@@ -18,29 +18,6 @@ find_package(SUITESPARSE REQUIRED)
 find_package(G2O REQUIRED)
 find_package(PCL 1.11 REQUIRED)
 
-set(OpenGL_GL_PREFERENCE "GLVND")
-find_package(OpenGL)
-
-# If OpenGL was found, use the import target if available. If not, use old-style includes
-set(G2O_USE_OPENGL ON CACHE BOOL "Build g2o with OpenGL support for visualization")
-if (OPENGL_FOUND AND G2O_USE_OPENGL)
-  if (TARGET OpenGL::GL)
-    set(G2O_OPENGL_TARGET "OpenGL::GL;OpenGL::GLU")
-  else()
-    set(G2O_OPENGL_TARGET "${OPENGL_LIBRARIES}")
-    include_directories(${OPENGL_INCLUDE_DIR})
-  endif()
-  set (G2O_HAVE_OPENGL 1)
-  message(STATUS "Compiling with OpenGL support")
-  #message(WARNING G2O_OPENGL_TARGET=${G2O_OPENGL_TARGET})
-endif()
-
-set(G2O_OPENGL_FOUND ${OPENGL_FOUND})
-
-
-# include_directories(marsupial_g2o ${OPENGL_INCLUDE_DIRS} ${GLUT_INCLUDE_DIRS}) 
-# target_link_libraries(target marsupial_g2o ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES})
-
 
 # Eigen3 FindScript Backward compatibility (ubuntu saucy)
 # Since FindEigen.cmake is deprecated starting from jade.
@@ -185,21 +162,17 @@ add_library(marsupial_g2o
   src/g2o_edge_equi_distance.cpp
   src/g2o_edge_time.cpp
   src/g2o_edge_velocity.cpp
-  src/g2o_vertex_pointxyz.cpp
+  src/g2o_edge_acceleration.cpp
   src/bisection3D.cpp   
   ) 
-
 target_link_libraries(marsupial_g2o
    ${EXTERNAL_LIBS}
    ${catkin_LIBRARIES}
 )
 
-
-
 ## Build additional executables
 
 add_executable(marsupial_node src/marsupial_node.cpp)
-
 target_link_libraries(marsupial_node
    marsupial_g2o
    ${EXTERNAL_LIBS}
