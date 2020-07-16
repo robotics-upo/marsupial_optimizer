@@ -3,7 +3,7 @@
 namespace g2o {
 
 	G2ODistanceVertexEdge::G2ODistanceVertexEdge() :
-		BaseBinaryEdge<1, double, VertexXYZ, VertexXYZ>()
+		BaseBinaryEdge<1, double, VertexPointXYZ, VertexPointXYZ>()
 	{
 		_information.setIdentity();
 		_error.setZero();

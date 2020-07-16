@@ -4,7 +4,7 @@
 #define G2O_KINEMATICS_EDGE_H
 
 
-#include "g2o_vertex_pointxyz.h"
+#include "g2o/types/slam3d/vertex_pointxyz.h"
 #include "g2o/config.h"
 #include "g2o/core/base_multi_edge.h"
 
@@ -19,9 +19,9 @@ namespace g2o
 
 		void computeError()
 		{
-			const VertexXYZ* pose1 = static_cast<const VertexXYZ*>(_vertices[0]);
-			const VertexXYZ* pose2 = static_cast<const VertexXYZ*>(_vertices[1]);
-			const VertexXYZ* pose3 = static_cast<const VertexXYZ*>(_vertices[2]);
+			const VertexPointXYZ* pose1 = static_cast<const VertexPointXYZ*>(_vertices[0]);
+			const VertexPointXYZ* pose2 = static_cast<const VertexPointXYZ*>(_vertices[1]);
+			const VertexPointXYZ* pose3 = static_cast<const VertexPointXYZ*>(_vertices[2]);
 
 			double dist12_xy = sqrt(pow((pose2->estimate().x()-pose1->estimate().x()),2)+pow((pose2->estimate().y()-pose1->estimate().y()),2));
 			double dist23_xy = sqrt(pow((pose3->estimate().x()-pose2->estimate().x()),2)+pow((pose3->estimate().y()-pose2->estimate().y()),2));

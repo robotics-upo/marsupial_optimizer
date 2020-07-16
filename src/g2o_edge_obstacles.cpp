@@ -3,7 +3,7 @@
 namespace g2o {
 
 	G2OObstaclesEdge::G2OObstaclesEdge() :
-		BaseUnaryEdge<1, double, VertexXYZ>() 
+		BaseUnaryEdge<1, double, VertexPointXYZ>() 
 	{
 
 		_information.setIdentity();

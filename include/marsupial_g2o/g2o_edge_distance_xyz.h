@@ -4,24 +4,24 @@
 #define G2O_DISTANCE_XYZ_EDGE_H
 
 
-#include "g2o_vertex_pointxyz.h"
+#include "g2o/types/slam3d/vertex_pointxyz.h"
 #include "g2o/config.h"
 #include "g2o/core/base_binary_edge.h"
 
 namespace g2o {
 
-class G2ODistanceXYZEdge : public BaseBinaryEdge<1, std::vector<float>, VertexXYZ, VertexXYZ>
+class G2ODistanceXYZEdge : public BaseBinaryEdge<1, std::vector<float>, VertexPointXYZ, VertexPointXYZ>
 {
 	public:
 		G2ODistanceXYZEdge();
-		VertexXYZ * xyz1;
-		VertexXYZ * xyz2;
+		VertexPointXYZ * xyz1;
+		VertexPointXYZ * xyz2;
 
 
 		void computeError()
 		{
-			xyz1 = static_cast<VertexXYZ *> (_vertices[0]);
-			xyz2 = static_cast<VertexXYZ *> (_vertices[1]);
+			xyz1 = static_cast<VertexPointXYZ *> (_vertices[0]);
+			xyz2 = static_cast<VertexPointXYZ *> (_vertices[1]);
 			
 			// _error[0] = (xyz2->estimate().x() - xyz1->estimate().x()) - _measurement[0];
 

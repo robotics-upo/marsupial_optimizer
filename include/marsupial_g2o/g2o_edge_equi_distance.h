@@ -4,7 +4,7 @@
 #define G2O_EQUI_DISTANCE_EDGE_H
 
 
-#include "g2o_vertex_pointxyz.h"
+#include "g2o/types/slam3d/vertex_pointxyz.h"
 #include "g2o/config.h"
 #include "g2o/core/base_multi_edge.h"
 
@@ -20,9 +20,9 @@ namespace g2o
 		int count = 0;
 		void computeError()
 		{
-			const VertexXYZ* pose1 = static_cast<const VertexXYZ*>(_vertices[0]);
-			const VertexXYZ* pose2 = static_cast<const VertexXYZ*>(_vertices[1]);
-			const VertexXYZ* pose3 = static_cast<const VertexXYZ*>(_vertices[2]);
+			const VertexPointXYZ* pose1 = static_cast<const VertexPointXYZ*>(_vertices[0]);
+			const VertexPointXYZ* pose2 = static_cast<const VertexPointXYZ*>(_vertices[1]);
+			const VertexPointXYZ* pose3 = static_cast<const VertexPointXYZ*>(_vertices[2]);
 
 			double _d1 = (pose2->estimate()-pose1->estimate()).norm();
 			double _d2 = (pose3->estimate()-pose2->estimate()).norm();

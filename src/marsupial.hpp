@@ -39,8 +39,8 @@
 #include "marsupial_g2o/g2o_edge_time.h"
 #include "marsupial_g2o/g2o_edge_velocity.h" 
 
-// #include "g2o_vertex_timediff.h"
-// #include "g2o_vertex_pointxyz.h"
+#include "marsupial_g2o/g2o_vertex_timediff.h"
+#include "g2o/types/slam3d/vertex_pointxyz.h"
 
 #include "marsupial_g2o/obstacles.hpp"
 #include "marsupial_g2o/nearNeighbor.hpp"
@@ -79,7 +79,7 @@ public:
 	// double w_theta = 0.1;
 	double bound, velocity , angle;
 
-	g2o::VertexXYZ* vertex1;
+	g2o::VertexPointXYZ* vertex1;
 	g2o::VertexTimeDiff* vertex2;
 
 	MarsupialCfg mcfg;
@@ -112,7 +112,7 @@ Marsupial::Marsupial(ros::NodeHandle &nh, ros::NodeHandle &pnh):mcfg(nh,pnh){
   		Y2 = 15;
   	}
   	if (!pnh.getParam("Z2", Z2)) {
-  	  	Z2 = 40;
+  	  	Z2 = 50;
   	}
 
   	if (!pnh.getParam("w_alpha", w_alpha)) {
@@ -221,7 +221,7 @@ void Marsupial::executeOptimization()
 	file_in_pos.open (path+"initial_trajectory.txt");
 	for (size_t i = 0; i < mcfg.pose_vec_.size(); ++i)
 	{	
-		vertex1 = new g2o::VertexXYZ();
+		vertex1 = new g2o::VertexPointXYZ();
 		Eigen::Vector3d xyz = mcfg.pose_vec_[i].position;
 		vertex1->setId(mcfg.pose_vec_[i].id);
 		vertex1->setEstimate(xyz);
@@ -382,7 +382,7 @@ void Marsupial::executeOptimization()
 	for (unsigned i = 0; i < mcfg.pose_vec_.size(); i++)
 	{
 		structPose vOp;
-		g2o::VertexXYZ *pose = dynamic_cast<g2o::VertexXYZ*>(optimizer.vertex(i));
+		g2o::VertexPointXYZ *pose = dynamic_cast<g2o::VertexPointXYZ*>(optimizer.vertex(i));
 		vOp.position = pose->estimate();	
 		vOp.id = i;
 		file_out_pos << setprecision(6) << vOp.position.x() << ";" << vOp.position.y() << ";" << vOp.position.z()<< endl;
@@ -398,8 +398,8 @@ void Marsupial::executeOptimization()
 	double velocity = 0.0;
  	for (size_t i = 0; i < mcfg.dist_vec_.size(); i++)
 	{
-		g2o::VertexXYZ *pose1Op = dynamic_cast<g2o::VertexXYZ*>(optimizer.vertex(i));
-		g2o::VertexXYZ *pose2Op = dynamic_cast<g2o::VertexXYZ*>(optimizer.vertex(i+1));
+		g2o::VertexPointXYZ *pose1Op = dynamic_cast<g2o::VertexPointXYZ*>(optimizer.vertex(i));
+		g2o::VertexPointXYZ *pose2Op = dynamic_cast<g2o::VertexPointXYZ*>(optimizer.vertex(i+1));
 		g2o::VertexTimeDiff *difftime = dynamic_cast<g2o::VertexTimeDiff*>(optimizer.vertex(i+mcfg.dist_vec_.size()+1));
 		double distance = (pose2Op->estimate()-pose1Op->estimate()).norm();	
 		sum_dispos = distance + sum_dispos;

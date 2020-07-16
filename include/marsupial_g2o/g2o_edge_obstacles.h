@@ -4,7 +4,7 @@
 #define G2O_OBSTACLES_EDGE_H
 
 
-#include "g2o_vertex_pointxyz.h"
+#include "g2o/types/slam3d/vertex_pointxyz.h"
 #include "g2o/config.h"
 #include "g2o/core/base_unary_edge.h"
 #include <vector>
@@ -17,12 +17,12 @@
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/point_types.h>
 
-#include "nearNeighbor.hpp"
+#include "marsupial_g2o/nearNeighbor.hpp"
 
 
 namespace g2o {
 
-class G2OObstaclesEdge : public BaseUnaryEdge<1, double, VertexXYZ>
+class G2OObstaclesEdge : public BaseUnaryEdge<1, double, VertexPointXYZ>
 {
 	public:
 		G2OObstaclesEdge();
@@ -39,7 +39,7 @@ class G2OObstaclesEdge : public BaseUnaryEdge<1, double, VertexXYZ>
 
 		void computeError()
 		{
-    		const VertexXYZ * xyz = static_cast<const VertexXYZ*> (_vertices[0]);
+    		const VertexPointXYZ * xyz = static_cast<const VertexPointXYZ*> (_vertices[0]);
 
 			near_ = nn.nearestObstacleVertex(kdT_From_NN , xyz->estimate(),obstacles_Points);
 			double _d = (xyz->estimate()-near_).norm();
@@ -68,7 +68,7 @@ class G2OObstaclesEdge : public BaseUnaryEdge<1, double, VertexXYZ>
 		// Commented 09-07-2020.
 		// virtual void linearizeOplus()
 		// {
-		// 	VertexXYZ * xyz = static_cast<VertexXYZ*> (_vertices[0]);
+		// 	VertexPointXYZ * xyz = static_cast<VertexPointXYZ*> (_vertices[0]);
 		// 	near_ = nn.nearestObstacleVertex(kdT_From_NN , xyz->estimate(),obstacles_Points);
 		// 	float _d = (xyz->estimate()-near_).norm();
 		// 	if (_d < 0.0000001)

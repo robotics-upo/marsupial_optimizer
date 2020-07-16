@@ -4,29 +4,29 @@
 #define G2O_DISTANCE_VERTEX_EDGE_H
 
 
-#include "g2o_vertex_pointxyz.h"
+#include "g2o/types/slam3d/vertex_pointxyz.h"
 #include "g2o/config.h"
 #include "g2o/core/base_binary_edge.h"
 
 namespace g2o {
 
-class G2ODistanceVertexEdge : public BaseBinaryEdge<1, double, VertexXYZ, VertexXYZ>
+class G2ODistanceVertexEdge : public BaseBinaryEdge<1, double, VertexPointXYZ, VertexPointXYZ>
 {
 	public:
 		G2ODistanceVertexEdge();
 
 		// typedef MatrixX::MapType JacobianType;
 
-		VertexXYZ * pose1;
-		VertexXYZ * pose2;
+		VertexPointXYZ * pose1;
+		VertexPointXYZ * pose2;
 		
 		// double size_trajectory_;
 
 		
 		void computeError()
 		{
-			pose1 = static_cast<VertexXYZ *> (_vertices[0]);
-			pose2 = static_cast<VertexXYZ *> (_vertices[1]);
+			pose1 = static_cast<VertexPointXYZ *> (_vertices[0]);
+			pose2 = static_cast<VertexPointXYZ *> (_vertices[1]);
 
 			double _d = (pose2->estimate() - pose1->estimate()).norm();
 
@@ -42,8 +42,8 @@ class G2ODistanceVertexEdge : public BaseBinaryEdge<1, double, VertexXYZ, Vertex
 
 		// virtual void linearizeOplus()
 		// {
-		// 	pose1 = static_cast<VertexXYZ *> (_vertices[0]);
-		// 	pose2 = static_cast<VertexXYZ *> (_vertices[1]);
+		// 	pose1 = static_cast<VertexPointXYZ *> (_vertices[0]);
+		// 	pose2 = static_cast<VertexPointXYZ *> (_vertices[1]);
 			
 		// 	float _d = (pose2->estimate()-pose1->estimate()).norm();
 		// 	if (_d < 0.0000001)

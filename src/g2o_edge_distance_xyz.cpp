@@ -3,7 +3,7 @@
 namespace g2o {
 
 	G2ODistanceXYZEdge::G2ODistanceXYZEdge() :
-		BaseBinaryEdge<1, std::vector<float>, VertexXYZ, VertexXYZ>()
+		BaseBinaryEdge<1, std::vector<float>, VertexPointXYZ, VertexPointXYZ>()
 	{
 		_information.setIdentity();
 		_error.setZero();

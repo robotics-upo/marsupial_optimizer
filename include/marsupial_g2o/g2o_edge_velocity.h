@@ -5,7 +5,7 @@
 
 
 #include "g2o_vertex_timediff.h"
-#include "g2o_vertex_pointxyz.h"
+#include "g2o/types/slam3d/vertex_pointxyz.h"
 #include "g2o/config.h"
 #include "g2o/core/base_multi_edge.h"
 
@@ -19,14 +19,14 @@ namespace g2o
 	public:
 		G2OVelocityEdge();
 
-		const VertexXYZ* pose1;
-		const VertexXYZ* pose2;
+		const VertexPointXYZ* pose1;
+		const VertexPointXYZ* pose2;
 		const VertexTimeDiff* deltaT;
 
 		void computeError()
 		{
-			pose1 = static_cast<const VertexXYZ*>(_vertices[0]);
-			pose2 = static_cast<const VertexXYZ*>(_vertices[1]);
+			pose1 = static_cast<const VertexPointXYZ*>(_vertices[0]);
+			pose2 = static_cast<const VertexPointXYZ*>(_vertices[1]);
 			deltaT = static_cast<const VertexTimeDiff*>(_vertices[2]);
 
 
@@ -48,8 +48,8 @@ namespace g2o
 		
 		// virtual void linearizeOplus()
 		// {
-		// 	pose1 = static_cast<VertexXYZ *> (_vertices[0]);
-		// 	pose2 = static_cast<VertexXYZ *> (_vertices[1]);
+		// 	pose1 = static_cast<VertexPointXYZ *> (_vertices[0]);
+		// 	pose2 = static_cast<VertexPointXYZ *> (_vertices[1]);
 		// 	deltaT = static_cast<const VertexTimeDiff*>(_vertices[2]);
 			
 		// 	float _d = (pose2->estimate()-pose1->estimate()).norm();

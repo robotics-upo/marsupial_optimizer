@@ -23,7 +23,7 @@ struct structPose
 {
 	int id;
 	Eigen::Vector3d position;
-    g2o::VertexXYZ vertex;
+    g2o::VertexPointXYZ vertex;
 };
 
 struct structTime
@@ -55,7 +55,7 @@ class MarsupialCfg
 		void setVelocity(double v_);
 		void getSlopXYZAxes( vector<float> &m_);
 		bool getParameterOptimizer(std::string fileName);
-		// VertexXYZ poseVertex(int index);
+		// VertexPointXYZ poseVertex(int index);
 		// VertexTimeDiff timeDiffVertex(int index) ;
 		//! Container of poses that represent the spatial part of the trajectory
 		typedef vector<structPose> PoseSequence;
@@ -165,7 +165,7 @@ void MarsupialCfg::loadData()
 		dist_vec_.push_back(pd);
 	}
 }
-// VertexXYZ MarsupialCfg::poseVertex(int index)
+// VertexPointXYZ MarsupialCfg::poseVertex(int index)
 // {
 // return pose_vec_.at(index).vertex;
 // }
