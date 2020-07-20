@@ -55,8 +55,10 @@
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
 
+//ROS
 #include "ros/ros.h"
-
+#include "actionlib/server/simple_action_server.h"
+#include "marsupial_actions/OptimizationTrajectoryAction.h"
 
 using namespace Eigen;
 using namespace std;
@@ -79,20 +81,26 @@ public:
 
 	double bound, velocity , angle, acceleration;
 
-	g2o::VertexPointXYZ* vertex1;
-	g2o::VertexTimeDiff* vertex2;
-
 	MarsupialCfg mcfg;
 
+	actionlib::SimpleActionServer<marsupial_actions::OptimizationTrajectoryAction> optimization_trajectory_action_server_;
+	marsupial_actions::OptimizationTrajectoryFeedback feedback_; //variable stores the feedback/intermediate results
+    marsupial_actions::OptimizationTrajectoryResult result_; //variable stores the final output
+
+	std::string action_name_;
+
 	// =========== Function declarations =============
-	Marsupial(ros::NodeHandle &nh, ros::NodeHandle &pnh);
+	Marsupial(ros::NodeHandle &nh, ros::NodeHandle &pnh, std::string name);
 	// ~Marsupial();
-	void executeOptimization();
+	void executeOptimization(const marsupial_actions::OptimizationTrajectoryGoalConstPtr &goal);
 
 	// =============== Main function =================
 };
 
-Marsupial::Marsupial(ros::NodeHandle &nh, ros::NodeHandle &pnh):mcfg(nh,pnh){
+Marsupial::Marsupial(ros::NodeHandle &nh, ros::NodeHandle &pnh,std::string name):
+			mcfg(nh,pnh),
+			optimization_trajectory_action_server_(name,boost::bind(&Marsupial::executeOptimization, this,_1),false),
+			action_name_(name){
 
 	ROS_INFO("Initialazing Optimization Proccess");
 	
@@ -111,16 +119,21 @@ Marsupial::Marsupial(ros::NodeHandle &nh, ros::NodeHandle &pnh):mcfg(nh,pnh){
   	pnh.param<double>("w_zeta", w_zeta,0.1);
   	pnh.param<double>("w_eta", w_eta,0.1);
   	pnh.param<double>("w_theta", w_theta,0.1);
+
+	optimization_trajectory_action_server_.start();
   
-	executeOptimization();
+	// executeOptimization();
 }
 
-void Marsupial::executeOptimization()
+void Marsupial::executeOptimization(const marsupial_actions::OptimizationTrajectoryGoalConstPtr &goal)
 {
+
+	g2o::VertexPointXYZ* vertex1 = new g2o::VertexPointXYZ;
+	g2o::VertexTimeDiff* vertex2 = new g2o::VertexTimeDiff;
 
 	// X1 =25; Y1 =40; Z1 =50;
 	// X2 =50; Y2 =15; Z2 =40;
-
+	
 	n_inter_opt = 200;
 	n_inter = 1;
 	n_vert_unit = 4;
@@ -162,6 +175,7 @@ void Marsupial::executeOptimization()
 	optimizationAlgorithm->setUserLambdaInit(0.00001);
 
 	SparseOptimizer optimizer;
+	optimizer.clear();
 	optimizer.setAlgorithm(optimizationAlgorithm);
     optimizer.setVerbose(true);
 
@@ -404,9 +418,21 @@ void Marsupial::executeOptimization()
 	}
 	file_out_acceleration.close();
 
+	if (optimization_trajectory_action_server_.isPreemptRequested() || !ros::ok())
+    {
+        optimizer.clear();
+        ROS_INFO("%s: Preempted", action_name_.c_str());
+        result_.optimization_completed = false;
+        optimization_trajectory_action_server_.setPreempted(result_);
+             
+    }
+
 	std::cout << "Optimization Proccess  Completed !!!" << std::endl;
+	result_.optimization_completed = true;
+	ROS_INFO("%s: Succeeded", action_name_.c_str());
+	optimization_trajectory_action_server_.setSucceeded(result_);
 	optimizer.clear();
+
 }
 
 #endif
-

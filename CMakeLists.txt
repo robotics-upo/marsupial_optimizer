@@ -8,6 +8,11 @@ set(CMAKE_BUILD_TYPE Release) #None, Debug, Release, RelWithDebInfo, MinSizeRel
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   tf
+  actionlib_msgs 
+  actionlib
+  message_generation
+  std_msgs
+  marsupial_actions
 )
 message(STATUS "System: ${CMAKE_SYSTEM}")
 ## System dependencies are found with CMake's conventions
@@ -113,6 +118,12 @@ endif()
 #    geometry_msgs std_msgs costmap_converter
 # )
 
+# generate_messages(
+#   DEPENDENCIES
+#   std_msgs
+#   actionlib_msgs
+# )
+
 #add dynamic reconfigure api
 #find_package(catkin REQUIRED dynamic_reconfigure)
 # generate_dynamic_reconfigure_options(
@@ -135,6 +146,10 @@ catkin_package(
   CATKIN_DEPENDS
   roscpp
   tf
+  std_msgs 
+  message_generation 
+  message_runtime
+  marsupial_actions
   DEPENDS SUITESPARSE G2O
 )
 
