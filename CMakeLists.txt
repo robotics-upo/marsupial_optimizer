@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   std_msgs
   marsupial_actions
+  dynamic_reconfigure
 )
 message(STATUS "System: ${CMAKE_SYSTEM}")
 ## System dependencies are found with CMake's conventions
@@ -126,9 +127,9 @@ endif()
 
 #add dynamic reconfigure api
 #find_package(catkin REQUIRED dynamic_reconfigure)
-# generate_dynamic_reconfigure_options(
-#   cfg/TebLocalPlannerReconfigure.cfg
-# )
+generate_dynamic_reconfigure_options(
+  cfg/OptimizationParams.cfg
+)
 
 
 ###################################
@@ -188,6 +189,8 @@ target_link_libraries(marsupial_g2o
 ## Build additional executables
 
 add_executable(marsupial_node src/marsupial_node.cpp)
+add_dependencies(marsupial_node ${PROJECT_NAME}_gencfg)
+
 target_link_libraries(marsupial_node
    marsupial_g2o
    ${EXTERNAL_LIBS}
