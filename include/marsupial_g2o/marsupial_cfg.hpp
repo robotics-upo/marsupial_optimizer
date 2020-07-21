@@ -117,7 +117,7 @@ void MarsupialCfg::loadData(double x1, double y1, double z1, double x2, double y
 	structTime pt;
 	double x_, y_, z_;
 	// d3D_= sqrt(pow(x2-x1,2)+pow(y2-y1,2)+pow(z2-z1,2));  
-	printf("\nDistance 3D Initial Trayectory = %f \n",d3D_);
+	ROS_INFO("Initial 3D distance of trayectory = %f",d3D_);
 	// n_points = ceil(d3D_*n_vert_unit);   
 	double distance_xy = sqrt(pow(x2-x1,2)+pow(y2-y1,2));
 	double distance_xz = sqrt(pow(x2-x1,2)+pow(z2-z1,2));

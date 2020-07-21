@@ -9,7 +9,7 @@
 // =========== Function declarations =============
 
 void dynamicReconfigureCallback(marsupial_g2o::OptimizationParamsConfig &config, uint32_t level){
-  ROS_INFO("Dynamic reconfigure callback");
+  // ROS_INFO("Dynamic reconfigure ready to use !!!");
 }
 
 // =============== Main function =================
@@ -19,7 +19,7 @@ using namespace std;
 int main(int argc, char** argv) {
   ros::init(argc, argv, "marsupial_node");
   
-  ROS_INFO("Starting MARSUPIAL Optimization trajectory");
+  ROS_INFO("Starting MARSUPIAL_NODE for Optimization trajectory");
   
   ros::NodeHandle nh;
   ros::NodeHandle pnh("~");

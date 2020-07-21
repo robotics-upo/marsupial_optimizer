@@ -19,6 +19,7 @@
 #include <g2o/core/optimization_algorithm_factory.h>
 #include <g2o/core/optimization_algorithm_levenberg.h>
 #include <g2o/core/sparse_optimizer.h>
+#include <g2o/core/sparse_optimizer_terminate_action.h>
 
 #include <g2o/solvers/eigen/linear_solver_eigen.h>
 #include <g2o/solvers/cholmod/linear_solver_cholmod.h>
@@ -74,8 +75,8 @@ public:
 	ofstream file_out_pos, file_out_time, file_out_velocity, file_out_difftime, file_out_acceleration;
 	string path= "/home/simon/";
 	double X1,Y1,Z1,X2,Y2,Z2;
-	int n_inter_opt;	//Iterations Numbers of Optimizer
-	int n_inter;	//Number of times that optimizer is execute
+	int n_iter_opt;	//Iterations Numbers of Optimizer
+	int n_iter;	//Number of times that optimizer is execute
 	int n_vert_unit; //number of Vertex per unit of lenght
 	double w_alpha, w_beta, w_gamma, w_delta, w_epsilon, w_zeta, w_eta, w_theta;
 
@@ -83,26 +84,39 @@ public:
 
 	MarsupialCfg mcfg;
 
+	SparseOptimizer optimizer;
+	g2o::VertexPointXYZ* vertex1;
+	g2o::VertexTimeDiff* vertex2;
+	//! Manage Data Vertices and Edges
+	vector<Eigen::Vector3d> vecObs;
+	vector<Eigen::Vector3d> near_obs;
+	vector<float> mXYZ_;
+	//! Create obstacles object
+	Obstacles _Obs1;
+	Obstacles _Obs2;
+	Obstacles _Obs3;
+
 	actionlib::SimpleActionServer<marsupial_actions::OptimizationTrajectoryAction> optimization_trajectory_action_server_;
 	marsupial_actions::OptimizationTrajectoryFeedback feedback_; //variable stores the feedback/intermediate results
     marsupial_actions::OptimizationTrajectoryResult result_; //variable stores the final output
+
+	// bool *finish;
+	// bool aux;
 
 	std::string action_name_;
 
 	// =========== Function declarations =============
 	Marsupial(ros::NodeHandle &nh, ros::NodeHandle &pnh, std::string name);
 	// ~Marsupial();
+	void setupOptimization();
 	void executeOptimization(const marsupial_actions::OptimizationTrajectoryGoalConstPtr &goal);
 
-	// =============== Main function =================
 };
 
 Marsupial::Marsupial(ros::NodeHandle &nh, ros::NodeHandle &pnh,std::string name):
 			mcfg(nh,pnh),
 			optimization_trajectory_action_server_(name,boost::bind(&Marsupial::executeOptimization, this,_1),false),
 			action_name_(name){
-
-	ROS_INFO("Initialazing Optimization Proccess");
 	
 	pnh.param<double>("X1", X1, 25.0);
   	pnh.param<double>("Y1", Y1, 40.0);
@@ -120,30 +134,27 @@ Marsupial::Marsupial(ros::NodeHandle &nh, ros::NodeHandle &pnh,std::string name)
   	pnh.param<double>("w_eta", w_eta,0.1);
   	pnh.param<double>("w_theta", w_theta,0.1);
 
+	pnh.param<int>("n_iter_opt", n_iter_opt,200);
+  	pnh.param<int>("n_iter", n_iter,1);
+  	pnh.param<int>("n_vert_unit", n_vert_unit,4);
+  	pnh.param<double>("bound", bound,2.0);
+  	pnh.param<double>("velocity", velocity,1.0);
+  	pnh.param<double>("acceleration", acceleration,0.0);
+  	pnh.param<double>("angle", angle,M_PI / 15.0);
+
+	setupOptimization();
 	optimization_trajectory_action_server_.start();
-  
-	// executeOptimization();
+
+	ROS_INFO("Parameters loaded, ready to Initialize Optimization Proccess !!");
 }
 
-void Marsupial::executeOptimization(const marsupial_actions::OptimizationTrajectoryGoalConstPtr &goal)
-{
 
-	g2o::VertexPointXYZ* vertex1 = new g2o::VertexPointXYZ;
-	g2o::VertexTimeDiff* vertex2 = new g2o::VertexTimeDiff;
-
+void Marsupial::setupOptimization(){
+	
+	//Initial and Final trajectory Points
 	// X1 =25; Y1 =40; Z1 =50;
 	// X2 =50; Y2 =15; Z2 =40;
 	
-	n_inter_opt = 200;
-	n_inter = 1;
-	n_vert_unit = 4;
-
-	bound = 2.0;
-	velocity = 1.0;
-	acceleration = 0.0;
-	angle = M_PI / 15.0;
-	// deltaTime = (mcfg.d3D_/mcfg.n_points * 1.0/vel);
-
 	//Weight Factors for position edges
 	// w_alpha = 0.3; //distanceVertex
 	// w_beta = 1.0; //obstacles
@@ -154,6 +165,18 @@ void Marsupial::executeOptimization(const marsupial_actions::OptimizationTraject
 	// w_zeta = 0.00018;
 	// w_eta = 0.00018;
 	// w_theta = 0.1;
+	
+	// n_iter_opt = 200;
+	// n_iter = 1;
+	// n_vert_unit = 4;
+
+	// bound = 2.0;
+	// velocity = 1.0;
+	// acceleration = 0.0;
+	// angle = M_PI / 15.0;
+
+	//// deltaTime = (mcfg.d3D_/mcfg.n_points * 1.0/vel);
+
 
 	mcfg.setNumVertUnit(n_vert_unit);	
 	mcfg.setDistance3D(X1,Y1,Z1,X2,Y2,Z2);
@@ -161,7 +184,7 @@ void Marsupial::executeOptimization(const marsupial_actions::OptimizationTraject
 	mcfg.setVelocity(velocity);
 
 
-	//Create the linear solver (Ax = b)
+	//! Create the linear solver (Ax = b)
 	auto linearSolver = g2o::make_unique<LinearSolverCSparse<BlockSolverX::PoseMatrixType>>();
     // auto linearSolver = g2o::make_unique<LinearSolverDense<BlockSolverX::PoseMatrixType>>(); // Linear equation solver
 
@@ -174,37 +197,35 @@ void Marsupial::executeOptimization(const marsupial_actions::OptimizationTraject
 	// optimizationAlgorithm->setMaxTrialsAfterFailure(3);
 	optimizationAlgorithm->setUserLambdaInit(0.00001);
 
-	SparseOptimizer optimizer;
 	optimizer.clear();
 	optimizer.setAlgorithm(optimizationAlgorithm);
     optimizer.setVerbose(true);
-
-	//Data
-	vector<Eigen::Vector3d> vecObs;
-	vector<Eigen::Vector3d> near_obs;
-	vector<float> mXYZ_;
 	
-	//Create obstacles
-	Obstacles _Obs1;
-	Obstacles _Obs2;
-	Obstacles _Obs3;
+	//! Create the vectors with initial poses and distances between vertex
+	ROS_INFO("Loading Trajectory Points");
+	mcfg.loadData(X1,Y1,Z1,X2,Y2,Z2);
+	ROS_INFO("X1=[%f] Y1=[%f] Z1=[%f] X2=[%f] Y2=[%f] Z2=[%f]\n",X1,Y1,Z1,X2,Y2,Z2);
+	ROS_INFO("alpha=[%f] beta=[%f] gamma=[%f] delta=[%f] epsilon=[%f] zeta=[%f] eta=[%f] theta=[%f]",w_alpha,w_beta,w_gamma,w_delta,w_epsilon,w_zeta,w_eta,w_theta);
+	
+	//! Create Objet for kdtree
+	mcfg.getSlopXYZAxes(mXYZ_);
+	
+}
+
+void Marsupial::executeOptimization(const marsupial_actions::OptimizationTrajectoryGoalConstPtr &goal)
+{
+	vertex1 = new g2o::VertexPointXYZ;
+	vertex2 = new g2o::VertexTimeDiff;
+
 	_Obs1.simulateObstacles(35, 0, 36,10, 40, 8,vecObs,1);
 	_Obs2.simulateObstacles(37, 0, 30, 6, 40, 2,vecObs,0);
 	_Obs3.simulateObstacles(37, 0, 48, 6, 40, 2,vecObs,0);
-
-
-	//Create the vectors with initial poses and distances between vertex
-	mcfg.loadData(X1,Y1,Z1,X2,Y2,Z2);
-	ROS_INFO("alpha=[%f] beta=[%f] gamma=[%f] delta=[%f] epsilon=[%f] zeta=[%f] eta=[%f] theta=[%f]",w_alpha,w_beta,w_gamma,w_delta,w_epsilon,w_zeta,w_eta,w_theta);
-	ROS_INFO("X1=[%f] Y1=[%f] Z1=[%f] X2=[%f] Y2=[%f] Z2=[%f]",X1,Y1,Z1,X2,Y2,Z2);
-	printf("\nValues of Initial Trajectory Loaded \n");
-	
-	//Create Objet for kdtree
 	NearNeighbor _NN(vecObs);
-	mcfg.getSlopXYZAxes(mXYZ_);
 
-	//////////////// Create Vertex. Points of the trajectory ////////////////
-	//To save points cable before and after optimization
+	/*
+	*Create Vertex. Points of the trajectory 
+	*/
+	//! To save points cable before and after optimization
 	file_in_pos.open (path+"initial_trajectory.txt");
 	for (size_t i = 0; i < mcfg.pose_vec_.size(); ++i)
 	{	
@@ -221,7 +242,7 @@ void Marsupial::executeOptimization(const marsupial_actions::OptimizationTraject
 	file_in_pos.close();	
 
 
-	// I. Add edges. These are the distances between the poses.
+	//! I. Add edges. These are the distances between the poses.
 	for (size_t i = 0; i < mcfg.dist_vec_.size(); ++i)
 	{
 		g2o::G2ODistanceVertexEdge* edge = new g2o::G2ODistanceVertexEdge();
@@ -232,7 +253,7 @@ void Marsupial::executeOptimization(const marsupial_actions::OptimizationTraject
 		optimizer.addEdge(edge);
 	}
 	
-	// II. Add edges. These are the distances from vertex to obstacles poses.
+	//! II. Add edges. These are the distances from vertex to obstacles poses.
 	for (size_t i = 0; i < mcfg.pose_vec_.size(); ++i)
 	{
 		g2o::G2OObstaclesEdge* edge = new g2o::G2OObstaclesEdge();
@@ -243,7 +264,7 @@ void Marsupial::executeOptimization(const marsupial_actions::OptimizationTraject
 		optimizer.addEdge(edge);
 	}
 
-	// III. Add edges. These are the X distances between Vertices.
+	//! III. Add edges. These are the X distances between Vertices.
 	for (size_t i = 0; i < mcfg.dist_vec_.size(); ++i)
 	{
 		g2o::G2ODistanceXYZEdge* edge = new g2o::G2ODistanceXYZEdge();
@@ -267,7 +288,7 @@ void Marsupial::executeOptimization(const marsupial_actions::OptimizationTraject
 		optimizer.addEdge(edge);
 	}
 
-	// V. Add edges. This is Equi-distance among vertices.
+	//! V. Add edges. This is Equi-distance among vertices.
 	for (size_t i = 0; i < mcfg.pose_vec_.size()-3; ++i)
 	{
 		G2OEquiDistanceEdge* edge = new G2OEquiDistanceEdge;
@@ -277,8 +298,10 @@ void Marsupial::executeOptimization(const marsupial_actions::OptimizationTraject
 		edge->setInformation(G2OEquiDistanceEdge::InformationType::Identity()*w_epsilon);
 		optimizer.addEdge(edge);
 	}
-	//////////////// Create Vertex. Time between consecutive configuration ////////////////
-	// To save temporal state before optimization
+	/*
+	*Create Vertex. Time between consecutive configuration 
+	*/
+	//! To save temporal state before optimization
 	file_in_time.open ((path+"initial_time.txt"));
 	file_in_velocity.open ((path+"initial_velocity.txt"));
 	file_in_difftime.open ((path+"initial_difftime.txt"));
@@ -314,7 +337,7 @@ void Marsupial::executeOptimization(const marsupial_actions::OptimizationTraject
 	file_in_acceleration.close();
 
 
-	// VI. Add edges. These are time between Vertices.
+	//! VI. Add edges. These are time between Vertices.
 	for (unsigned i=mcfg.dist_vec_.size()+1; i < mcfg.dist_vec_.size()*2.0; ++i)
 	{
 		G2OTimeEdge* edge = new G2OTimeEdge;
@@ -324,7 +347,7 @@ void Marsupial::executeOptimization(const marsupial_actions::OptimizationTraject
 		optimizer.addEdge(edge);
 	}
 
-	// VII. Add edges. These are velocities between Vertices.
+	//! VII. Add edges. These are velocities between Vertices.
 	for (size_t i = 0; i < mcfg.dist_vec_.size(); ++i)
 	{
 		G2OVelocityEdge* edge = new G2OVelocityEdge;
@@ -336,7 +359,7 @@ void Marsupial::executeOptimization(const marsupial_actions::OptimizationTraject
 		optimizer.addEdge(edge);
 	}
 
-	// VIII. Add edges. This is aceleration between Vertices.
+	//! VIII. Add edges. This is aceleration between Vertices.
 	for (size_t i = 0; i < mcfg.dist_vec_.size()-1; ++i)
 	{
 		G2OAccelerationEdge* edge = new G2OAccelerationEdge;
@@ -354,10 +377,10 @@ void Marsupial::executeOptimization(const marsupial_actions::OptimizationTraject
 	optimizer.save("antithing_before.g2o");
 	optimizer.initializeOptimization();
 	optimizer.setVerbose(true);
-	optimizer.optimize(n_inter_opt);
+	optimizer.optimize(n_iter_opt);
 	optimizer.save("antithing_after.g2o");
 
-	//Save Optimized Trajectory in File.txt 
+	//! Save Optimized Trajectory in File.txt 
 	file_out_pos.open (path+"optimized_trajectory.txt");
 	for (unsigned i = 0; i < mcfg.pose_vec_.size(); i++)
 	{
@@ -369,7 +392,7 @@ void Marsupial::executeOptimization(const marsupial_actions::OptimizationTraject
 	}
 	file_out_pos.close();
 
-	//Save Optimized Time in File.txt 
+	//! Save Optimized Time in File.txt 
 	file_out_time.open (path+"optimized_time.txt");
 	file_out_velocity.open (path+"optimized_velocity.txt");
 	file_out_difftime.open (path+"optimized_difftime.txt");
@@ -432,6 +455,10 @@ void Marsupial::executeOptimization(const marsupial_actions::OptimizationTraject
 	ROS_INFO("%s: Succeeded", action_name_.c_str());
 	optimization_trajectory_action_server_.setSucceeded(result_);
 	optimizer.clear();
+	// optimizer.clearParameters();
+	// bool aux= true;
+	// finish = &aux;
+	// optimizer.setForceStopFlag(finish);
 
 }
 
