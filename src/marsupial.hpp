@@ -44,7 +44,7 @@
 #include "marsupial_g2o/g2o_vertex_timediff.h"
 #include "g2o/types/slam3d/vertex_pointxyz.h"
 
-#include "marsupial_g2o/obstacles.hpp"
+// #include "marsupial_g2o/obstacles.hpp"
 #include "marsupial_g2o/nearNeighbor.hpp"
 #include "marsupial_g2o/marsupial_cfg.hpp"
 
@@ -57,9 +57,13 @@
 #include <boost/algorithm/string.hpp>
 
 //ROS
-#include "ros/ros.h"
-#include "actionlib/server/simple_action_server.h"
-#include "marsupial_actions/OptimizationTrajectoryAction.h"
+#include <ros/ros.h>
+#include <actionlib/server/simple_action_server.h>
+#include <marsupial_actions/OptimizationTrajectoryAction.h>
+// #include <visualization_msgs/MarkerArray.h>
+#include <geometry_msgs/Point.h>
+#include <sensor_msgs/PointCloud2.h>
+
 
 using namespace Eigen;
 using namespace std;
@@ -84,17 +88,19 @@ public:
 
 	MarsupialCfg mcfg;
 
+	NearNeighbor nn_;
+
 	SparseOptimizer optimizer;
 	g2o::VertexPointXYZ* vertex1;
 	g2o::VertexTimeDiff* vertex2;
 	//! Manage Data Vertices and Edges
-	vector<Eigen::Vector3d> vecObs;
+	// vector<Eigen::Vector3d> vecObs;
 	vector<Eigen::Vector3d> near_obs;
 	vector<float> mXYZ_;
 	//! Create obstacles object
-	Obstacles _Obs1;
-	Obstacles _Obs2;
-	Obstacles _Obs3;
+	// Obstacles _Obs1;
+	// Obstacles _Obs2;
+	// Obstacles _Obs3;
 
 	actionlib::SimpleActionServer<marsupial_actions::OptimizationTrajectoryAction> optimization_trajectory_action_server_;
 	marsupial_actions::OptimizationTrajectoryFeedback feedback_; //variable stores the feedback/intermediate results
@@ -105,11 +111,18 @@ public:
 
 	std::string action_name_;
 
+	ros::Subscriber read_octomap_sub_;
+
+	geometry_msgs::Point obs_oct;
+
 	// =========== Function declarations =============
 	Marsupial(ros::NodeHandle &nh, ros::NodeHandle &pnh, std::string name);
 	// ~Marsupial();
 	void setupOptimization();
 	void executeOptimization(const marsupial_actions::OptimizationTrajectoryGoalConstPtr &goal);
+
+	void initializeSubscribers(ros::NodeHandle &pnh);
+	void readOctomapCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
 
 };
 
@@ -141,6 +154,8 @@ Marsupial::Marsupial(ros::NodeHandle &nh, ros::NodeHandle &pnh,std::string name)
   	pnh.param<double>("velocity", velocity,1.0);
   	pnh.param<double>("acceleration", acceleration,0.0);
   	pnh.param<double>("angle", angle,M_PI / 15.0);
+	
+	initializeSubscribers(nh);
 
 	setupOptimization();
 	optimization_trajectory_action_server_.start();
@@ -148,36 +163,19 @@ Marsupial::Marsupial(ros::NodeHandle &nh, ros::NodeHandle &pnh,std::string name)
 	ROS_INFO("Parameters loaded, ready to Initialize Optimization Proccess !!");
 }
 
+void Marsupial::initializeSubscribers(ros::NodeHandle &nh)
+{
+    read_octomap_sub_ = nh.subscribe( "octomap_point_cloud_centers", 2,  &Marsupial::readOctomapCallback, this);
+    ROS_INFO("Subscribers Initialized node marsupial_node");
+}
 
-void Marsupial::setupOptimization(){
-	
-	//Initial and Final trajectory Points
-	// X1 =25; Y1 =40; Z1 =50;
-	// X2 =50; Y2 =15; Z2 =40;
-	
-	//Weight Factors for position edges
-	// w_alpha = 0.3; //distanceVertex
-	// w_beta = 1.0; //obstacles
-	// w_gamma= 0.3; //distanceXYZ
-	// w_delta= 0.8; //kinetics
-	// w_epsilon = 0.4;	// equi-distance
-	// //Weight Factors for temporal edges
-	// w_zeta = 0.00018;
-	// w_eta = 0.00018;
-	// w_theta = 0.1;
-	
-	// n_iter_opt = 200;
-	// n_iter = 1;
-	// n_vert_unit = 4;
+void Marsupial::readOctomapCallback(const sensor_msgs::PointCloud2::ConstPtr& msg)
+{
+	  nn_.setInput(*msg);
+}
 
-	// bound = 2.0;
-	// velocity = 1.0;
-	// acceleration = 0.0;
-	// angle = M_PI / 15.0;
-
-	//// deltaTime = (mcfg.d3D_/mcfg.n_points * 1.0/vel);
-
-
+void Marsupial::setupOptimization()
+{
 	mcfg.setNumVertUnit(n_vert_unit);	
 	mcfg.setDistance3D(X1,Y1,Z1,X2,Y2,Z2);
 	mcfg.setNumPoints(mcfg.d3D_,mcfg.n_vert_unit);
@@ -209,18 +207,18 @@ void Marsupial::setupOptimization(){
 	
 	//! Create Objet for kdtree
 	mcfg.getSlopXYZAxes(mXYZ_);
-	
 }
+
 
 void Marsupial::executeOptimization(const marsupial_actions::OptimizationTrajectoryGoalConstPtr &goal)
 {
 	vertex1 = new g2o::VertexPointXYZ;
 	vertex2 = new g2o::VertexTimeDiff;
 
-	_Obs1.simulateObstacles(35, 0, 36,10, 40, 8,vecObs,1);
-	_Obs2.simulateObstacles(37, 0, 30, 6, 40, 2,vecObs,0);
-	_Obs3.simulateObstacles(37, 0, 48, 6, 40, 2,vecObs,0);
-	NearNeighbor _NN(vecObs);
+	// _Obs1.simulateObstacles(35, 0, 36,10, 40, 8,vecObs,1);
+	// _Obs2.simulateObstacles(37, 0, 30, 6, 40, 2,vecObs,0);
+	// _Obs3.simulateObstacles(37, 0, 48, 6, 40, 2,vecObs,0);
+	// NearNeighbor _NN(vecObs);
 
 	/*
 	*Create Vertex. Points of the trajectory 
@@ -258,7 +256,7 @@ void Marsupial::executeOptimization(const marsupial_actions::OptimizationTraject
 	{
 		g2o::G2OObstaclesEdge* edge = new g2o::G2OObstaclesEdge();
 		edge->vertices()[0] = optimizer.vertices()[i];
-		edge->readKDTree(_NN.kdtree,_NN.obs_points);
+		edge->readKDTree(nn_.kdtree,nn_.obs_points);
 		edge->setMeasurement(bound);
 		edge->setInformation(G2OObstaclesEdge::InformationType::Identity()*w_beta);//UPDATE
 		optimizer.addEdge(edge);

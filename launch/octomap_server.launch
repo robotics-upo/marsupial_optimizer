@@ -1,0 +1,10 @@
+<launch>
+
+    <arg name="static_map_file" default="/home/simon/marsupial_ws/src/marsupial_g2o/maps/octomap_full.bt"/>
+
+	<node pkg="octomap_server" type="octomap_server_node" name="octomap_server_node" output="screen" args="$(arg static_map_file)">
+		<param name="base_frame_id" value="base_link"/>
+		<param name="frame_id" value="map"/>
+	</node>
+
+</launch>
