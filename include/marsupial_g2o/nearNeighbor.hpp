@@ -12,12 +12,13 @@
 #include <ros/ros.h>
 #include <sensor_msgs/PointCloud2.h>
 
+#include <pcl/kdtree/kdtree_flann.h>
+#include <pcl/point_cloud.h>
+
 #include <pcl/search/impl/kdtree.hpp>
 #include <pcl/kdtree/impl/kdtree_flann.hpp>
-#include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/point_types.h>
 #include <pcl_conversions/pcl_conversions.h>
-#include <pcl/point_types.h>
 #include <pcl/PCLPointCloud2.h>
 #include <pcl/conversions.h>
 #include <pcl_ros/transforms.h>
@@ -76,6 +77,8 @@ inline void NearNeighbor::setKDTree(const sensor_msgs::PointCloud2 &pc2_)
 	ROS_INFO("Executed SetKDTree PointCloud2");
 	obs_points.reset(new pcl::PointCloud <pcl::PointXYZ>);
 	pcl::fromROSMsg(pc2_,*obs_points);
+
+	ROS_INFO("size obs_points = [%lu]",obs_points->size());
 
 	kdtree.setInputCloud(obs_points);
 }

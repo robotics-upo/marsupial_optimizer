@@ -45,9 +45,11 @@ class G2OObstaclesEdge : public BaseUnaryEdge<1, double, VertexPointXYZ>
 			double _d = (xyz->estimate()-near_).norm();
 			
 			if (_d < _measurement)
-				_error[0] = exp(_measurement - 2.0*_d) ; 
+				_error[0] = 2.0*exp(_measurement - 2.0*_d) ; 
 			else 
 				_error[0] = 0.0;
+			printf("[%i] Vertex=[%f %f %f] near=[%f %f %f] d=[%f] error=[%f]\n",
+			xyz->id(),xyz->estimate().x(),xyz->estimate().y(),xyz->estimate().z(),near_.x(),near_.y(),near_.z(),_d,_error[0]);
 		}
 
 		virtual bool read(std::istream& is);

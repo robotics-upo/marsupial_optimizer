@@ -60,7 +60,7 @@
 #include <ros/ros.h>
 #include <actionlib/server/simple_action_server.h>
 #include <marsupial_actions/OptimizationTrajectoryAction.h>
-// #include <visualization_msgs/MarkerArray.h>
+#include <visualization_msgs/MarkerArray.h>
 #include <geometry_msgs/Point.h>
 #include <sensor_msgs/PointCloud2.h>
 
@@ -80,7 +80,6 @@ public:
 	string path= "/home/simon/";
 	double X1,Y1,Z1,X2,Y2,Z2;
 	int n_iter_opt;	//Iterations Numbers of Optimizer
-	int n_iter;	//Number of times that optimizer is execute
 	int n_vert_unit; //number of Vertex per unit of lenght
 	double w_alpha, w_beta, w_gamma, w_delta, w_epsilon, w_zeta, w_eta, w_theta;
 
@@ -112,6 +111,7 @@ public:
 	std::string action_name_;
 
 	ros::Subscriber read_octomap_sub_;
+	ros::Publisher init_traj_pub_,final_traj_pub_;
 
 	geometry_msgs::Point obs_oct;
 
@@ -121,8 +121,10 @@ public:
 	void setupOptimization();
 	void executeOptimization(const marsupial_actions::OptimizationTrajectoryGoalConstPtr &goal);
 
-	void initializeSubscribers(ros::NodeHandle &pnh);
+	void initializeSubscribers(ros::NodeHandle &nh);
+	void initializePublishers(ros::NodeHandle &nh);
 	void readOctomapCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
+	void getMarkerArray(visualization_msgs::MarkerArray &_marker, Eigen::Vector3d _p);
 
 };
 
@@ -148,7 +150,6 @@ Marsupial::Marsupial(ros::NodeHandle &nh, ros::NodeHandle &pnh,std::string name)
   	pnh.param<double>("w_theta", w_theta,0.1);
 
 	pnh.param<int>("n_iter_opt", n_iter_opt,200);
-  	pnh.param<int>("n_iter", n_iter,1);
   	pnh.param<int>("n_vert_unit", n_vert_unit,4);
   	pnh.param<double>("bound", bound,2.0);
   	pnh.param<double>("velocity", velocity,1.0);
@@ -156,6 +157,7 @@ Marsupial::Marsupial(ros::NodeHandle &nh, ros::NodeHandle &pnh,std::string name)
   	pnh.param<double>("angle", angle,M_PI / 15.0);
 	
 	initializeSubscribers(nh);
+	initializePublishers(nh);
 
 	setupOptimization();
 	optimization_trajectory_action_server_.start();
@@ -166,12 +168,20 @@ Marsupial::Marsupial(ros::NodeHandle &nh, ros::NodeHandle &pnh,std::string name)
 void Marsupial::initializeSubscribers(ros::NodeHandle &nh)
 {
     read_octomap_sub_ = nh.subscribe( "octomap_point_cloud_centers", 2,  &Marsupial::readOctomapCallback, this);
-    ROS_INFO("Subscribers Initialized node marsupial_node");
+    ROS_INFO("Subscribers Initialized marsupial_node");
+}
+
+void Marsupial::initializePublishers(ros::NodeHandle &nh)
+{
+    init_traj_pub_ = nh.advertise<visualization_msgs::MarkerArray>("initial_trajectory", 2);
+    final_traj_pub_ = nh.advertise<visualization_msgs::MarkerArray>("final_trajectory", 2);
+    ROS_INFO("Publishers Initialized marsupial_node");
 }
 
 void Marsupial::readOctomapCallback(const sensor_msgs::PointCloud2::ConstPtr& msg)
 {
 	  nn_.setInput(*msg);
+	//   printf("1  nn_.obs_points=[%lu]",nn_.obs_points->size());
 }
 
 void Marsupial::setupOptimization()
@@ -180,7 +190,6 @@ void Marsupial::setupOptimization()
 	mcfg.setDistance3D(X1,Y1,Z1,X2,Y2,Z2);
 	mcfg.setNumPoints(mcfg.d3D_,mcfg.n_vert_unit);
 	mcfg.setVelocity(velocity);
-
 
 	//! Create the linear solver (Ax = b)
 	auto linearSolver = g2o::make_unique<LinearSolverCSparse<BlockSolverX::PoseMatrixType>>();
@@ -212,19 +221,20 @@ void Marsupial::setupOptimization()
 
 void Marsupial::executeOptimization(const marsupial_actions::OptimizationTrajectoryGoalConstPtr &goal)
 {
+	printf("Preparing to execute optimization!!\n");
 	vertex1 = new g2o::VertexPointXYZ;
 	vertex2 = new g2o::VertexTimeDiff;
 
-	// _Obs1.simulateObstacles(35, 0, 36,10, 40, 8,vecObs,1);
-	// _Obs2.simulateObstacles(37, 0, 30, 6, 40, 2,vecObs,0);
-	// _Obs3.simulateObstacles(37, 0, 48, 6, 40, 2,vecObs,0);
-	// NearNeighbor _NN(vecObs);
+	visualization_msgs::MarkerArray initial_marker, final_marker;
+	initial_marker.markers.clear();
+	final_marker.markers.clear();
+	initial_marker.markers.resize(mcfg.pose_vec_.size());
+	final_marker.markers.resize(mcfg.pose_vec_.size());
 
 	/*
 	*Create Vertex. Points of the trajectory 
 	*/
 	//! To save points cable before and after optimization
-	file_in_pos.open (path+"initial_trajectory.txt");
 	for (size_t i = 0; i < mcfg.pose_vec_.size(); ++i)
 	{	
 		vertex1 = new g2o::VertexPointXYZ();
@@ -235,9 +245,30 @@ void Marsupial::executeOptimization(const marsupial_actions::OptimizationTraject
 		if (i == 0 || i == mcfg.pose_vec_.size()-1)
 			vertex1->setFixed(true);
 		optimizer.addVertex(vertex1);	
-		file_in_pos << setprecision(6) << xyz.x() << ";" << xyz.y() << ";" << xyz.z()<< endl;
+		
+		initial_marker.markers[i].header.frame_id = "map";
+		initial_marker.markers[i].header.stamp = ros::Time::now();
+		initial_marker.markers[i].ns = "points";
+		initial_marker.markers[i].id = i;
+		// initial_marker.markers[i].action = visualization_msgs::Marker::DELETEALL;
+		initial_marker.markers[i].type = visualization_msgs::Marker::SPHERE;
+		initial_marker.markers[i].lifetime = ros::Duration(0);
+		initial_marker.markers[i].pose.position.x = xyz.x();
+		initial_marker.markers[i].pose.position.y = xyz.y();
+		initial_marker.markers[i].pose.position.z = xyz.z();
+		initial_marker.markers[i].pose.orientation.x = 0.0;
+		initial_marker.markers[i].pose.orientation.y = 0.0;
+		initial_marker.markers[i].pose.orientation.z = 0.0;
+		initial_marker.markers[i].pose.orientation.w = 1.0;
+		initial_marker.markers[i].scale.x = 0.2;
+		initial_marker.markers[i].scale.y = 0.2;
+		initial_marker.markers[i].scale.z = 0.2;
+		initial_marker.markers[i].color.a = 1.0;
+		initial_marker.markers[i].color.r = 0.0;
+		initial_marker.markers[i].color.g = 0.9;
+		initial_marker.markers[i].color.b = 0.0;
 	}
-	file_in_pos.close();	
+	init_traj_pub_.publish(initial_marker);
 
 
 	//! I. Add edges. These are the distances between the poses.
@@ -247,7 +278,7 @@ void Marsupial::executeOptimization(const marsupial_actions::OptimizationTraject
 		edge->vertices()[0] = optimizer.vertices()[mcfg.dist_vec_[i].id_from];
 		edge->vertices()[1] = optimizer.vertices()[mcfg.dist_vec_[i].id_to];
 		edge->setMeasurement(mcfg.d3D_/mcfg.n_points);
-		edge->setInformation(G2ODistanceVertexEdge::InformationType::Identity()*w_alpha); //UPDATE
+		edge->setInformation(G2ODistanceVertexEdge::InformationType::Identity()*w_alpha); 
 		optimizer.addEdge(edge);
 	}
 	
@@ -256,20 +287,21 @@ void Marsupial::executeOptimization(const marsupial_actions::OptimizationTraject
 	{
 		g2o::G2OObstaclesEdge* edge = new g2o::G2OObstaclesEdge();
 		edge->vertices()[0] = optimizer.vertices()[i];
+		// printf("2  nn_.obs_points=[%lu]",nn_.obs_points->size());
 		edge->readKDTree(nn_.kdtree,nn_.obs_points);
 		edge->setMeasurement(bound);
-		edge->setInformation(G2OObstaclesEdge::InformationType::Identity()*w_beta);//UPDATE
+		edge->setInformation(G2OObstaclesEdge::InformationType::Identity()*w_beta);
 		optimizer.addEdge(edge);
 	}
 
-	//! III. Add edges. These are the X distances between Vertices.
+	//! III. Add edges. These are the XYZ distances between Vertices.
 	for (size_t i = 0; i < mcfg.dist_vec_.size(); ++i)
 	{
 		g2o::G2ODistanceXYZEdge* edge = new g2o::G2ODistanceXYZEdge();
 		edge->vertices()[0] = optimizer.vertices()[mcfg.dist_vec_[i].id_from];
 		edge->vertices()[1] = optimizer.vertices()[mcfg.dist_vec_[i].id_to];
 		edge->setMeasurement(mXYZ_);
-		edge->setInformation(G2ODistanceXYZEdge::InformationType::Identity()*w_gamma); //UPDATE
+		edge->setInformation(G2ODistanceXYZEdge::InformationType::Identity()*w_gamma); 
 		optimizer.addEdge(edge);
 	}
 
@@ -314,14 +346,13 @@ void Marsupial::executeOptimization(const marsupial_actions::OptimizationTraject
 		_sum_dist = mcfg.dist_vec_[i].dist + _sum_dist;
 		vertex2 = new g2o::VertexTimeDiff();
 		if (i == 0)	//First vertex is fixed. 
-			vertex2 = new g2o::VertexTimeDiff(_dT,true);
-			// vertex2->setFixed(true);
+			vertex2->setFixed(true);
+			// vertex2 = new g2o::VertexTimeDiff(_dT,true);
 		else
-			vertex2 = new g2o::VertexTimeDiff(_dT,false);
-		
-			// vertex2->setFixed(false);
+			vertex2->setFixed(false);
+			// vertex2 = new g2o::VertexTimeDiff(_dT,false);
 		vertex2->setId(i+mcfg.dist_vec_.size()+1);
-		// vertex2->setEstimate(_dT);
+		vertex2->setEstimate(_dT);
 		optimizer.addVertex(vertex2);	
 		file_in_time << setprecision(6) << _sum_dist << ";" << _sum_dT << endl;
 		file_in_velocity  << setprecision(6) << _sum_dist << ";" << velocity << endl;
@@ -372,23 +403,49 @@ void Marsupial::executeOptimization(const marsupial_actions::OptimizationTraject
 	}
 
 	std::cout << "Optimization  started !!" << std::endl;
-	optimizer.save("antithing_before.g2o");
+	// optimizer.save("antithing_before.g2o");
 	optimizer.initializeOptimization();
 	optimizer.setVerbose(true);
 	optimizer.optimize(n_iter_opt);
-	optimizer.save("antithing_after.g2o");
+	// optimizer.save("antithing_after.g2o");
 
 	//! Save Optimized Trajectory in File.txt 
-	file_out_pos.open (path+"optimized_trajectory.txt");
+	// file_out_pos.open (path+"optimized_trajectory.txt");
 	for (unsigned i = 0; i < mcfg.pose_vec_.size(); i++)
 	{
 		structPose vOp;
 		g2o::VertexPointXYZ *pose = dynamic_cast<g2o::VertexPointXYZ*>(optimizer.vertex(i));
 		vOp.position = pose->estimate();	
 		vOp.id = i;
-		file_out_pos << setprecision(6) << vOp.position.x() << ";" << vOp.position.y() << ";" << vOp.position.z()<< endl;
+		// file_out_pos << setprecision(6) << vOp.position.x() << ";" << vOp.position.y() << ";" << vOp.position.z()<< endl;
+
+		final_marker.markers[i].header.frame_id = "map";
+		final_marker.markers[i].header.stamp = ros::Time::now();
+		final_marker.markers[i].ns = "points";
+		final_marker.markers[i].id = i;
+		// final_marker.markers[i].action = visualization_msgs::Marker::ADD;
+		final_marker.markers[i].type = visualization_msgs::Marker::SPHERE;
+		final_marker.markers[i].lifetime = ros::Duration(0);
+		// std::cout << "msg->circles[i].center.x: " << msg->circles[i].center.x << std::endl;
+		final_marker.markers[i].pose.position.x = vOp.position.x();
+		final_marker.markers[i].pose.position.y = vOp.position.y();
+		final_marker.markers[i].pose.position.z = vOp.position.z();
+		final_marker.markers[i].pose.orientation.x = 0.0;
+		final_marker.markers[i].pose.orientation.y = 0.0;
+		final_marker.markers[i].pose.orientation.z = 0.0;
+		final_marker.markers[i].pose.orientation.w = 1.0;
+		// std::cout << "msg->circles[i].radius " << msg->circles[i].radius << std::endl;
+		final_marker.markers[i].scale.x = 0.2;
+		final_marker.markers[i].scale.y = 0.2;
+		final_marker.markers[i].scale.z = 0.2;
+		final_marker.markers[i].color.a = 1.0;
+		final_marker.markers[i].color.r = 0.0;
+		final_marker.markers[i].color.g = 0.0;
+		final_marker.markers[i].color.b = 0.9;
 	}
-	file_out_pos.close();
+	// file_out_pos.close();
+	final_traj_pub_.publish(final_marker);
+
 
 	//! Save Optimized Time in File.txt 
 	file_out_time.open (path+"optimized_time.txt");
@@ -425,7 +482,6 @@ void Marsupial::executeOptimization(const marsupial_actions::OptimizationTraject
 		g2o::VertexTimeDiff *difftime1 = dynamic_cast<g2o::VertexTimeDiff*>(optimizer.vertex(i+mcfg.dist_vec_.size()+1));
 		g2o::VertexTimeDiff *difftime2 = dynamic_cast<g2o::VertexTimeDiff*>(optimizer.vertex(i+mcfg.dist_vec_.size()+1));
 		
-		
 		double distance1 = (pose2Op->estimate()-pose1Op->estimate()).norm();	
 		double distance2 = (pose3Op->estimate()-pose2Op->estimate()).norm();
 		if (i==0)
@@ -445,7 +501,6 @@ void Marsupial::executeOptimization(const marsupial_actions::OptimizationTraject
         ROS_INFO("%s: Preempted", action_name_.c_str());
         result_.optimization_completed = false;
         optimization_trajectory_action_server_.setPreempted(result_);
-             
     }
 
 	std::cout << "Optimization Proccess  Completed !!!" << std::endl;
@@ -453,10 +508,35 @@ void Marsupial::executeOptimization(const marsupial_actions::OptimizationTraject
 	ROS_INFO("%s: Succeeded", action_name_.c_str());
 	optimization_trajectory_action_server_.setSucceeded(result_);
 	optimizer.clear();
-	// optimizer.clearParameters();
-	// bool aux= true;
-	// finish = &aux;
-	// optimizer.setForceStopFlag(finish);
+}
+
+void Marsupial::getMarkerArray(visualization_msgs::MarkerArray &_marker, Eigen::Vector3d _p)
+{
+
+	for (size_t i = 0; i < mcfg.pose_vec_.size(); ++i)
+	{	
+		_marker.markers[i].header.frame_id = "map";
+		_marker.markers[i].header.stamp = ros::Time::now();
+		_marker.markers[i].ns = "points";
+		_marker.markers[i].id = i;
+		// _marker.markers[i].action = visualization_msgs::Marker::ADD;
+		_marker.markers[i].type = visualization_msgs::Marker::SPHERE;
+		_marker.markers[i].lifetime = ros::Duration(0);
+		_marker.markers[i].pose.position.x = _p.x();
+		_marker.markers[i].pose.position.y = _p.y();
+		_marker.markers[i].pose.position.z = _p.z();
+		_marker.markers[i].pose.orientation.x = 0.0;
+		_marker.markers[i].pose.orientation.y = 0.0;
+		_marker.markers[i].pose.orientation.z = 0.0;
+		_marker.markers[i].pose.orientation.w = 1.0;
+		_marker.markers[i].scale.x = 0.2;
+		_marker.markers[i].scale.y = 0.2;
+		_marker.markers[i].scale.z = 0.2;
+		_marker.markers[i].color.a = 1.0;
+		_marker.markers[i].color.r = 0.0;
+		_marker.markers[i].color.g = 0.9;
+		_marker.markers[i].color.b = 0.0;
+	}
 
 }
 
