@@ -28,9 +28,7 @@ class G2OObstaclesEdge : public BaseUnaryEdge<1, double, VertexPointXYZ>
 		G2OObstaclesEdge();
         
 		double size_trajectory_;
-
-		int count = 1;
-		int _id;
+		double factor_ = 2.0;
 
 		NearNeighbor nn;
 		Eigen::Vector3d near_;
@@ -39,17 +37,21 @@ class G2OObstaclesEdge : public BaseUnaryEdge<1, double, VertexPointXYZ>
 
 		void computeError()
 		{
-    		const VertexPointXYZ * xyz = static_cast<const VertexPointXYZ*> (_vertices[0]);
+    		const VertexPointXYZ * pose = static_cast<const VertexPointXYZ*> (_vertices[0]);
 
-			near_ = nn.nearestObstacleVertex(kdT_From_NN , xyz->estimate(),obstacles_Points);
-			double _d = (xyz->estimate()-near_).norm();
+			near_ = nn.nearestObstacleVertex(kdT_From_NN , pose->estimate(),obstacles_Points);
+			double _d = (pose->estimate()-near_).norm();
 			
-			if (_d < _measurement)
-				_error[0] = 2.0*exp(_measurement - 2.0*_d) ; 
-			else 
+			if (_d < _measurement){
+				_error[0] = factor_ * exp(_measurement - 2.0*_measurement*_d) ; 
+				// _error[0] = factor_* (_measurement-_d)/_measurement; 
+				// printf("error[%i] = [%f]\n",pose->id(),_error[0]);
+				// _error[0] = 1000.0*exp(_measurement - 2.0*_d) ; 
+			}
+			else {
 				_error[0] = 0.0;
-			printf("[%i] Vertex=[%f %f %f] near=[%f %f %f] d=[%f] error=[%f]\n",
-			xyz->id(),xyz->estimate().x(),xyz->estimate().y(),xyz->estimate().z(),near_.x(),near_.y(),near_.z(),_d,_error[0]);
+				// printf("error[%i] = [%f]\n",pose->id(),_error[0]);
+			}
 		}
 
 		virtual bool read(std::istream& is);
@@ -67,22 +69,18 @@ class G2OObstaclesEdge : public BaseUnaryEdge<1, double, VertexPointXYZ>
 
 		inline void setSizeTrajectory(double v_){size_trajectory_ = v_;} 
 
-		// Commented 09-07-2020.
 		// virtual void linearizeOplus()
 		// {
-		// 	VertexPointXYZ * xyz = static_cast<VertexPointXYZ*> (_vertices[0]);
-		// 	near_ = nn.nearestObstacleVertex(kdT_From_NN , xyz->estimate(),obstacles_Points);
-		// 	float _d = (xyz->estimate()-near_).norm();
+		// 	VertexPointXYZ * pose = static_cast<VertexPointXYZ*> (_vertices[0]);
+		// 	near_ = nn.nearestObstacleVertex(kdT_From_NN , pose->estimate(),obstacles_Points);
+		// 	float _d = (pose->estimate()-near_).norm();
 		// 	if (_d < 0.0000001)
 		// 		_d= 0.0000001;
 
-		// 	 _jacobianOplusXi(0,0) = -exp(_measurement - _d) * (xyz->estimate().x()-near_.x())/(_d) ;  
-		// 	 _jacobianOplusXi(0,1) = -exp(_measurement - _d) * (xyz->estimate().y()-near_.y())/(_d) ;
-		// 	 _jacobianOplusXi(0,2) = -exp(_measurement - _d) * (xyz->estimate().z()-near_.z())/(_d) ;
-			// printf("[%i] xyz.x = %f  xyz.y = %f  xyz.z = %f near.x = %f near.y = %f  near.z = %f \n",
-			// 		xyz->id(),xyz->estimate().x(),xyz->estimate().y(),xyz->estimate().z(),near_.x(),near_.y(),near_.z());
-			// printf("J1 = %.8f   J2 = %.8f  J3 = %.8f \n", _jacobianOplusXi(0,0),_jacobianOplusXi(0,1),_jacobianOplusXi(0,2));
-			// printf("_d = %.8f   _m = %f\n",_d,_measurement);
+		// 	 _jacobianOplusXi(0,0) = factor_* (near_.x()-pose->estimate().x())/(_measurement * _d);  
+		// 	 _jacobianOplusXi(0,1) = factor_* (near_.y()-pose->estimate().y())/(_measurement * _d);
+		// 	 _jacobianOplusXi(0,2) = factor_* (near_.z()-pose->estimate().z())/(_measurement * _d);
+		// 	// printf("_d = %.8f   _m = %f\n",_d,_measurement);
 		// }
 
 	protected:

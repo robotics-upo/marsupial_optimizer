@@ -31,7 +31,7 @@ struct structTime
 	int id_from;
 	int id_to;
 	double time;
-	g2o::VertexTimeDiff vertex;
+	// g2o::VertexTimeDiff vertex;
 };
 
 struct structDistance
@@ -47,11 +47,12 @@ class MarsupialCfg
 		MarsupialCfg(ros::NodeHandle &nh, ros::NodeHandle &pnh);
 		// ~MarsupialCfg();
 		void loadDataCatenary(vector<structPose> &poses, vector<structDistance> &distances);	//Function to create a catenary from point A to B
-		void loadData(double x1, double y1, double z1, double x2, double y2, double z2);	//Function to create a straight line from point A to B
-		void loadData();
+		void setStraightTrajectory(double x1, double y1, double z1, double x2, double y2, double z2, int n_v_u_);	//Function to create a straight line from point A to B
+		void setStraightTrajectory();
+		void straightTrajectoryVertices(double x1, double y1, double z1, double x2, double y2, double z2, int _n_v_u, vector<Eigen::Vector3d> &_v);
 		void setNumVertUnit(int n_);
-		void setDistance3D(float x1, float y1, float z1, float x2, float y2, float z2);
-		void setNumPoints(float d_, int n_v);	// To define approximately the number of points to analyze per length unity
+		// void setDistance3D(float x1, float y1, float z1, float x2, float y2, float z2);
+		// void setNumPoints(float d_, int n_v);	// To define approximately the number of points to analyze per length unity
 		void setVelocity(double v_);
 		void getSlopXYZAxes( vector<float> &m_);
 		bool getParameterOptimizer(std::string fileName);
@@ -83,9 +84,9 @@ MarsupialCfg::MarsupialCfg(ros::NodeHandle &nh, ros::NodeHandle &pnh){
 // }
 
 inline void MarsupialCfg::setNumVertUnit(int n_) {n_vert_unit = n_;}
-inline void MarsupialCfg::setDistance3D(float x1, float y1, float z1, float x2, float y2, float z2) {d3D_= sqrt(pow(x2-x1,2)+pow(y2-y1,2)+pow(z2-z1,2));}
+// inline void MarsupialCfg::setDistance3D(float x1, float y1, float z1, float x2, float y2, float z2) {d3D_= sqrt(pow(x2-x1,2)+pow(y2-y1,2)+pow(z2-z1,2));}
 inline void MarsupialCfg::setVelocity(double v_) {velocity = v_;}
-inline void MarsupialCfg::setNumPoints(float d_, int n_v_u_) {n_points = ceil(d_*n_v_u_);}	
+// inline void MarsupialCfg::setNumPoints(float d_, int n_v_u_) {n_points = ceil(d_*n_v_u_);}	
 inline void MarsupialCfg::getSlopXYZAxes(vector<float> &m_) {m_=slopeXYZ;}	
 
 void MarsupialCfg::loadDataCatenary(vector<structPose> &poses, vector<structDistance> &distances)
@@ -110,15 +111,15 @@ void MarsupialCfg::loadDataCatenary(vector<structPose> &poses, vector<structDist
 	}
 }
 
-void MarsupialCfg::loadData(double x1, double y1, double z1, double x2, double y2, double z2)
+void MarsupialCfg::setStraightTrajectory(double x1, double y1, double z1, double x2, double y2, double z2, int n_v_u_)
 {
 	structPose ps;
 	structDistance pd;
 	structTime pt;
 	double x_, y_, z_;
-	// d3D_= sqrt(pow(x2-x1,2)+pow(y2-y1,2)+pow(z2-z1,2));  
+	d3D_= sqrt(pow(x2-x1,2)+pow(y2-y1,2)+pow(z2-z1,2));
 	ROS_INFO("Initial 3D distance of trayectory = %f",d3D_);
-	// n_points = ceil(d3D_*n_vert_unit);   
+	n_points = ceil(d3D_*n_v_u_);
 	double distance_xy = sqrt(pow(x2-x1,2)+pow(y2-y1,2));
 	double distance_xz = sqrt(pow(x2-x1,2)+pow(z2-z1,2));
 	double interval_xy = distance_xy/n_points;		// Size of the interval between points in axes xy
@@ -152,7 +153,7 @@ void MarsupialCfg::loadData(double x1, double y1, double z1, double x2, double y
 	}
 }
 
-void MarsupialCfg::loadData()
+void MarsupialCfg::setStraightTrajectory()
 {
 	structDistance pd;
 	for(unsigned i = 0 ; i< pose_vec_.size()-1 ; i++)
@@ -164,6 +165,26 @@ void MarsupialCfg::loadData()
 						pow(pose_vec_[i].position.z()-pose_vec_[i+1].position.z(),2));
 		dist_vec_.push_back(pd);
 	}
+}
+
+void MarsupialCfg::straightTrajectoryVertices(double x1, double y1, double z1, double x2, double y2, double z2, int _n_v_u, vector<Eigen::Vector3d> &_v)
+{
+	double _x, _y, _z;
+	double _d= sqrt(pow(x2-x1,2)+pow(y2-y1,2)+pow(z2-z1,2));
+	// double _n = ceil(_d*n_v_u_);
+	double distance_xy = sqrt(pow(x2-x1,2)+pow(y2-y1,2));
+	double distance_xz = sqrt(pow(x2-x1,2)+pow(z2-z1,2));
+	double interval_xy = distance_xy/_n_v_u;		// Size of the interval between points in axes xy
+	double interval_xz = distance_xz/_n_v_u;		// Size of the interval between points in axes xz
+	for(int i = 0 ; i< _n_v_u ; i++)
+	{
+		_x = x1 + i*interval_xy * ((x2-x1)/distance_xy);
+		_y = y1 + i*interval_xy * ((y2-y1)/distance_xy);
+		_z = z1 + i*interval_xz * ((z2-z1)/distance_xz);
+	
+		_v.push_back(Eigen::Vector3d(_x,_y,_z));
+	}
+
 }
 // VertexPointXYZ MarsupialCfg::poseVertex(int index)
 // {

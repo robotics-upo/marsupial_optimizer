@@ -17,7 +17,8 @@ namespace g2o
 	public:
 		G2OEquiDistanceEdge();
 
-		int count = 0;
+		double factor_ = 10.0;
+
 		void computeError()
 		{
 			const VertexPointXYZ* pose1 = static_cast<const VertexPointXYZ*>(_vertices[0]);
@@ -27,10 +28,9 @@ namespace g2o
 			double _d1 = (pose2->estimate()-pose1->estimate()).norm();
 			double _d2 = (pose3->estimate()-pose2->estimate()).norm();
 
-			_error[0] = 2.0*(_d1 - _d2);
+			_error[0] = factor_ *(_d1 - _d2);
 			
 			// printf("EquiDistance: error=[%f] [%i-%i]_d1 = [%f]  [%i-%i]_d2 = [%f] \n",_error[0],pose2->id(),pose1->id(),_d1,pose3->id(),pose2->id(),_d2);
-
 		}
 
 

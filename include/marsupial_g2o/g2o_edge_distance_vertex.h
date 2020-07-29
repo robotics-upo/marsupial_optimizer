@@ -20,6 +20,7 @@ class G2ODistanceVertexEdge : public BaseBinaryEdge<1, double, VertexPointXYZ, V
 		VertexPointXYZ * pose1;
 		VertexPointXYZ * pose2;
 		
+		double factor_= 10.0;
 		// double size_trajectory_;
 
 		
@@ -30,7 +31,7 @@ class G2ODistanceVertexEdge : public BaseBinaryEdge<1, double, VertexPointXYZ, V
 
 			double _d = (pose2->estimate() - pose1->estimate()).norm();
 
-			_error[0] = _d - _measurement;
+			_error[0] = factor_ * (_d - _measurement);
 		}
 
 		virtual bool read(std::istream& is);
@@ -49,12 +50,12 @@ class G2ODistanceVertexEdge : public BaseBinaryEdge<1, double, VertexPointXYZ, V
 		// 	if (_d < 0.0000001)
 		// 		_d= 0.0000001;
 
-		// 	_jacobianOplusXi(0,0) = -(pose2->estimate().x()-pose1->estimate().x())/(_d);  
-		// 	_jacobianOplusXi(0,1) = -(pose2->estimate().y()-pose1->estimate().y())/(_d);   
-		// 	_jacobianOplusXi(0,2) = -(pose2->estimate().z()-pose1->estimate().z())/(_d);   
-		// 	_jacobianOplusXj(0,0) = (pose2->estimate().x()-pose1->estimate().x())/(_d);  
-		// 	_jacobianOplusXj(0,1) = (pose2->estimate().y()-pose1->estimate().y())/(_d);   
-		// 	_jacobianOplusXj(0,2) = (pose2->estimate().z()-pose1->estimate().z())/(_d);  
+		// 	_jacobianOplusXi(0,0) = -1.0*(pose2->estimate().x()-pose1->estimate().x()) / (_d);  
+		// 	_jacobianOplusXi(0,1) = -1.0*(pose2->estimate().y()-pose1->estimate().y()) / (_d);   
+		// 	_jacobianOplusXi(0,2) = -1.0*(pose2->estimate().z()-pose1->estimate().z()) / (_d);   
+		// 	_jacobianOplusXj(0,0) =  1.0*(pose2->estimate().x()-pose1->estimate().x()) / (_d);  
+		// 	_jacobianOplusXj(0,1) =  1.0*(pose2->estimate().y()-pose1->estimate().y()) / (_d);   
+		// 	_jacobianOplusXj(0,2) =  1.0*(pose2->estimate().z()-pose1->estimate().z()) / (_d);  
 		// }
 
 

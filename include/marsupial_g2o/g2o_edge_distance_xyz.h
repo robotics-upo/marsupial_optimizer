@@ -38,17 +38,17 @@ class G2ODistanceXYZEdge : public BaseBinaryEdge<1, std::vector<float>, VertexPo
 			_measurement = m;
 		}
 
-		virtual void linearizeOplus()
-		{
-			// _jacobianOplusXi=-Matrix3::Identity();
-    		// _jacobianOplusXj= Matrix3::Identity();
-			_jacobianOplusXi(0,0) = -1.0;  
-			_jacobianOplusXi(0,1) = -1.0;   
-			_jacobianOplusXi(0,2) = -1.0;   
-			_jacobianOplusXj(0,0) = 1.0;  
-			_jacobianOplusXj(0,1) = 1.0;   
-			_jacobianOplusXj(0,2) = 1.0;  
-		}
+		// virtual void linearizeOplus()
+		// {
+		// 	// _jacobianOplusXi=-Matrix3::Identity();
+    	// 	// _jacobianOplusXj= Matrix3::Identity();
+		// 	_jacobianOplusXi(0,0) = -1.0;  
+		// 	_jacobianOplusXi(0,1) = -1.0;   
+		// 	_jacobianOplusXi(0,2) = -1.0;   
+		// 	_jacobianOplusXj(0,0) = 1.0;  
+		// 	_jacobianOplusXj(0,1) = 1.0;   
+		// 	_jacobianOplusXj(0,2) = 1.0;  
+		// }
 
 
 	};

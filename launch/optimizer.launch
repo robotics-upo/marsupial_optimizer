@@ -1,43 +1,35 @@
 <launch>
 
 
-    <node pkg="marsupial_g2o" type="marsupial_node" name="marsupial_node" output="screen">
+    <node pkg="marsupial_g2o" type="marsupial_node" name="marsupial_node" output="screen" launch-prefix="gdb -ex run --args">
         <!-- <rosparam command="load" file="$(find marsupial_g2o)/cfg/uav_optimization_trayectory.yaml"/> -->
-        
-        <!-- Initial Position X -->
-        <!-- Initial Position Y -->
-        <!-- Initial Position Z -->
-        <!-- Final Position X -->
-        <!-- Final Position Y -->
-        <!-- Final Position Z -->
 
-        <!-- <param name="X1" value="-3.0"/>     
-        <param name="Y1" value="-3.0"/>     
-        <param name="Z1" value="1.0"/>      
-        <param name="X2" value="2.0"/>      
-        <param name="Y2" value="5.0"/>      
-        <param name="Z2" value="9.0"/>       -->
-
-        <param name="X1" value="1.5"/>    
-        <param name="Y1" value="-3.0"/>    
-        <param name="Z1" value="1.0"/>     
-        <param name="X2" value="-2.0"/>     
-        <param name="Y2" value="8.0"/>     
-        <param name="Z2" value="2.0"/>     
+        <param name="X1" value="13.0"/>    <!-- Initial Position X -->
+        <param name="Y1" value="6.0"/>   <!-- Initial Position Y --> 
+        <param name="Z1" value="7.0"/>    <!-- Initial Position Z --> 
+        <param name="X2" value="6.8"/>   <!-- Final Position X -->  
+        <param name="Y2" value="6.0"/>    <!-- Final Position Y --> 
+        <param name="Z2" value="7.0"/>    <!-- Final Position Z --> 
         
         <param name="w_alpha"   value="0.8"/>   <!-- distance-vertex 5.44--> 
-        <param name="w_beta"    value="1.0"/>   <!-- obstacles 27.71-->
-        <param name="w_gamma"   value="0.4"/>   <!-- distance-xyz 5.16-->
-        <param name="w_delta"   value="0.8"/>   <!-- kinematics 5.52-->
+        <param name="w_gamma"   value="0.8"/>   <!-- distance-xyz 5.16-->
         <param name="w_epsilon" value="0.8"/>   <!-- equi-distance 4.78-->
-        <param name="w_zeta"    value="0.1"/>   <!-- time -->
-        <param name="w_eta"     value="0.1"/>   <!-- velocity -->
-        <param name="w_theta"   value="0.01"/>   <!-- acceleration -->
+
+        <param name="w_beta"    value="0.2"/>   <!-- obstacles 27.71-->
+        <param name="w_iota"    value="0.4"/>   <!-- obstacles through -->
+
+        <param name="w_delta"   value="1.0"/>   <!-- kinematics 5.52-->
         
-        <param name="n_iter_opt"    value="500"/>   <!-- number max. of iterations per optimization --> 
+        <param name="w_zeta"    value="0.0"/>   <!-- time -->
+        <param name="w_eta"     value="0.0"/>   <!-- velocity -->
+        <param name="w_theta"   value="0.00"/>   <!-- acceleration -->
+        
+        <param name="n_iter_opt"    value="1"/>   <!-- number max. of iterations per optimization --> 
+        <param name="n_time_optimize"    value="50"/>   <!-- number to execute loop for to optimize --> 
+        <param name="td_"    value="1.0"/>   <!-- Time Duration --> 
         <param name="n_vert_unit"   value="8"/>     <!-- number of vertices per length unit -->  
         
-        <param name="bound"         value="1.0"/>     
+        <param name="bound"         value="2.0"/>     
         <param name="velocity"      value="1.0"/>    
         <param name="acceleration"  value="0.0"/>    
         <!-- <param name="angle"         value="M_PI / 15.0"/>   -->

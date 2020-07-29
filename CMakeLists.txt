@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(marsupial_g2o)
 
 # Set to Release in order to speed up the program significantly
-set(CMAKE_BUILD_TYPE Release) #None, Debug, Release, RelWithDebInfo, MinSizeRel
+set(CMAKE_BUILD_TYPE Debug) #None, Debug, Release, RelWithDebInfo, MinSizeRel
 
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
@@ -173,13 +173,13 @@ add_library(marsupial_g2o
   # src/marsupial_node.cpp
   src/g2o_edge_distance_vertex.cpp 
   src/g2o_edge_obstacles.cpp
+  src/g2o_edge_obstacles_through.cpp
   src/g2o_edge_distance_xyz.cpp
   src/g2o_edge_kinematics.cpp
   src/g2o_edge_equi_distance.cpp
   src/g2o_edge_time.cpp
   src/g2o_edge_velocity.cpp
   src/g2o_edge_acceleration.cpp
-  src/bisection3D.cpp   
   ) 
 target_link_libraries(marsupial_g2o
    ${EXTERNAL_LIBS}
