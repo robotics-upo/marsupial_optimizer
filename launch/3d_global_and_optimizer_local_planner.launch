@@ -6,6 +6,7 @@
     
     <arg name="lidar_topic" default="os1_cloud_node/points"/>
     <arg name="use_octomap" default="true"/>
+    <arg name="verbose_optimizer" default="false"/>
     <arg name="debug_msgs" default="true"/>
     <arg name="show_config_msgs" default="true"/>
 
@@ -27,7 +28,7 @@
             <param name="mode3d" value="$(arg use_dron)"/>
             <param name="use_octomap" value="$(arg use_octomap)"/>
             <param name="debug" value="$(arg debug_msgs)"/>
-            <param name="robot_base_frame_id" value="base_link"/>
+            <param name="robot_base_frame" value="uav_base_link"/>
             <param name="timeout" value="30"/>
         </node>
 
@@ -40,10 +41,17 @@
             <param name="debug" value="$(arg debug_msgs)"/>
             <param name="show_config" value="$(arg show_config_msgs)"/>
             <param name="mode3d" value="$(arg use_dron)"/>
-            <param name="robot_base_frame" value="base_link"/>
-            <param name="traj_dest_frame" value="base_link"/>
+            <param name="uav_base_frame" value="uav_base_link"/>
+            <param name="ugv_base_frame" value="ugv_base_link"/>
+            <param name="traj_dest_frame" value="uav_base_link"/>
             <param name="timeout" value="0.4"/>
             <param name="final_search_around" value="1.4"/>
+            
+            <param name="verbose_optimizer" value="$(arg verbose_optimizer)"/>
+            
+            <param name="initial_pos_ugv_x"  value="-3.0"/>   <!-- distance-vertex 5.44--> 
+            <param name="initial_pos_ugv_y"  value="6.0"/>   <!-- distance-xyz 5.16-->
+            <param name="initial_pos_ugv_z"  value="0.2"/>   <!-- equi-distance 4.78-->
 
             <param name="w_alpha"   value="0.1"/>   <!-- distance-vertex 5.44--> 
             <param name="w_gamma"   value="0.1"/>   <!-- distance-xyz 5.16-->
@@ -53,18 +61,14 @@
             <param name="w_delta"   value="0.9"/>   <!-- kinematics 5.52-->
             <param name="w_zeta"    value="0.05"/>   <!-- time -->
             <param name="w_eta"     value="0.3"/>   <!-- velocity -->
-            <param name="w_theta"   value="0.8"/>   <!-- acceleration -->
+            <param name="w_theta"   value="1.0"/>   <!-- acceleration -->
             <param name="n_iter_opt"    value="500"/>   <!-- number max. of iterations per optimization --> 
-            <param name="n_time_optimize"    value="1"/>   <!-- number to execute loop for to optimize --> 
-            <param name="td_"    value="1.0"/>   <!-- Time Duration --> 
-            <param name="n_vert_unit"   value="8"/>     <!-- number of vertices per length unit -->  
-            <param name="bound"         value="2.0"/>     
+            <param name="n_time_optimize"    value="1"/>   <!-- number Loop-For to execute optimizer --> 
+            <param name="td_"    value="1.0"/>   <!-- Time Sleep between optimization in Loop-For --> 
+
+            <param name="bound"         value="2.0"/> <!-- Bound distance to obstacles -->
             <param name="velocity"      value="2.0"/>    
             <param name="acceleration"  value="0.0"/>    
         </node>
-
-
-
-
 
 </launch>

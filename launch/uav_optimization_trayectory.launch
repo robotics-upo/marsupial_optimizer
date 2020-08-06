@@ -1,7 +1,9 @@
 <launch>
 
     <node pkg="tf" type="static_transform_publisher" name="map" args="0 0 0 0 0 0  world /map 10"/>
-    <node pkg="tf" type="static_transform_publisher" name="base_link" args="0 3.0 1.0 0 0 0  /map /base_link 10"/>
+    <node pkg="tf" type="static_transform_publisher" name="base_link" args="0 3.0 1.0 0 0 0  /map /uav_base_link 10"/>
+
+    <node pkg="tf" type="static_transform_publisher" name="ugv_base_link" args="-3.0 3.0 1.0 0 0 0  /map /ugv_base_link 10"/>
 
     <!-- <include file="$(find marsupial_g2o)/launch/optimizer.launch"/> -->
     <include file="$(find marsupial_g2o)/launch/octomap_server.launch"/>

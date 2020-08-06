@@ -17,6 +17,10 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(tf2_ros::Buffer *tfBuffer_)
 	nh.reset(new ros::NodeHandle("~"));
     tf_list.reset(new tf::TransformListener);
 
+	nh->param<double>("initial_pos_ugv_x", initial_pos_ugv_x, 0.0);
+	nh->param<double>("initial_pos_ugv_y", initial_pos_ugv_y, 0.0);
+	nh->param<double>("initial_pos_ugv_z", initial_pos_ugv_z, 0.0);
+
 	nh->param<double>("w_alpha", w_alpha,0.1);
 	nh->param<double>("w_beta",	w_beta,0.1);
 	nh->param<double>("w_iota",	w_iota,0.1);
@@ -28,7 +32,6 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(tf2_ros::Buffer *tfBuffer_)
   	nh->param<double>("w_theta", w_theta,0.1);
 
 	nh->param<int>("n_iter_opt", n_iter_opt,200);
-  	nh->param<int>("n_vert_unit", n_vert_unit,4);
   	nh->param<double>("bound", bound,2.0);
   	nh->param<double>("velocity", velocity,1.0);
   	nh->param<double>("acceleration", acceleration,0.0);
@@ -37,13 +40,15 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(tf2_ros::Buffer *tfBuffer_)
   	nh->param<int>("n_time_optimize", n_time_optimize, 500);
   	nh->param<double>("td_", td_, 0.5);
 	
-  	nh->param("robot_base_frame_id", robot_base_frame_id, (std::string)"base_link");
+  	nh->param<bool>("verbose_optimizer",verbose_optimizer, true);
+	
+  	nh->param("uav_base_frame", uav_base_frame, (std::string)"base_link");
 	nh->param("debug", debug, (bool)0);
     nh->param("show_config", showConfig, (bool)0);
 
     ROS_INFO_COND(showConfig, PRINTF_GREEN "Optimizer Local Planner 3D Node Configuration:\n");
     // ROS_INFO_COND(showConfig, PRINTF_GREEN "\t Trajectory Position Increments = [%.2f], Tolerance: [%.2f]", traj_dxy_max, traj_pos_tol);
-    // ROS_INFO_COND(showConfig, PRINTF_GREEN "\t Robot base frame: %s, World frame: %s", robot_base_frame.c_str(), world_frame.c_str());
+    // ROS_INFO_COND(showConfig, PRINTF_GREEN "\t Robot base frame: %s, World frame: %s", uav_base_frame.c_str(), world_frame.c_str());
     // ROS_INFO_COND(showConfig, PRINTF_GREEN "\t Workspace:\t X:[%.2f, %.2f]\t Y:[%.2f, %.2f]\t Z: [%.2f, %.2f]", ws_x_max, ws_x_min, ws_y_max, ws_y_min, ws_z_max, ws_z_min);
     // ROS_INFO_COND(showConfig, PRINTF_GREEN "\t Map Resolution: %.2f\t Map H inflaction: %.2f\t Map V Inflaction: %.2f", map_resolution, map_h_inflaction, map_v_inflaction);
     // ROS_INFO_COND(showConfig, PRINTF_GREEN "\t Z weight cost: %.2f\t Z not inflate: %.2f", z_weight_cost, z_not_inflate);
@@ -79,6 +84,7 @@ void OptimizerLocalPlanner::initializeSubscribers()
 void OptimizerLocalPlanner::initializePublishers()
 {
     traj_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("opt_trajectory_marker", 2);
+    ugv_marker_pub_ = nh->advertise<visualization_msgs::Marker>("ugv_marsupial_marker", 1);
 
 	// visMarkersPublisher = nh->advertise<visualization_msgs::Marker>("markers", 1, true);
     // trajPub = nh->advertise<trajectory_msgs::MultiDOFJointTrajectory>("local_path", 1);
@@ -107,9 +113,6 @@ void OptimizerLocalPlanner::configServices()
 
 void OptimizerLocalPlanner::setupOptimizer()
 {
-	setNumVertUnit(n_vert_unit);	
-	setVelocity(velocity);
-
 	//! Create the linear solver (Ax = b)
 	auto linearSolver = g2o::make_unique<LinearSolverCSparse<BlockSolverX::PoseMatrixType>>();
     // auto linearSolver = g2o::make_unique<LinearSolverDense<BlockSolverX::PoseMatrixType>>(); // Linear equation solver
@@ -125,7 +128,7 @@ void OptimizerLocalPlanner::setupOptimizer()
 
 	optimizer.clear();
 	optimizer.setAlgorithm(optimizationAlgorithm);
-    optimizer.setVerbose(true);
+    optimizer.setVerbose(verbose_optimizer);
 	
 	// getSlopXYZAxes(mXYZ_);
 }
@@ -157,7 +160,7 @@ void OptimizerLocalPlanner::collisionMapCallBack(const octomap_msgs::OctomapCons
 //     // ROS_INFO_COND(debug, PRINTF_MAGENTA "Collision Map Received");
 //     mapReceived = true;
 //     PointCloud out;
-//     pcl_ros::transformPointCloud(robot_base_frame, *points, out, *tf_list_ptr);
+//     pcl_ros::transformPointCloud(uav_base_frame, *points, out, *tf_list_ptr);
 //     // theta3D.updateMap(out);
 //     // theta3D.publishOccupationMarkersMap();
 // }
@@ -185,6 +188,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 
 	resetFlags();
     clearMarkers(size);
+	getMarkerUGV();
 	global_path_length = calculatePathLengthAndDistanceVertices(globalTrajectory,dist_vec_);
 
 	for (int j_ = 0; j_ < n_time_optimize; j_++)
@@ -383,7 +387,7 @@ void OptimizerLocalPlanner::getMarkerPoints(visualization_msgs::MarkerArray &mar
 		else
 			marker_.markers[i].type = visualization_msgs::Marker::SPHERE;
 		if (j_+1 == n_time_optimize)
-			marker_.markers[i].lifetime = ros::Duration(450);
+			marker_.markers[i].lifetime = ros::Duration(200);
 		else
 			marker_.markers[i].lifetime = ros::Duration(2.0);
 		marker_.markers[i].pose.position.x = _vector[i].position.x();
@@ -414,7 +418,7 @@ void OptimizerLocalPlanner::getMarkerLines(visualization_msgs::MarkerArray &mark
 		marker_.markers[i].action = visualization_msgs::Marker::ADD;
 		marker_.markers[i].type = visualization_msgs::Marker::LINE_STRIP;
 		if (j_+1 == n_time_optimize)
-			marker_.markers[i].lifetime = ros::Duration(450);
+			marker_.markers[i].lifetime = ros::Duration(200);
 		else
 			marker_.markers[i].lifetime = ros::Duration(2.0);
 		_p1.x = _vector[i].position.x();
@@ -439,6 +443,31 @@ void OptimizerLocalPlanner::getMarkerLines(visualization_msgs::MarkerArray &mark
 	}
 }
 
+void OptimizerLocalPlanner::getMarkerUGV()
+{
+	ugv_marker.ns = "ugv";
+    ugv_marker.header.frame_id = "/map";
+    ugv_marker.header.stamp = ros::Time::now();
+    ugv_marker.id = 1;
+    ugv_marker.lifetime = ros::Duration(200);
+    ugv_marker.type = visualization_msgs::Marker::SPHERE;
+    ugv_marker.action = visualization_msgs::Marker::ADD;
+    ugv_marker.pose.position.x=initial_pos_ugv_x;
+    ugv_marker.pose.position.y=initial_pos_ugv_y;
+    ugv_marker.pose.position.z=initial_pos_ugv_z;
+    ugv_marker.pose.orientation.w = 1;
+    ugv_marker.color.r = 0.9;
+    ugv_marker.color.g = 0.0;
+    ugv_marker.color.b = 0.0;
+    ugv_marker.color.a = 1.0;
+    ugv_marker.scale.x = 0.8;
+    ugv_marker.scale.y = 0.8;
+    ugv_marker.scale.z = 0.8;
+	// ugv_marker.mesh_resource = "package://pr2_description/meshes/base_v0/base.dae";
+
+    ugv_marker_pub_.publish(ugv_marker);
+}
+
 void OptimizerLocalPlanner::clearMarkers(auto _s){
 	lines_marker.markers.clear();
 	points_marker.markers.clear();
@@ -450,6 +479,10 @@ void OptimizerLocalPlanner::clearMarkers(auto _s){
 		points_marker.markers[i].action = visualization_msgs::Marker::DELETE;
 		lines_marker.markers[i].action = visualization_msgs::Marker::DELETE;
 	}
+    ugv_marker.action = RVizMarker::DELETEALL;
+    ugv_marker_pub_.publish(ugv_marker);
+    ugv_marker.points.clear();
+    ugv_marker.action = RVizMarker::ADD;
 }
 
 double OptimizerLocalPlanner::calculatePathLengthAndDistanceVertices(trajectory_msgs::MultiDOFJointTrajectory _path,vector<structDistance> &_v_sD)
@@ -486,10 +519,6 @@ void OptimizerLocalPlanner::getTemporalState(vector<structTime> &_time, vector<s
 		_time.push_back(_sT);
 	}
 }
-
-inline void OptimizerLocalPlanner::setNumVertUnit(int n_) {n_vert_unit = n_;}
-
-inline void OptimizerLocalPlanner::setVelocity(double v_) {velocity = v_;}
 
 inline void OptimizerLocalPlanner::getSlopXYZAxes(vector<float> &m_) {m_=slopeXYZ;}	
 

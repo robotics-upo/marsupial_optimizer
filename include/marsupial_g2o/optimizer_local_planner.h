@@ -154,6 +154,7 @@ public:
 	void getTemporalState(vector<structTime> &_time, vector<structDistance> _v_sD, double _length, double _vel);
 	void writeTemporalDataBeforeOptimization(void);
 	void writeTemporalDataAfterOptimization(auto _s);
+	void getMarkerUGV();
 
 	// ============= Global Variables ================
 
@@ -164,7 +165,7 @@ public:
 	ofstream file_out_pos, file_out_time, file_out_velocity, file_out_difftime, file_out_acceleration;
 	string path= "/home/simon/";
 	int n_iter_opt;	//Iterations Numbers of Optimizer
-	int n_vert_unit; //number of Vertex per unit of lenght
+	double initial_pos_ugv_x, initial_pos_ugv_y, initial_pos_ugv_z;
 	double w_alpha, w_beta, w_iota, w_gamma, w_delta, w_epsilon, w_zeta, w_eta, w_theta;
 
 	NearNeighbor nn_;
@@ -201,24 +202,23 @@ public:
     ros::Time start_time;
 
 	visualization_msgs::MarkerArray points_marker, lines_marker;
-	visualization_msgs::Marker lineMarker, waypointsMarker;
+	visualization_msgs::Marker ugv_marker;
 	typedef visualization_msgs::Marker RVizMarker;
 
 	std::string action_name_;
-	std::string robot_base_frame_id;
+	std::string uav_base_frame, ugv_base_frame;
 
 	ros::Subscriber octomap_sub_,local_map_sub;
-	ros::Publisher traj_marker_pub_,visMarkersPublisher;
+	ros::Publisher traj_marker_pub_,visMarkersPublisher, ugv_marker_pub_;
 
 	geometry_msgs::Point obs_oct;
 
 	int n_time_optimize;
 	bool continue_optimizing;
 	double td_;
+	bool verbose_optimizer;
 
 	void setStraightTrajectory(double x1, double y1, double z1, double x2, double y2, double z2, int n_v_u_);	//Function to create a straight line from point A to B
-	void setNumVertUnit(int n_);
-	void setVelocity(double v_);
 	void getSlopXYZAxes( vector<float> &m_);
 	typedef vector<structPose> PoseSequence;
 	typedef vector<structTime> TimeSequence;
@@ -226,7 +226,6 @@ public:
 	PoseSequence pose_vec_opt_; 
 	DistanceSequence dist_vec_; 
 	TimeSequence time_vec_;
-	// int n_vert_unit;	//number of Vertex per unit of lenght
 	float d3D_;
 	float n_points; 
 	vector<float> slopeXYZ;

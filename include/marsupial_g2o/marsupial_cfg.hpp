@@ -9,7 +9,7 @@
 #include <iomanip>
 #include <Eigen/StdVector>
 
-// #include "marsupial_g2o/bisection3D.hpp"
+// #include "marsupial_g2o/bisection_catenary_3D.hpp"
 
 // #include "marsupial_g2o/g2o_vertex_timediff.h"
 // #include "marsupial_g2o/g2o_vertex_pointxyz.h"
