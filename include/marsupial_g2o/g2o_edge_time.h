@@ -22,6 +22,7 @@ class G2OTimeEdge : public BaseUnaryEdge<1, double, VertexTimeDiff>
 		void computeError()
 		{
 			VTime = static_cast<VertexTimeDiff *> (_vertices[0]);
+			// printf("G2OTimeEdge: VTime->estimate=[%f]\n",VTime->estimate());
 			_error[0] = VTime->estimate() - _measurement;
 
 		}

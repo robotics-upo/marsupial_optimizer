@@ -1,0 +1,14 @@
+show_config: true
+debug: true
+
+traj_dxy_max: 1
+traj_pos_tol: 10
+traj_yaw_tol: 0.1
+
+goal_weight: 1.5
+cost_weight: 0.25
+lof_distance: 1
+occ_threshold: 100
+
+world_frame: map
+robot_base_frame: base_link

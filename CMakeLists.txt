@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(marsupial_g2o)
 
 # Set to Release in order to speed up the program significantly
-set(CMAKE_BUILD_TYPE Debug) #None, Debug, Release, RelWithDebInfo, MinSizeRel
+set(CMAKE_BUILD_TYPE Release) #None, Debug, Release, RelWithDebInfo, MinSizeRel
 
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   std_msgs
   marsupial_actions
+  upo_actions
   dynamic_reconfigure
 )
 message(STATUS "System: ${CMAKE_SYSTEM}")
@@ -151,6 +152,7 @@ catkin_package(
   message_generation 
   message_runtime
   marsupial_actions
+  upo_actions
   DEPENDS SUITESPARSE G2O
 )
 
@@ -190,9 +192,8 @@ target_link_libraries(marsupial_g2o
 
 add_executable(marsupial_node src/marsupial_node.cpp)
 add_dependencies(marsupial_node ${PROJECT_NAME}_gencfg)
+target_link_libraries(marsupial_node marsupial_g2o ${EXTERNAL_LIBS} ${catkin_LIBRARIES})
 
-target_link_libraries(marsupial_node
-   marsupial_g2o
-   ${EXTERNAL_LIBS}
-   ${catkin_LIBRARIES}
-)
+add_executable(optimizer_local_planner_node src/optimizer_local_planner_node.cpp src/optimizer_local_planner.cpp)
+add_dependencies(optimizer_local_planner_node ${PROJECT_NAME}_gencfg)
+target_link_libraries(optimizer_local_planner_node marsupial_g2o ${EXTERNAL_LIBS} ${catkin_LIBRARIES})

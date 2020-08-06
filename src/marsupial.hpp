@@ -68,6 +68,7 @@
 #include <geometry_msgs/Point.h>
 #include <sensor_msgs/PointCloud2.h>
 
+#include <tf/transform_broadcaster.h>
 
 using namespace Eigen;
 using namespace std;
@@ -98,9 +99,10 @@ public:
 	g2o::VertexTimeDiff* vertexTime;
 
 	g2o::G2ODistanceVertexEdge* edgeDistanceVertex;
-	g2o::G2OObstaclesEdge* edgeObstaclesNear;
 	g2o::G2ODistanceXYZEdge* edgeDistanceXYZ;
 	g2o::G2OKinematicsEdge* edgeKinetics;
+	g2o::G2OObstaclesEdge* edgeObstaclesNear;
+	g2o::G2OThroughObstaclesEdge* edgeThroughObstacles;
 	g2o::G2OEquiDistanceEdge* edgeEquiDistance;
 
 	//! Manage Data Vertices and Edges
@@ -121,15 +123,18 @@ public:
 	// bool aux;
 
 	std::string action_name_;
+	std::string robot_base_frame_id_;
 
 	ros::Subscriber read_octomap_sub_;
-	ros::Publisher init_traj_pub_,final_traj_pub_, line_traj_pub_;
+	ros::Publisher init_traj_pub_,final_traj_pub_, line_traj_pub_, main_obstacle_pub_;
 
 	geometry_msgs::Point obs_oct;
 
 	int n_time_optimize;
 	bool continue_optimizing;
 	double td_;
+
+	double initial_pos_robot_x, initial_pos_robot_y, initial_pos_robot_z;
 
 	// =========== Function declarations =============
 	Marsupial(ros::NodeHandle &nh, ros::NodeHandle &pnh, std::string name);
@@ -141,11 +146,13 @@ public:
 	void initializePublishers(ros::NodeHandle &nh);
 	void readOctomapCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
 	void getMarkerArray(visualization_msgs::MarkerArray &_marker, Eigen::Vector3d _p);
+	visualization_msgs::Marker getMarker(double _size , Eigen::Vector3d _vo );
+	void tfBroadcaster(void);
 
 };
 
 Marsupial::Marsupial(ros::NodeHandle &nh, ros::NodeHandle &pnh,std::string name):
-			mcfg(nh,pnh),
+			mcfg(),
 			optimization_trajectory_action_server_(name,boost::bind(&Marsupial::executeOptimization, this,_1),false),
 			action_name_(name){
 	
@@ -155,6 +162,10 @@ Marsupial::Marsupial(ros::NodeHandle &nh, ros::NodeHandle &pnh,std::string name)
 	pnh.param<double>("X2", X2, 50.0);
   	pnh.param<double>("Y2", Y2, 15.0);
   	pnh.param<double>("Z2", Z2, 40.0);
+	
+	pnh.param<double>("initial_pos_robot_x", initial_pos_robot_x, 0.0);
+  	pnh.param<double>("initial_pos_robot_y", initial_pos_robot_y, 0.0);
+  	pnh.param<double>("initial_pos_robot_z", initial_pos_robot_z, 0.0);
   	
 	pnh.param<double>("w_alpha", w_alpha,0.1);
 	pnh.param<double>("w_beta",	w_beta,0.1);
@@ -175,6 +186,9 @@ Marsupial::Marsupial(ros::NodeHandle &nh, ros::NodeHandle &pnh,std::string name)
 	
   	pnh.param<int>("n_time_optimize", n_time_optimize, 500);
   	pnh.param<double>("td_", td_, 0.5);
+	
+  	pnh.param("robot_base_frame_id_", robot_base_frame_id_, (std::string)"/base_link");
+
 
 	continue_optimizing = false;
 	
@@ -199,6 +213,8 @@ void Marsupial::initializePublishers(ros::NodeHandle &nh)
     init_traj_pub_ = nh.advertise<visualization_msgs::MarkerArray>("initial_trajectory", 2);
     final_traj_pub_ = nh.advertise<visualization_msgs::MarkerArray>("final_trajectory", 2);
     line_traj_pub_ = nh.advertise<visualization_msgs::MarkerArray>("line_trajectory", 2);
+	main_obstacle_pub_ = nh.advertise<visualization_msgs::Marker>("main_obstacle", 2);
+
     ROS_INFO("Publishers Initialized marsupial_node");
 }
 
@@ -256,6 +272,9 @@ void Marsupial::executeOptimization(const marsupial_actions::OptimizationTraject
 		vertexTime = new g2o::VertexTimeDiff;
 
 		visualization_msgs::MarkerArray initial_marker, final_marker , line_strip;
+		visualization_msgs::Marker main_obstacle_marker_;
+
+
 		initial_marker.markers.clear();
 		final_marker.markers.clear();
 		line_strip.markers.clear();
@@ -359,14 +378,14 @@ void Marsupial::executeOptimization(const marsupial_actions::OptimizationTraject
 		//! V. Add edges. These are the distances from vertex to obstacles poses.
 		for (size_t i = 0; i < mcfg.dist_vec_.size(); ++i)
 		{
-			g2o::G2OThroughObstaclesEdge* edge = new g2o::G2OThroughObstaclesEdge();
-			edge->vertices()[0] = optimizer.vertices()[mcfg.dist_vec_[i].id_from];
-			edge->vertices()[1] = optimizer.vertices()[mcfg.dist_vec_[i].id_to];
-			edge->setRobustKernel(new g2o::RobustKernelCauchy());
-            edge->robustKernel()->setDelta(1.0);
-			edge->readKDTree(nn_.kdtree,nn_.obs_points);
-			edge->setInformation(G2OThroughObstaclesEdge::InformationType::Identity()*w_iota); 
-			optimizer.addEdge(edge);
+			edgeThroughObstacles = new g2o::G2OThroughObstaclesEdge();
+			edgeThroughObstacles->vertices()[0] = optimizer.vertices()[mcfg.dist_vec_[i].id_from];
+			edgeThroughObstacles->vertices()[1] = optimizer.vertices()[mcfg.dist_vec_[i].id_to];
+			edgeThroughObstacles->setRobustKernel(new g2o::RobustKernelCauchy());
+            edgeThroughObstacles->robustKernel()->setDelta(1.0);
+			edgeThroughObstacles->readKDTree(nn_.kdtree,nn_.obs_points);
+			edgeThroughObstacles->setInformation(G2OThroughObstaclesEdge::InformationType::Identity()*w_iota); 
+			optimizer.addEdge(edgeThroughObstacles);
 		}
 		// VI. Add edges. This is kinematic of trajectory.
 		for (size_t i = 0; i < mcfg.pose_vec_.size()-3; ++i)
@@ -480,8 +499,6 @@ void Marsupial::executeOptimization(const marsupial_actions::OptimizationTraject
 				final_marker.markers[i].type = visualization_msgs::Marker::CUBE;
 			else
 				final_marker.markers[i].type = visualization_msgs::Marker::SPHERE;
-			
-
 			if (j_+1 == n_time_optimize)
 				final_marker.markers[i].lifetime = ros::Duration(0);
 			else
@@ -533,8 +550,13 @@ void Marsupial::executeOptimization(const marsupial_actions::OptimizationTraject
 			// _p1.z= vOp.position.z();
 		}
 		// file_out_pos.close();
+
+		// printf("size=[%i] main_obstacle_marker=[%f %f %f]\n",edgeThroughObstacles->_size_vector_marker,edgeThroughObstacles->_main_obstacle_marker.x()
+		// ,edgeThroughObstacles->_main_obstacle_marker.y(),edgeThroughObstacles->_main_obstacle_marker.z());
+		// main_obstacle_marker_ = getMarker(0.2*edgeThroughObstacles->_size_vector_marker,edgeThroughObstacles->_main_obstacle_marker);
+		// main_obstacle_pub_.publish(main_obstacle_marker_);
 		final_traj_pub_.publish(final_marker);
-		line_traj_pub_.publish(line_strip);
+		// line_traj_pub_.publish(line_strip);
 
 		vecOpt.clear();
 		for (size_t i = 0; i < mcfg.pose_vec_.size(); i++)
@@ -596,7 +618,6 @@ void Marsupial::executeOptimization(const marsupial_actions::OptimizationTraject
 		// file_out_acceleration.close();
 
 		ros::Duration(td_).sleep();
-
 	}
 	if (optimization_trajectory_action_server_.isPreemptRequested() || !ros::ok())
     {
@@ -611,12 +632,22 @@ void Marsupial::executeOptimization(const marsupial_actions::OptimizationTraject
 	ROS_INFO("%s: Succeeded", action_name_.c_str());
 	optimization_trajectory_action_server_.setSucceeded(result_);
 	optimizer.clear();
-
 }
+
+
+void Marsupial::tfBroadcaster(void){
+  static tf::TransformBroadcaster br;
+  tf::Transform transform;
+  transform.setOrigin( tf::Vector3(initial_pos_robot_x,initial_pos_robot_y,initial_pos_robot_z) );
+  tf::Quaternion q;
+  q.setRPY(0, 0, 0);
+  transform.setRotation(q);
+  br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "map", robot_base_frame_id_));
+}
+
 
 void Marsupial::getMarkerArray(visualization_msgs::MarkerArray &_marker, Eigen::Vector3d _p)
 {
-
 	for (size_t i = 0; i < mcfg.pose_vec_.size(); ++i)
 	{	
 		_marker.markers[i].header.frame_id = "map";
@@ -641,7 +672,35 @@ void Marsupial::getMarkerArray(visualization_msgs::MarkerArray &_marker, Eigen::
 		_marker.markers[i].color.g = 0.9;
 		_marker.markers[i].color.b = 0.0;
 	}
+}
 
+
+visualization_msgs::Marker Marsupial::getMarker(double _size , Eigen::Vector3d _vo )
+{
+	visualization_msgs::Marker marker_;
+	marker_.header.frame_id = "map";
+	marker_.header.stamp = ros::Time::now();
+	marker_.ns = "points";
+	marker_.id = 1;
+	// _marker.action = visualization_msgs::Marker::ADD;
+	marker_.type = visualization_msgs::Marker::SPHERE;
+	marker_.lifetime = ros::Duration(0);
+	marker_.pose.position.x = _vo.x();
+	marker_.pose.position.y = _vo.y();
+	marker_.pose.position.z = _vo.z();
+	marker_.pose.orientation.x = 0.0;
+	marker_.pose.orientation.y = 0.0;
+	marker_.pose.orientation.z = 0.0;
+	marker_.pose.orientation.w = 1.0;
+	marker_.scale.x = _size;
+	marker_.scale.y = _size;
+	marker_.scale.z = _size;
+	marker_.color.a = 1.0;
+	marker_.color.r = 0.9;
+	marker_.color.g = 0.0;
+	marker_.color.b = 0.0;
+
+	return marker_;
 }
 
 #endif

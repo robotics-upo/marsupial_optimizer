@@ -30,14 +30,15 @@ class G2OThroughObstaclesEdge : public BaseBinaryEdge<1, double, VertexPointXYZ,
 		double size_trajectory_;
 
 		int num_points = 4;
-		std::vector<Eigen::Vector3d> _vector;
+		std::vector<Eigen::Vector3d> _vector_points_line;
 		std::vector<Eigen::Vector3d> _vectorMainObstacles;
-		Eigen::Vector3d _main_obtacle;
+		Eigen::Vector3d _main_obstacle, _main_obstacle_marker;
 		double _sum_obstacle_x, _sum_obstacle_y, _sum_obstacle_z;
 		int _size_vector;
+		int _size_vector_marker = 0;
 
 		double approximation_ = 0.2;
-		double factor_ = 10000.0;
+		double factor_ = 100000.0;
 
 		NearNeighbor nn;
 		Eigen::Vector3d near_;
@@ -49,30 +50,30 @@ class G2OThroughObstaclesEdge : public BaseBinaryEdge<1, double, VertexPointXYZ,
     		const VertexPointXYZ * pose1 = static_cast<const VertexPointXYZ*> (_vertices[0]);
     		const VertexPointXYZ * pose2 = static_cast<const VertexPointXYZ*> (_vertices[1]);
 
+
 			bool inside_x, inside_y, inside_z;
 			double _d1 = (pose1->estimate()-near_).norm();
 			double _d2 = (pose2->estimate()-near_).norm();
 			double _d = (pose1->estimate()-pose2->estimate()).norm();
 
-			_vector.clear();
+			_vector_points_line.clear();
 			_vectorMainObstacles.clear();
 
-			straightTrajectoryVertices(pose1->estimate().x(),pose1->estimate().y(),pose1->estimate().z(),pose2->estimate().x(),pose2->estimate().y(),pose2->estimate().z(),num_points,_vector);
+			straightTrajectoryVertices(pose1->estimate().x(),pose1->estimate().y(),pose1->estimate().z(),pose2->estimate().x(),pose2->estimate().y(),pose2->estimate().z(),num_points,_vector_points_line);
 			
 			// printf("vector_size=[%lu] [%i]p1=[%f %f %f] [%i]p2=[%f %f %f]\n",
-			// _vector.size(),pose1->id(),pose1->estimate().x(),pose1->estimate().y(),pose1->estimate().z(),pose2->id(),pose2->estimate().x(),pose2->estimate().y(),pose2->estimate().z());
-
-
-			for (size_t i =0; i <_vector.size();i++){
+			// _vector_points_line.size(),pose1->id(),pose1->estimate().x(),pose1->estimate().y(),pose1->estimate().z(),pose2->id(),pose2->estimate().x(),pose2->estimate().y(),pose2->estimate().z());
+	
+			for (size_t i =0; i <_vector_points_line.size();i++){
 
 				inside_x = false;
 				inside_y = false;
 				inside_z = false;
 				Eigen::Vector3d obstacles_;
-				// printf("[%lu]vector = [%f %f %f] \n",i,_vector[i].x(),_vector[i].y(),_vector[i].z());
-				near_ = nn.nearestObstacleVertex(kdT_From_NN , _vector[i],obstacles_Points);
+				// printf("[%lu]vector = [%f %f %f] \n",i,_vector_points_line[i].x(),_vector_points_line[i].y(),_vector_points_line[i].z());
+				near_ = nn.nearestObstacleVertex(kdT_From_NN , _vector_points_line[i],obstacles_Points);
 
-				// printf("[%lu] near=[%f %f %f] vector=[%f %f %f]\n",i,near_.x(),near_.y(),near_.z(),_vector[i].x() ,_vector[i].y(),_vector[i].z());
+				// printf("[%lu] near=[%f %f %f] vector=[%f %f %f]\n",i,near_.x(),near_.y(),near_.z(),_vector_points_line[i].x() ,_vector_points_line[i].y(),_vector_points_line[i].z());
 				if (pose1->estimate().x() < pose2->estimate().x()){
 					if ((pose1->estimate().x() - approximation_) < near_.x() && (pose2->estimate().x() + approximation_) > near_.x()){
 						inside_x = true;
@@ -96,7 +97,6 @@ class G2OThroughObstaclesEdge : public BaseBinaryEdge<1, double, VertexPointXYZ,
 				}
 				else
 					inside_x = false;
-				
 				// printf("after X BOOL x=[%d] y=[%d] z=[%d]\n",inside_x,inside_y,inside_z);
 
 
@@ -123,7 +123,6 @@ class G2OThroughObstaclesEdge : public BaseBinaryEdge<1, double, VertexPointXYZ,
 				}
 				else
 					inside_y = false;
-				
 				// printf("after y BOOL x=[%d] y=[%d] z=[%d]\n",inside_x,inside_y,inside_z);
 
 				
@@ -150,8 +149,8 @@ class G2OThroughObstaclesEdge : public BaseBinaryEdge<1, double, VertexPointXYZ,
 				}
 				else
 					inside_z = false;
-
 				// printf("after z BOOL x=[%d] y=[%d] z=[%d]\n",inside_x,inside_y,inside_z);
+
 				if (inside_x && inside_y && inside_z){
 					_vectorMainObstacles.push_back(obstacles_);
 				}
@@ -163,34 +162,38 @@ class G2OThroughObstaclesEdge : public BaseBinaryEdge<1, double, VertexPointXYZ,
 				_size_vector = 0;
 			else
 				_size_vector = _vectorMainObstacles.size();
+			// printf("INSIDE size=[%i] _main_obstacle[%f %f %f]\n",_size_vector ,_main_obstacle.x(),_main_obstacle.y(),_main_obstacle.z());
 
 			for (int k=0 ; k < _size_vector; k++){
 				_sum_obstacle_x = _vectorMainObstacles[k].x() + _sum_obstacle_x;
 				_sum_obstacle_y = _vectorMainObstacles[k].y() + _sum_obstacle_y;
 				_sum_obstacle_z = _vectorMainObstacles[k].z() + _sum_obstacle_z;
 			}
-			_main_obtacle.x() = (_sum_obstacle_x) / _size_vector;
-			_main_obtacle.y() = (_sum_obstacle_y) / _size_vector;
-			_main_obtacle.z() = (_sum_obstacle_z) / _size_vector;
+			_main_obstacle.x() = (_sum_obstacle_x) / _size_vector;
+			_main_obstacle.y() = (_sum_obstacle_y) / _size_vector;
+			_main_obstacle.z() = (_sum_obstacle_z) / _size_vector;
 
-			double _do1 = (pose1->estimate()-_main_obtacle).norm();
-			double _do2 = (pose2->estimate()-_main_obtacle).norm();
+			// printf("_main_obstacle = [%f %f %f]\n",_main_obstacle.x(),_main_obstacle.y(),_main_obstacle.z());
+
+			double _do1 = (pose1->estimate()-_main_obstacle).norm();
+			double _do2 = (pose2->estimate()-_main_obstacle).norm();
+
+			if (_size_vector >= _size_vector_marker){
+				_main_obstacle_marker = _main_obstacle;
+				_size_vector_marker = _size_vector;	
+			}
 
 			if (inside_x && inside_y && inside_z)
 			{
-				// _error[0] = factor_ *( 1.0 / (1.0 + exp(-1.0 *(_d1+_d2)))) ; 
-				_error[0] = factor_ *(_do1+_do2) ; 
-
+				_error[0] = factor_ *(_do1+_do2); 
+				// _error[0] = factor_/(_do1+_do2);
+				// _error[0] = factor_ * exp( - 2.0*(_do1+_do2)); 
 				// printf("Vertex[%i-%i]_error=[%f] p1=[%f %f %f] p2=[%f %f %f] near=[%f %f %f]\n",pose1->id(),pose2->id(),_error[0],
 				// pose1->estimate().x(),pose1->estimate().y(),pose1->estimate().z(),pose2->estimate().x(),pose2->estimate().y(),pose2->estimate().z(),
 				// near_.x(),near_.y(),near_.z());
 			}
 			else
 				_error[0] = 0.0; 
-				
-
-			
-
 		}
 
 		virtual bool read(std::istream& is);
@@ -231,6 +234,7 @@ class G2OThroughObstaclesEdge : public BaseBinaryEdge<1, double, VertexPointXYZ,
 				_v.push_back(Eigen::Vector3d(_x,_y,_z));
 			}
 		}
+
 
 		// virtual void linearizeOplus()
 		// {

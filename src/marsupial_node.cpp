@@ -37,6 +37,7 @@ int main(int argc, char** argv) {
   {
     ros::spinOnce();  
     // m_.executeOptimization();
+    m_.tfBroadcaster();
     r.sleep();
   }
   

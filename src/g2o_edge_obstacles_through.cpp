@@ -5,7 +5,7 @@ namespace g2o {
 	G2OThroughObstaclesEdge::G2OThroughObstaclesEdge() :
 		BaseBinaryEdge<1, double, VertexPointXYZ, VertexPointXYZ>() 
 	{
-
+		
 		_information.setIdentity();
 		_error.setZero();
 	}

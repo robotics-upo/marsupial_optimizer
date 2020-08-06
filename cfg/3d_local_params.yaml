@@ -1,0 +1,29 @@
+
+show_config: true
+debug: true
+
+ws_x_max: 3
+ws_y_max: 3
+ws_z_max: 0.8
+
+map_resolution: 0.1
+
+map_h_inflaction: 0.4
+map_v_inflaction: 0.4
+
+z_weight_cost: 2
+z_not_inflate: 8
+
+goal_weight: 1.4  
+
+traj_dxy_max: 1
+traj_pos_tol: 1
+traj_yaw_tol: 0.1
+traj_dz_max: 1
+traj_vxy_m: 1
+traj_vz_m: 1
+traj_vxy_m_1: 1
+traj_vz_m_1: 1
+traj_wyaw_m: 1
+
+world_frame: world

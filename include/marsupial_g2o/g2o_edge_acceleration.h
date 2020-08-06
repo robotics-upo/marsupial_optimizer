@@ -25,7 +25,8 @@ namespace g2o
 		const VertexTimeDiff* deltaT1;
 		const VertexTimeDiff* deltaT2;
 
-
+		double factor_ = 10.0;
+		
 		void computeError()
 		{
 			pose1 = static_cast<const VertexPointXYZ*>(_vertices[0]);
@@ -41,8 +42,8 @@ namespace g2o
 			double _v2 =  _d2/ deltaT2->estimate();
 			double _a = (_v2-_v1)/(deltaT1->estimate()+deltaT2->estimate());
 
-			if (_a > _measurement ) 
-				_error[0] = (_a - _measurement);
+			if (_a > _measurement || _a < _measurement ) 
+				_error[0] = factor_ * (_a - _measurement);
 			else
 				_error[0] = 0.0;
 		}

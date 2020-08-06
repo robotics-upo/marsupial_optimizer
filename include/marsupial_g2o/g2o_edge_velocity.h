@@ -23,6 +23,9 @@ namespace g2o
 		const VertexPointXYZ* pose2;
 		const VertexTimeDiff* deltaT;
 
+		double factor_ = 2.0;
+		double porcentage_ = 0.05;
+
 		void computeError()
 		{
 			pose1 = static_cast<const VertexPointXYZ*>(_vertices[0]);
@@ -32,9 +35,11 @@ namespace g2o
 
 			double _d = (pose2->estimate() - pose1->estimate()).norm();
 			double _v =  _d/ deltaT->estimate();
+			// printf("G2OVelocityEdge: p2 =[%f %f %f] p1=[%f %f %f] _d=[%f] _v=[%f] _m=[%f] deltaT->estimate=[%f]\n",
+			// pose2->estimate().x(), pose2->estimate().y(),pose2->estimate().z(),pose1->estimate().x(), pose1->estimate().y(),pose1->estimate().z(),_d,_v,_measurement,deltaT->estimate());
 
-			if ((_v > _measurement + _measurement/5.0) || (_v < _measurement - _measurement/5.0))
-				_error[0] = (_v - _measurement);
+			if ((_v > _measurement + _measurement*porcentage_) || (_v < _measurement - _measurement*porcentage_))
+				_error[0] = factor_*(_v - _measurement);
 			else
 				_error[0] = 0.0;
 		}

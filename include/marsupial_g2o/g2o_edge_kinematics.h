@@ -16,6 +16,8 @@ namespace g2o
 	{
 	public:
 		G2OKinematicsEdge();
+		
+		double factor_ = 2.0;
 
 		void computeError()
 		{
@@ -40,17 +42,17 @@ namespace g2o
 
 
 			if ((angle_x_12 - angle_x_23) < _measurement)
-				_error[0] = (angle_x_12 - angle_x_23) ;
+				_error[0] = factor_ * (angle_x_12 - angle_x_23) ;
 			else
 				_error[0] = 0.0;
 			
 			if	((angle_y_12 - angle_y_23) < _measurement)
-				_error[1] = (angle_y_12 - angle_y_23) ;
+				_error[1] = factor_ * (angle_y_12 - angle_y_23) ;
 			else
 				_error[1] = 0.0;
 
 			if ((angle_z_12 - angle_z_23) < _measurement)
-				_error[2] = (angle_z_12 - angle_z_23) ;
+				_error[2] = factor_ * (angle_z_12 - angle_z_23) ;
 			else
 				_error[2] = 0.0;
 
