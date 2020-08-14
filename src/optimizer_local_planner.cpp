@@ -20,6 +20,9 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(tf2_ros::Buffer *tfBuffer_)
 	nh->param<double>("initial_pos_ugv_x", initial_pos_ugv_x, 0.0);
 	nh->param<double>("initial_pos_ugv_y", initial_pos_ugv_y, 0.0);
 	nh->param<double>("initial_pos_ugv_z", initial_pos_ugv_z, 0.0);
+	nh->param<double>("offset_initial_pos_ugv_x", offset_initial_pos_ugv_x, 0.0);
+	nh->param<double>("offset_initial_pos_ugv_y", offset_initial_pos_ugv_y, 0.0);
+	nh->param<double>("offset_initial_pos_ugv_z", offset_initial_pos_ugv_z, 0.0);
 
 	nh->param<double>("w_alpha", w_alpha,0.1);
 	nh->param<double>("w_beta",	w_beta,0.1);
@@ -30,12 +33,17 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(tf2_ros::Buffer *tfBuffer_)
   	nh->param<double>("w_zeta", w_zeta,0.1);
   	nh->param<double>("w_eta", w_eta,0.1);
   	nh->param<double>("w_theta", w_theta,0.1);
+  	nh->param<double>("w_kappa", w_kappa,0.1);
+
+  	nh->param<double>("multiplicative_factor_catenary", multiplicative_factor_catenary,1.0); //Can't be lower than 1.0 or "catenary < distance between UGV and vertex" 	
 
 	nh->param<int>("n_iter_opt", n_iter_opt,200);
   	nh->param<double>("bound", bound,2.0);
   	nh->param<double>("velocity", velocity,1.0);
   	nh->param<double>("acceleration", acceleration,0.0);
   	nh->param<double>("angle", angle, M_PI / 15.0);
+  	nh->param<float>("radius_collition_catenary", radius_collition_catenary, 0.1);
+	  
 	
   	nh->param<int>("n_time_optimize", n_time_optimize, 500);
   	nh->param<double>("td_", td_, 0.5);
@@ -185,6 +193,9 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
     auto path_shared_ptr = execute_path_srv_ptr->acceptNewGoal();
     globalTrajectory = path_shared_ptr->path;
     auto size = globalTrajectory.points.size()-1;
+    ROS_INFO_COND(debug, PRINTF_GREEN "Number of Vertices to optimize = [%lu]",size);
+
+	// printf("size.size() = [%lu]\n",size);
 
 	resetFlags();
     clearMarkers(size);
@@ -194,10 +205,10 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	for (int j_ = 0; j_ < n_time_optimize; j_++)
 	{
 		if (!continue_optimizing)
-			ROS_INFO("Preparing to execute optimization!!");
+			ROS_INFO("Preparing to execute optimization: Creating Vertices and Edges!!");
 
 		/*
-		*Create Vertex: WayPoints for local trajectory to optimize 
+		* I Create Vertex: WayPoints for local trajectory to optimize 
 		*/
 		for (size_t i = 0; i < size; ++i)
 		{	
@@ -249,7 +260,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			edgeEquiDistance->setInformation(G2OEquiDistanceEdge::InformationType::Identity()*w_epsilon);
 			optimizer.addEdge(edgeEquiDistance);
 		}
-		//! IV. Add Edges: Obstacles distances from Vertex.
+		//! IV. Add Edges: Nearest Obstacles distances from Vertex.
 		for (size_t i = 0; i < size; ++i)
 		{
 			edgeObstaclesNear = new g2o::G2OObstaclesEdge();
@@ -284,7 +295,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		}
 
 		/*
-		*Create Vertex: Time between consecutive waypoints in trajectory 
+		* II Create Vertex: Time between consecutive waypoints in trajectory 
 		*/
 		getTemporalState(time_vec_,dist_vec_,global_path_length,velocity);
 		for (size_t i = 0; i < size-1; ++i)
@@ -322,15 +333,53 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		// ! IX. Add edges. This is aceleration between Vertices.
 		for (size_t i = size; i < size*2.0-2.0; ++i)
 		{
-			G2OAccelerationEdge* edge = new G2OAccelerationEdge;
-			edge->vertices()[0] = optimizer.vertices()[i-size];
-			edge->vertices()[1] = optimizer.vertices()[i-size+1];
-			edge->vertices()[2] = optimizer.vertices()[i-size+2];
-			edge->vertices()[3] = optimizer.vertices()[i];
-			edge->vertices()[4] = optimizer.vertices()[i+1];
-			edge->setMeasurement(acceleration);
-			edge->setInformation(G2OAccelerationEdge::InformationType::Identity()*w_theta);
-			optimizer.addEdge(edge);
+			G2OAccelerationEdge* edgeAcceleration = new G2OAccelerationEdge;
+			edgeAcceleration->vertices()[0] = optimizer.vertices()[i-size];
+			edgeAcceleration->vertices()[1] = optimizer.vertices()[i-size+1];
+			edgeAcceleration->vertices()[2] = optimizer.vertices()[i-size+2];
+			edgeAcceleration->vertices()[3] = optimizer.vertices()[i];
+			edgeAcceleration->vertices()[4] = optimizer.vertices()[i+1];
+			edgeAcceleration->setMeasurement(acceleration);
+			edgeAcceleration->setInformation(G2OAccelerationEdge::InformationType::Identity()*w_theta);
+			optimizer.addEdge(edgeAcceleration);
+		}
+
+		/*
+		* III Create Vertex: Multiplicative factor for Catenary Length
+		*/
+		for (size_t i = 0; i < size; ++i) // Subtracting -2 because the extreme Vertices are fixed, cannot be optimizing their position
+		{	
+			vertexCatenaryFactor = new g2o:: VertexCatenaryFactor();
+			if(!continue_optimizing){
+				vertexCatenaryFactor->setEstimate(multiplicative_factor_catenary);
+				printf("Revisar ESTA CONDICION, hay que cambiar el valor que se le pasa una vez que ya optimizo!!\n");
+			}
+			else
+				vertexCatenaryFactor->setEstimate(multiplicative_factor_catenary);
+			if (i == 0 || i == size-1)		//First and last vertices are fixed.	
+				vertexCatenaryFactor->setFixed(true);
+			else
+				vertexCatenaryFactor->setFixed(false);
+			vertexCatenaryFactor->setId(i+size+size-1.0);
+			optimizer.addVertex(vertexCatenaryFactor);	
+		}
+
+
+		ugv_pos_catenary.x = initial_pos_ugv_x + offset_initial_pos_ugv_x;
+		ugv_pos_catenary.y = initial_pos_ugv_y + offset_initial_pos_ugv_y;
+		ugv_pos_catenary.z = initial_pos_ugv_z + offset_initial_pos_ugv_z;
+		//! X. Add Edges: Catenary chain.
+		for (size_t i = 0; i < size; ++i)
+		{
+			G2OCatenaryEdge* edgeCatenary = new g2o::G2OCatenaryEdge(nh);
+			edgeCatenary->vertices()[0] = optimizer.vertices()[i];
+			edgeCatenary->vertices()[1] = optimizer.vertices()[i+size-1.0+size];
+			edgeCatenary->readKDTree(nn_.kdtree,nn_.obs_points);
+			edgeCatenary->setRadius(radius_collition_catenary);
+			edgeCatenary->numberVerticesNotFixed(size-2);
+			edgeCatenary->setMeasurement(ugv_pos_catenary);
+			edgeCatenary->setInformation(G2OCatenaryEdge::InformationType::Identity()*w_kappa);
+			optimizer.addEdge(edgeCatenary);
 		}
 
 		if (!continue_optimizing)
@@ -387,7 +436,7 @@ void OptimizerLocalPlanner::getMarkerPoints(visualization_msgs::MarkerArray &mar
 		else
 			marker_.markers[i].type = visualization_msgs::Marker::SPHERE;
 		if (j_+1 == n_time_optimize)
-			marker_.markers[i].lifetime = ros::Duration(200);
+			marker_.markers[i].lifetime = ros::Duration(400);
 		else
 			marker_.markers[i].lifetime = ros::Duration(2.0);
 		marker_.markers[i].pose.position.x = _vector[i].position.x();
@@ -418,7 +467,7 @@ void OptimizerLocalPlanner::getMarkerLines(visualization_msgs::MarkerArray &mark
 		marker_.markers[i].action = visualization_msgs::Marker::ADD;
 		marker_.markers[i].type = visualization_msgs::Marker::LINE_STRIP;
 		if (j_+1 == n_time_optimize)
-			marker_.markers[i].lifetime = ros::Duration(200);
+			marker_.markers[i].lifetime = ros::Duration(400);
 		else
 			marker_.markers[i].lifetime = ros::Duration(2.0);
 		_p1.x = _vector[i].position.x();
@@ -449,8 +498,8 @@ void OptimizerLocalPlanner::getMarkerUGV()
     ugv_marker.header.frame_id = "/map";
     ugv_marker.header.stamp = ros::Time::now();
     ugv_marker.id = 1;
-    ugv_marker.lifetime = ros::Duration(200);
-    ugv_marker.type = visualization_msgs::Marker::SPHERE;
+    ugv_marker.lifetime = ros::Duration(400);
+    ugv_marker.type = visualization_msgs::Marker::CUBE;
     ugv_marker.action = visualization_msgs::Marker::ADD;
     ugv_marker.pose.position.x=initial_pos_ugv_x;
     ugv_marker.pose.position.y=initial_pos_ugv_y;
@@ -468,7 +517,8 @@ void OptimizerLocalPlanner::getMarkerUGV()
     ugv_marker_pub_.publish(ugv_marker);
 }
 
-void OptimizerLocalPlanner::clearMarkers(auto _s){
+void OptimizerLocalPlanner::clearMarkers(auto _s)
+{
 	lines_marker.markers.clear();
 	points_marker.markers.clear();
 

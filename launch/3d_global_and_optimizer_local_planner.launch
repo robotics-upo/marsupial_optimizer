@@ -51,24 +51,33 @@
             
             <param name="initial_pos_ugv_x"  value="-3.0"/>   <!-- distance-vertex 5.44--> 
             <param name="initial_pos_ugv_y"  value="6.0"/>   <!-- distance-xyz 5.16-->
-            <param name="initial_pos_ugv_z"  value="0.2"/>   <!-- equi-distance 4.78-->
+            <param name="initial_pos_ugv_z"  value="0.4"/>   <!-- equi-distance 4.78-->
+            <param name="offset_initial_pos_ugv_x"  value="0.4"/>   <!-- Is just to visual analisys, Deppend on the "scale" of UGV marker to not begin the catenary in the center of the CUBE--> 
+            <param name="offset_initial_pos_ugv_y"  value="-0.4"/>   <!-- Is just to visual analisys, Deppend on the "scale" of UGV marker to not begin the catenary in the center of the CUBE-->
+            <param name="offset_initial_pos_ugv_z"  value="0.4"/>   <!-- Is just to visual analisys, Deppend on the "scale" of UGV marker to not begin the catenary in the center of the CUBE-->
+
 
             <param name="w_alpha"   value="0.1"/>   <!-- distance-vertex 5.44--> 
             <param name="w_gamma"   value="0.1"/>   <!-- distance-xyz 5.16-->
             <param name="w_epsilon" value="0.8"/>   <!-- equi-distance 4.78-->
-            <param name="w_beta"    value="0.6"/>   <!-- obstacles 27.71-->
+            <param name="w_beta"    value="0.8"/>   <!-- obstacles 27.71-->
             <param name="w_iota"    value="0.4"/>   <!-- obstacles through -->
             <param name="w_delta"   value="0.9"/>   <!-- kinematics 5.52-->
             <param name="w_zeta"    value="0.05"/>   <!-- time -->
             <param name="w_eta"     value="0.3"/>   <!-- velocity -->
             <param name="w_theta"   value="1.0"/>   <!-- acceleration -->
-            <param name="n_iter_opt"    value="500"/>   <!-- number max. of iterations per optimization --> 
+            <param name="w_kappa"   value="0.15"/>   <!-- catenary -->
+            <param name="n_iter_opt"    value="200"/>   <!-- number max. of iterations per optimization --> 
             <param name="n_time_optimize"    value="1"/>   <!-- number Loop-For to execute optimizer --> 
             <param name="td_"    value="1.0"/>   <!-- Time Sleep between optimization in Loop-For --> 
 
+
+            <param name="multiplicative_factor_catenary"   value="1.001"/>    <!-- This parameter multiply the length between UGV and vertex to adjust Catenary-->
             <param name="bound"         value="2.0"/> <!-- Bound distance to obstacles -->
             <param name="velocity"      value="2.0"/>    
             <param name="acceleration"  value="0.0"/>    
+            <param name="radius_collition_catenary"  value="0.3"/>    
+            
         </node>
 
 </launch>

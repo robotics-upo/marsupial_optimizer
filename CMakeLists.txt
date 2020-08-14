@@ -144,7 +144,7 @@ generate_dynamic_reconfigure_options(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include ${EXTERNAL_INCLUDE_DIRS}
-  LIBRARIES marsupial_g2o ${EXTERNAL_LIBS}
+  LIBRARIES ${EXTERNAL_LIBS}
   CATKIN_DEPENDS
   roscpp
   tf
@@ -182,6 +182,7 @@ add_library(marsupial_g2o
   src/g2o_edge_time.cpp
   src/g2o_edge_velocity.cpp
   src/g2o_edge_acceleration.cpp
+  src/g2o_edge_catenary.cpp
   ) 
 target_link_libraries(marsupial_g2o
    ${EXTERNAL_LIBS}
@@ -190,10 +191,10 @@ target_link_libraries(marsupial_g2o
 
 ## Build additional executables
 
-add_executable(marsupial_node src/marsupial_node.cpp)
-add_dependencies(marsupial_node ${PROJECT_NAME}_gencfg)
-target_link_libraries(marsupial_node marsupial_g2o ${EXTERNAL_LIBS} ${catkin_LIBRARIES})
+# add_executable(marsupial_node src/marsupial_node.cpp)
+# add_dependencies(marsupial_node ${PROJECT_NAME}_gencfg)
+# target_link_libraries(marsupial_node marsupial_g2o ${EXTERNAL_LIBS} ${catkin_LIBRARIES})
 
-add_executable(optimizer_local_planner_node src/optimizer_local_planner_node.cpp src/optimizer_local_planner.cpp)
+add_executable(optimizer_local_planner_node src/optimizer_local_planner_node.cpp src/optimizer_local_planner.cpp src/bisection_catenary_3D.cpp)
 add_dependencies(optimizer_local_planner_node ${PROJECT_NAME}_gencfg)
 target_link_libraries(optimizer_local_planner_node marsupial_g2o ${EXTERNAL_LIBS} ${catkin_LIBRARIES})

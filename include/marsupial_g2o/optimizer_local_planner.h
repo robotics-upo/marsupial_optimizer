@@ -1,5 +1,5 @@
 /*
-Optimizer Local Planner based in g2o for Marsupial Robotics COnfiguration 
+Optimizer Local Planner based in g2o for Marsupial Robotics Configuration 
 Simon Martinez Rozas, 2020 
 Service Robotics Lab, University Pablo de Olavide , Seville, Spain 
  */
@@ -51,13 +51,14 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "marsupial_g2o/g2o_edge_time.h"
 #include "marsupial_g2o/g2o_edge_velocity.h" 
 #include "marsupial_g2o/g2o_edge_acceleration.h" 
+#include "marsupial_g2o/g2o_edge_catenary.h"
 
 #include "marsupial_g2o/g2o_vertex_timediff.h"
+#include "marsupial_g2o/g2o_vertex_catenary_factor.h"
 #include "g2o/types/slam3d/vertex_pointxyz.h"
 
-// #include "marsupial_g2o/obstacles.hpp"
 #include "marsupial_g2o/nearNeighbor.hpp"
-// #include "marsupial_g2o/marsupial_cfg.hpp"
+#include "marsupial_g2o/bisection_catenary_3D.h"
 
 #include <iostream>
 #include <fstream>
@@ -155,6 +156,7 @@ public:
 	void writeTemporalDataBeforeOptimization(void);
 	void writeTemporalDataAfterOptimization(auto _s);
 	void getMarkerUGV();
+	void setInitialLengthCatenaryAndPosUGV(std::vector <double> &_vector, auto _s);
 
 	// ============= Global Variables ================
 
@@ -166,13 +168,17 @@ public:
 	string path= "/home/simon/";
 	int n_iter_opt;	//Iterations Numbers of Optimizer
 	double initial_pos_ugv_x, initial_pos_ugv_y, initial_pos_ugv_z;
-	double w_alpha, w_beta, w_iota, w_gamma, w_delta, w_epsilon, w_zeta, w_eta, w_theta;
+	double offset_initial_pos_ugv_x, offset_initial_pos_ugv_y, offset_initial_pos_ugv_z;
+	double multiplicative_factor_catenary;
+	float radius_collition_catenary;
+	double w_alpha, w_beta, w_iota, w_gamma, w_delta, w_epsilon, w_zeta, w_eta, w_theta, w_kappa;
 
 	NearNeighbor nn_;
 
 	SparseOptimizer optimizer;
 	g2o::VertexPointXYZ* vertexPose;
 	g2o::VertexTimeDiff* vertexTime;
+	g2o::VertexCatenaryFactor* vertexCatenaryFactor;
 
 	g2o::G2ODistanceVertexEdge* edgeDistanceVertex;
 	g2o::G2ODistanceXYZEdge* edgeDistanceXYZ;
@@ -180,6 +186,7 @@ public:
 	g2o::G2OObstaclesEdge* edgeObstaclesNear;
 	g2o::G2OThroughObstaclesEdge* edgeThroughObstacles;
 	g2o::G2OEquiDistanceEdge* edgeEquiDistance;
+	g2o::G2OCatenaryEdge* edgeCatenary;
 
 	//! Manage Data Vertices and Edges
 	vector<Eigen::Vector3d> near_obs;
@@ -229,11 +236,14 @@ public:
 	float d3D_;
 	float n_points; 
 	vector<float> slopeXYZ;
+	vector<double> initial_length_catenary;
+
 
 private:
 	void resetFlags();
 	double global_path_length;
 	double bound, velocity , angle, acceleration;
+	geometry_msgs::Point ugv_pos_catenary;
 
     // void pointsSub(const PointCloud::ConstPtr &points);
 
