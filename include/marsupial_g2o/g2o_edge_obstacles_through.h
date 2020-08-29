@@ -61,108 +61,89 @@ class G2OThroughObstaclesEdge : public BaseBinaryEdge<1, double, VertexPointXYZ,
 
 			straightTrajectoryVertices(pose1->estimate().x(),pose1->estimate().y(),pose1->estimate().z(),pose2->estimate().x(),pose2->estimate().y(),pose2->estimate().z(),num_points,_vector_points_line);
 			
-			// printf("vector_size=[%lu] [%i]p1=[%f %f %f] [%i]p2=[%f %f %f]\n",
-			// _vector_points_line.size(),pose1->id(),pose1->estimate().x(),pose1->estimate().y(),pose1->estimate().z(),pose2->id(),pose2->estimate().x(),pose2->estimate().y(),pose2->estimate().z());
-	
 			for (size_t i =0; i <_vector_points_line.size();i++){
 
 				inside_x = false;
 				inside_y = false;
 				inside_z = false;
 				Eigen::Vector3d obstacles_;
-				// printf("[%lu]vector = [%f %f %f] \n",i,_vector_points_line[i].x(),_vector_points_line[i].y(),_vector_points_line[i].z());
 				near_ = nn.nearestObstacleVertex(kdT_From_NN , _vector_points_line[i],obstacles_Points);
 
-				// printf("[%lu] near=[%f %f %f] vector=[%f %f %f]\n",i,near_.x(),near_.y(),near_.z(),_vector_points_line[i].x() ,_vector_points_line[i].y(),_vector_points_line[i].z());
 				if (pose1->estimate().x() < pose2->estimate().x()){
 					if ((pose1->estimate().x() - approximation_) < near_.x() && (pose2->estimate().x() + approximation_) > near_.x()){
 						inside_x = true;
 						obstacles_.x()=near_.x();					
-						// printf("Inside X1 axes [%i - %i]\n",pose1->id(),pose2->id());
 					}
 				}
 				else if (pose1->estimate().x() > pose2->estimate().x()){
 					if ((pose1->estimate().x() + approximation_) > near_.x() && (pose2->estimate().x() - approximation_) < near_.x()){
 						inside_x = true;
 						obstacles_.x()=near_.x();					
-						// printf("Inside X2 axes [%i - %i]\n",pose1->id(),pose2->id());
 					}
 				}
 				else if (pose1->estimate().x() == pose2->estimate().x()){
 					if ((pose1->estimate().x() + approximation_) > near_.x() && (pose1->estimate().x() - approximation_) < near_.x()){
 						inside_x = true;
 						obstacles_.x()=near_.x();					
-						// printf("Inside X3 axes [%i - %i]\n",pose1->id(),pose2->id());
 					}
 				}
 				else
 					inside_x = false;
-				// printf("after X BOOL x=[%d] y=[%d] z=[%d]\n",inside_x,inside_y,inside_z);
 
 
 				if (pose1->estimate().y() < pose2->estimate().y()){
 					if ((pose1->estimate().y() - approximation_) < near_.y() && (pose2->estimate().y() + approximation_) > near_.y()){
 						inside_y = true;
 						obstacles_.y()=near_.y();					
-						// printf("Inside Y1 axes [%i - %i]\n",pose1->id(),pose2->id());
 					}
 				}
 				else if (pose1->estimate().y() > pose2->estimate().y()){
 					if ((pose1->estimate().y() + approximation_) > near_.y() &&  (pose2->estimate().y() - approximation_) < near_.y()){
 						inside_y = true;
 						obstacles_.y()=near_.y();					
-						// printf("Inside Y2 axes [%i - %i]\n",pose1->id(),pose2->id());
 					}
 				}
 				else if (pose1->estimate().y() == pose2->estimate().y()){
 					if ((pose1->estimate().y() + approximation_) > near_.y() && (pose1->estimate().y() - approximation_) < near_.y()){
 						inside_y = true;
 						obstacles_.y()=near_.y();					
-						// printf("Inside Y3 axes [%i - %i]\n",pose1->id(),pose2->id());
 					}
 				}
 				else
 					inside_y = false;
-				// printf("after y BOOL x=[%d] y=[%d] z=[%d]\n",inside_x,inside_y,inside_z);
 
 				
 				if (pose1->estimate().z() < pose2->estimate().z()){
 					if ((pose1->estimate().z() - approximation_) < near_.z() && (pose2->estimate().z() + approximation_) > near_.z()){
 						inside_z = true;
 						obstacles_.z()=near_.z();					
-						// printf("Inside Z1 axes [%i - %i]\n",pose1->id(),pose2->id());
 					}
 				}
 				else if (pose1->estimate().z() > pose2->estimate().z()){
 					if ((pose1->estimate().z() + approximation_) > near_.z() && (pose2->estimate().z() - approximation_) < near_.z()){
 						inside_z = true;
 						obstacles_.z()=near_.z();					
-						// printf("Inside Z2 axes [%i - %i]\n",pose1->id(),pose2->id());
 					}
 				}
 				else if (pose1->estimate().z() == pose2->estimate().z()){
 					if ((pose1->estimate().z() + approximation_) > near_.z() && (pose1->estimate().z() - approximation_) < near_.z()){
 						inside_z = true;
 						obstacles_.z()=near_.z();					
-						// printf("Inside Z3 axes [%i - %i]\n",pose1->id(),pose2->id());
 					}
 				}
 				else
 					inside_z = false;
-				// printf("after z BOOL x=[%d] y=[%d] z=[%d]\n",inside_x,inside_y,inside_z);
 
 				if (inside_x && inside_y && inside_z){
 					_vectorMainObstacles.push_back(obstacles_);
 				}
 			}
 
-			// printf("BOOL x=[%d] y=[%d] z=[%d]\n",inside_x,inside_y,inside_z);
 			_sum_obstacle_x = _sum_obstacle_y = _sum_obstacle_z = 0.0;
 			if (_vectorMainObstacles.size() == 0)
 				_size_vector = 0;
 			else
 				_size_vector = _vectorMainObstacles.size();
-			// printf("INSIDE size=[%i] _main_obstacle[%f %f %f]\n",_size_vector ,_main_obstacle.x(),_main_obstacle.y(),_main_obstacle.z());
 
 			for (int k=0 ; k < _size_vector; k++){
 				_sum_obstacle_x = _vectorMainObstacles[k].x() + _sum_obstacle_x;
@@ -173,7 +154,6 @@ class G2OThroughObstaclesEdge : public BaseBinaryEdge<1, double, VertexPointXYZ,
 			_main_obstacle.y() = (_sum_obstacle_y) / _size_vector;
 			_main_obstacle.z() = (_sum_obstacle_z) / _size_vector;
 
-			// printf("_main_obstacle = [%f %f %f]\n",_main_obstacle.x(),_main_obstacle.y(),_main_obstacle.z());
 
 			double _do1 = (pose1->estimate()-_main_obstacle).norm();
 			double _do2 = (pose2->estimate()-_main_obstacle).norm();
@@ -186,11 +166,7 @@ class G2OThroughObstaclesEdge : public BaseBinaryEdge<1, double, VertexPointXYZ,
 			if (inside_x && inside_y && inside_z)
 			{
 				_error[0] = factor_ *(_do1+_do2); 
-				// _error[0] = factor_/(_do1+_do2);
-				// _error[0] = factor_ * exp( - 2.0*(_do1+_do2)); 
-				// printf("Vertex[%i-%i]_error=[%f] p1=[%f %f %f] p2=[%f %f %f] near=[%f %f %f]\n",pose1->id(),pose2->id(),_error[0],
-				// pose1->estimate().x(),pose1->estimate().y(),pose1->estimate().z(),pose2->estimate().x(),pose2->estimate().y(),pose2->estimate().z(),
-				// near_.x(),near_.y(),near_.z());
+
 			}
 			else
 				_error[0] = 0.0; 

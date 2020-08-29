@@ -17,13 +17,6 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(tf2_ros::Buffer *tfBuffer_)
 	nh.reset(new ros::NodeHandle("~"));
     tf_list.reset(new tf::TransformListener);
 
-	nh->param<double>("initial_pos_ugv_x", initial_pos_ugv_x, 0.0);
-	nh->param<double>("initial_pos_ugv_y", initial_pos_ugv_y, 0.0);
-	nh->param<double>("initial_pos_ugv_z", initial_pos_ugv_z, 0.0);
-	nh->param<double>("offset_initial_pos_ugv_x", offset_initial_pos_ugv_x, 0.0);
-	nh->param<double>("offset_initial_pos_ugv_y", offset_initial_pos_ugv_y, 0.0);
-	nh->param<double>("offset_initial_pos_ugv_z", offset_initial_pos_ugv_z, 0.0);
-
 	nh->param<double>("w_alpha", w_alpha,0.1);
 	nh->param<double>("w_beta",	w_beta,0.1);
 	nh->param<double>("w_iota",	w_iota,0.1);
@@ -35,7 +28,7 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(tf2_ros::Buffer *tfBuffer_)
   	nh->param<double>("w_theta", w_theta,0.1);
   	nh->param<double>("w_kappa", w_kappa,0.1);
 
-  	nh->param<double>("multiplicative_factor_catenary", multiplicative_factor_catenary,1.0); //Can't be lower than 1.0 or "catenary < distance between UGV and vertex" 	
+  	nh->param<double>("initial_multiplicative_factor_length_catenary", initial_multiplicative_factor_length_catenary,1.0); //Can't be lower than 1.0 or "catenary < distance between UGV and vertex" 	
 
 	nh->param<int>("n_iter_opt", n_iter_opt,200);
   	nh->param<double>("bound", bound,2.0);
@@ -92,7 +85,7 @@ void OptimizerLocalPlanner::initializeSubscribers()
 void OptimizerLocalPlanner::initializePublishers()
 {
     traj_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("opt_trajectory_marker", 2);
-    ugv_marker_pub_ = nh->advertise<visualization_msgs::Marker>("ugv_marsupial_marker", 1);
+    // ugv_marker_pub_ = nh->advertise<visualization_msgs::Marker>("ugv_marsupial_marker", 1);
 
 	// visMarkersPublisher = nh->advertise<visualization_msgs::Marker>("markers", 1, true);
     // trajPub = nh->advertise<trajectory_msgs::MultiDOFJointTrajectory>("local_path", 1);
@@ -138,7 +131,7 @@ void OptimizerLocalPlanner::setupOptimizer()
 	optimizer.setAlgorithm(optimizationAlgorithm);
     optimizer.setVerbose(verbose_optimizer);
 	
-	// getSlopXYZAxes(mXYZ_);
+	// getSlopXYZAxes(v_mXYZ_);
 }
 
 void OptimizerLocalPlanner::dynRecCb(marsupial_g2o::OptimizationParamsConfig &config, uint32_t level)
@@ -192,15 +185,23 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
     //upo_actions::ExecutePathGoalConstPtr path_shared_ptr;
     auto path_shared_ptr = execute_path_srv_ptr->acceptNewGoal();
     globalTrajectory = path_shared_ptr->path;
-    auto size = globalTrajectory.points.size()-1;
+
+	for (int i = 0; i < globalTrajectory.points.size()-1; i++){
+		printf("size=[%lu] GlobalTrayectoryPointTranslation=[%f %f %f]\n", globalTrajectory.points.size()-1,
+		globalTrajectory.points.at(i).transforms[0].translation.x, globalTrajectory.points.at(i).transforms[0].translation.y, globalTrajectory.points.at(i).transforms[0].translation.z);
+	}
+		
+	getPointsFromGlobalPath(globalTrajectory,new_path_from_global);
+    // auto size = globalTrajectory.points.size()-1;
+    auto size = new_path_from_global.size()-1;
     ROS_INFO_COND(debug, PRINTF_GREEN "Number of Vertices to optimize = [%lu]",size);
 
 	// printf("size.size() = [%lu]\n",size);
 
 	resetFlags();
     clearMarkers(size);
-	getMarkerUGV();
-	global_path_length = calculatePathLengthAndDistanceVertices(globalTrajectory,dist_vec_);
+	// getMarkerUGV();
+	global_path_length = calculatePathLengthAndDistanceVertices(new_path_from_global,dist_vec_);
 
 	for (int j_ = 0; j_ < n_time_optimize; j_++)
 	{
@@ -215,9 +216,12 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			vertexPose = new g2o::VertexPointXYZ();
 			Eigen::Vector3d xyz;
 			if(!continue_optimizing){
-				xyz.x() = globalTrajectory.points.at(i).transforms[0].translation.x;
-				xyz.y() = globalTrajectory.points.at(i).transforms[0].translation.y;
-				xyz.z() = globalTrajectory.points.at(i).transforms[0].translation.z;
+				// xyz.x() = globalTrajectory.points.at(i).transforms[0].translation.x;
+				// xyz.y() = globalTrajectory.points.at(i).transforms[0].translation.y;
+				// xyz.z() = globalTrajectory.points.at(i).transforms[0].translation.z;
+				xyz.x() = new_path_from_global[i].x();
+				xyz.y() = new_path_from_global[i].y();
+				xyz.z() = new_path_from_global[i].z();
 				vertexPose->setEstimate(xyz);
 			}
 			else{
@@ -228,7 +232,8 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			else
 				vertexPose->setFixed(false);
 			vertexPose->setId(i);
-			optimizer.addVertex(vertexPose);	
+			optimizer.addVertex(vertexPose);
+			printf("Creating Vertex I - pose: [%lu]estimate=[%f %f %f]\n",i,xyz.x(),xyz.y(),xyz.z());	
 		}
 		//! I. Add Edges: Distances between two Vertices.
 		// for (size_t i = 0; i < size-1; ++i)
@@ -246,7 +251,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		// 	edgeDistanceXYZ = new g2o::G2ODistanceXYZEdge();
 		// 	edgeDistanceXYZ->vertices()[0] = optimizer.vertices()[i];
 		// 	edgeDistanceXYZ->vertices()[1] = optimizer.vertices()[i+1];
-		// 	edgeDistanceXYZ->setMeasurement(mXYZ_);
+		// 	edgeDistanceXYZ->setMeasurement(v_mXYZ_);
 		// 	edgeDistanceXYZ->setInformation(G2ODistanceXYZEdge::InformationType::Identity()*w_gamma); 
 		// 	optimizer.addEdge(edgeDistanceXYZ);
 		// }
@@ -305,6 +310,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			vertexTime->setId(i+size);
 			vertexTime->setFixed(false);
 			optimizer.addVertex(vertexTime);
+			printf("Creating Vertex II - time: [%lu]estimate=[%f]\n",i,time_vec_[i].time);	
 		}
 		
 		if (!continue_optimizing)
@@ -347,27 +353,26 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		/*
 		* III Create Vertex: Multiplicative factor for Catenary Length
 		*/
+		setInitialLengthCatenaryAndPosUGV(v_initial_length_catenary, size);
+		printf("v_initial_length_catenary: size=[%lu]\n",v_initial_length_catenary.size());
 		for (size_t i = 0; i < size; ++i) // Subtracting -2 because the extreme Vertices are fixed, cannot be optimizing their position
 		{	
-			vertexCatenaryFactor = new g2o:: VertexCatenaryFactor();
-			if(!continue_optimizing){
-				vertexCatenaryFactor->setEstimate(multiplicative_factor_catenary);
+			vertexCatenaryLength = new g2o:: VertexCatenaryLength();
+			if(!continue_optimizing)
+				vertexCatenaryLength->setEstimate(v_initial_length_catenary[i]);
+			else{
+				vertexCatenaryLength->setEstimate(v_initial_length_catenary[i]);
 				printf("Revisar ESTA CONDICION, hay que cambiar el valor que se le pasa una vez que ya optimizo!!\n");
 			}
-			else
-				vertexCatenaryFactor->setEstimate(multiplicative_factor_catenary);
 			if (i == 0 || i == size-1)		//First and last vertices are fixed.	
-				vertexCatenaryFactor->setFixed(true);
+				vertexCatenaryLength->setFixed(true);
 			else
-				vertexCatenaryFactor->setFixed(false);
-			vertexCatenaryFactor->setId(i+size+size-1.0);
-			optimizer.addVertex(vertexCatenaryFactor);	
+				vertexCatenaryLength->setFixed(false);
+			vertexCatenaryLength->setId(i+size+size-1.0);
+			optimizer.addVertex(vertexCatenaryLength);	
+			printf("Creating Vertex III - catenary: [%lu]estimate=[%f]\n",i,v_initial_length_catenary[i]);	
 		}
 
-
-		ugv_pos_catenary.x = initial_pos_ugv_x + offset_initial_pos_ugv_x;
-		ugv_pos_catenary.y = initial_pos_ugv_y + offset_initial_pos_ugv_y;
-		ugv_pos_catenary.z = initial_pos_ugv_z + offset_initial_pos_ugv_z;
 		//! X. Add Edges: Catenary chain.
 		for (size_t i = 0; i < size; ++i)
 		{
@@ -377,7 +382,11 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			edgeCatenary->readKDTree(nn_.kdtree,nn_.obs_points);
 			edgeCatenary->setRadius(radius_collition_catenary);
 			edgeCatenary->numberVerticesNotFixed(size-2);
-			edgeCatenary->setMeasurement(ugv_pos_catenary);
+			edgeCatenary->setInitialPosUGV(ugv_pos_catenary);
+			edgeCatenary->setMeasurement(v_initial_length_catenary);
+			// edgeCatenary->initializeVector();
+			edgeCatenary->setRobustKernel(new g2o::RobustKernelCauchy());
+            edgeCatenary->robustKernel()->setDelta(1.0);
 			edgeCatenary->setInformation(G2OCatenaryEdge::InformationType::Identity()*w_kappa);
 			optimizer.addEdge(edgeCatenary);
 		}
@@ -393,14 +402,24 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			std::cout << std::endl <<"Optimization Completed !!!" << std::endl << "===================================================" << std::endl << "Saving Temporal data in txt file ..." << std::endl;
 
 		pose_vec_opt_.clear();
+		len_cat_vec_.clear();
 		for (unsigned i = 0; i < size; i++)
 		{
 			structPose vOp;
+			structLengthCatenary vLC;
 			vOp.vertex = dynamic_cast<g2o::VertexPointXYZ*>(optimizer.vertex(i));
 			vOp.position = vOp.vertex->estimate();	
 			vOp.id = i;
 			pose_vec_opt_.push_back(vOp);
 			optimizer.removeVertex(optimizer.vertex(i));
+			vLC.vertex = dynamic_cast<g2o::VertexCatenaryLength*>(optimizer.vertex(i+size+size-1.0));
+			vLC.length = vLC.vertex->estimate();
+			vLC.id = i+size+size-1.0;
+			len_cat_vec_.push_back(vLC);
+		}
+
+		for (size_t i = 0; i < len_cat_vec_.size(); ++i){
+			printf("Optimized Length Canery[%i] = [%f]\n",len_cat_vec_[i].id,len_cat_vec_[i].length);
 		}
 
 		getMarkerPoints(points_marker,pose_vec_opt_,"points_lines",j_);
@@ -492,30 +511,30 @@ void OptimizerLocalPlanner::getMarkerLines(visualization_msgs::MarkerArray &mark
 	}
 }
 
-void OptimizerLocalPlanner::getMarkerUGV()
-{
-	ugv_marker.ns = "ugv";
-    ugv_marker.header.frame_id = "/map";
-    ugv_marker.header.stamp = ros::Time::now();
-    ugv_marker.id = 1;
-    ugv_marker.lifetime = ros::Duration(400);
-    ugv_marker.type = visualization_msgs::Marker::CUBE;
-    ugv_marker.action = visualization_msgs::Marker::ADD;
-    ugv_marker.pose.position.x=initial_pos_ugv_x;
-    ugv_marker.pose.position.y=initial_pos_ugv_y;
-    ugv_marker.pose.position.z=initial_pos_ugv_z;
-    ugv_marker.pose.orientation.w = 1;
-    ugv_marker.color.r = 0.9;
-    ugv_marker.color.g = 0.0;
-    ugv_marker.color.b = 0.0;
-    ugv_marker.color.a = 1.0;
-    ugv_marker.scale.x = 0.8;
-    ugv_marker.scale.y = 0.8;
-    ugv_marker.scale.z = 0.8;
-	// ugv_marker.mesh_resource = "package://pr2_description/meshes/base_v0/base.dae";
+// void OptimizerLocalPlanner::getMarkerUGV()
+// {
+// 	ugv_marker.ns = "ugv";
+//     ugv_marker.header.frame_id = "/map";
+//     ugv_marker.header.stamp = ros::Time::now();
+//     ugv_marker.id = 1;
+//     ugv_marker.lifetime = ros::Duration(400);
+//     ugv_marker.type = visualization_msgs::Marker::CUBE;
+//     ugv_marker.action = visualization_msgs::Marker::ADD;
+//     ugv_marker.pose.position.x=initial_pos_ugv_x;
+//     ugv_marker.pose.position.y=initial_pos_ugv_y;
+//     ugv_marker.pose.position.z=initial_pos_ugv_z;
+//     ugv_marker.pose.orientation.w = 1;
+//     ugv_marker.color.r = 0.9;
+//     ugv_marker.color.g = 0.0;
+//     ugv_marker.color.b = 0.0;
+//     ugv_marker.color.a = 1.0;
+//     ugv_marker.scale.x = 0.8;
+//     ugv_marker.scale.y = 0.8;
+//     ugv_marker.scale.z = 0.8;
+// 	// ugv_marker.mesh_resource = "package://pr2_description/meshes/base_v0/base.dae";
 
-    ugv_marker_pub_.publish(ugv_marker);
-}
+//     ugv_marker_pub_.publish(ugv_marker);
+// }
 
 void OptimizerLocalPlanner::clearMarkers(auto _s)
 {
@@ -530,29 +549,75 @@ void OptimizerLocalPlanner::clearMarkers(auto _s)
 		lines_marker.markers[i].action = visualization_msgs::Marker::DELETE;
 	}
     ugv_marker.action = RVizMarker::DELETEALL;
-    ugv_marker_pub_.publish(ugv_marker);
+    // ugv_marker_pub_.publish(ugv_marker);
     ugv_marker.points.clear();
     ugv_marker.action = RVizMarker::ADD;
 }
 
-double OptimizerLocalPlanner::calculatePathLengthAndDistanceVertices(trajectory_msgs::MultiDOFJointTrajectory _path,vector<structDistance> &_v_sD)
+void OptimizerLocalPlanner::getPointsFromGlobalPath(trajectory_msgs::MultiDOFJointTrajectory _path,vector<Eigen::Vector3d> &_v_gp)
+{
+	float x, y, z;
+	Eigen::Vector3d _p;
+    double D = 0.0;
+	int n = 0;
+	_v_gp.clear();
+    for (size_t i = 0; i < _path.points.size()-1; i++)
+    {
+        x = _path.points.at(i+1).transforms[0].translation.x - _path.points.at(i).transforms[0].translation.x;
+		y = _path.points.at(i+1).transforms[0].translation.y - _path.points.at(i).transforms[0].translation.y;
+		z = _path.points.at(i+1).transforms[0].translation.z - _path.points.at(i).transforms[0].translation.z;
+        D = sqrt(x * x + y * y + z * z);
+		if (D > 0.5){
+			n = floor(D / 0.5);
+			double xp = x/((double)n+1.0);
+			double yp = y/((double)n+1.0);
+			double zp = z/((double)n+1.0);
+			// printf("i=[%lu] n = [%i] , xp,yp,zp=[%f %f %f]\n",i,n,xp,yp,zp);
+			_p.x() = _path.points.at(i).transforms[0].translation.x;
+			_p.y() = _path.points.at(i).transforms[0].translation.y;
+			_p.z() = _path.points.at(i).transforms[0].translation.z;
+			_v_gp.push_back(_p);
+			for (int j=0; j< n ; j++){
+				_p = Eigen::Vector3d(0.0,0.0,0.0);
+				_p.x() = _path.points.at(i).transforms[0].translation.x + xp*(1.0+(double)j);
+				_p.y() = _path.points.at(i).transforms[0].translation.y + yp*(1.0+(double)j);
+				_p.z() = _path.points.at(i).transforms[0].translation.z + zp*(1.0+(double)j);
+				// printf("[%i] xp*(1.0+(double)i) =[%f] yp*(1.0+(double)i)=[%f] zp*(1.0+(double)i)=[%f]\n",j,xp*(1.0+(double)j),yp*(1.0+(double)j),zp*(1.0+(double)j));
+				_v_gp.push_back(_p);
+			}
+		}
+		else{
+			_p.x() = _path.points.at(i).transforms[0].translation.x;
+			_p.y() = _path.points.at(i).transforms[0].translation.y;
+			_p.z() = _path.points.at(i).transforms[0].translation.z;
+			_v_gp.push_back(_p);
+		}
+    }
+	_p.x() = _path.points.at(_path.points.size()-1).transforms[0].translation.x;
+	_p.y() = _path.points.at(_path.points.size()-1).transforms[0].translation.y;
+	_p.z() = _path.points.at(_path.points.size()-1).transforms[0].translation.z;
+	_v_gp.push_back(_p);
+}
+
+
+double OptimizerLocalPlanner::calculatePathLengthAndDistanceVertices(vector<Eigen::Vector3d> _path,vector<structDistance> &_v_sD)
 {
 	structDistance _sD;
 	float x, y, z;
 	_v_sD.clear();
     double pL = 0;
-    for (size_t i = 0; i < _path.points.size()-1; i++)
+    for (size_t i = 0; i < _path.size()-1; i++)
     {
-        x = _path.points.at(i).transforms[0].translation.x - _path.points.at(i+1).transforms[0].translation.x;
-		y = _path.points.at(i).transforms[0].translation.y - _path.points.at(i+1).transforms[0].translation.y;
-		z = _path.points.at(i).transforms[0].translation.z - _path.points.at(i+1).transforms[0].translation.z;
+        x = new_path_from_global[i+1].x() - new_path_from_global[i].x();
+		y = new_path_from_global[i+1].y() - new_path_from_global[i].y();
+		z = new_path_from_global[i+1].z() - new_path_from_global[i].z();
         pL= sqrt(x * x + y * y + z * z);
 		_sD.id_from = i;
 		_sD.id_to = i+ 1;
 		_sD.dist = pL;
 		_v_sD.push_back(_sD);
     }
-    // ROS_INFO_COND(debug, PRINTF_BLUE "Global path lenght: %f, number of points: %d", pL, _path.points.size());
+    // ROS_INFO_COND(debug, PRINTF_BLUE "Global path length: %f, number of points: %d", pL, _path.points.size());
 	return pL;
 }
 
@@ -570,7 +635,7 @@ void OptimizerLocalPlanner::getTemporalState(vector<structTime> &_time, vector<s
 	}
 }
 
-inline void OptimizerLocalPlanner::getSlopXYZAxes(vector<float> &m_) {m_=slopeXYZ;}	
+inline void OptimizerLocalPlanner::getSlopXYZAxes(vector<float> &m_) {m_=v_slopeXYZ;}	
 
 void OptimizerLocalPlanner::writeTemporalDataBeforeOptimization(void){
 	//! Save temporal state before optimization
@@ -638,4 +703,41 @@ void OptimizerLocalPlanner::writeTemporalDataAfterOptimization(auto _s)
 	file_out_velocity.close();
 	// file_out_difftime.close();
 	file_out_acceleration.close();
+}
+
+void OptimizerLocalPlanner::setInitialLengthCatenaryAndPosUGV(std::vector <double> &_vector, auto _s)
+{
+
+	tfListener();
+	printf("setInitialLengthCatenaryAndPosUGV: ugv_pos_catenary = [%f %f %f]\n",ugv_pos_catenary.x,ugv_pos_catenary.y,ugv_pos_catenary.z);
+
+	_vector.clear();
+	for (size_t i = 0; i < _s; ++i){
+		// double _dist_X_c_v = (ugv_pos_catenary.x - globalTrajectory.points.at(i).transforms[0].translation.x);
+		// double _dist_Y_c_v = (ugv_pos_catenary.y - globalTrajectory.points.at(i).transforms[0].translation.y);
+		// double _dist_Z_c_v = (ugv_pos_catenary.z - globalTrajectory.points.at(i).transforms[0].translation.z);
+		double _dist_X_c_v = (ugv_pos_catenary.x - new_path_from_global[i].x());
+		double _dist_Y_c_v = (ugv_pos_catenary.y - new_path_from_global[i].y());
+		double _dist_Z_c_v = (ugv_pos_catenary.z - new_path_from_global[i].z());
+		
+		double _dist_c_v = sqrt(_dist_X_c_v * _dist_X_c_v + _dist_Y_c_v * _dist_Y_c_v + _dist_Z_c_v * _dist_Z_c_v)*initial_multiplicative_factor_length_catenary;  
+		
+		_vector.push_back(_dist_c_v);
+		printf("size=[%lu] i=[%lu] Length Canery=[%f] ugv_pos_catenary=[%f %f %f] GlobalTrayectoryPointTranslation=[%f %f %f]\n",
+		_s,i,_dist_c_v,ugv_pos_catenary.x,ugv_pos_catenary.y,ugv_pos_catenary.z,
+		new_path_from_global[i].x(), new_path_from_global[i].y(), new_path_from_global[i].z());
+		
+		// printf("Initial Length Canery[%lu] = [%f]\n",i,_dist_c_v);
+	}
+}
+
+void OptimizerLocalPlanner::tfListener(){
+
+	tf::StampedTransform transform;
+
+    listener.lookupTransform("/map", "/reel_base_link", ros::Time(0), transform);
+
+	ugv_pos_catenary.x = transform.getOrigin().x();
+	ugv_pos_catenary.y = transform.getOrigin().y();
+	ugv_pos_catenary.z = transform.getOrigin().z();
 }

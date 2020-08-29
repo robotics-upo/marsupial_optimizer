@@ -1,0 +1,2602 @@
+<?xml version="1.0" ?>
+
+<robot name="tether_model" xmlns:xacro="http://ros.org/wiki/xacro">
+
+<!-- <xacro:macro name="tether"> -->
+
+  <joint name="tether_model_joint_01_02" type="revolute">
+    <parent link="tether_model_sphere_01"/>
+    <child link="tether_model_sphere_02"/>
+    <origin rpy="0  0  0" xyz="0.01  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_02_03" type="revolute">
+    <parent link="tether_model_sphere_02"/>
+    <child link="tether_model_sphere_03"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_03_04" type="revolute">
+    <parent link="tether_model_sphere_03"/>
+    <child link="tether_model_sphere_04"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_04_05" type="revolute">
+    <parent link="tether_model_sphere_04"/>
+    <child link="tether_model_sphere_05"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_05_06" type="revolute">
+    <parent link="tether_model_sphere_05"/>
+    <child link="tether_model_sphere_06"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_06_07" type="revolute">
+    <parent link="tether_model_sphere_06"/>
+    <child link="tether_model_sphere_07"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_07_08" type="revolute">
+    <parent link="tether_model_sphere_07"/>
+    <child link="tether_model_sphere_08"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_08_09" type="revolute">
+    <parent link="tether_model_sphere_08"/>
+    <child link="tether_model_sphere_09"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_09_10" type="revolute">
+    <parent link="tether_model_sphere_09"/>
+    <child link="tether_model_sphere_10"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_10_11" type="revolute">
+    <parent link="tether_model_sphere_10"/>
+    <child link="tether_model_sphere_11"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_11_12" type="revolute">
+    <parent link="tether_model_sphere_11"/>
+    <child link="tether_model_sphere_12"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_12_13" type="revolute">
+    <parent link="tether_model_sphere_12"/>
+    <child link="tether_model_sphere_13"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_13_14" type="revolute">
+    <parent link="tether_model_sphere_13"/>
+    <child link="tether_model_sphere_14"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_14_15" type="revolute">
+    <parent link="tether_model_sphere_14"/>
+    <child link="tether_model_sphere_15"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_15_16" type="revolute">
+    <parent link="tether_model_sphere_15"/>
+    <child link="tether_model_sphere_16"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_16_17" type="revolute">
+    <parent link="tether_model_sphere_16"/>
+    <child link="tether_model_sphere_17"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_17_18" type="revolute">
+    <parent link="tether_model_sphere_17"/>
+    <child link="tether_model_sphere_18"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_18_19" type="revolute">
+    <parent link="tether_model_sphere_18"/>
+    <child link="tether_model_sphere_19"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_19_20" type="revolute">
+    <parent link="tether_model_sphere_19"/>
+    <child link="tether_model_sphere_20"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_20_21" type="revolute">
+    <parent link="tether_model_sphere_20"/>
+    <child link="tether_model_sphere_21"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_21_22" type="revolute">
+    <parent link="tether_model_sphere_21"/>
+    <child link="tether_model_sphere_22"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_22_23" type="revolute">
+    <parent link="tether_model_sphere_22"/>
+    <child link="tether_model_sphere_23"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_23_24" type="revolute">
+    <parent link="tether_model_sphere_23"/>
+    <child link="tether_model_sphere_24"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_24_25" type="revolute">
+    <parent link="tether_model_sphere_24"/>
+    <child link="tether_model_sphere_25"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_25_26" type="revolute">
+    <parent link="tether_model_sphere_25"/>
+    <child link="tether_model_sphere_26"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_26_27" type="revolute">
+    <parent link="tether_model_sphere_26"/>
+    <child link="tether_model_sphere_27"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_27_28" type="revolute">
+    <parent link="tether_model_sphere_27"/>
+    <child link="tether_model_sphere_28"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_28_29" type="revolute">
+    <parent link="tether_model_sphere_28"/>
+    <child link="tether_model_sphere_29"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_29_30" type="revolute">
+    <parent link="tether_model_sphere_29"/>
+    <child link="tether_model_sphere_30"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_30_31" type="revolute">
+    <parent link="tether_model_sphere_30"/>
+    <child link="tether_model_sphere_31"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_31_32" type="revolute">
+    <parent link="tether_model_sphere_31"/>
+    <child link="tether_model_sphere_32"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_32_33" type="revolute">
+    <parent link="tether_model_sphere_32"/>
+    <child link="tether_model_sphere_33"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_33_34" type="revolute">
+    <parent link="tether_model_sphere_33"/>
+    <child link="tether_model_sphere_34"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_34_35" type="revolute">
+    <parent link="tether_model_sphere_34"/>
+    <child link="tether_model_sphere_35"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_35_36" type="revolute">
+    <parent link="tether_model_sphere_35"/>
+    <child link="tether_model_sphere_36"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_36_37" type="revolute">
+    <parent link="tether_model_sphere_36"/>
+    <child link="tether_model_sphere_37"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_37_38" type="revolute">
+    <parent link="tether_model_sphere_37"/>
+    <child link="tether_model_sphere_38"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_38_39" type="revolute">
+    <parent link="tether_model_sphere_38"/>
+    <child link="tether_model_sphere_39"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_39_40" type="revolute">
+    <parent link="tether_model_sphere_39"/>
+    <child link="tether_model_sphere_40"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_40_41" type="revolute">
+    <parent link="tether_model_sphere_40"/>
+    <child link="tether_model_sphere_41"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_41_42" type="revolute">
+    <parent link="tether_model_sphere_41"/>
+    <child link="tether_model_sphere_42"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_42_43" type="revolute">
+    <parent link="tether_model_sphere_42"/>
+    <child link="tether_model_sphere_43"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_43_44" type="revolute">
+    <parent link="tether_model_sphere_43"/>
+    <child link="tether_model_sphere_44"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_44_45" type="revolute">
+    <parent link="tether_model_sphere_44"/>
+    <child link="tether_model_sphere_45"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_45_46" type="revolute">
+    <parent link="tether_model_sphere_45"/>
+    <child link="tether_model_sphere_46"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_46_47" type="revolute">
+    <parent link="tether_model_sphere_46"/>
+    <child link="tether_model_sphere_47"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_47_48" type="revolute">
+    <parent link="tether_model_sphere_47"/>
+    <child link="tether_model_sphere_48"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_48_49" type="revolute">
+    <parent link="tether_model_sphere_48"/>
+    <child link="tether_model_sphere_49"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_49_50" type="revolute">
+    <parent link="tether_model_sphere_49"/>
+    <child link="tether_model_sphere_50"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_50_51" type="revolute">
+    <parent link="tether_model_sphere_50"/>
+    <child link="tether_model_sphere_51"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_51_52" type="revolute">
+    <parent link="tether_model_sphere_51"/>
+    <child link="tether_model_sphere_52"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_52_5" type="revolute">
+    <parent link="tether_model_sphere_52"/>
+    <child link="tether_model_sphere_53"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_53_54" type="revolute">
+    <parent link="tether_model_sphere_53"/>
+    <child link="tether_model_sphere_54"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_54_55" type="revolute">
+    <parent link="tether_model_sphere_54"/>
+    <child link="tether_model_sphere_55"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_55_56" type="revolute">
+    <parent link="tether_model_sphere_55"/>
+    <child link="tether_model_sphere_56"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_56_57" type="revolute">
+    <parent link="tether_model_sphere_56"/>
+    <child link="tether_model_sphere_57"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_57_58" type="revolute">
+    <parent link="tether_model_sphere_57"/>
+    <child link="tether_model_sphere_58"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_58_59" type="revolute">
+    <parent link="tether_model_sphere_58"/>
+    <child link="tether_model_sphere_59"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_59_60" type="revolute">
+    <parent link="tether_model_sphere_59"/>
+    <child link="tether_model_sphere_60"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_60_61" type="revolute">
+    <parent link="tether_model_sphere_60"/>
+    <child link="tether_model_sphere_61"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_61_62" type="revolute">
+    <parent link="tether_model_sphere_61"/>
+    <child link="tether_model_sphere_62"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_62_63" type="revolute">
+    <parent link="tether_model_sphere_62"/>
+    <child link="tether_model_sphere_63"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_63_64" type="revolute">
+    <parent link="tether_model_sphere_63"/>
+    <child link="tether_model_sphere_64"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_64_65" type="revolute">
+    <parent link="tether_model_sphere_64"/>
+    <child link="tether_model_sphere_65"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_65_66" type="revolute">
+    <parent link="tether_model_sphere_65"/>
+    <child link="tether_model_sphere_66"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_66_67" type="revolute">
+    <parent link="tether_model_sphere_66"/>
+    <child link="tether_model_sphere_67"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_67_68" type="revolute">
+    <parent link="tether_model_sphere_67"/>
+    <child link="tether_model_sphere_68"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_68_69" type="revolute">
+    <parent link="tether_model_sphere_68"/>
+    <child link="tether_model_sphere_69"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_69_70" type="revolute">
+    <parent link="tether_model_sphere_69"/>
+    <child link="tether_model_sphere_70"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_70_71" type="revolute">
+    <parent link="tether_model_sphere_70"/>
+    <child link="tether_model_sphere_71"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_71_2" type="revolute">
+    <parent link="tether_model_sphere_71"/>
+    <child link="tether_model_sphere_72"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_72_73" type="revolute">
+    <parent link="tether_model_sphere_72"/>
+    <child link="tether_model_sphere_73"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_73_74" type="revolute">
+    <parent link="tether_model_sphere_73"/>
+    <child link="tether_model_sphere_74"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_74_75" type="revolute">
+    <parent link="tether_model_sphere_74"/>
+    <child link="tether_model_sphere_75"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_75_76" type="revolute">
+    <parent link="tether_model_sphere_75"/>
+    <child link="tether_model_sphere_76"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_76_77" type="revolute">
+    <parent link="tether_model_sphere_76"/>
+    <child link="tether_model_sphere_77"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_77_78" type="revolute">
+    <parent link="tether_model_sphere_77"/>
+    <child link="tether_model_sphere_78"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_78_79" type="revolute">
+    <parent link="tether_model_sphere_78"/>
+    <child link="tether_model_sphere_79"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_79_80" type="revolute">
+    <parent link="tether_model_sphere_79"/>
+    <child link="tether_model_sphere_80"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_80_81" type="revolute">
+    <parent link="tether_model_sphere_80"/>
+    <child link="tether_model_sphere_81"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_81_82" type="revolute">
+    <parent link="tether_model_sphere_81"/>
+    <child link="tether_model_sphere_82"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_82_83" type="revolute">
+    <parent link="tether_model_sphere_82"/>
+    <child link="tether_model_sphere_83"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_83_84" type="revolute">
+    <parent link="tether_model_sphere_83"/>
+    <child link="tether_model_sphere_84"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_84_85" type="revolute">
+    <parent link="tether_model_sphere_84"/>
+    <child link="tether_model_sphere_85"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_85_86" type="revolute">
+    <parent link="tether_model_sphere_85"/>
+    <child link="tether_model_sphere_86"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_86_87" type="revolute">
+    <parent link="tether_model_sphere_86"/>
+    <child link="tether_model_sphere_87"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_87_88" type="revolute">
+    <parent link="tether_model_sphere_87"/>
+    <child link="tether_model_sphere_88"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_88_89" type="revolute">
+    <parent link="tether_model_sphere_88"/>
+    <child link="tether_model_sphere_89"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_89_90" type="revolute">
+    <parent link="tether_model_sphere_89"/>
+    <child link="tether_model_sphere_90"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_90_91" type="revolute">
+    <parent link="tether_model_sphere_90"/>
+    <child link="tether_model_sphere_91"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_91_92" type="revolute">
+    <parent link="tether_model_sphere_91"/>
+    <child link="tether_model_sphere_92"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_92_93" type="revolute">
+    <parent link="tether_model_sphere_92"/>
+    <child link="tether_model_sphere_93"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_93_94" type="revolute">
+    <parent link="tether_model_sphere_93"/>
+    <child link="tether_model_sphere_94"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_94_95" type="revolute">
+    <parent link="tether_model_sphere_94"/>
+    <child link="tether_model_sphere_95"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_95_96" type="revolute">
+    <parent link="tether_model_sphere_95"/>
+    <child link="tether_model_sphere_96"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_96_97" type="revolute">
+    <parent link="tether_model_sphere_96"/>
+    <child link="tether_model_sphere_97"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_97_98" type="revolute">
+    <parent link="tether_model_sphere_97"/>
+    <child link="tether_model_sphere_98"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_98_99" type="revolute">
+    <parent link="tether_model_sphere_98"/>
+    <child link="tether_model_sphere_99"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  0  1"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <joint name="tether_model_joint_99_100" type="revolute">
+    <parent link="tether_model_sphere_99"/>
+    <child link="tether_model_sphere_100"/>
+    <origin rpy="0  0  0" xyz="0.02  0    0"/>
+    <axis xyz="0  1  0"/>
+    <limit effort="0.0" lower="-2.2" upper="2.2" velocity="0.0"/>
+  </joint>
+  <link name="tether_model_sphere_01">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_01_collision">
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_01_visual">
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_02">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_02_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_02_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_03">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_03_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_03_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_04">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_04_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_04_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_05">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_05_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_05_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_06">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_06_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_06_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_07">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_07_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_07_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_08">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_08_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_08_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_09">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_09_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_09_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_10">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_10_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_10_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_11">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_11_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_11_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_12">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_12_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_12_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_13">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_13_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_13_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_14">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_14_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_14_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_15">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_15_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_15_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_16">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_16_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_16_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_17">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_17_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_17_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_18">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_18_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_18_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_19">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_19_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_19_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_20">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_20_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_20_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_21">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_21_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_21_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_22">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_22_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_22_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_23">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_23_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_23_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_24">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_24_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_24_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_25">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_25_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_25_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_26">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_26_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_26_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_27">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_27_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_27_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_28">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_08_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_08_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_29">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_29_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_29_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_30">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_30_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_30_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_31">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_31_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_31_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_32">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_32_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_32_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_33">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_33_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_33_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_34">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_34_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_34_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_35">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_35_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_35_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_36">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_36_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_36_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_37">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_37_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_37_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_38">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_38_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_38_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_39">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_39_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_39_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_40">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_40_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_40_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_41">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_41_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_41_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_42">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_42_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_42_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_43">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_43_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_43_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_44">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_44_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_44_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_45">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_45_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_45_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_46">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_46_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_46_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_47">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_47_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_47_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_48">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_48_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_48_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_49">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_49_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_49_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_50">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_50_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_50_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_51">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_51_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_51_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_52">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_52_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_52_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_53">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_53_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_53_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_54">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_54_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_54_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_55">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_55_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_55_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_56">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_56_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_56_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_57">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_57_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_57_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_58">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_58_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_58_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_59">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_59_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_59_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_60">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_60_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_60_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_61">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_61_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_61_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_62">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_62_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_62_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_63">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_63_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_63_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_64">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_64_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_64_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_65">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_65_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_65_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_66">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_66_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_66_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_67">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_67_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_67_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_68">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_68_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_68_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_69">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_69_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_69_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_70">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_70_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_70_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_71">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_71_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_71_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_72">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_72_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_72_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_73">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_73_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_73_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_74">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_74_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_74_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_75">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_75_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_75_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_76">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_76_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_76_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_77">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_77_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_77_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_78">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_78_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_78_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_79">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_79_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_79_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_80">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_80_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_80_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_81">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_81_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_81_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_82">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_82_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_82_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_83">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_83_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_83_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_84">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_84_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_84_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_85">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_85_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_85_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_86">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_86_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_86_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_87">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_87_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_87_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_88">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_88_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_88_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_89">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_89_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_89_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_90">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_90_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_90_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_91">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_91_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_91_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_92">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_92_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_92_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_93">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_93_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_93_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_94">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_94_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_94_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_95">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_95_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_95_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_96">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_96_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_96_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_97">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_97_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_97_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_98">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_98_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_98_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_99">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_99_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_99_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="tether_model_sphere_100">
+    <inertial>
+      <mass value="0.010000"/>
+      <origin rpy="0  0  0" xyz="0  0  0"/>
+      <inertia ixx="0.000001" ixy="0.000000" ixz="0.000000" iyy="0.000001" iyz="0.000000" izz="0.000001"/>
+    </inertial>
+    <collision name="tether_model_sphere_100_collision">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </collision>
+    <visual name="tether_model_sphere_100_visual">
+      <origin rpy="0  0  0" xyz="0.01  0    0"/>
+      <geometry>
+        <sphere radius="0.0100"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <!-- </xacro:macro> -->
+</robot>

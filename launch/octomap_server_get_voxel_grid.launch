@@ -1,0 +1,22 @@
+<launch>
+	
+	<!-- <arg name="map_file" default="octomap_full"/> -->
+	<!-- <arg name="map_file" default="stage_1"/> -->
+	<arg name="map_file" default="my_test"/> 
+	
+     <arg name="static_map_file" default="/home/simon/marsupial_ws/src/marsupial_g2o/maps/$(arg map_file).bt"/>
+
+	<node pkg="octomap_server" type="octomap_server_node" name="octomap_server_map" output="screen" args="$(arg static_map_file)">
+		<param name="base_frame_id" value="ugv_base_link"/>
+		<param name="frame_id" value="map"/>
+		<remap from="octomap_point_cloud_centers" to ="pointcloud_map"/>
+	</node>
+
+	<node pkg="octomap_server" type="octomap_server_node" name="octomap_server_node" output="screen">
+		<param name="base_frame_id" value="base_link"/>
+		<param name="frame_id" value="world"/>
+		<remap from="cloud_in" to ="/cloud_pcd"/>
+	</node>
+
+
+</launch>

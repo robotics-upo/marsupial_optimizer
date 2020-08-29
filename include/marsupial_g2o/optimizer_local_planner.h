@@ -54,7 +54,7 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "marsupial_g2o/g2o_edge_catenary.h"
 
 #include "marsupial_g2o/g2o_vertex_timediff.h"
-#include "marsupial_g2o/g2o_vertex_catenary_factor.h"
+#include "marsupial_g2o/g2o_vertex_catenary_length.h"
 #include "g2o/types/slam3d/vertex_pointxyz.h"
 
 #include "marsupial_g2o/nearNeighbor.hpp"
@@ -80,6 +80,7 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include <sensor_msgs/PointCloud2.h>
 
 #include <tf/transform_broadcaster.h>
+#include <tf/transform_listener.h>
 
 // #include <marsupial_actions/OptimizationTrajectoryAction.h>
 #include <upo_actions/ExecutePathAction.h>
@@ -123,6 +124,13 @@ struct structDistance
 	double dist;
 };
 
+struct structLengthCatenary
+{
+	int id;
+	double length;
+	g2o::VertexCatenaryLength *vertex;
+};
+
 class OptimizerLocalPlanner
 {
     typedef actionlib::SimpleActionServer<upo_actions::ExecutePathAction> ExecutePathServer;
@@ -142,7 +150,7 @@ public:
 	void readOctomapCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
 	void getMarkerPoints(visualization_msgs::MarkerArray &marker_, vector<structPose> _vector, std::string ns, int j_);
 	void getMarkerLines(visualization_msgs::MarkerArray &marker_, vector<structPose> _vector, std::string ns, int j_);
-	void tfBroadcaster(void);
+	void tfListener(void);
 	void configServices();
 	void executeOptimizerPathPreemptCB();
 	void executeOptimizerPathGoalCB();
@@ -151,25 +159,26 @@ public:
 	void configMarkers(std::string ns, std::string frame);
 	void clearMarkers(auto _s);
 	void publishTrajMarker3D(vector<structPose> _vector) ;
-	double calculatePathLengthAndDistanceVertices(trajectory_msgs::MultiDOFJointTrajectory _path,vector<structDistance> &_v_sD);
+	double calculatePathLengthAndDistanceVertices(vector<Eigen::Vector3d> _path,vector<structDistance> &_v_sD);
 	void getTemporalState(vector<structTime> &_time, vector<structDistance> _v_sD, double _length, double _vel);
 	void writeTemporalDataBeforeOptimization(void);
 	void writeTemporalDataAfterOptimization(auto _s);
-	void getMarkerUGV();
+	// void getMarkerUGV();
 	void setInitialLengthCatenaryAndPosUGV(std::vector <double> &_vector, auto _s);
+	void getPointsFromGlobalPath(trajectory_msgs::MultiDOFJointTrajectory _path,vector<Eigen::Vector3d> &_v_gp);
 
 	// ============= Global Variables ================
 
 	ros::NodeHandlePtr nh;
 	tf2_ros::Buffer *tfBuffer;
 	
+	tf::TransformListener listener;
+
 	ofstream file_in_pos,file_in_time ,file_in_velocity, file_in_difftime, file_in_acceleration;
 	ofstream file_out_pos, file_out_time, file_out_velocity, file_out_difftime, file_out_acceleration;
 	string path= "/home/simon/";
 	int n_iter_opt;	//Iterations Numbers of Optimizer
-	double initial_pos_ugv_x, initial_pos_ugv_y, initial_pos_ugv_z;
-	double offset_initial_pos_ugv_x, offset_initial_pos_ugv_y, offset_initial_pos_ugv_z;
-	double multiplicative_factor_catenary;
+	double initial_multiplicative_factor_length_catenary;
 	float radius_collition_catenary;
 	double w_alpha, w_beta, w_iota, w_gamma, w_delta, w_epsilon, w_zeta, w_eta, w_theta, w_kappa;
 
@@ -178,7 +187,7 @@ public:
 	SparseOptimizer optimizer;
 	g2o::VertexPointXYZ* vertexPose;
 	g2o::VertexTimeDiff* vertexTime;
-	g2o::VertexCatenaryFactor* vertexCatenaryFactor;
+	g2o::VertexCatenaryLength* vertexCatenaryLength;
 
 	g2o::G2ODistanceVertexEdge* edgeDistanceVertex;
 	g2o::G2ODistanceXYZEdge* edgeDistanceXYZ;
@@ -189,8 +198,9 @@ public:
 	g2o::G2OCatenaryEdge* edgeCatenary;
 
 	//! Manage Data Vertices and Edges
-	vector<Eigen::Vector3d> near_obs;
-	vector<float> mXYZ_;
+	vector<float> v_mXYZ_;
+
+	vector<Eigen::Vector3d> new_path_from_global;
 
 	// actionlib::SimpleActionServer<marsupial_actions::OptimizationTrajectoryAction> optimization_trajectory_action_server_;
 	// marsupial_actions::OptimizationTrajectoryFeedback feedback_; //variable stores the feedback/intermediate results
@@ -216,7 +226,7 @@ public:
 	std::string uav_base_frame, ugv_base_frame;
 
 	ros::Subscriber octomap_sub_,local_map_sub;
-	ros::Publisher traj_marker_pub_,visMarkersPublisher, ugv_marker_pub_;
+	ros::Publisher traj_marker_pub_,visMarkersPublisher;
 
 	geometry_msgs::Point obs_oct;
 
@@ -230,13 +240,15 @@ public:
 	typedef vector<structPose> PoseSequence;
 	typedef vector<structTime> TimeSequence;
 	typedef vector<structDistance> DistanceSequence;
+	typedef vector<structLengthCatenary> LengthCatenarySequence;
 	PoseSequence pose_vec_opt_; 
 	DistanceSequence dist_vec_; 
 	TimeSequence time_vec_;
+	LengthCatenarySequence len_cat_vec_;
 	float d3D_;
 	float n_points; 
-	vector<float> slopeXYZ;
-	vector<double> initial_length_catenary;
+	vector<float> v_slopeXYZ;
+	vector<double> v_initial_length_catenary;
 
 
 private:

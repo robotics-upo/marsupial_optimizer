@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+
+<robot name="marsupial" xmlns:xacro="http://ros.org/wiki/xacro">
+
+
+    <xacro:include filename="$(find marsupial_gazebo)/models/tether/tether.urdf" />
+    <xacro:include filename="$(find marsupial_gazebo)/models/pionner3at/pionner3at.urdf" />
+    <!-- <xacro:include filename="$(find marsupial_gazebo)/models/ardrone/ardrone.urdf" /> -->
+
+   <joint name="pionner_tether_joint" type="revolute">
+      <origin xyz="0 0 -0.01" rpy="0 0 0"/>
+      <parent link="marsupial::base_link"/>
+      <child link="marsupial::sphere_01"/>
+      <limit upper="3.0" lower="-3.0" effort="0" velocity="0" />
+      <axis xyz="0 1 0"/>
+    </joint> 
+
+</robot>

@@ -65,12 +65,14 @@ class bisectionCatenary
         virtual void resetVariables();
         virtual void setNumberPointsCatenary(int _n_p);
 
-        //Lenght Catenary Chain 
+        //Length Catenary Chain 
         double L; 
         //Lashing points(X1,Y1,Z1) and (X2,Y2,Z2)
         double X1,Y1,Z1,X2,Y2,Z2;
-        //Distance between lashing represent in 2D plane
+        //Distance between lashing points in Axes X and Y represented in 2D plane
         double XB,YB;    
+
+        geometry_msgs::Point lower_point_3d_catenary;
 
     protected:
 
@@ -86,6 +88,7 @@ class bisectionCatenary
     int n_points, n_chain;
     double c_value, h_value, Xc, Yc, XC, YC, ZC;
     double direc_x , direc_y, distance_3d ; 
+
 
 };
 

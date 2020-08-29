@@ -48,6 +48,7 @@ set(EXTERNAL_LIBS ${SUITESPARSE_LIBRARIES} ${G2O_LIBRARIES} ${PCL_LIBRARIES} )
 
 
 ## C++11 support
+add_compile_options(-std=c++14)
 ## Unfortunately, the 3d-party dependency libg2o requires c++11 starting from ROS Jade.
 ## Even if the ROS Jade specifications do not want c++11-only packages,
 ## we cannot compile without c++11 enabled. Another option would be to downgrade  

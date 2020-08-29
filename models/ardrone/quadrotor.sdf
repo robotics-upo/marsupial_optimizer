@@ -1,0 +1,144 @@
+<?xml version='1.0'?>
+<sdf version='1.6'>
+  <model name='ardrone_model'>
+    <static>false</static>
+    <link name='base_link'>
+      <pose >0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose >0 0 0 0 -0 0</pose>
+        <mass>2.5</mass>
+        <inertia>
+          <ixx>0.0604</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.0604</iyy>
+          <iyz>0</iyz>
+          <izz>0.1041</izz>
+        </inertia>
+      </inertial>
+      <collision name='base_link_collision'>
+        <pose >0 0 0 0 -0 0</pose>
+        <geometry>
+          <!-- <mesh>
+            <scale>1 1 1</scale>
+            <uri>model://ardrone/meshes/ardrone/quadrotor_4.stl</uri>
+          </mesh> -->
+          <box>
+            <size> 0.5 0.5 0.06 </size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name='base_link_visual'>
+        <pose >0 0 0 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>1 1 1</scale>
+            <uri>model://ardrone/meshes/ardrone/quadrotor_4.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <gravity>1</gravity>
+      <velocity_decay/>
+    </link>
+    <plugin name='quadrotor_imu_sim' filename='libhector_gazebo_ros_imu.so'>
+      <alwaysOn>true</alwaysOn>
+      <updateRate>100.0</updateRate>
+      <bodyName>base_link</bodyName>
+      <frameId>ardrone_base_link</frameId>
+      <topicName>/ardrone/imu</topicName>
+      <rpyOffsets>0 0 0</rpyOffsets>
+      <gaussianNoise>0</gaussianNoise>
+      <accelDrift>0.5 0.5 0.5</accelDrift>
+      <accelGaussianNoise>0.35 0.35 0.3</accelGaussianNoise>
+      <rateDrift>0.0 0.0 0.0</rateDrift>
+      <rateGaussianNoise>0.00 0.00 0.00</rateGaussianNoise>
+      <headingDrift>0.0</headingDrift>
+      <headingDriftFrequency>0.0</headingDriftFrequency>
+      <headingOffset>0.0</headingOffset>
+      <rateDriftFrequency>0 0 0</rateDriftFrequency>
+      <rateOffset>0 0 0</rateOffset>
+      <accelDriftFrequency>0 0 0</accelDriftFrequency>
+      <accelOffset>0 0 0</accelOffset>
+      <headingGaussianNoise>0.00</headingGaussianNoise>
+    </plugin>
+    <plugin name='quadrotor_baro_sim' filename='libhector_gazebo_ros_baro.so'>
+      <alwaysOn>true</alwaysOn>
+      <updateRate>10.0</updateRate>
+      <bodyName>base_link</bodyName>
+      <topicName>/ardrone/pressure_height</topicName>
+      <altimeterTopicName>/ardrone/altimeter</altimeterTopicName>
+      <offset>0</offset>
+      <drift>0.1</drift>
+      <driftFrequency>0.0</driftFrequency>
+      <gaussianNoise>0.5</gaussianNoise>
+    </plugin>
+    <plugin name='quadrotor_magnetic_sim' filename='libhector_gazebo_ros_magnetic.so'>
+      <alwaysOn>true</alwaysOn>
+      <updateRate>10.0</updateRate>
+      <bodyName>base_link</bodyName>
+      <topicName>/ardrone/magnetic</topicName>
+      <offset>0 0 0</offset>
+      <drift>0.0 0.0 0.0</drift>
+      <driftFrequency>0.0 0.0 0.0</driftFrequency>
+      <gaussianNoise>1.3e-2 1.3e-2 1.3e-2</gaussianNoise>
+    </plugin>
+    <plugin name='quadrotor_gps_sim' filename='libhector_gazebo_ros_gps.so'>
+      <alwaysOn>true</alwaysOn>
+      <updateRate>4.0</updateRate>
+      <bodyName>base_link</bodyName>
+      <topicName>/ardrone/fix</topicName>
+      <velocityTopicName>/ardrone/fix_velocity</velocityTopicName>
+      <offset>0 0 0</offset>
+      <drift>5.0 5.0 5.0</drift>
+      <driftFrequency>0.0 0.0 0.0</driftFrequency>
+      <gaussianNoise>0.1 0.1 0.1</gaussianNoise>
+      <velocityDrift>0 0 0</velocityDrift>
+      <velocityDriftFrequency>0 0 0</velocityDriftFrequency>
+      <velocityGaussianNoise>0.1 0.1 0.1</velocityGaussianNoise>
+      <velocityOffset>0 0 0</velocityOffset>
+    </plugin>
+    <plugin name='quadrotor_groundtruth_sim' filename='libgazebo_ros_p3d.so'>
+      <alwaysOn>true</alwaysOn>
+      <updateRate>100.0</updateRate>
+      <bodyName>base_link</bodyName>
+      <topicName>/ardrone/ground_truth/state</topicName>
+      <gaussianNoise>0.0</gaussianNoise>
+      <frameName>map</frameName>
+    </plugin>
+    <static>0</static>
+    <plugin name='quadrotor_simple_controller' filename='libhector_gazebo_quadrotor_simple_controller.so'>
+      <alwaysOn>true</alwaysOn>
+      <updateRate>0.0</updateRate>
+      <bodyName>base_link</bodyName>
+      <stateTopic>/ardrone/ground_truth/state</stateTopic>
+      <imuTopic>ardrone/imu</imuTopic>
+      <topicName>/ardrone/cmd_vel</topicName>
+      <rollpitchProportionalGain>10.0</rollpitchProportionalGain>
+      <rollpitchDifferentialGain>5.0</rollpitchDifferentialGain>
+      <rollpitchLimit>0.5</rollpitchLimit>
+      <yawProportionalGain>2.0</yawProportionalGain>
+      <yawDifferentialGain>1.0</yawDifferentialGain>
+      <yawLimit>1.5</yawLimit>
+      <velocityXYProportionalGain>5.0</velocityXYProportionalGain>
+      <velocityXYDifferentialGain>1.0</velocityXYDifferentialGain>
+      <velocityXYLimit>2</velocityXYLimit>
+      <velocityZProportionalGain>5.0</velocityZProportionalGain>
+      <velocityZDifferentialGain>1.0</velocityZDifferentialGain>
+      <velocityZLimit>0.5</velocityZLimit>
+      <maxForce>30</maxForce>
+      <motionSmallNoise>0.05</motionSmallNoise>
+      <motionDriftNoise>0.03</motionDriftNoise>
+      <motionDriftNoiseTime>5.0</motionDriftNoiseTime>
+    </plugin>
+    <plugin name='quadrotor_state_controller' filename='libhector_gazebo_quadrotor_state_controller.so'>
+      <alwaysOn>true</alwaysOn>
+      <updateRate>0.0</updateRate>
+      <bodyName>base_link</bodyName>
+      <stateTopic>/ardrone/ground_truth/state</stateTopic>
+      <imuTopic>/ardrone/imu</imuTopic>
+      <sonarTopic>/ardrone/sonar_height</sonarTopic>
+      <topicName>/ardrone/cmd_vel</topicName>
+    </plugin>
+  </model>
+</sdf>
+

@@ -1,7 +1,7 @@
 show_config: true
 debug: true
 
-traj_dxy_max: 1
+traj_dxy_max: 1.5
 traj_pos_tol: 10
 traj_yaw_tol: 0.1
 

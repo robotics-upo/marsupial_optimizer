@@ -1,0 +1,9 @@
+## About the models
+
+The model "ardrone" and "quadrotor" in the version URDF and SDF represent ARDRONE MODEL.
+
+The models "ardrone.sdf" and "ardrone.urdf" are inherited from ROTORS_SIMULATOR.
+
+The models "quadrotor.sdf" and "quadrotor.urdf" are inherited from  TUM_SIMULATOR.
+
+The version from ROTOR_SIMULATOR are used because the model present the tf and plugins easily comparing with TUM_SIMULATOR.

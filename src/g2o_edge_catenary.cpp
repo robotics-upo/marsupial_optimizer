@@ -3,23 +3,26 @@
 namespace g2o {
 
 	G2OCatenaryEdge::G2OCatenaryEdge(ros::NodeHandlePtr nhP) :
-		BaseBinaryEdge<3, geometry_msgs::Point, VertexPointXYZ, VertexCatenaryFactor>() 
+		BaseBinaryEdge<3, vector<double>, VertexPointXYZ, VertexCatenaryLength>() 
 	{
 		_information.setIdentity();
 		_error.setZero();
 	    catenary_marker_pub_ = nhP->advertise<visualization_msgs::MarkerArray>("catenary_marker", 2);
 
+		// _v_dis_average_coll = new vector<double>(20);
+		// _v_states_catenary = new vector<structCatenary>(20);
+		// printf("initializeVector: _v_dis_average_coll->size=[%lu]\n",_v_dis_average_coll->size());
 	}
 
 	bool G2OCatenaryEdge::read(std::istream& is)
 	{
-		geometry_msgs::Point p;
-		is >> p.x;
-		is >> p.y;
-		is >> p.z;
-		setMeasurement(p);
-		for (int i = 0; i < 3; ++i)
-			for (int j = i; j < 3; ++j) {
+		vector<double> p;
+		for(size_t i=0; i< p.size(); i++){
+			is >> p[i];
+			setMeasurement(p);
+		}
+		for (int i = 0; i < p.size(); ++i)
+			for (int j = i; j < p.size(); ++j) {
 				is >> information()(i, j);
 				if (i != j)
 					information()(j, i) = information()(i, j);
@@ -29,17 +32,16 @@ namespace g2o {
 
 	bool G2OCatenaryEdge::write(std::ostream& os) const
 	{
-		geometry_msgs::Point p = measurement();
-		os << p.x;
-		os << p.y;
-		os << p.z;
-		for (int i = 0; i < 3; ++i)
-			for (int j = i; j < 3; ++j)
+		vector<double> p = measurement();
+		for(size_t i=0; i< p.size(); i++){
+			os << p[i];
+		}
+		for (int i = 0; i < p.size(); ++i)
+			for (int j = i; j < p.size(); ++j)
 				os << " " << information()(i, j);
 		return os.good();
 	}
 
-	inline void G2OCatenaryEdge::setLengthCatenary(double _v){_length_catenary = _v;} 
 
 	void G2OCatenaryEdge::markerPoints(visualization_msgs::MarkerArray _marker, std::vector<geometry_msgs::Point> _vector, int _suffix, int _n_v)
 	{
@@ -72,9 +74,9 @@ namespace g2o {
 			_marker.markers[i].pose.orientation.y = 0.0;
 			_marker.markers[i].pose.orientation.z = 0.0;
 			_marker.markers[i].pose.orientation.w = 1.0;
-			_marker.markers[i].scale.x = 0.08;
-			_marker.markers[i].scale.y = 0.08;
-			_marker.markers[i].scale.z = 0.08;
+			_marker.markers[i].scale.x = 0.06;
+			_marker.markers[i].scale.y = 0.06;
+			_marker.markers[i].scale.z = 0.06;
 			_marker.markers[i].color.a = 1.0;
 			_marker.markers[i].color.r = 0.9;
 			_marker.markers[i].color.g = c_color1;

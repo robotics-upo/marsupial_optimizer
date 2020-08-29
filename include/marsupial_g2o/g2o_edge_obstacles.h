@@ -28,7 +28,7 @@ class G2OObstaclesEdge : public BaseUnaryEdge<1, double, VertexPointXYZ>
 		G2OObstaclesEdge();
         
 		double size_trajectory_;
-		double factor_ = 2.0;
+		double factor_ = 4.0;
 
 		NearNeighbor nn;
 		Eigen::Vector3d near_;
@@ -40,18 +40,13 @@ class G2OObstaclesEdge : public BaseUnaryEdge<1, double, VertexPointXYZ>
     		const VertexPointXYZ * pose = static_cast<const VertexPointXYZ*> (_vertices[0]);
 
 			near_ = nn.nearestObstacleVertex(kdT_From_NN , pose->estimate(),obstacles_Points);
-			// printf("near=[%f %f %f]\n",near_.x(),near_.y(),near_.z());
 			double _d = (pose->estimate()-near_).norm();
 			
 			if (_d < _measurement){
 				_error[0] = factor_ * exp(_measurement - 2.0*_measurement*_d); 
-				// _error[0] = factor_* (_measurement-_d)/_measurement; 
-				// printf("error[%i] = [%f]\n",pose->id(),_error[0]);
-				// _error[0] = 1000.0*exp(_measurement - 2.0*_d) ; 
 			}
 			else {
 				_error[0] = 0.0;
-				// printf("error[%i] = [%f]\n",pose->id(),_error[0]);
 			}
 		}
 

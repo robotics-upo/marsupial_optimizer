@@ -6,10 +6,9 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /octomap1/Status1
-        - /global marker1/Status1
-        - /Opt_Trajectory1/Status1
-      Splitter Ratio: 0.6705882549285889
+        - /PointCloud21
+        - /OptImized Trajectory1/Status1
+      Splitter Ratio: 0.353032648563385
     Tree Height: 726
   - Class: rviz/Selection
     Name: Selection
@@ -62,17 +61,27 @@ Visualization Manager:
       Radius: 0.10000000149011612
       Reference Frame: <Fixed Frame>
       Value: true
+    - Alpha: 0.699999988079071
+      Class: rviz/Map
+      Color Scheme: map
+      Draw Behind: false
+      Enabled: false
+      Name: Map
+      Topic: /projected_map
+      Unreliable: false
+      Use Timestamp: false
+      Value: false
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 10
-        Min Value: -10
+        Max Value: 19.950000762939453
+        Min Value: -0.949999988079071
         Value: true
       Axis: Z
       Channel Name: intensity
       Class: rviz/PointCloud2
       Color: 255; 255; 255
-      Color Transformer: Intensity
+      Color Transformer: AxisColor
       Decay Time: 0
       Enabled: true
       Invert Rainbow: false
@@ -85,7 +94,7 @@ Visualization Manager:
       Queue Size: 10
       Selectable: true
       Size (Pixels): 3
-      Size (m): 0.029999999329447746
+      Size (m): 0.10000000149011612
       Style: Flat Squares
       Topic: /octomap_point_cloud_centers
       Unreliable: false
@@ -93,64 +102,89 @@ Visualization Manager:
       Use rainbow: true
       Value: true
     - Class: rviz/MarkerArray
-      Enabled: true
+      Enabled: false
       Marker Topic: /occupied_cells_vis_array
       Name: octomap
       Namespaces:
-        map: true
+        {}
       Queue Size: 100
-      Value: true
+      Value: false
     - Class: rviz/Marker
       Enabled: true
       Marker Topic: /global_planner_node/markers
-      Name: global marker
+      Name: Global Trajectory
       Namespaces:
         global_path_3d: true
       Queue Size: 100
       Value: true
-    - Alpha: 0.699999988079071
-      Class: rviz/Map
-      Color Scheme: map
-      Draw Behind: false
-      Enabled: false
-      Name: Map
-      Topic: /projected_map
-      Unreliable: false
-      Use Timestamp: false
-      Value: false
     - Class: rviz/MarkerArray
       Enabled: true
       Marker Topic: /optimizer_local_planner_node/opt_trajectory_marker
-      Name: Opt_Trajectory
+      Name: OptImized Trajectory
       Namespaces:
-        points: true
-      Queue Size: 100
-      Value: true
-    - Class: rviz/Marker
-      Enabled: true
-      Marker Topic: /optimizer_local_planner_node/ugv_marsupial_marker
-      Name: ugv
-      Namespaces:
-        ugv: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
       Enabled: true
       Marker Topic: /optimizer_local_planner_node/catenary_marker
-      Name: catenary_cable
+      Name: Catenary Cable
       Namespaces:
-        catenary_1: true
-        catenary_10: true
-        catenary_11: true
-        catenary_12: true
-        catenary_2: true
-        catenary_3: true
-        catenary_4: true
-        catenary_5: true
-        catenary_6: true
-        catenary_7: true
-        catenary_8: true
-        catenary_9: true
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/TF
+      Enabled: true
+      Frame Timeout: 15
+      Frames:
+        All Enabled: true
+        map:
+          Value: true
+        reel_base_link:
+          Value: true
+        uav_base_link:
+          Value: true
+        ugv_base_link:
+          Value: true
+        world:
+          Value: true
+      Marker Scale: 1
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Tree:
+        world:
+          map:
+            uav_base_link:
+              {}
+            ugv_base_link:
+              reel_base_link:
+                {}
+      Update Interval: 0
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /siar_marker_node/siar_model
+      Name: UGV_Robot
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /m600
+      Name: UAV_Robot
+      Namespaces:
+        m600: true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /circle
+      Name: UAV_Circle_Robot
+      Namespaces:
+        circle: true
       Queue Size: 100
       Value: true
   Enabled: true
@@ -181,25 +215,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 4.313859939575195
+      Distance: 28.209619522094727
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -3.462045431137085
-        Y: 3.677619457244873
-        Z: 1.4736759662628174
+        X: 2.7387092113494873
+        Y: -14.243742942810059
+        Z: 2.5388145446777344
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.12479720264673233
+      Pitch: 0.5447973012924194
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 1.780679702758789
+      Yaw: 4.820783615112305
     Saved: ~
 Window Geometry:
   Displays:
@@ -207,7 +241,7 @@ Window Geometry:
   Height: 1023
   Hide Left Dock: false
   Hide Right Dock: true
-  QMainWindow State: 000000ff00000000fd00000004000000000000015600000361fc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d00000361000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261000000010000010f00000363fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d00000363000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e100000197000000030000073d0000003efc0100000002fb0000000800540069006d006501000000000000073d000002eb00fffffffb0000000800540069006d00650100000000000004500000000000000000000005e10000036100000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd00000004000000000000028500000361fc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d00000361000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261000000010000010f00000363fc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073000000003d00000363000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e100000197000000030000073d0000003efc0100000002fb0000000800540069006d006501000000000000073d000002eb00fffffffb0000000800540069006d00650100000000000004500000000000000000000004b20000036100000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:
