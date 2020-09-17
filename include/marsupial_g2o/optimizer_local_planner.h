@@ -159,8 +159,8 @@ public:
 	void configMarkers(std::string ns, std::string frame);
 	void clearMarkers(auto _s);
 	void publishTrajMarker3D(vector<structPose> _vector) ;
-	double calculatePathLengthAndDistanceVertices(vector<Eigen::Vector3d> _path,vector<structDistance> &_v_sD);
-	void getTemporalState(vector<structTime> &_time, vector<structDistance> _v_sD, double _length, double _vel);
+	void calculateDistanceVertices(vector<Eigen::Vector3d> _path,vector<structDistance> &_v_sD);
+	void getTemporalState(vector<structTime> &_time, vector<structDistance> _v_sD, double _vel);
 	void writeTemporalDataBeforeOptimization(void);
 	void writeTemporalDataAfterOptimization(auto _s);
 	// void getMarkerUGV();
@@ -179,8 +179,10 @@ public:
 	string path= "/home/simon/";
 	int n_iter_opt;	//Iterations Numbers of Optimizer
 	double initial_multiplicative_factor_length_catenary;
-	float radius_collition_catenary;
+	float radius_collition_catenary,min_distance_add_new_point;
+	int mode_obstacle;
 	double w_alpha, w_beta, w_iota, w_gamma, w_delta, w_epsilon, w_zeta, w_eta, w_theta, w_kappa;
+
 
 	NearNeighbor nn_;
 
@@ -250,11 +252,10 @@ public:
 	vector<float> v_slopeXYZ;
 	vector<double> v_initial_length_catenary;
 
-
 private:
 	void resetFlags();
 	double global_path_length;
-	double bound, velocity , angle, acceleration;
+	double bound, velocity , angle, acceleration,bound_bisection_a,bound_bisection_b;
 	geometry_msgs::Point ugv_pos_catenary;
 
     // void pointsSub(const PointCloud::ConstPtr &points);

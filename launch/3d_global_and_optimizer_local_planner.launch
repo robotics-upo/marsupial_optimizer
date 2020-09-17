@@ -55,54 +55,63 @@
             
             <param name="verbose_optimizer" value="$(arg verbose_optimizer)"/>
             
-            <param name="w_alpha"   value="0.1"/>   <!-- distance-vertex 5.44--> 
-            <param name="w_gamma"   value="0.1"/>   <!-- distance-xyz 5.16-->
-            <param name="w_epsilon" value="0.8"/>   <!-- equi-distance 4.78-->
-            <param name="w_beta"    value="0.8"/>   <!-- obstacles 27.71-->
-            <param name="w_iota"    value="0.4"/>   <!-- obstacles through -->
-            <param name="w_delta"   value="0.9"/>   <!-- kinematics 5.52-->
-            <param name="w_zeta"    value="0.05"/>   <!-- time -->
-            <param name="w_eta"     value="0.3"/>   <!-- velocity -->
-            <param name="w_theta"   value="1.0"/>   <!-- acceleration -->
-            <param name="w_kappa"   value="0.4"/>   <!-- catenary -->
-            <param name="n_iter_opt"    value="10"/>   <!-- number max. of iterations per optimization --> 
+            <!-- <param name="w_alpha"   value="0.1"/>   # distance-vertex  
+            <param name="w_gamma"   value="0.1"/>   # distance-xyz  -->
+            <param name="w_epsilon" value="0.8"/>   # equi-distance 
+            <param name="w_beta"    value="0.8"/>   # obstacles 
+            <param name="w_iota"    value="0.4"/>   # obstacles through 
+            <param name="w_delta"   value="0.9"/>   # kinematics 
+            <param name="w_zeta"    value="0.05"/>  # time 
+            <param name="w_eta"     value="0.3"/>   # velocity 
+            <param name="w_theta"   value="1.0"/>   # acceleration 
+            <param name="w_kappa"   value="0.8"/>   # catenary 
+            <param name="n_iter_opt"    value="200"/>   <!-- number max. of iterations per optimization --> 
             <param name="n_time_optimize"    value="1"/>   <!-- number Loop-For to execute optimizer --> 
             <param name="td_"    value="1.0"/>   <!-- Time Sleep between optimization in Loop-For --> 
-
             <param name="initial_multiplicative_factor_length_catenary"   value="1.001"/>    <!-- This parameter multiply the length between UGV and vertex to adjust Catenary-->
             <param name="bound"         value="2.0"/> <!-- Bound distance to obstacles -->
             <param name="velocity"      value="2.0"/>    
             <param name="acceleration"  value="0.0"/>    
-            <param name="radius_collition_catenary"  value="0.4"/>    
+            <param name="min_distance_add_new_point" value="1.0"/>  
+            #Parameter for Edge Catenary
+            <param name="radius_collition_catenary"  value="0.1"/>    
+            <param name="mode_obstacle" value="3"/>     <!-- mode 0: mode 1: , mode 2: -->
+            #Parameter for Bisection Method
+            <param name="bound_bisection_a"         value="100.0"/> <!-- range to get solution in bisection method for XY axes-->
+            <param name="bound_bisection_b"         value="300.0"/> <!-- range to get solution in bisection method for Z axes-->
         </node>
 
 
         <!-- Robot Marker -->
-        <node pkg="upo_markers" type="siar_marker_node" name="ugv_marker_node" if="$(arg launch_robot_marker)">
+        <node pkg="upo_markers" type="siar_marker_node" name="ugv_marker_node" output="screen" if="$(arg launch_robot_marker)">
             <param name="frame_id" value="ugv_base_link"/>
+            <param name="scale" value="2.0"/>
+
         </node>
 
          <!-- Robot Marker -->
-        <node pkg="upo_markers" type="marker_node" name="uav_marker_node" if="$(arg launch_robot_marker)">
+        <node pkg="upo_markers" type="marker_node" name="uav_marker_node" output="screen" if="$(arg launch_robot_marker)">
             <param name="base_frame_id" value="uav_base_link"/>
-            <param name="model" value="m600"/> <!-- m600 or m100 -->
-            <param name="color" value="1.0"/> 
-            <param name="color_r" value="1.0"/> 
-            <param name="color_g" value="1.0"/> 
-            <param name="color_b" value="1.0"/> 
+            <param name="model" value="m100"/> <!-- m600 or m100 -->
+            <param name="color" value="0.0"/> 
+            <param name="color_r" value="0.0"/> 
+            <param name="color_g" value="0.0"/> 
+            <param name="color_b" value="0.0"/> 
+            <param name="scale" value="1.0"/>
         </node>
 
-        <node pkg="upo_markers" type="marker_node" name="circle_marker_node" if="$(arg launch_robot_marker)">
+        <node pkg="upo_markers" type="marker_node" name="circle_marker_node" output="screen" if="$(arg launch_robot_marker)">
             <param name="base_frame_id" value="uav_base_link"/>
             <param name="model" value="circle"/> 
             <param name="radius" value="0.6"/> 
-            <param name="color" value="1.0"/> 
-            <param name="color_r" value="1.0"/> 
-            <param name="color_g" value="0.0"/> 
+            <param name="color" value="0.5"/> 
+            <param name="color_r" value="0.8"/> 
+            <param name="color_g" value="0.4"/> 
             <param name="color_b" value="0.0"/> 
-            <param name="scale_x" value="0.1"/> 
-            <param name="scale_y" value="0.1"/> 
-            <param name="scale_z" value="0.1"/> 
+            <param name="scale_x" value="0.2"/> 
+            <param name="scale_y" value="0.2"/> 
+            <param name="scale_z" value="0.2"/> 
+            <param name="scale" value="1.0"/>
         </node>
 
 </launch>

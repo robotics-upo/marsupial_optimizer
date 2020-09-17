@@ -7,7 +7,7 @@ namespace g2o {
 	{
 		_information.setIdentity();
 		_error.setZero();
-	    catenary_marker_pub_ = nhP->advertise<visualization_msgs::MarkerArray>("catenary_marker", 2);
+	    catenary_marker_pub_ = nhP->advertise<visualization_msgs::MarkerArray>("catenary_marker", 100);
 
 		// _v_dis_average_coll = new vector<double>(20);
 		// _v_states_catenary = new vector<structCatenary>(20);
@@ -63,7 +63,10 @@ namespace g2o {
 			_marker.markers[i].ns = ns_marker;
 			_marker.markers[i].id = i+1;
 			_marker.markers[i].action = visualization_msgs::Marker::ADD;
-			_marker.markers[i].type = visualization_msgs::Marker::SPHERE;
+			if (i % 5 == 0)
+				_marker.markers[i].type = visualization_msgs::Marker::CUBE;
+			else
+				_marker.markers[i].type = visualization_msgs::Marker::SPHERE;
 			_marker.markers[i].lifetime = ros::Duration(400);
 			// printf("markerPoints : _marker[%lu].pose.position [%f %f %f]\n",i,_vector[i].x,_vector[i].y,_vector[i].z);
 			_marker.markers[i].pose.position.x = _vector[i].x; 

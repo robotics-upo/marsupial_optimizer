@@ -54,16 +54,17 @@ class bisectionCatenary
         virtual double catenaryPointA(double x);
         virtual double catenaryPointB(double y);
         virtual double evaluteCatenaryChain(double x_);
-        virtual void integrateCatenaryChain();
+        virtual void integrateCatenaryChain2D();
         virtual double resolveBisection(double a, double b, int mode_);// 0 = to find phi() , 1 = to find X0 , 2 = to find Y0
         //Find points with sign changes in interval a-b, times that function pass through the origin 
         virtual void signChange(double a, double b, int mode_);
-        virtual double modeBisection(double xr_aux, int mode_);
+        virtual double computeFunction(double xr_aux, int mode_);
         virtual void getPointCatenary3D(vector<geometry_msgs::Point> &_v_p);
         virtual void directionVectorAxes();
-        virtual void configBisection(double _l, double _x1, double _y1, double _z1, double _x2, double _y2, double _z2);
+        virtual void configBisection(double _l, double _x1, double _y1, double _z1, double _x2, double _y2, double _z2, int _id);
         virtual void resetVariables();
         virtual void setNumberPointsCatenary(int _n_p);
+        virtual void setFactorBisection(double _fa,double _fb);
 
         //Length Catenary Chain 
         double L; 
@@ -71,6 +72,8 @@ class bisectionCatenary
         double X1,Y1,Z1,X2,Y2,Z2;
         //Distance between lashing points in Axes X and Y represented in 2D plane
         double XB,YB;    
+    // printf("enter setNumberPointsCatenary\n");
+        double factor_bisection_a,factor_bisection_b;
 
         geometry_msgs::Point lower_point_3d_catenary;
 
@@ -87,8 +90,10 @@ class bisectionCatenary
     double bs_p, bs_Y0, bs_X0;
     int n_points, n_chain;
     double c_value, h_value, Xc, Yc, XC, YC, ZC;
-    double direc_x , direc_y, distance_3d ; 
+    double direc_x , direc_y, direc_z, distance_3d ; 
 
+    bool x_const, y_const, z_const;
+    int id_vertex;
 
 };
 
