@@ -1,11 +1,15 @@
 <launch>
 
     <arg name="initial_pos_ugv_x"         default="-2.4"/>   
-    <arg name="initial_pos_ugv_y"         default="1.4"/>   
+    <arg name="initial_pos_ugv_y"         default="-1.6"/>   
     <arg name="initial_pos_ugv_z"         default="2.0"/>
     <arg name="initial_pos_ugv_yaw"       default="0.0"/>      
     <arg name="initial_pos_ugv_pitch"     default="0.0"/>   
     <arg name="initial_pos_ugv_roll"      default="0.0"/>   
+
+    <arg name="pos_uav_above_ugv"         default="1.0"/>
+    <arg name="pos_uav"         default="$(eval arg('initial_pos_ugv_z')+ arg('pos_uav_above_ugv'))"/>
+
 
     <!-- <arg name="map_file" default="octomap_full"/>   # -3.8 -1.0 0 3.14 0 0 -->
 	<!-- <arg name="map_file" default="stage_1"/>  #Arc # 0 0 0 3.14 0 0  -->
@@ -15,11 +19,12 @@
 	<!-- <arg name="map_file" default="stage_5"/> #Gas Station #-4.5 -3.0 0.0 -0.8 0.0 0.0  -->
 	<!-- <arg name="map_file" default="rehersal_1_with_windows"/> -->
     
+    <!-- <param name="circumference" value="$(eval 2.* 3.1415 * arg('radius'))"/> -->
 
     <node pkg="tf" type="static_transform_publisher" name="map" 
         args="0 0 0 0 0 0  world /map 10"/> <!-- x y z y p r-->
     <node pkg="tf" type="static_transform_publisher" name="uav_base_link"   
-        args="$(arg initial_pos_ugv_x) $(arg initial_pos_ugv_y) 2.5 $(arg initial_pos_ugv_yaw) $(arg initial_pos_ugv_pitch) $(arg initial_pos_ugv_roll)  /map /uav_base_link 10"/> <!-- x y z y p r-->
+        args="$(arg initial_pos_ugv_x) $(arg initial_pos_ugv_y) $(arg pos_uav) $(arg initial_pos_ugv_yaw) $(arg initial_pos_ugv_pitch) $(arg initial_pos_ugv_roll)  /map /uav_base_link 10"/> <!-- x y z y p r-->
     <node pkg="tf" type="static_transform_publisher" name="ugv_base_link"   
         args="$(arg initial_pos_ugv_x) $(arg initial_pos_ugv_y) $(arg initial_pos_ugv_z) $(arg initial_pos_ugv_yaw) $(arg initial_pos_ugv_pitch) $(arg initial_pos_ugv_roll)  /map /ugv_base_link 10"/> <!-- x y z y p r-->
     <node pkg="tf" type="static_transform_publisher" name="reel_base_link"  

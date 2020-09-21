@@ -5,7 +5,7 @@ namespace g2o {
 	G2OEquiDistanceEdge::G2OEquiDistanceEdge():
 		BaseMultiEdge<3, double>()
 	{
-		this->resize(3); 
+		this->resize(4); 
 
 		_information.setIdentity();
 		_error.setZero();

@@ -128,14 +128,13 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        map:
-          uav_base_link:
-            {}
-          ugv_base_link:
-            reel_base_link:
-              {}
         world:
-          {}
+          map:
+            uav_base_link:
+              {}
+            ugv_base_link:
+              reel_base_link:
+                {}
       Update Interval: 0
       Value: true
     - Class: rviz/Marker
@@ -159,10 +158,16 @@ Visualization Manager:
       Marker Topic: /optimizer_local_planner_node/catenary_marker
       Name: Catenary Cable
       Namespaces:
+        catenary_0: true
         catenary_1: true
         catenary_2: true
         catenary_3: true
         catenary_4: true
+        catenary_5: true
+        catenary_6: true
+        catenary_7: true
+        catenary_8: true
+        catenary_9: true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -217,25 +222,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 9.311158180236816
+      Distance: 8.786309242248535
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -0.7758035659790039
-        Y: 3.833611011505127
-        Z: 7.152557373046875e-7
+        X: -0.6821162700653076
+        Y: 0.7692956924438477
+        Z: -2.384185791015625e-7
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: -0.009796904399991035
+      Pitch: 0.06020262464880943
       Target Frame: <Fixed Frame>
       Value: XYOrbit (rviz)
-      Yaw: 4.8358659744262695
+      Yaw: 4.825976371765137
     Saved: ~
 Window Geometry:
   Displays:

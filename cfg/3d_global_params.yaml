@@ -14,7 +14,7 @@ map_resolution: 0.2
 map_h_inflaction: 0.1
 map_v_inflaction: 0.1
 
-z_weight_cost: 1
+z_weight_cost: 0.0
 z_not_inflate: 3
 
 goal_weight: 1.3

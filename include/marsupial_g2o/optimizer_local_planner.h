@@ -255,7 +255,7 @@ public:
 private:
 	void resetFlags();
 	double global_path_length;
-	double bound, velocity , angle, acceleration,bound_bisection_a,bound_bisection_b;
+	double bound, velocity , angle_min_traj, acceleration,bound_bisection_a,bound_bisection_b;
 	geometry_msgs::Point ugv_pos_catenary;
 
     // void pointsSub(const PointCloud::ConstPtr &points);

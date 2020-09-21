@@ -34,7 +34,7 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(tf2_ros::Buffer *tfBuffer_)
   	nh->param<double>("bound", bound,2.0);
   	nh->param<double>("velocity", velocity,1.0);
   	nh->param<double>("acceleration", acceleration,0.0);
-  	nh->param<double>("angle", angle, M_PI / 15.0);
+  	nh->param<double>("angle_min_traj", angle_min_traj, M_PI / 15.0);
   	nh->param<float>("radius_collition_catenary", radius_collition_catenary, 0.1);
   	nh->param<float>("min_distance_add_new_point", min_distance_add_new_point, 0.5);
   	nh->param<double>("bound_bisection_a", bound_bisection_a,100.0);
@@ -191,8 +191,8 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
     auto path_shared_ptr = execute_path_srv_ptr->acceptNewGoal();
     globalTrajectory = path_shared_ptr->path;
 
-	for (int i = 0; i < globalTrajectory.points.size(); i++){
-		printf("size=[%lu] GlobalTrayectoryPointTranslation=[%f %f %f]\n", globalTrajectory.points.size(),
+	for (size_t i = 0; i < globalTrajectory.points.size(); i++){
+		printf("point=[%lu/%lu] GlobalTrayectoryPointTranslation=[%f %f %f]\n",i+1, globalTrajectory.points.size(),
 		globalTrajectory.points.at(i).transforms[0].translation.x, globalTrajectory.points.at(i).transforms[0].translation.y, globalTrajectory.points.at(i).transforms[0].translation.z);
 	}
 		
@@ -266,12 +266,13 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		// 	optimizer.addEdge(edgeDistanceXYZ);
 		// }
 		// ! III. Add Edges: Equi-distance among vertices.
-		for (size_t i = 0; i < size-2; i++)
+		for (size_t i = 0; i < size-3; i++)
 		{
 			edgeEquiDistance = new g2o::G2OEquiDistanceEdge;
 			edgeEquiDistance->vertices()[0] = optimizer.vertices()[i];
 			edgeEquiDistance->vertices()[1] = optimizer.vertices()[i+1];
 			edgeEquiDistance->vertices()[2] = optimizer.vertices()[i+2];
+			edgeEquiDistance->vertices()[3] = optimizer.vertices()[i+3];
 			edgeEquiDistance->setInformation(G2OEquiDistanceEdge::InformationType::Identity()*w_epsilon);
 			optimizer.addEdge(edgeEquiDistance);
 		}
@@ -304,7 +305,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			edgeKinetics->vertices()[0] = optimizer.vertices()[i];
 			edgeKinetics->vertices()[1] = optimizer.vertices()[i+1];
 			edgeKinetics->vertices()[2] = optimizer.vertices()[i+2];
-			edgeKinetics->setMeasurement(angle);
+			edgeKinetics->setMeasurement(angle_min_traj);
 			edgeKinetics->setInformation(G2OKinematicsEdge::InformationType::Identity()*w_delta);
 			optimizer.addEdge(edgeKinetics);
 		}
@@ -376,9 +377,9 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 				// vertexCatenaryLength->setEstimate(v_initial_length_catenary[i]);
 				// printf("Revisar ESTA CONDICION, hay que cambiar el valor que se le pasa una vez que ya optimizo!!\n");
 			// }
-			if (i == 0 || i == size-1)		//First and last vertices are fixed.	
-				vertexCatenaryLength->setFixed(true);
-			else
+			// if (i == 0 || i == size-1)		//First and last vertices are fixed.	
+			// 	vertexCatenaryLength->setFixed(true);
+			// else
 				vertexCatenaryLength->setFixed(false);
 			vertexCatenaryLength->setId(i+size+size-1);
 			optimizer.addVertex(vertexCatenaryLength);
@@ -598,13 +599,13 @@ void OptimizerLocalPlanner::getPointsFromGlobalPath(trajectory_msgs::MultiDOFJoi
 			_p.y() = _path.points.at(i).transforms[0].translation.y;
 			_p.z() = _path.points.at(i).transforms[0].translation.z;
 			_v_gp.push_back(_p);
-			printf("pointsFromGlobalPath [%f %f %f]\n",_p.x(),_p.y(),_p.z());
+			printf("point =[%lu/%lu] getPointsFromGlobalPath = [%f %f %f]\n",i+1,_path.points.size()-1,_p.x(),_p.y(),_p.z());
 			for (int j=0; j< n ; j++){
 				_p = Eigen::Vector3d(0.0,0.0,0.0);
 				_p.x() = _path.points.at(i).transforms[0].translation.x + xp*(1.0+(double)j);
 				_p.y() = _path.points.at(i).transforms[0].translation.y + yp*(1.0+(double)j);
 				_p.z() = _path.points.at(i).transforms[0].translation.z + zp*(1.0+(double)j);
-				printf("pointsFromGlobalPath [%f %f %f]\n",_p.x(),_p.y(),_p.z());
+				printf("point =[%lu/%lu] getPointsFromGlobalPath = [%f %f %f]\n",i+1,_path.points.size()-1,_p.x(),_p.y(),_p.z());
 				// printf("[%i] xp*(1.0+(double)i) =[%f] yp*(1.0+(double)i)=[%f] zp*(1.0+(double)i)=[%f]\n",j,xp*(1.0+(double)j),yp*(1.0+(double)j),zp*(1.0+(double)j));
 				_v_gp.push_back(_p);
 			}
@@ -614,14 +615,14 @@ void OptimizerLocalPlanner::getPointsFromGlobalPath(trajectory_msgs::MultiDOFJoi
 			_p.y() = _path.points.at(i).transforms[0].translation.y;
 			_p.z() = _path.points.at(i).transforms[0].translation.z;
 			_v_gp.push_back(_p);
-			printf("pointsFromGlobalPath [%f %f %f]\n",_p.x(),_p.y(),_p.z());
+			printf("point =[%lu/%lu] getPointsFromGlobalPath = [%f %f %f]\n",i+1,_path.points.size()-1,_p.x(),_p.y(),_p.z());
 		}
     }
 	// _p.x() = _path.points.at(_path.points.size()-1).transforms[0].translation.x;
 	// _p.y() = _path.points.at(_path.points.size()-1).transforms[0].translation.y;
 	// _p.z() = _path.points.at(_path.points.size()-1).transforms[0].translation.z;
 	// _v_gp.push_back(_p);
-	// printf("pointsFromGlobalPath [%f %f %f]\n",_p.x(),_p.y(),_p.z());
+	// printf("point =[%i/%lu] getPointsFromGlobalPath = [%f %f %f]\n",_p.x(),_p.y(),_p.z());
 }
 
 
