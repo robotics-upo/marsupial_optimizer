@@ -76,13 +76,15 @@ class G2OCatenaryEdge : public BaseBinaryEdge<3, vector<double>, VertexPointXYZ,
 		bool _debug;
 		double approximation_;
 		double _length_cat_;
-		int mode_obstacle;
 		double bound_bisection_a,bound_bisection_b;
 
 		double bound_z_negative = 0.1;
 		double lower_point_cat_z;
 
-		geometry_msgs::Point _initial_pos_ugv;
+		geometry_msgs::Point _initial_pos_cat_ugv;
+
+		int count_coll_cat_obs;
+		std::vector<double> _v_count_coll_cat_obs;
 	
 
 		std::vector<points_obs_close_cat> _v_obs_collision_cat;
@@ -97,9 +99,9 @@ class G2OCatenaryEdge : public BaseBinaryEdge<3, vector<double>, VertexPointXYZ,
 			lower_point_cat_z = bound_z_negative;
 
 			// Calculate Catenary
-			_x = (pose->estimate().x()-_initial_pos_ugv.x);
-			_y = (pose->estimate().y()-_initial_pos_ugv.y);
-			_z = (pose->estimate().z()-_initial_pos_ugv.z);
+			_x = (pose->estimate().x()-_initial_pos_cat_ugv.x);
+			_y = (pose->estimate().y()-_initial_pos_cat_ugv.y);
+			_z = (pose->estimate().z()-_initial_pos_cat_ugv.z);
 			_d_curr = sqrt( _x * _x + _y * _y + _z * _z); // Distance UGV and Vertex
 
 
@@ -117,7 +119,7 @@ class G2OCatenaryEdge : public BaseBinaryEdge<3, vector<double>, VertexPointXYZ,
 			else{
 				bc.setNumberPointsCatenary(_length_catenary*10.0);
 				bc.setFactorBisection(bound_bisection_a,bound_bisection_b);
-				bc.configBisection(_length_catenary,_initial_pos_ugv.x,_initial_pos_ugv.y,_initial_pos_ugv.z,pose->estimate().x(),pose->estimate().y(),pose->estimate().z(),pose->id());
+				bc.configBisection(_length_catenary,_initial_pos_cat_ugv.x,_initial_pos_cat_ugv.y,_initial_pos_cat_ugv.z,pose->estimate().x(),pose->estimate().y(),pose->estimate().z(),pose->id());
 
 				_points_catenary.clear();
 				// printf(PRINTF_RED);
@@ -148,6 +150,8 @@ class G2OCatenaryEdge : public BaseBinaryEdge<3, vector<double>, VertexPointXYZ,
 
 				points_obs_close_cat _points1, _points2;
 
+				count_coll_cat_obs = 0;	
+				_v_count_coll_cat_obs.clear();
 				for (size_t i = 0 ; i < _points_catenary.size() ; i++){
 					Eigen::Vector3d p_cat;
 					p_cat.x() = _points_catenary[i].x;
@@ -159,15 +163,15 @@ class G2OCatenaryEdge : public BaseBinaryEdge<3, vector<double>, VertexPointXYZ,
 					
 
 					// Get Data I Analysis Catenary: To check if there is obstacle between two catenary points
-					int n_points_cat_dis = 4;
-					if (_d_cat_obs < _radius_security && (i > n_points_cat_dis || i < (_points_catenary.size()- n_points_cat_dis/2 - 1))){
+					int n_points_cat_dis = 6; // parameter to ignore collsion points in the begining and in the end of catenary
+					if (_d_cat_obs < _radius_security && (i > n_points_cat_dis && i < (_points_catenary.size()- n_points_cat_dis/2 - 1))){
 						_points1.obs = _obstacles_near_catenary;
 						_points1.cat = p_cat;
 						_v_obs_close_cat.push_back(_points1);
-						// printf("vertex[%i] _d=[%f] pos_point_cat =[%lu / %lu] _length_catenary=[%f]  _points1.cat =[%f %f %f] _points1.obs = [%f %f %f]\n",pose->id(),_d_cat_obs,i,_points_catenary.size(),_length_catenary,_points1.cat.x(),_points1.cat.y(),_points1.cat.z(),_points1.obs.x(),_points1.obs.y(),_points1.obs.z());
+						count_coll_cat_obs++;
+						_v_count_coll_cat_obs.push_back(i);
 					}
 					
-
 					// double _d_points_cat = (p_cat-prev_point_catenary).norm();
 					// approximation_ = _d_points_cat;
 					
@@ -268,36 +272,21 @@ class G2OCatenaryEdge : public BaseBinaryEdge<3, vector<double>, VertexPointXYZ,
 	
 		
 				// Computed Error[0]: Collision catenary with obstacle
-				if (mode_obstacle == 0){
-
-				}
-				else if(mode_obstacle == 1) {
-					_error[0] = 10000.0*pow(count,4)/(_length_catenary); 
-				}
-				else if(mode_obstacle == 2) {
-					_error[0] = 100.0*count/(_length_catenary); 
-				}
-				else if(mode_obstacle == 3) {
-					if (_v_obs_close_cat.size() > 0)
-						_error[0] = 10000000.0/pow(_length_catenary,6) * exp ( _v_av_coll_oc.obs.z() - _v_av_coll_oc.cat.z());
-					else 
-						_error[0] = 0.0;
-				}
-				else if(mode_obstacle == 4) {
-					_error[0] = 0.0;
-				}
-				// Computed Error[1]
-				if (_v_obs_close_cat.size() > 0)
+				// Computed Error[1]: To straight the Cable
+				if (_v_obs_close_cat.size() > 0){
+					_error[0] = 10000000.0/pow(_length_catenary,6) * exp ( _v_av_coll_oc.obs.z() - 1.0 - _v_av_coll_oc.cat.z());
 					_error[1] = 0.0;
-				else	
+					// ROS_ERROR("SI !! vertex[%i] count_coll_cat_obs=[%i] _initial_pos_cat_ugv.z=[%f] <? _v_av_coll_oc.obs.z=[%f] _error[0]=[%f]",pose->id(),count_coll_cat_obs,_initial_pos_cat_ugv.z,_v_av_coll_oc.obs.z(),_error[0]);
+					// for(size_t j = 0; j< _v_count_coll_cat_obs.size() ; j++){
+					// 	printf("_v_pos_cat_coll_obs=[%f]\n",_v_count_coll_cat_obs[j]);
+					// }
+				}
+				else{
+					_error[0] = 0.0;
 					_error[1] = 100.0*(_length_catenary -  _d_curr); 
-
-				// Computed Error[2]
+				} 
+				// Computed Error[2]: To Avoid -z valus for catenary
 				_error[2] = 100000000.0*(double)(count_negative_z)*_length_catenary;
-				
-				// if (pose->id() == 8)
-				// 	printf("entro modo [%i]: vertex[%i] _v_obs_close_cat.size()=[%lu]  v_av_coll_oc.obs.z()&v_av_coll_oc.cat.z() =[%f %f]  count=[%i]  length_catenary=[%f] error[0,1,2] = [%f %f %f]\n",
-				// 	mode_obstacle,pose->id(),_v_obs_close_cat.size(),_v_av_coll_oc.obs.z(),_v_av_coll_oc.cat.z(),count,_length_catenary,_error[0],_error[1],_error[2]);
 			}
 		}
 
@@ -317,11 +306,9 @@ class G2OCatenaryEdge : public BaseBinaryEdge<3, vector<double>, VertexPointXYZ,
 
 		inline void setRadius(const float& _s_r){_radius = _s_r;}
 
-		inline void setInitialPosUGV(const geometry_msgs::Point& _p) {_initial_pos_ugv = _p;}
+		inline void setInitialPosCatUGV(const geometry_msgs::Point& _p) {_initial_pos_cat_ugv = _p;}
 
 		// inline void setLengthCatenary(double _v){_length_catenary = _v;} // Set the catenary length related with distance between UGV and vertex
-
-		inline void setModeBelowObstacles(int _b){mode_obstacle = _b;} 
 
 		inline void setBoundForBisection(double _fa,double _fb){
 			bound_bisection_a = _fa; 

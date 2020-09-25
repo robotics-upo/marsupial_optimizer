@@ -163,9 +163,10 @@ public:
 	void getTemporalState(vector<structTime> &_time, vector<structDistance> _v_sD, double _vel);
 	void writeTemporalDataBeforeOptimization(void);
 	void writeTemporalDataAfterOptimization(auto _s);
-	// void getMarkerUGV();
 	void setInitialLengthCatenaryAndPosUGV(std::vector <double> &_vector, auto _s);
 	void getPointsFromGlobalPath(trajectory_msgs::MultiDOFJointTrajectory _path,vector<Eigen::Vector3d> &_v_gp);
+
+	upo_actions::ExecutePathResult action_result;
 
 	// ============= Global Variables ================
 
@@ -176,12 +177,12 @@ public:
 
 	ofstream file_in_pos,file_in_time ,file_in_velocity, file_in_difftime, file_in_acceleration;
 	ofstream file_out_pos, file_out_time, file_out_velocity, file_out_difftime, file_out_acceleration;
-	string path= "/home/simon/";
+	std::string path= "/home/simon/";
 	int n_iter_opt;	//Iterations Numbers of Optimizer
 	double initial_multiplicative_factor_length_catenary;
 	float radius_collition_catenary,min_distance_add_new_point;
-	int mode_obstacle;
 	double w_alpha, w_beta, w_iota, w_gamma, w_delta, w_epsilon, w_zeta, w_eta, w_theta, w_kappa;
+	// double initial_pos_ugv_x, initial_pos_ugv_y, initial_pos_ugv_z, initial_pos_ugv_yaw, initial_pos_ugv_pitch, initial_pos_ugv_roll, pos_uav_above_ugv;
 
 
 	NearNeighbor nn_;
@@ -221,11 +222,10 @@ public:
     ros::Time start_time;
 
 	visualization_msgs::MarkerArray points_marker, lines_marker;
-	visualization_msgs::Marker ugv_marker;
 	typedef visualization_msgs::Marker RVizMarker;
 
 	std::string action_name_;
-	std::string uav_base_frame, ugv_base_frame;
+	// std::string uav_base_frame, ugv_base_frame;
 
 	ros::Subscriber octomap_sub_,local_map_sub;
 	ros::Publisher traj_marker_pub_,visMarkersPublisher;

@@ -1,0 +1,23 @@
+test_1:
+  initial_pos_ugv_x: -2.4
+  initial_pos_ugv_y: 1.4
+  initial_pos_ugv_z: 2.0
+  initial_pos_ugv_yaw:  0.0
+  initial_pos_ugv_pitch: 0.0
+  initial_pos_ugv_roll: 0.0
+
+test_2:
+  initial_pos_ugv_x: -2.4
+  initial_pos_ugv_y: -1.6
+  initial_pos_ugv_z: 2.0
+  initial_pos_ugv_yaw:  0.0
+  initial_pos_ugv_pitch: 0.0
+  initial_pos_ugv_roll: 0.0
+
+test_3:
+  initial_pos_ugv_x: -2.4
+  initial_pos_ugv_y: -1.6
+  initial_pos_ugv_z: 2.0
+  initial_pos_ugv_yaw:  0.0
+  initial_pos_ugv_pitch: 0.0
+  initial_pos_ugv_roll: 0.0

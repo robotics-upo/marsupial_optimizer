@@ -11,10 +11,6 @@
     <arg name="debug_msgs" default="true"/>
     <arg name="show_config_msgs" default="true"/>
 
-    <arg name="initial_pos_ugv_x"         default="0.0"/>   
-    <arg name="initial_pos_ugv_y"         default="0.0"/>   
-    <arg name="initial_pos_ugv_z"         default="0.0"/>   
-
         <!-- Mission Planner -->
         <node pkg="theta_star_2d" type="action_goal_interface_node" name="mission_interface">
             <remap from="/Execute_Mission" to="Execute_Mission"/>
@@ -47,14 +43,14 @@
             <param name="debug" value="$(arg debug_msgs)"/>
             <param name="show_config" value="$(arg show_config_msgs)"/>
             <param name="mode3d" value="$(arg use_dron)"/>
-            <param name="uav_base_frame" value="uav_base_link"/>
-            <param name="ugv_base_frame" value="ugv_base_link"/>
+            <!-- <param name="uav_base_frame" value="uav_base_link"/>
+            <param name="ugv_base_frame" value="ugv_base_link"/> -->
             <param name="traj_dest_frame" value="uav_base_link"/>
             <param name="timeout" value="0.4"/>
             <param name="final_search_around" value="1.4"/>
             
             <param name="verbose_optimizer" value="$(arg verbose_optimizer)"/>
-            
+
             <!-- <param name="w_alpha"   value="0.1"/>   # distance-vertex  
             <param name="w_gamma"   value="0.1"/>   # distance-xyz  -->
             <param name="w_epsilon" value="0.6"/>   # equi-distance 
@@ -65,7 +61,7 @@
             <param name="w_eta"     value="0.3"/>   # velocity 
             <param name="w_theta"   value="1.0"/>   # acceleration 
             <param name="w_kappa"   value="0.8"/>   # catenary 
-            <param name="n_iter_opt"    value="500"/>   <!-- number max. of iterations per optimization --> 
+            <param name="n_iter_opt"    value="100"/>   <!-- number max. of iterations per optimization --> 
             <param name="n_time_optimize"    value="1"/>   <!-- number Loop-For to execute optimizer --> 
             <param name="td_"    value="1.0"/>   <!-- Time Sleep between optimization in Loop-For --> 
             <param name="initial_multiplicative_factor_length_catenary"   value="1.001"/>    <!-- This parameter multiply the length between UGV and vertex to adjust Catenary-->
@@ -76,7 +72,6 @@
             <param name="min_distance_add_new_point" value="1.0"/>  
             #Parameter for Edge Catenary
             <param name="radius_collition_catenary"  value="0.1"/>    
-            <param name="mode_obstacle" value="3"/>     <!-- mode 0: mode 1: , mode 2: -->
             #Parameter for Bisection Method
             <param name="bound_bisection_a"         value="100.0"/> <!-- range to get solution in bisection method for XY axes-->
             <param name="bound_bisection_b"         value="400.0"/> <!-- range to get solution in bisection method for Z axes-->

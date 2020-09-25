@@ -184,6 +184,7 @@ add_library(marsupial_g2o
   src/g2o_edge_velocity.cpp
   src/g2o_edge_acceleration.cpp
   src/g2o_edge_catenary.cpp
+  src/optimizer_publisher_tf_node.cpp
   ) 
 target_link_libraries(marsupial_g2o
    ${EXTERNAL_LIBS}
@@ -199,3 +200,7 @@ target_link_libraries(marsupial_g2o
 add_executable(optimizer_local_planner_node src/optimizer_local_planner_node.cpp src/optimizer_local_planner.cpp src/bisection_catenary_3D.cpp)
 add_dependencies(optimizer_local_planner_node ${PROJECT_NAME}_gencfg)
 target_link_libraries(optimizer_local_planner_node marsupial_g2o ${EXTERNAL_LIBS} ${catkin_LIBRARIES})
+
+add_executable(optimizer_publisher_tf_node src/optimizer_publisher_tf_node.cpp)
+add_dependencies(optimizer_publisher_tf_node ${PROJECT_NAME}_gencfg)
+target_link_libraries(optimizer_publisher_tf_node marsupial_g2o ${EXTERNAL_LIBS} ${catkin_LIBRARIES})

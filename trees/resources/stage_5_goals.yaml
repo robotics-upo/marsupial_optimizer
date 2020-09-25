@@ -1,0 +1,33 @@
+stage_5_pos_final_1:
+    pose:
+        x: -7.6
+        y: 0.0
+        z: 0.8
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        w: 1.0
+
+stage_5_pos_final_2:
+    pose:
+        x: -4.0
+        y: 0.0
+        z: 0.8
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        w: 1.0
+
+stage_5_pos_final_3:
+    pose:
+        x: -1.5
+        y: 0.0
+        z: 5.2
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        w: 1.0
+

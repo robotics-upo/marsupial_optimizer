@@ -1,0 +1,8 @@
+test_1:
+  initial_pos_ugv_x: 0.0
+  initial_pos_ugv_y: 0.0
+  initial_pos_ugv_z: 0.0
+  initial_pos_ugv_yaw:  3.14
+  initial_pos_ugv_pitch: 0.0
+  initial_pos_ugv_roll: 0.0
+

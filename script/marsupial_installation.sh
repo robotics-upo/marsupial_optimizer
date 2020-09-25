@@ -2,6 +2,10 @@ read -p "Installing optimizer for marsupial robot configuration based in g2o. Pr
 
 #! /bin/bash
 
+# Dependencies for Behavior Tree
+sudo apt-get install qtbase5-dev libqt5svg5-dev ros-kinetic-ros-type-introspection
+sudo apt install libdw-dev
+
 cd ~/marsupial_ws/src
 
 # git clone https://github.com/robotics-upo/marsupial_g2o.git
@@ -20,4 +24,13 @@ https://github.com/robotics-upo/upo_actions.git
 https://github.com/robotics-upo/upo_markers.git
 
 #To get .bt form gazebo world
-sim_gazebo_plugins
+sim_gazebo_plugins # Tengo que subir este paquete
+
+#To install Behavior tree
+sudo apt-get install libqt5svg5-dev ros-$ROS_DISTRO-ros-type-introspection
+
+git clone https://github.com/robotics-upo/Groot.git
+git clone -b develop https://github.com/robotics-upo/behavior_tree_ros.git
+git clone -b mbzirc https://github.com/robotics-upo/behavior_tree_plugins.git
+git clone https://github.com/robotics-upo/BehaviorTree.CPP.git
+
