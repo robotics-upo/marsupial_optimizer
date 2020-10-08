@@ -65,12 +65,13 @@ class G2OCatenaryEdge : public BaseBinaryEdge<3, vector<double>, VertexPointXYZ,
 
 		NearNeighbor _nn;
 		Eigen::Vector3d _obstacles_near_catenary;
+		Eigen::Vector3d _obstacles_nearest_catenary;
 		Eigen::Vector3d obstacles_;
 		Eigen::Vector3d prev_point_catenary;
 		pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN;
 		pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points;
 		double _radius; 
-		double _radius_security = 0.2;
+		double _radius_security; 
 
 		double _d_curr, _x, _y, _z;
 		bool _debug;
@@ -84,12 +85,17 @@ class G2OCatenaryEdge : public BaseBinaryEdge<3, vector<double>, VertexPointXYZ,
 		geometry_msgs::Point _initial_pos_cat_ugv;
 
 		int count_coll_cat_obs;
-		std::vector<double> _v_count_coll_cat_obs;
+		std::vector<double> _v_count_close_cat_obs;
 	
 
 		std::vector<points_obs_close_cat> _v_obs_collision_cat;
 		std::vector<points_obs_close_cat> _v_obs_close_cat;
 		// std::vector<Eigen::Vector3d> _v_p_cat_collision;
+
+		int n_points_cat_dis;
+		double multiplicative_factor_error;
+		double _d_cat_obs_prev;
+		
 
 		void computeError()
 		{
@@ -103,7 +109,6 @@ class G2OCatenaryEdge : public BaseBinaryEdge<3, vector<double>, VertexPointXYZ,
 			_y = (pose->estimate().y()-_initial_pos_cat_ugv.y);
 			_z = (pose->estimate().z()-_initial_pos_cat_ugv.z);
 			_d_curr = sqrt( _x * _x + _y * _y + _z * _z); // Distance UGV and Vertex
-
 
 			if (l_catenary->estimate() > _d_curr)
 				_length_catenary = l_catenary->estimate();
@@ -151,25 +156,45 @@ class G2OCatenaryEdge : public BaseBinaryEdge<3, vector<double>, VertexPointXYZ,
 				points_obs_close_cat _points1, _points2;
 
 				count_coll_cat_obs = 0;	
-				_v_count_coll_cat_obs.clear();
+				_v_count_close_cat_obs.clear();
+				_d_cat_obs_prev = 10000.0;
+				// printf("CATENARY SIZE =[%lu] VERTEX=[%i]!!!!\n",_points_catenary.size(),pose->id());
 				for (size_t i = 0 ; i < _points_catenary.size() ; i++){
 					Eigen::Vector3d p_cat;
 					p_cat.x() = _points_catenary[i].x;
 					p_cat.y() = _points_catenary[i].y;
 					p_cat.z() = _points_catenary[i].z;
 					
+					// printf("verterx[%i][%f %f %f] p_cat=[%lu][%f %f %f]\n",pose->id(),pose->estimate().x(),pose->estimate().y(),pose->estimate().z(),i,p_cat.x(),p_cat.y(),p_cat.z());
+					
 					_obstacles_near_catenary = _nn.nearestObstacleVertex(kdT_From_NN , p_cat,obstacles_Points);
 					double _d_cat_obs = (p_cat-_obstacles_near_catenary).norm();
-					
 
+					if (_d_cat_obs < _d_cat_obs_prev){
+						_obstacles_nearest_catenary.x() = _obstacles_near_catenary.x();
+						_obstacles_nearest_catenary.y() = _obstacles_near_catenary.y();
+						_obstacles_nearest_catenary.z() = _obstacles_near_catenary.z();
+						_d_cat_obs_prev = _d_cat_obs;
+					}
+					
 					// Get Data I Analysis Catenary: To check if there is obstacle between two catenary points
-					int n_points_cat_dis = 6; // parameter to ignore collsion points in the begining and in the end of catenary
-					if (_d_cat_obs < _radius_security && (i > n_points_cat_dis && i < (_points_catenary.size()- n_points_cat_dis/2 - 1))){
+					// int n_points_cat_dis = 6; // parameter to ignore collsion points in the begining and in the end of catenary
+					n_points_cat_dis = ceil(1.5*ceil(_length_catenary)); // parameter to ignore collsion points in the begining and in the end of catenary
+					if (n_points_cat_dis < 5)
+						n_points_cat_dis = 5;
+					// if(pose->id() == 10 ||pose->id() == 11)
+					// 	printf("Dentro FOR[%lu]: _d_cat_obs=[%f] p_cat=[%f %f %f] _obstacles_near_catenary=[%f %f %f] _points_catenary.size=[%lu] n_points_cat_dis=[%i] ingnored_after_pos_in_the_end=[%lu]\n",
+					// 	i,_d_cat_obs,p_cat.x(),p_cat.y(),p_cat.z(),_obstacles_near_catenary.x(),_obstacles_near_catenary.y(),_obstacles_near_catenary.z(),
+					// 	_points_catenary.size(),n_points_cat_dis,(_points_catenary.size()- n_points_cat_dis));
+					// }
+					// if (_d_cat_obs < _radius && (i > n_points_cat_dis && i < (_points_catenary.size()- n_points_cat_dis))){
+					if (_d_cat_obs < _radius && (i > n_points_cat_dis )){
 						_points1.obs = _obstacles_near_catenary;
 						_points1.cat = p_cat;
+						// printf("Dentro IF vertex[%i] pointCat[%lu]: _d_cat_obs=[%f] p_cat=[%f %f %f] _obstacles_near_catenary=[%f %f %f]\n",pose->id(),i,_d_cat_obs,p_cat.x(),p_cat.y(),p_cat.z(),_obstacles_near_catenary.x(),_obstacles_near_catenary.y(),_obstacles_near_catenary.z());
 						_v_obs_close_cat.push_back(_points1);
 						count_coll_cat_obs++;
-						_v_count_coll_cat_obs.push_back(i);
+						_v_count_close_cat_obs.push_back(i);
 					}
 					
 					// double _d_points_cat = (p_cat-prev_point_catenary).norm();
@@ -261,30 +286,68 @@ class G2OCatenaryEdge : public BaseBinaryEdge<3, vector<double>, VertexPointXYZ,
 							lower_point_cat_z = p_cat.z();
 					}
 				}
-
-				// points_obs_close_cat _v_av_close_oc;
-				// computeAveragePoint(_v_obs_close_cat,_v_av_close_oc);
-
-				//Get distance between average points in collision from obstacles and catenary. 
-				points_obs_close_cat _v_av_coll_oc;	
-				computeAveragePoint(_v_obs_collision_cat, _v_av_coll_oc);
-				double _d_av_cat_obs = (_v_av_coll_oc.cat - _v_av_coll_oc.obs).norm();
-	
 		
 				// Computed Error[0]: Collision catenary with obstacle
 				// Computed Error[1]: To straight the Cable
-				if (_v_obs_close_cat.size() > 0){
-					_error[0] = 10000000.0/pow(_length_catenary,6) * exp ( _v_av_coll_oc.obs.z() - 1.0 - _v_av_coll_oc.cat.z());
+
+				
+
+				// if (_v_obs_close_cat.size() > 0){
+				// if (_v_obs_collision_cat.size() > 0){
+					//Get average of points from catenaty and obstacles close each other. 
+					points_obs_close_cat _v_av_close_oc;
+					computeAveragePoint(_v_obs_close_cat,_v_av_close_oc);
+
+					multiplicative_factor_error = getMultiplicativeFactorError(_d_curr);
+					double dis_z_cat_obs = _v_av_close_oc.cat.z() - _v_av_close_oc.obs.z();
+					double dist_close_cat_obs = (_v_av_close_oc.cat  - _v_av_close_oc.obs).norm();
+
+					double _sigm = 1.0 /(1.0 + exp(-dis_z_cat_obs));
+
+					// double dis_z_cat_init = 2.0*(_v_av_close_oc.cat.z() - _initial_pos_cat_ugv.z);
+					
+					// double factor_exp;
+					// if (dis_z_cat_obs > 0.3)
+					// 	factor_exp = 0.4;
+					// else
+					// 	factor_exp = 1.0;
+
+					// _error[0] = 100000000.0/pow(_length_catenary,6) * exp(_d_curr) * exp (2.0*(_v_av_close_oc.cat.z()+0.1 - _v_av_close_oc.obs.z() ));
+					// _error[0] = multiplicative_factor_error * pow (2.0,_d_curr*1.5) /pow(_length_catenary,5) * exp (factor_exp*dis_z_cat_obs);
+					// _error[0] = multiplicative_factor_error * pow (2.0,_d_curr*1.5) /pow(_length_catenary,5) * (double)count_coll_cat_obs;
+					// _error[0] = multiplicative_factor_error * pow (2.0,_d_curr*1.5) /pow(_length_catenary,5) * 15*dist_close_cat_obs;
+					// _error[0] = multiplicative_factor_error * pow (2.0,_d_curr*1.5) /pow(_length_catenary,5) * 15*dis_z_cat_obs;
+					// _error[0] = multiplicative_factor_error * pow (2.0,_d_curr*1.5) /pow(_length_catenary,5) * dis_z_cat_init ;
+					// _error[0] = multiplicative_factor_error /pow(_length_catenary,4)*exp(count_coll_cat_obs/_points_catenary.size());
+					double factor_exp;
+					if (dis_z_cat_obs > 0.0)
+						factor_exp = 2.0;
+					else
+						factor_exp = 1.0;
+					double diff_dis = _length_catenary-_d_curr;
+					// double _exponent = 10.0 + _length_catenary/100;
+					double _exponent = 10.0 + diff_dis*10.0;
+					// _error[0] =  1000.0 *(pow(_d_curr,10) / pow(_length_catenary,_exponent)) *exp(2.0*count_coll_cat_obs/_points_catenary.size()) * exp(factor_exp*_sigm);
+					// _error[0] = 5000.0 + 1000.0 *(pow(_d_curr,10) / pow(_length_catenary,_exponent)) *exp(2.0*count_coll_cat_obs/_points_catenary.size()) * exp(factor_exp*_sigm);
+					_error[0] =  10000.0 * exp(_radius -_d_cat_obs_prev);
+
+					//Get distance between average points in collision from obstacles and catenary. 
+					// points_obs_close_cat _v_av_coll_oc;	
+					// computeAveragePoint(_v_obs_collision_cat, _v_av_coll_oc);
+					// _error[0] = 10000000.0/pow(_length_catenary,6) * exp ( _v_av_coll_oc.obs.z() - 1.0 - _v_av_coll_oc.cat.z());
+
 					_error[1] = 0.0;
-					// ROS_ERROR("SI !! vertex[%i] count_coll_cat_obs=[%i] _initial_pos_cat_ugv.z=[%f] <? _v_av_coll_oc.obs.z=[%f] _error[0]=[%f]",pose->id(),count_coll_cat_obs,_initial_pos_cat_ugv.z,_v_av_coll_oc.obs.z(),_error[0]);
-					// for(size_t j = 0; j< _v_count_coll_cat_obs.size() ; j++){
-					// 	printf("_v_pos_cat_coll_obs=[%f]\n",_v_count_coll_cat_obs[j]);
+					// printf("vertex[%i] length=[%f] d_curr=[%f] count_coll_cat_obs=[%i/%lu] dis_z_cat_obs=[%f] v_av_close_oc.cat.z=[%f] >? v_av_close_oc.obs.z=[%f] n_points_cat_dis=[%i] error[0]=[%f]\n",
+					// pose->id(),_length_catenary,_d_curr,count_coll_cat_obs,_points_catenary.size(), dis_z_cat_obs, _v_av_close_oc.cat.z(),_v_av_close_oc.obs.z(),n_points_cat_dis,_error[0]);
+					// for(size_t j = 0; j< _v_count_close_cat_obs.size() ; j++){
+					// 	printf("_v_pos_cat_coll_obs=[%f]\n",_v_count_close_cat_obs[j]);
 					// }
-				}
-				else{
-					_error[0] = 0.0;
-					_error[1] = 100.0*(_length_catenary -  _d_curr); 
-				} 
+				// }
+				// else{
+				// 	_error[0] = 0.0;
+				// 	_error[1] = 100.0*(_length_catenary -  _d_curr); 
+				// 	// printf("Streaching tether error[1]=[%f] vertex=[%i]\n",_error[1],pose->id());
+				// } 
 				// Computed Error[2]: To Avoid -z valus for catenary
 				_error[2] = 100000000.0*(double)(count_negative_z)*_length_catenary;
 			}
@@ -304,7 +367,7 @@ class G2OCatenaryEdge : public BaseBinaryEdge<3, vector<double>, VertexPointXYZ,
 		
 		virtual void numberVerticesNotFixed(const int& _n_v) {_n_vertices = _n_v;}
 
-		inline void setRadius(const float& _s_r){_radius = _s_r;}
+		inline void setRadius(const double& _s_r){_radius = _s_r;}
 
 		inline void setInitialPosCatUGV(const geometry_msgs::Point& _p) {_initial_pos_cat_ugv = _p;}
 
@@ -317,24 +380,45 @@ class G2OCatenaryEdge : public BaseBinaryEdge<3, vector<double>, VertexPointXYZ,
 
 		virtual void computeAveragePoint(std::vector<points_obs_close_cat> _vp, points_obs_close_cat &_struc){
 			double xc,yc,zc,xo,yo,zo;
-			xc=yc=zc=xo=yo=zo= 0.0;
+			xc=yc=zc=xo=yo= 0.0;
+			zc = 0.0;
+			zo = 100.0;
 			for(size_t i=0 ; i < _vp.size() ; i++){
 				xc = (_vp[i].cat.x() + xc);
 				yc = (_vp[i].cat.y() + yc);
-				zc = (_vp[i].cat.z() + zc);
+				// zc = (_vp[i].cat.z() + zc);
 				xo = (_vp[i].obs.x() + xo);
 				yo = (_vp[i].obs.y() + yo);
-				zo = (_vp[i].obs.z() + zo);
-			}
-			double _s;
-			if (_vp.size() > 0.0)
-				_s = _vp.size();
-			else
-				_s = 1.0;
-			_struc.cat = Eigen::Vector3d(xc/_s,yc/_s,zc/_s);
-			_struc.obs = Eigen::Vector3d(xo/_s,yo/_s,zo/_s);
+				// zo = (_vp[i].obs.z() + zo);
+				if (_vp[i].cat.z() > zc)
+					zc = _vp[i].cat.z();
+				if (_vp[i].obs.z() < zo)
+					zo = _vp[i].obs.z();
+				// printf("computeAveragePoint print _vp[%lu/%lu].obs.z() =[%f] zo=[%f]\n",i,_vp.size(),_vp[i].obs.z(),zo);
+			}	
+			double _s = _vp.size();
+			// double _s;
+			// if (_vp.size() > 0.0)
+			// 	_s = _vp.size();
+			// else
+			// 	_s = 1.0;
+			_struc.cat = Eigen::Vector3d(xc/_s,yc/_s,zc);
+			_struc.obs = Eigen::Vector3d(xo/_s,yo/_s,zo);
 		}
 
+		virtual double getMultiplicativeFactorError(double _d){
+			double ret;
+			if (_d >= 0.01 && _d < 1.0){ret = 100*_d;}
+			else if (_d >= 1.0 && _d < 1.5){ret = 50000*_d-45000;}
+			else if (_d >= 1.5 && _d < 2.0){ret = 140000*_d-180000;}
+			else if (_d >= 2.0 && _d < 2.5){ret = 200000*_d-300000;}
+			else if (_d >= 2.5 && _d < 4.0){ret = 400000*_d-800000;}
+			else if (_d >= 4.0 && _d < 5.0){ret = 200000*_d;}
+			else if (_d >= 4.0 && _d < 5.0){ret = 200000*_d;}
+			else if (_d >= 5.0){ret = 1000000;}
+
+			return (ret);
+		}
 
 	protected: 
 };

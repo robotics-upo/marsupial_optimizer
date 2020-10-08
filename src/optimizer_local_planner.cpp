@@ -44,8 +44,8 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(tf2_ros::Buffer *tfBuffer_)
   	nh->param<double>("velocity", velocity,1.0);
   	nh->param<double>("acceleration", acceleration,0.0);
   	nh->param<double>("angle_min_traj", angle_min_traj, M_PI / 15.0);
-  	nh->param<float>("radius_collition_catenary", radius_collition_catenary, 0.1);
-  	nh->param<float>("min_distance_add_new_point", min_distance_add_new_point, 0.5);
+  	nh->param<double>("radius_collition_catenary", radius_collition_catenary, 0.1);
+  	nh->param<double>("min_distance_add_new_point", min_distance_add_new_point, 0.5);
   	nh->param<double>("bound_bisection_a", bound_bisection_a,100.0);
   	nh->param<double>("bound_bisection_b", bound_bisection_b,100.0);
 
@@ -207,10 +207,14 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
     auto size = new_path_from_global.size();
     ROS_INFO_COND(debug, PRINTF_GREEN "Number of Vertices to optimize = [%lu] = size",size);
 
+	// setInitialLengthCatenaryAndPosUGV(v_initial_length_catenary, size);
+	preComputeLengthCatenary(v_initial_length_catenary, size);
+
+	count_edges = 0;
 
 	for (int j_ = 0; j_ < n_time_optimize; j_++)
 	{
-		resetFlags();
+		// resetFlags();
     	clearMarkers(size);
 		calculateDistanceVertices(new_path_from_global,dist_vec_);
 
@@ -241,6 +245,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		// 	edgeDistanceVertex->setMeasurement(d3D_/n_points);
 		// 	edgeDistanceVertex->setInformation(G2ODistanceVertexEdge::InformationType::Identity()*w_alpha); 
 		// 	optimizer.addEdge(edgeDistanceVertex);
+		//	count_edges++;
 		// }
 		// //! II. Add Edges: Distances in XYZ axes between two Vertices.
 		// for (size_t i = 0; i < size-1; i++)
@@ -251,6 +256,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		// 	edgeDistanceXYZ->setMeasurement(v_mXYZ_);
 		// 	edgeDistanceXYZ->setInformation(G2ODistanceXYZEdge::InformationType::Identity()*w_gamma); 
 		// 	optimizer.addEdge(edgeDistanceXYZ);
+		//	count_edges++;
 		// }
 		// ! III. Add Edges: Equi-distance among vertices.
 		for (size_t i = 0; i < size-3; i++){
@@ -261,6 +267,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			edgeEquiDistance->vertices()[3] = optimizer.vertices()[i+3];
 			edgeEquiDistance->setInformation(G2OEquiDistanceEdge::InformationType::Identity()*w_epsilon);
 			optimizer.addEdge(edgeEquiDistance);
+			count_edges++;
 		}
 		//! IV. Add Edges: Nearest Obstacles distances from Vertex.
 		for (size_t i = 0; i < size; i++){
@@ -270,6 +277,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			edgeObstaclesNear->setMeasurement(bound);
 			edgeObstaclesNear->setInformation(G2OObstaclesEdge::InformationType::Identity()*w_beta);
 			optimizer.addEdge(edgeObstaclesNear);
+			count_edges++;
 		}
 		//! V. Add Edges: Obstacles between two Vertices.
 		for (size_t i = 0; i < size-1; i++){
@@ -281,6 +289,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			edgeThroughObstacles->readKDTree(nn_.kdtree,nn_.obs_points);
 			edgeThroughObstacles->setInformation(G2OThroughObstaclesEdge::InformationType::Identity()*w_iota); 
 			optimizer.addEdge(edgeThroughObstacles);
+			count_edges++;
 		}
 		// VI. Add Edges: Kinematic of trajectory.
 		for (size_t i = 0; i < size-2; i++){
@@ -291,6 +300,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			edgeKinetics->setMeasurement(angle_min_traj);
 			edgeKinetics->setInformation(G2OKinematicsEdge::InformationType::Identity()*w_delta);
 			optimizer.addEdge(edgeKinetics);
+			count_edges++;
 		}
 
 		/*
@@ -315,6 +325,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			edgeTime->setMeasurement(time_vec_[i-size].time);
 			edgeTime->setInformation(G2OTimeEdge::InformationType::Identity()*w_zeta);
 			optimizer.addEdge(edgeTime);
+			count_edges++;
 		}
 		//! VIII. Add edges. These are velocities between Vertices.
 		for (size_t i = size; i < size*2.0-1.0; i++){
@@ -325,6 +336,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			edgeVelocity->setMeasurement(velocity);
 			edgeVelocity->setInformation(G2OVelocityEdge::InformationType::Identity()*w_eta);
 			optimizer.addEdge(edgeVelocity);
+			count_edges++;
 		}
 		// ! IX. Add edges. This is aceleration between Vertices.
 		for (size_t i = size; i < size*2.0-2.0; i++){
@@ -337,13 +349,12 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			edgeAcceleration->setMeasurement(acceleration);
 			edgeAcceleration->setInformation(G2OAccelerationEdge::InformationType::Identity()*w_theta);
 			optimizer.addEdge(edgeAcceleration);
+			count_edges++;
 		}
 
 		/*
 		* III Create Vertex: Multiplicative factor for Catenary Length
 		*/
-		setInitialLengthCatenaryAndPosUGV(v_initial_length_catenary, size);
-	
 		for (size_t i = 0; i < size; i++){	
 			vertexCatenaryLength = new g2o:: VertexCatenaryLength();
 			vertexCatenaryLength->setEstimate(v_initial_length_catenary[i]);
@@ -352,6 +363,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			optimizer.addVertex(vertexCatenaryLength);
 		}
 
+		n_edges_before_catenary = count_edges;	
 		//! X. Add Edges: Catenary chain.
 		for (size_t i = 0; i < size; i++){
 			G2OCatenaryEdge* edgeCatenary = new g2o::G2OCatenaryEdge(nh);
@@ -367,6 +379,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
             edgeCatenary->robustKernel()->setDelta(1.0);
 			edgeCatenary->setInformation(G2OCatenaryEdge::InformationType::Identity()*w_kappa);
 			optimizer.addEdge(edgeCatenary);
+			count_edges++;
 		}
 
 		if (!continue_optimizing)
@@ -377,26 +390,39 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		optimizer.optimize(n_iter_opt);
 		// optimizer.save("antithing_after.g2o");
 		if (j_ + 1 == n_time_optimize)
-			std::cout << std::endl <<"Optimization Proccess Finished !!!" << std::endl << "===================================================" << std::endl << "Saving Temporal data in txt file ..." << std::endl;
+			std::cout << std::endl <<"Optimization Proccess Completed !!!" << std::endl << "===================================================" << std::endl << "Saving Temporal data in txt file ..." << std::endl;
 
 		pose_vec_opt_.clear();
 		len_cat_vec_.clear();
 		
+		// for(int k=1; k < size+1; k++){
+		// 	 (optimizer.);
+			// int state = catenaryData->_state_collision;
+			
+			// edgeCatenary->parameter
+			// edgeCatenary[k]->_state_collision[n_edges_before_catenary+k];
+		    // printf("edgeCatenary->_state_collision = [%i]\n",edgeCatenary->_state_collision);
+
+		// }
+		
 		new_path_from_global.clear(); //clear the path to set the optimizer solution as path
+		v_initial_length_catenary.clear();
 		for (size_t i = 0; i < size; i++){
 			structPose vOp;
 			structLengthCatenary vLC;
 			vOp.vertex = dynamic_cast<g2o::VertexPointXYZ*>(optimizer.vertex(i));
 			vOp.position = vOp.vertex->estimate();	
-			vOp.id = i;
+			vOp.id = vOp.vertex->id();
 			pose_vec_opt_.push_back(vOp);
 			new_path_from_global.push_back(vOp.position);
-			optimizer.removeVertex(optimizer.vertex(i));
+			optimizer.removeVertex(optimizer.vertex(vOp.vertex->id()));
 			vLC.vertex = dynamic_cast<g2o::VertexCatenaryLength*>(optimizer.vertex(i+size+size-1));
 			vLC.length = vLC.vertex->estimate();
-			vLC.id = i+size+size-1;
+			vLC.id = vLC.vertex->id();
 			len_cat_vec_.push_back(vLC);
-			optimizer.removeVertex(optimizer.vertex(i+size+size-1));
+			v_initial_length_catenary.push_back(vLC.length);
+
+			optimizer.removeVertex(optimizer.vertex(vLC.vertex->id()));
 		}
 
 		getMarkerPoints(points_marker,pose_vec_opt_,"points_lines",j_);
@@ -415,19 +441,28 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 
 		ros::Duration(td_).sleep();
 
-		std::cout << "...Temporal data saved in txt file." << std::endl << std::endl;
 
 		if (j_ + 1 == n_time_optimize){
 			// Aqui le tengo que decir al servicio que goal es success
 			// ¿¿Que condicion para parar el proceso  utilizar??????
 			// REVISAR ESTO UNA VEZ HECHAS LAS PRUEBAS
+			std::cout << std::endl << "...Temporal data saved in txt file." << std::endl << std::endl;
 			ROS_INFO("Optimizer Local Planner: Goal position successfully achieved");
 			ros::Duration(5.0).sleep();
 			action_result.arrived = true;
 			execute_path_srv_ptr->setSucceeded(action_result);
 
 			std::cout <<"Optimization Local Planner Proccess ended !!!!!!!!!!!!!!!!!!!!!!!" << std::endl << "==================================================="<< std::endl << std::endl;
+			resetFlags();
+
 		}
+		else
+		{
+			auto n_loop = j_ + 1;
+			std::cout << std::endl <<"Optimization number " << n_loop << " finished, starting new proccess !!!!!!!!!!!!!!!!!!!!!!!" << std::endl << "==================================================="<< std::endl << std::endl;
+			optimizer.clear();
+		}
+		
 	}
 	optimizer.clear();
 }
@@ -690,6 +725,92 @@ void OptimizerLocalPlanner::setInitialLengthCatenaryAndPosUGV(std::vector <doubl
 		double _dist_c_v = sqrt(_dist_X_c_v * _dist_X_c_v + _dist_Y_c_v * _dist_Y_c_v + _dist_Z_c_v * _dist_Z_c_v)*initial_multiplicative_factor_length_catenary;  
 		
 		_vector.push_back(_dist_c_v);
+	}
+}
+
+void OptimizerLocalPlanner::preComputeLengthCatenary(std::vector <double> &_vector, auto _s)
+{
+	std::vector<geometry_msgs::Point> _pre_points_catenary;
+	Eigen::Vector3d _obstacles_near_catenary;
+	Eigen::Vector3d _p_cat;
+
+	double _bound_z_negative = 0.1;
+	double _mF = initial_multiplicative_factor_length_catenary;
+	double _best_length= 0.0;
+	int _best_n_collision= 10000;
+	bool _state_collision_z ;
+	int _n_collision;
+	
+	tfListener();
+	_vector.clear();
+
+	size_t i=0;
+	while (i < _s){
+		double _dist_X_c_v = (ugv_pos_catenary.x - new_path_from_global[i].x());
+		double _dist_Y_c_v = (ugv_pos_catenary.y - new_path_from_global[i].y());
+		double _dist_Z_c_v = (ugv_pos_catenary.z - new_path_from_global[i].z());
+		double _dist_c_v = sqrt(_dist_X_c_v * _dist_X_c_v + _dist_Y_c_v * _dist_Y_c_v + _dist_Z_c_v * _dist_Z_c_v);
+		double _length = _dist_c_v * _mF;
+
+		_state_collision_z = false;
+		_n_collision = 0;
+		
+		bisectionCatenary bsC;
+		bsC.setNumberPointsCatenary(_length*10.0);
+		bsC.setFactorBisection(bound_bisection_a,bound_bisection_b);
+		bsC.configBisection(_length,ugv_pos_catenary.x,ugv_pos_catenary.y,ugv_pos_catenary.z,new_path_from_global[i].x(),new_path_from_global[i].y(),new_path_from_global[i].z(),i);
+		_pre_points_catenary.clear();
+		bsC.getPointCatenary3D(_pre_points_catenary);
+
+		int _n_points_cat_dis = ceil(1.5*ceil(_length)); // parameter to ignore collsion points in the begining and in the end of catenary
+		if (_n_points_cat_dis < 5)
+			_n_points_cat_dis = 5;
+
+		for (size_t j = 0 ; j <_pre_points_catenary.size() ; j++){
+			printf("Loop For i=[%lu/%lu] j=[%lu/%lu] _n_points_cat_dis =[%i] length=[%f]  \n",i,_s-1,j,_pre_points_catenary.size(),_n_points_cat_dis,_length);
+			if (j > _n_points_cat_dis ){
+				if(_pre_points_catenary[j].z < _bound_z_negative){
+					printf("Pre Compute Catenary with z_value(%f) < z_bound(%f): IMPOSIBLE continue increasing length=[%f] for vertex=[%lu]\n",_pre_points_catenary[j].z,_bound_z_negative,_length,i);
+					_state_collision_z= true;
+				}
+				
+				_p_cat.x()= _pre_points_catenary[j].x;
+				_p_cat.y()= _pre_points_catenary[j].y;
+				_p_cat.z()= _pre_points_catenary[j].z;
+
+				_obstacles_near_catenary = nn_.nearestObstacleVertex(nn_.kdtree, _p_cat, nn_.obs_points);
+				double _d_cat_obs = (_p_cat-_obstacles_near_catenary).norm();
+				printf("_p_cat=[%f %f %f] _obstacles_near_catenary=[%f %f %f] _d_cat_obs=[%f]\n",_p_cat.x(),_p_cat.y(),_p_cat.z(), _pre_points_catenary[j].x,_pre_points_catenary[j].y,_pre_points_catenary[j].z,_d_cat_obs);
+
+				if (_d_cat_obs < radius_collition_catenary && !_state_collision_z){
+					_n_collision++;
+					printf("Catenary length=[%f] from vertex=[%lu] in collision_point=[%lu] total_point_collision=[%i]\n",_length,i,j,_n_collision);
+				}
+			}
+		}
+
+		if (_n_collision > 0){
+			_mF = _mF + 0.01;
+
+			if (_n_collision < _best_n_collision && !_state_collision_z){
+				_best_length = _length;
+				_best_n_collision = _n_collision;	
+			}
+			if(_state_collision_z){
+					_mF = initial_multiplicative_factor_length_catenary; 
+					_vector.push_back(_best_length);
+					printf("Saving Catenary best_length=[%f] from vertex=[%lu] best_n_collision=[%i] vector_pos=[%lu]\n",_best_length,i,_best_n_collision,i);
+					i++;
+					_best_n_collision = 10000;
+				}
+		}
+		else{
+			_mF = initial_multiplicative_factor_length_catenary; 
+			_vector.push_back(_length);
+			printf("Saving Catenary length=[%f] from vertex=[%lu] n_collision=[%i] vector_pos=[%lu]\n",_length,i,_n_collision,i);
+			i++;
+			_best_n_collision = 10000;
+		}
 	}
 }
 

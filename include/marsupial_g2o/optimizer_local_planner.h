@@ -164,6 +164,7 @@ public:
 	void writeTemporalDataBeforeOptimization(void);
 	void writeTemporalDataAfterOptimization(auto _s);
 	void setInitialLengthCatenaryAndPosUGV(std::vector <double> &_vector, auto _s);
+	void preComputeLengthCatenary(std::vector <double> &_vector, auto _s);
 	void getPointsFromGlobalPath(trajectory_msgs::MultiDOFJointTrajectory _path,vector<Eigen::Vector3d> &_v_gp);
 
 	upo_actions::ExecutePathResult action_result;
@@ -180,7 +181,7 @@ public:
 	std::string path= "/home/simon/";
 	int n_iter_opt;	//Iterations Numbers of Optimizer
 	double initial_multiplicative_factor_length_catenary;
-	float radius_collition_catenary,min_distance_add_new_point;
+	double radius_collition_catenary,min_distance_add_new_point;
 	double w_alpha, w_beta, w_iota, w_gamma, w_delta, w_epsilon, w_zeta, w_eta, w_theta, w_kappa;
 	// double initial_pos_ugv_x, initial_pos_ugv_y, initial_pos_ugv_z, initial_pos_ugv_yaw, initial_pos_ugv_pitch, initial_pos_ugv_roll, pos_uav_above_ugv;
 
@@ -251,6 +252,8 @@ public:
 	float n_points; 
 	vector<float> v_slopeXYZ;
 	vector<double> v_initial_length_catenary;
+
+	int count_edges, n_total_edges, n_edges_before_catenary;
 
 private:
 	void resetFlags();

@@ -52,3 +52,14 @@ stage_1_pos_final_5:
         y: 0.0
         z: 0.0
         w: 1.0
+
+stage_1_pos_final_6:
+    pose:
+        x: -8.0
+        y: 2.0
+        z: 8.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        w: 1.0

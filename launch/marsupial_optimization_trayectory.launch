@@ -1,7 +1,7 @@
 <launch>
 
     <!-- Loading Arguments -->
-    <arg name="stage_number"        default="2"/>
+    <arg name="stage_number"        default="1"/>
     <arg name="num_pos_initial"         default="1"/>
     <arg name="pos_uav_above_ugv"         default="1.0"/> #meters UAV above UGV
 

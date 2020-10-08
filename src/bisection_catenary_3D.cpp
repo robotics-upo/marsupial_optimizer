@@ -191,7 +191,6 @@ double bisectionCatenary::phi(double x)
 double bisectionCatenary::distanceC(double p)
 {
     return ( XB/(2.0*p));
-    // printf("\nValue of 'c = %g'\n",result_);
 }
 
 double bisectionCatenary::catenaryPointA(double x)
@@ -213,8 +212,6 @@ double bisectionCatenary::evaluteCatenaryChain(double x_)
 void bisectionCatenary::integrateCatenaryChain2D()
 {
     double x_value, y_value, x_step;
-    // int pos_lower_point;
-    // double Ymin = Z1;
     points_catenary_2D point_cat;
     catenary_chain_points_2D.clear();
     x_value = 0.0;
@@ -226,19 +223,9 @@ void bisectionCatenary::integrateCatenaryChain2D()
         y_value = evaluteCatenaryChain(x_value);
         point_cat.x_ = x_value;
         point_cat.y_ = y_value;
-        // printf("integrateCatenaryChain2D : Points Catenary [%f,%f]\n",x_value,y_value);
         catenary_chain_points_2D.push_back(point_cat);
         x_value = x_value + x_step;
-    
-        // if (Ymin > y_value)
-        // {
-        //     Ymin = y_value;
-        //     pos_lower_point = i;
-        // }
     }
-    // printf("Vector 'catenary_chain_points_2D' size = %i\n",catenary_chain_points_2D.size());
-    // printf("\nFOUND IT!! The lowest point Catenary 2D Xc= %f , Yc= %f\n",
-    // catenary_chain_points_2D[pos_lower_point].x_,catenary_chain_points_2D[pos_lower_point].y_);
 }
 
 double bisectionCatenary::computeFunction(double xr_aux, int mode_)
@@ -260,16 +247,20 @@ double bisectionCatenary::computeFunction(double xr_aux, int mode_)
     return yr_aux;
 }
 
-double bisectionCatenary::resolveBisection(double a, double b,int mode_) 
+double bisectionCatenary::resolveBisection(double a1, double b1,int mode_) 
 {
     double xr, error;
     //Initialize error with a big value
     
     double x_a , x_b;
     points_interval it_points_interval;
-    // printf ("\nbisection mode = %i",mode_);
-    // printf ("\nLooking for Function roots:\n");
-    signChange(a, b, mode_);  // To find smallers interval where can be find the solution, depend on the sign change
+
+    bool find_sign_change = true;
+    double add_sign = 0.0;
+    while(find_sign_change){
+        find_sign_change = signChange(a1-add_sign, b1+add_sign, mode_);  // To find smallers interval where can be find the solution, depend on the sign change
+        add_sign = add_sign + 5.0;
+    }
 
     for (unsigned i = 0; i < vector_sign_change.size(); i++)
     {
@@ -309,14 +300,14 @@ double bisectionCatenary::resolveBisection(double a, double b,int mode_)
     return xr;
 }
 
-void bisectionCatenary::signChange(double a, double b, int mode_)
+bool bisectionCatenary::signChange(double a2, double b2, int mode_)
 {
     points_interval points_sign_change;
     vector_sign_change.clear();
     
     double y1 , y2;
-    double interval = fabs(b - a) / n_points;
-    double bound_a = a ;
+    double interval = fabs(b2 - a2) / n_points;
+    double bound_a = a2 ;
     double bound_b;
     
     for (int i = 0; i < n_points; i++) 
@@ -324,13 +315,11 @@ void bisectionCatenary::signChange(double a, double b, int mode_)
         y1 = computeFunction(bound_a,mode_);
         bound_b = bound_a + interval;
         y2 = computeFunction(bound_b,mode_);
-        // printf("mode =[%i] y1=[%.9f] y2=[%.9f]  bound_a=[%f]  bound_b=[%f] interval=[%f]\n", mode_,y1,y2,bound_a,bound_b,interval);
         
         if ((y1*y2 < 0) || (y1*y2 == 0))
         {
             points_sign_change.pa = bound_a;
             points_sign_change.pb = bound_b;
-            // ROS_ERROR("ENTRO: mode =[%i] y1=[%.9f] y2=[%.9f]  bound_a=[%f]  bound_b=[%f] interval=[%f]", mode_,y1,y2,bound_a,bound_b,interval);
             vector_sign_change.push_back(points_sign_change);
         }           
         bound_a = bound_b;
@@ -355,35 +344,19 @@ void bisectionCatenary::signChange(double a, double b, int mode_)
     if (vector_sign_change.size() < 1.0 )
     {
         if (mode_ == 0){
-            ROS_ERROR("NOT SOLUTION FOR phi() !!! Interval [a =%f , b=%f] doesn't enclose a root",a,b);
+            ROS_ERROR("NOT SOLUTION FOR phi() !!! Interval [a2=%f , b2=%f] doesn't enclose a root Vertex[%i]",a2,b2,id_vertex);
             // ROS_ERROR("=== kConst = [%f] bs_p = [%f] c_value =[%f]  YB =[%f] XB =[%f]",kConst,bs_p,c_value,YB,XB );
             // ROS_ERROR("=== vertex[%i] P_init=[%f %f %f] P_final=[%f %f %f]  L=[%f] ",id_vertex,X1,Y1,Z1,X2,Y2,Z2,L);
-            // bound_a = a;
-            // for (int i = 0; i < n_points; i++) 
-            // {
-            //     y1 = computeFunction(bound_a,mode_);
-            //     bound_b = bound_a + interval;
-            //     y2 = computeFunction(bound_b,mode_);
-            //     ROS_ERROR("NO ENTRO: mode =[%i] a=[%f] b=[%f] y1=[%.9f] y2=[%.9f]  bound_a=[%f]  bound_b=[%f] interval=[%f]", mode_,a,b,y1,y2,bound_a,bound_b,interval);
-            //     bound_a = bound_b;
-            // }
+            return true;
         }
         if (mode_ == 1){
-            ROS_ERROR("NOT SOLUTION FOR Catenary_A() !!! Interval [a =%f , b=%f] doesn't enclose a root",a,b);
+            ROS_ERROR("NOT SOLUTION FOR Catenary_A() !!! Interval [a2=%f , b2=%f] doesn't enclose a root Vertex[%i]",a2,b2,id_vertex);
             // ROS_ERROR("=== kConst = [%f] bs_p = [%f] c_value =[%f]  YB =[%f] XB =[%f]",kConst,bs_p,c_value,YB,XB );
             // ROS_ERROR("=== vertex[%i] P_init=[%f %f %f] P_final=[%f %f %f]  L=[%f] ",id_vertex,X1,Y1,Z1,X2,Y2,Z2,L);
-            // bound_a = a;
-            // for (int i = 0; i < n_points; i++) 
-            // {
-            //     y1 = computeFunction(bound_a,mode_);
-            //     bound_b = bound_a + interval;
-            //     y2 = computeFunction(bound_b,mode_);
-            //     ROS_ERROR("NO ENTRO: mode =[%i] a=[%f] b=[%f] y1=[%.9f] y2=[%.9f]  bound_a=[%f]  bound_b=[%f] interval=[%f]", mode_,a,b,y1,y2,bound_a,bound_b,interval);
-            //     bound_a = bound_b;
-            // }
+            return true;
         }
         if (mode_ == 2){
-            ROS_ERROR("NOT SOLUTION FOR Catenary_B() !!! Interval [a =%f , b=%f] doesn't enclose a root",a,b);
+            ROS_ERROR("NOT SOLUTION FOR Catenary_B() !!! Interval [a2=%f , b2=%f] doesn't enclose a root Vertex[%i]",a2,b2,id_vertex);
             // ROS_ERROR("=== kConst = [%f] bs_p = [%f] c_value =[%f]  YB =[%f] XB =[%f] bs_X0=[%f]",kConst,bs_p,c_value,YB,XB,bs_X0);
             // ROS_ERROR("=== vertex[%i] P_init=[%f %f %f] P_final=[%f %f %f]  L=[%f] ",id_vertex,X1,Y1,Z1,X2,Y2,Z2,L);
             // bound_a = a;
@@ -396,6 +369,9 @@ void bisectionCatenary::signChange(double a, double b, int mode_)
             //     bound_a = bound_b;
             // }
         }
+    }
+    else{
+        return false;
     }
 }
 

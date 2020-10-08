@@ -43,7 +43,8 @@ class G2OObstaclesEdge : public BaseUnaryEdge<1, double, VertexPointXYZ>
 			double _d = (pose->estimate()-near_).norm();
 			
 			if (_d < _measurement){
-				_error[0] = factor_ * exp(_measurement - 2.0*_measurement*_d); 
+				// _error[0] = factor_ * exp(_measurement - 2.0*_measurement*_d); 
+				_error[0] = factor_ * exp(_measurement - 4.0*_d); 
 			}
 			else {
 				_error[0] = 0.0;

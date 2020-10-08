@@ -36,13 +36,16 @@ namespace g2o
 
 			double angle = acos(dot_product / (norm_vector1*norm_vector2));
 
+			double bound1 = M_PI - _measurement;
+			double bound2 = M_PI + _measurement;
 
-			if (dot_product > 0.0 && (angle) < _measurement)
+			// if (dot_product > 0.0 && ( (angle < bound1) || (angle > bound2)  ) )
+			if ( (angle < bound1) || (angle > bound2) ) 
 				_error[0] = factor_ / angle ;
 			else
 				_error[0] = 0.0;
 			
-			// printf("KinematicsEdge: _error[0]=[%f] angle=[%f] _measurement=[%f] vertex=[%i,%i,%i] dot_product=[%f] norm_vector1=[%f] norm_vector2=[%f]  \n",_error[0],angle,_measurement,pose1->id(),pose2->id(),pose3->id(),dot_product,norm_vector1,norm_vector2);
+			// printf("KinematicsEdge: _error[0]=[%f] angle=[%f] _measurement=[%f] bound=[%f %f] vertex=[%i,%i,%i] dot_product=[%f] norm_vector1=[%f] norm_vector2=[%f]  \n",_error[0],angle,_measurement,bound1,bound2,pose1->id(),pose2->id(),pose3->id(),dot_product,norm_vector1,norm_vector2);
 
 
 

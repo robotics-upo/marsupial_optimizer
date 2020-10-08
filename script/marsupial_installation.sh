@@ -3,7 +3,7 @@ read -p "Installing optimizer for marsupial robot configuration based in g2o. Pr
 #! /bin/bash
 
 # Dependencies for Behavior Tree
-sudo apt-get install qtbase5-dev libqt5svg5-dev ros-kinetic-ros-type-introspection
+sudo apt-get install qtbase5-dev libqt5svg5-dev 
 sudo apt install libdw-dev
 
 cd ~/marsupial_ws/src

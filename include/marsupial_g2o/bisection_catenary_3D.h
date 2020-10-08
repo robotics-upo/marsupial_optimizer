@@ -57,7 +57,7 @@ class bisectionCatenary
         virtual void integrateCatenaryChain2D();
         virtual double resolveBisection(double a, double b, int mode_);// 0 = to find phi() , 1 = to find X0 , 2 = to find Y0
         //Find points with sign changes in interval a-b, times that function pass through the origin 
-        virtual void signChange(double a, double b, int mode_);
+        virtual bool signChange(double a, double b, int mode_);
         virtual double computeFunction(double xr_aux, int mode_);
         virtual void getPointCatenary3D(vector<geometry_msgs::Point> &_v_p);
         virtual void directionVectorAxes();

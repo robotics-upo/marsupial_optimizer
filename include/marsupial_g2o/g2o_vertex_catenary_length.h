@@ -31,7 +31,6 @@ public:
     setFixed(fixed);
   }
   
-
   /**
     * @brief Destructs the VertexCatenaryLength
     */ 
@@ -39,21 +38,21 @@ public:
   {}
 
   /**
-    * @brief Access the catenary multiplicative factor value of the vertex
+    * @brief Access the catenary length of the vertex
     * @see estimate
     * @return reference to cfactor
     */ 
   double& cfactor() {return _estimate;}
   
   /**
-    * @brief Access the catenary multiplicative factor value of the vertex (read-only)
+    * @brief Access the catenary length value of the vertex (read-only)
     * @see estimate
     * @return const reference to cfactor
     */ 
   const double& cfactor() const {return _estimate;}
   
   /**
-    * @brief Set the underlying TimeDiff estimate \f$ \Delta T \f$ to default.
+    * @brief Set the underlying Length estimate to default.
     */ 
   virtual void setToOriginImpl()
   {
@@ -61,7 +60,7 @@ public:
   }
 
   /**
-    * @brief Define the update increment \f$ \Delta T_{k+1} = \Delta T_k + update \f$.
+    * @brief Define the update increment \f$ \Length{k+1} = \Length_k + update \f$.
     * A simple addition implements what we want.
     * @param update increment that should be added to the previous esimate
     */ 
@@ -71,7 +70,7 @@ public:
   }
 
   /**
-    * @brief Read an estimate of \f$ \Delta T \f$ from an input stream
+    * @brief Read an estimate of \f$ \Length \f$ from an input stream
     * @param is input stream
     * @return always \c true
     */ 
@@ -82,7 +81,7 @@ public:
   }
 
   /**
-    * @brief Write the estimate \f$ \Delta T \f$ to an output stream
+    * @brief Write the estimate \f$ \Length \f$ to an output stream
     * @param os output stream
     * @return \c true if the export was successful, otherwise \c false
     */ 
