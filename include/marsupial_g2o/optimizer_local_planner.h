@@ -166,6 +166,8 @@ public:
 	void setInitialLengthCatenaryAndPosUGV(std::vector <double> &_vector, auto _s);
 	void preComputeLengthCatenary(std::vector <double> &_vector, auto _s);
 	void getPointsFromGlobalPath(trajectory_msgs::MultiDOFJointTrajectory _path,vector<Eigen::Vector3d> &_v_gp);
+	void checkObstaclesBetweenCatenaries(std::vector <double> _vectorIN,std::vector <double> &_vectorOUT, auto _s);
+	void straightTrajectoryVertices(double x1, double y1, double z1, double x2, double y2, double z2, int _n_v_u, std::vector<Eigen::Vector3d> &_v);
 
 	upo_actions::ExecutePathResult action_result;
 
@@ -231,6 +233,11 @@ public:
 	ros::Subscriber octomap_sub_,local_map_sub;
 	ros::Publisher traj_marker_pub_,visMarkersPublisher;
 
+	ros::Publisher catenary_marker_pub_;
+	visualization_msgs::MarkerArray _catenary_marker;
+	void markerPoints(visualization_msgs::MarkerArray _marker, std::vector<geometry_msgs::Point> _vector, int _suffix, int _n_v);
+	void clearMarkers(visualization_msgs::MarkerArray _marker,auto _s);
+
 	geometry_msgs::Point obs_oct;
 
 	int n_time_optimize;
@@ -251,6 +258,7 @@ public:
 	float d3D_;
 	float n_points; 
 	vector<float> v_slopeXYZ;
+	vector<double> v_pre_initial_length_catenary;
 	vector<double> v_initial_length_catenary;
 
 	int count_edges, n_total_edges, n_edges_before_catenary;

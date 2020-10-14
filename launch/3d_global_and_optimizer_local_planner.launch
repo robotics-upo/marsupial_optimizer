@@ -61,7 +61,7 @@
             <param name="w_eta"     value="0.3"/>   # velocity 
             <param name="w_theta"   value="1.0"/>   # acceleration 
             <param name="w_kappa"   value="0.9"/>   # catenary 
-            <param name="n_iter_opt"    value="200"/>   <!-- number max. of iterations per optimization --> 
+            <param name="n_iter_opt"    value="50"/>   <!-- number max. of iterations per optimization --> 
             <param name="n_time_optimize"    value="1"/>   <!-- number Loop-For to execute optimizer --> 
             <param name="td_"    value="1.0"/>   <!-- Time Sleep between optimization in Loop-For --> 
             <param name="initial_multiplicative_factor_length_catenary"   value="1.001"/>    <!-- This parameter multiply the length between UGV and vertex to adjust Catenary-->

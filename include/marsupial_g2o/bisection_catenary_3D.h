@@ -61,7 +61,7 @@ class bisectionCatenary
         virtual double computeFunction(double xr_aux, int mode_);
         virtual void getPointCatenary3D(vector<geometry_msgs::Point> &_v_p);
         virtual void directionVectorAxes();
-        virtual void configBisection(double _l, double _x1, double _y1, double _z1, double _x2, double _y2, double _z2, int _id);
+        virtual void configBisection(double _l, double _x1, double _y1, double _z1, double _x2, double _y2, double _z2, int _id, string _vtx_name);
         virtual void resetVariables();
         virtual void setNumberPointsCatenary(int _n_p);
         virtual void setFactorBisection(double _fa,double _fb);
@@ -94,6 +94,10 @@ class bisectionCatenary
 
     bool x_const, y_const, z_const;
     int id_vertex;
+
+    bool interval_finded;
+
+    string vertex_name;
 
 };
 

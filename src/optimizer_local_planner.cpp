@@ -98,6 +98,7 @@ void OptimizerLocalPlanner::initializeSubscribers()
 void OptimizerLocalPlanner::initializePublishers()
 {
     traj_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("opt_trajectory_marker", 2);
+	catenary_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("catenary_marker", 100);
 
 	// visMarkersPublisher = nh->advertise<visualization_msgs::Marker>("markers", 1, true);
     // trajPub = nh->advertise<trajectory_msgs::MultiDOFJointTrajectory>("local_path", 1);
@@ -208,7 +209,10 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
     ROS_INFO_COND(debug, PRINTF_GREEN "Number of Vertices to optimize = [%lu] = size",size);
 
 	// setInitialLengthCatenaryAndPosUGV(v_initial_length_catenary, size);
-	preComputeLengthCatenary(v_initial_length_catenary, size);
+	preComputeLengthCatenary(v_pre_initial_length_catenary, size);
+	// ros::Duration(5.0).sleep();
+	checkObstaclesBetweenCatenaries(v_pre_initial_length_catenary,v_initial_length_catenary,size);
+	// ros::Duration(10.0).sleep();
 
 	count_edges = 0;
 
@@ -381,6 +385,26 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			optimizer.addEdge(edgeCatenary);
 			count_edges++;
 		}
+
+		//! X. Add Edges: Catenary chain.
+		// for (size_t i = 0; i < size-1; i++){
+		// 	G2OCatenaryEdge* edgeCatenary = new g2o::G2OCatenaryEdge(nh);
+		// 	edgeCatenary->vertices()[0] = optimizer.vertices()[i];
+		// 	edgeCatenary->vertices()[1] = optimizer.vertices()[i+1];
+		// 	edgeCatenary->vertices()[2] = optimizer.vertices()[i+size-1.0+size];
+		// 	edgeCatenary->vertices()[3] = optimizer.vertices()[i+size-1.0+size+1];
+		// 	edgeCatenary->readKDTree(nn_.kdtree,nn_.obs_points);
+		// 	edgeCatenary->setRadius(radius_collition_catenary);
+		// 	edgeCatenary->numberVerticesNotFixed(size-2);
+		// 	edgeCatenary->setInitialPosCatUGV(ugv_pos_catenary);
+		// 	edgeCatenary->setMeasurement(v_initial_length_catenary);
+		// 	edgeCatenary->setBoundForBisection(bound_bisection_a,bound_bisection_b);
+		// 	edgeCatenary->setRobustKernel(new g2o::RobustKernelCauchy());
+        //     edgeCatenary->robustKernel()->setDelta(1.0);
+		// 	edgeCatenary->setInformation(G2OCatenaryEdge::InformationType::Identity()*w_kappa);
+		// 	optimizer.addEdge(edgeCatenary);
+		// 	count_edges++;
+		// }
 
 		if (!continue_optimizing)
 			std::cout << std::endl <<  "==================================================="  << std::endl << "Optimization  started !!" << std::endl;
@@ -733,6 +757,15 @@ void OptimizerLocalPlanner::preComputeLengthCatenary(std::vector <double> &_vect
 	std::vector<geometry_msgs::Point> _pre_points_catenary;
 	Eigen::Vector3d _obstacles_near_catenary;
 	Eigen::Vector3d _p_cat;
+	struct catenaryStates{
+		int _vertex;
+		double _initial;
+		double _final;
+		int _n_collision;
+		double _mf;
+	};
+	vector <catenaryStates> _v_cat_states;
+	catenaryStates _cat_states;
 
 	double _bound_z_negative = 0.1;
 	double _mF = initial_multiplicative_factor_length_catenary;
@@ -745,6 +778,9 @@ void OptimizerLocalPlanner::preComputeLengthCatenary(std::vector <double> &_vect
 	_vector.clear();
 
 	size_t i=0;
+	_v_cat_states.clear();
+	int change_vertex = -1;
+
 	while (i < _s){
 		double _dist_X_c_v = (ugv_pos_catenary.x - new_path_from_global[i].x());
 		double _dist_Y_c_v = (ugv_pos_catenary.y - new_path_from_global[i].y());
@@ -752,13 +788,22 @@ void OptimizerLocalPlanner::preComputeLengthCatenary(std::vector <double> &_vect
 		double _dist_c_v = sqrt(_dist_X_c_v * _dist_X_c_v + _dist_Y_c_v * _dist_Y_c_v + _dist_Z_c_v * _dist_Z_c_v);
 		double _length = _dist_c_v * _mF;
 
+		if (change_vertex != i){
+			_cat_states._vertex = i;
+			_cat_states._initial = _length;
+			_cat_states._final = -1;
+			_cat_states._n_collision = -1;
+			_cat_states._mf = -1;
+			change_vertex = i;
+		}
+
 		_state_collision_z = false;
 		_n_collision = 0;
 		
 		bisectionCatenary bsC;
 		bsC.setNumberPointsCatenary(_length*10.0);
 		bsC.setFactorBisection(bound_bisection_a,bound_bisection_b);
-		bsC.configBisection(_length,ugv_pos_catenary.x,ugv_pos_catenary.y,ugv_pos_catenary.z,new_path_from_global[i].x(),new_path_from_global[i].y(),new_path_from_global[i].z(),i);
+		bsC.configBisection(_length,ugv_pos_catenary.x,ugv_pos_catenary.y,ugv_pos_catenary.z,new_path_from_global[i].x(),new_path_from_global[i].y(),new_path_from_global[i].z(),i,"pre_compute_cat");
 		_pre_points_catenary.clear();
 		bsC.getPointCatenary3D(_pre_points_catenary);
 
@@ -767,11 +812,12 @@ void OptimizerLocalPlanner::preComputeLengthCatenary(std::vector <double> &_vect
 			_n_points_cat_dis = 5;
 
 		for (size_t j = 0 ; j <_pre_points_catenary.size() ; j++){
-			printf("Loop For i=[%lu/%lu] j=[%lu/%lu] _n_points_cat_dis =[%i] length=[%f]  \n",i,_s-1,j,_pre_points_catenary.size(),_n_points_cat_dis,_length);
+			// printf("Loop For i=[%lu/%lu] j=[%lu/%lu] _n_points_cat_dis =[%i] length=[%f]  \n",i,_s-1,j,_pre_points_catenary.size(),_n_points_cat_dis,_length);
 			if (j > _n_points_cat_dis ){
 				if(_pre_points_catenary[j].z < _bound_z_negative){
-					printf("Pre Compute Catenary with z_value(%f) < z_bound(%f): IMPOSIBLE continue increasing length=[%f] for vertex=[%lu]\n",_pre_points_catenary[j].z,_bound_z_negative,_length,i);
+					ROS_ERROR("Pre Compute Catenary with z_value(%f) < z_bound(%f): IMPOSIBLE continue increasing length=[%f] for vertex=[%lu]",_pre_points_catenary[j].z,_bound_z_negative,_length,i);
 					_state_collision_z= true;
+					break;
 				}
 				
 				_p_cat.x()= _pre_points_catenary[j].x;
@@ -780,16 +826,18 @@ void OptimizerLocalPlanner::preComputeLengthCatenary(std::vector <double> &_vect
 
 				_obstacles_near_catenary = nn_.nearestObstacleVertex(nn_.kdtree, _p_cat, nn_.obs_points);
 				double _d_cat_obs = (_p_cat-_obstacles_near_catenary).norm();
-				printf("_p_cat=[%f %f %f] _obstacles_near_catenary=[%f %f %f] _d_cat_obs=[%f]\n",_p_cat.x(),_p_cat.y(),_p_cat.z(), _pre_points_catenary[j].x,_pre_points_catenary[j].y,_pre_points_catenary[j].z,_d_cat_obs);
+				// printf("_p_cat=[%f %f %f] _obstacles_near_catenary=[%f %f %f] _d_cat_obs=[%f]\n",_p_cat.x(),_p_cat.y(),_p_cat.z(), _pre_points_catenary[j].x,_pre_points_catenary[j].y,_pre_points_catenary[j].z,_d_cat_obs);
 
-				if (_d_cat_obs < radius_collition_catenary && !_state_collision_z){
+				if (_d_cat_obs < radius_collition_catenary){
 					_n_collision++;
-					printf("Catenary length=[%f] from vertex=[%lu] in collision_point=[%lu] total_point_collision=[%i]\n",_length,i,j,_n_collision);
+					// printf("Catenary length=[%f] from vertex=[%lu] in collision_point=[%lu] total_point_collision=[%i]\n",_length,i,j,_n_collision);
 				}
 			}
 		}
 
-		if (_n_collision > 0){
+		// ROS_ERROR("FINISHED FOR LOOP for catenary points: n_collision=[%i] vertex=[%lu] state_collision_z=[%d]\n",_n_collision,i,_state_collision_z);
+
+		if (_n_collision > 0 || _state_collision_z){
 			_mF = _mF + 0.01;
 
 			if (_n_collision < _best_n_collision && !_state_collision_z){
@@ -797,20 +845,36 @@ void OptimizerLocalPlanner::preComputeLengthCatenary(std::vector <double> &_vect
 				_best_n_collision = _n_collision;	
 			}
 			if(_state_collision_z){
+					_cat_states._final = _best_length;
+				    _cat_states._mf = _mF;
+					_cat_states._n_collision = _best_n_collision;
+					_v_cat_states.push_back(_cat_states);
 					_mF = initial_multiplicative_factor_length_catenary; 
 					_vector.push_back(_best_length);
-					printf("Saving Catenary best_length=[%f] from vertex=[%lu] best_n_collision=[%i] vector_pos=[%lu]\n",_best_length,i,_best_n_collision,i);
+					// ROS_ERROR("Saving Catenary best_length=[%f] from vertex=[%lu] n_collision=[%i] best_n_collision=[%i] vector_pos=[%lu]\n",_best_length,i,_n_collision,_best_n_collision,i);
+					// markerPoints(_catenary_marker ,_pre_points_catenary,i,_s-2);
 					i++;
 					_best_n_collision = 10000;
-				}
+			}
 		}
 		else{
+			_cat_states._final = _length;
+			_cat_states._mf = _mF;
+			_cat_states._n_collision = _n_collision;
+			_v_cat_states.push_back(_cat_states);
 			_mF = initial_multiplicative_factor_length_catenary; 
 			_vector.push_back(_length);
-			printf("Saving Catenary length=[%f] from vertex=[%lu] n_collision=[%i] vector_pos=[%lu]\n",_length,i,_n_collision,i);
+			// ROS_ERROR("Saving Catenary length=[%f] from vertex=[%lu] n_collision=[%i] vector_pos=[%lu]\n",_length,i,_n_collision,i);
+			// markerPoints(_catenary_marker ,_pre_points_catenary,i,_s-2);
 			i++;
 			_best_n_collision = 10000;
 		}
+
+	}
+	printf("---------------------------------------------------------------------------------------------\n");
+	for(size_t i = 0; i < _v_cat_states.size(); i++){
+		printf("preComputeLengthCatenary: Got it PRE LENGTH catenary = [vertex=%i , initial=%f , final=%f , n_coll=%i , mf=%f]\n",
+		_v_cat_states[i]._vertex,_v_cat_states[i]._initial,_v_cat_states[i]._final,_v_cat_states[i]._n_collision,_v_cat_states[i]._mf);
 	}
 }
 
@@ -824,3 +888,230 @@ void OptimizerLocalPlanner::tfListener(){
 	ugv_pos_catenary.y = transform.getOrigin().y();
 	ugv_pos_catenary.z = transform.getOrigin().z();
 }
+
+
+void OptimizerLocalPlanner::checkObstaclesBetweenCatenaries(std::vector <double> _vectorIN,std::vector <double> &_vectorOUT, auto _s)
+{
+	int _num_points;
+	double _length1,_length2;
+	bool obst_between_catenaries=false;
+	std::vector<geometry_msgs::Point> _pre_points_catenary1;
+	std::vector<geometry_msgs::Point> _pre_points_catenary2;
+	std::vector<geometry_msgs::Point> _v_factor1, _v_factor2;
+	std::vector<Eigen::Vector3d> _vector_points_line;
+	bisectionCatenary bsC1, bsC2;
+
+	_vectorOUT.clear();
+	int i = 0;
+	int _count_obst;
+	bool _z_collision;
+	double _mf = 1.0;
+	double best_count_obs = 10000;
+	double best_length2 = 0.0;
+	// printf("Entering checkObstaclesBetweenCatenaries: _vectorIN.size=[%lu] _vectorOUT.size=[%lu]\n",_vectorIN.size(),_vectorOUT.size());
+
+	_vectorOUT.push_back(_vectorIN[0]);
+	while( i < _s-1){
+		if(_vectorIN[i] ==_vectorOUT[i])
+			_length1 = _vectorIN[i];
+		else
+			_length1 = _vectorOUT[i];
+		if (!obst_between_catenaries)
+			_length2 = _vectorIN[i+1];
+		else
+			_length2 = _vectorIN[i+1] * _mf;
+		
+		bsC1.setNumberPointsCatenary(_length1*10.0);
+		bsC1.setFactorBisection(bound_bisection_a,bound_bisection_b);
+		bsC1.configBisection(_length1,ugv_pos_catenary.x,ugv_pos_catenary.y,ugv_pos_catenary.z,new_path_from_global[i].x(),new_path_from_global[i].y(),new_path_from_global[i].z(),i,"pre_compute_cat1");
+		_pre_points_catenary1.clear();
+		bsC1.getPointCatenary3D(_pre_points_catenary1);
+		
+		bsC2.setNumberPointsCatenary(_length2*10.0);
+		bsC2.setFactorBisection(bound_bisection_a,bound_bisection_b);
+		bsC2.configBisection(_length2,ugv_pos_catenary.x,ugv_pos_catenary.y,ugv_pos_catenary.z,new_path_from_global[i+1].x(),new_path_from_global[i+1].y(),new_path_from_global[i+1].z(),i,"pre_compute_cat2");
+		_pre_points_catenary2.clear();
+		bsC2.getPointCatenary3D(_pre_points_catenary2);
+
+		double n_points_cat_dis1 = ceil(1.5*ceil(_length1)); // parameter to ignore collsion points in the begining and in the end of catenary
+		if (n_points_cat_dis1 < 5)
+			n_points_cat_dis1 = 5;
+		double n_points_cat_dis2 = ceil(1.5*ceil(_length2)); // parameter to ignore collsion points in the begining and in the end of catenary
+		if (n_points_cat_dis2 < 5)
+			n_points_cat_dis2 = 5;			
+
+		double rate;
+		string equal_status;
+		rate = (double)_pre_points_catenary1.size()/(double)_pre_points_catenary2.size();	
+
+		_count_obst = 0;
+		_z_collision = false;
+		for (size_t j=0; j< _pre_points_catenary2.size(); j++){
+			int id_c2_to_c1; 
+			id_c2_to_c1 = ceil((j+1)*rate) -1 ;
+			if (_pre_points_catenary1.size() <= _pre_points_catenary2.size())
+				equal_status ="catenary1.size() <= catenary2.size()";
+			else
+				equal_status ="catenary2.size() < catenary1.size()";
+
+			if ( j > n_points_cat_dis2 ){
+				Eigen::Vector3d _pc1, _pc2;
+				_pc1.x() = _pre_points_catenary1[id_c2_to_c1].x;
+				_pc1.y() = _pre_points_catenary1[id_c2_to_c1].y;
+				_pc1.z() = _pre_points_catenary1[id_c2_to_c1].z;
+				_pc2.x() = _pre_points_catenary2[j].x;
+				_pc2.y() = _pre_points_catenary2[j].y;
+				_pc2.z() = _pre_points_catenary2[j].z;
+				if (_pc1.z() < 0.1 ){
+					ROS_ERROR("Warning: Not Posible to get feasible lenght for catenary1 %i , best_length2=[%f]",i,best_length2);
+					i++;
+					_z_collision = true;
+					_mf = 1.0;
+					_vectorOUT.push_back(best_length2);
+					break;
+				}
+				if ( _pc2.z()<0.1){
+					ROS_ERROR("Warning: Not Posible to get feasible lenght for catenary2 %i , best_length2=[%f]",i+1,best_length2);
+					i++;
+					_z_collision = true;
+					_mf = 1.0;
+					_vectorOUT.push_back(best_length2);
+					break;
+				}
+				double _x, _y , _z;
+				_x = _pc2.x() - _pc1.x();
+				_y = _pc2.y() - _pc1.y();
+				_z = _pc2.z() - _pc1.z();
+				double dist_pc2_pc1 = sqrt(_x*_x)+ sqrt(_y*_y) + sqrt(_z*_z);
+				// double dist_pc2_pc1 = (_pc2 - _pc1).norm();
+				_num_points = (int)(ceil(dist_pc2_pc1 * 10.0));
+				_vector_points_line.clear();
+				straightTrajectoryVertices(_pc1.x(),_pc1.y(),_pc1.z(),_pc2.x(),_pc2.y(),_pc2.z(),_num_points,_vector_points_line);
+				for (size_t k =0; k <_vector_points_line.size(); k++){
+					Eigen::Vector3d _near = nn_.nearestObstacleVertex(nn_.kdtree, _vector_points_line[k], nn_.obs_points);
+					double dist_straight_line_obstacle = (_vector_points_line[k] -_near).norm();
+					double _radius_cat_straight = 0.1;
+					if (dist_straight_line_obstacle < _radius_cat_straight){
+						_count_obst++;
+						// break;
+					}
+					// if (i ==18 || i ==19 || i == 20 || i== 21){
+					// 	ROS_INFO("INSIDE loop for loop for i=[%i , %i /%lu]  j=[%lu] k=[%lu] count_obst=[%i] pre_points_catenary.size=[%lu/%lu , %lu/%lu] length=[%f , %f] mf=[%f] dist_pc2_pc1=[%f] pc1=[%f %f %f] pc2=[%f %f %f]"
+					// 	,i,i+1,_s,j,k,_count_obst,id_c2_to_c1,_pre_points_catenary1.size(),j,_pre_points_catenary2.size(),_length1,_length2,_mf,dist_pc2_pc1,_pc1.x(),_pc1.y(),_pc1.z(),_pc2.x(),_pc2.y(),_pc2.z());
+					// }
+				}
+			}
+		}
+		// printf("Here 1\n");
+		if(_count_obst > 0){
+			// printf("Here 2 _count_obst = [%i] length2=[%f] best_length2=[%f]\n",_count_obst,_length2,best_length2);
+			_mf = _mf + 0.01;
+			obst_between_catenaries = true ;
+			// if (best_count_obs > _count_obst ){
+			// if (_length2 > best_length2 ){
+			// 	printf("Here 3\n");
+			// 	best_count_obs = _count_obst;
+				best_length2 = _length2;
+			// } 
+		}
+		else if(!_z_collision){
+			// printf("Here 4 vertex=[%i]\n",i);
+			_mf = 1.0;
+			obst_between_catenaries = false;
+			_vectorOUT.push_back(_length2);
+			// markerPoints(_catenary_marker ,_pre_points_catenary1,i,_s-2);
+			// markerPoints(_catenary_marker ,_pre_points_catenary2,i+1,_s-2);
+			i++;
+		}
+	}
+	// printf("Exit checkObstaclesBetweenCatenaries: _vectorIN.size=[%lu] _vectorOUT.size=[%lu]\n",_vectorIN.size(),_vectorOUT.size());
+	
+	printf("---------------------------------------------------------------------------------------------\n");
+	for(size_t i = 0; i < _vectorOUT.size(); i++){
+		printf("checkObstaclesBetweenCatenaries: Got it LENGTH catenary = [vertex=%lu , initial=%f , final=%f ]\n",i,_vectorIN[i],_vectorOUT[i]);
+	}
+}
+
+void OptimizerLocalPlanner::straightTrajectoryVertices(double x1, double y1, double z1, double x2, double y2, double z2, int _n_v_u, std::vector<Eigen::Vector3d> &_v)
+{
+	double _x, _y, _z;
+	double _d= sqrt(pow(x2-x1,2)+pow(y2-y1,2)+pow(z2-z1,2));
+	// double _n = ceil(_d*n_v_u_);
+	double distance_xy = sqrt(pow(x2-x1,2)+pow(y2-y1,2));
+	double distance_xz = sqrt(pow(x2-x1,2)+pow(z2-z1,2));
+	if (distance_xy < 0.00001)
+		distance_xy = 0.00001;
+	if (distance_xz < 0.00001)
+		distance_xz = 0.00001;
+
+	double interval_xy = distance_xy/_n_v_u;		// Size of the interval between points in axes xy
+	double interval_xz = distance_xz/_n_v_u;		// Size of the interval between points in axes xz
+	for(int i = 1 ; i< _n_v_u+1 ; i++)
+	{
+		_x = x1 + i*interval_xy * ((x2-x1)/distance_xy);
+		_y = y1 + i*interval_xy * ((y2-y1)/distance_xy);
+		_z = z1 + i*interval_xz * ((z2-z1)/distance_xz);
+	
+		_v.push_back(Eigen::Vector3d(_x,_y,_z));
+	}
+}
+
+
+
+	void OptimizerLocalPlanner::markerPoints(visualization_msgs::MarkerArray _marker, std::vector<geometry_msgs::Point> _vector, int _suffix, int _n_v)
+	{
+		std::string string_marker;
+		std::string ns_marker;
+
+		double c_color1 = (_suffix / (double)_n_v)* 0.5;
+		double c_color2 = (_suffix / (double)_n_v)* 0.5;
+		// printf ("c_color = [%f] _suffix=[%i]  _n_v=[%i]\n",c_color, _suffix, _n_v);
+	  	
+		string_marker = std::to_string(_suffix);
+		ns_marker = "catenary_"+string_marker;
+
+		_marker.markers.resize(_vector.size());
+		
+		for (size_t i = 0; i < _vector.size(); ++i){
+			_marker.markers[i].header.frame_id = "/map";
+			_marker.markers[i].header.stamp = ros::Time::now();
+			_marker.markers[i].ns = ns_marker;
+			_marker.markers[i].id = i+1;
+			_marker.markers[i].action = visualization_msgs::Marker::ADD;
+			if (i % 5 == 0)
+				_marker.markers[i].type = visualization_msgs::Marker::CUBE;
+			else
+				_marker.markers[i].type = visualization_msgs::Marker::SPHERE;
+			_marker.markers[i].lifetime = ros::Duration(400);
+			// printf("markerPoints : _marker[%lu].pose.position [%f %f %f]\n",i,_vector[i].x,_vector[i].y,_vector[i].z);
+			_marker.markers[i].pose.position.x = _vector[i].x; 
+			_marker.markers[i].pose.position.y = _vector[i].y; 
+			_marker.markers[i].pose.position.z = _vector[i].z;
+
+			_marker.markers[i].pose.orientation.x = 0.0;
+			_marker.markers[i].pose.orientation.y = 0.0;
+			_marker.markers[i].pose.orientation.z = 0.0;
+			_marker.markers[i].pose.orientation.w = 1.0;
+			_marker.markers[i].scale.x = 0.06;
+			_marker.markers[i].scale.y = 0.06;
+			_marker.markers[i].scale.z = 0.06;
+			_marker.markers[i].color.a = 1.0;
+			_marker.markers[i].color.r = 0.9;
+			_marker.markers[i].color.g = c_color1;
+			_marker.markers[i].color.b = 0.0;
+		}	
+		catenary_marker_pub_.publish(_marker);
+	}
+
+	void OptimizerLocalPlanner::clearMarkers(visualization_msgs::MarkerArray _marker,auto _s)
+	{
+		_marker.markers.clear();
+		_marker.markers.resize(_s);
+
+		for (auto i = 0 ; i < _s; i++){
+			_marker.markers[i].action = visualization_msgs::Marker::DELETEALL;
+		}
+		catenary_marker_pub_.publish(_marker);
+	}
+
+

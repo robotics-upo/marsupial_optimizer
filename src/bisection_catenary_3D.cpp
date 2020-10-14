@@ -84,7 +84,7 @@ bisectionCatenary::bisectionCatenary()
 
 // bisectionCatenary::~bisectionCatenary(){} 
 
-void bisectionCatenary::configBisection(double _l, double _x1, double _y1, double _z1, double _x2, double _y2, double _z2, int _id)
+void bisectionCatenary::configBisection(double _l, double _x1, double _y1, double _z1, double _x2, double _y2, double _z2, int _id, string _vtx_name)
 {
     resetVariables();
     if (_x1 == _x2)
@@ -101,6 +101,7 @@ void bisectionCatenary::configBisection(double _l, double _x1, double _y1, doubl
     X1 =_x1; Y1 = _y1; Z1= _z1;
     X2 = _x2; Y2 = _y2;  Z2= _z2;
     id_vertex = _id;
+    vertex_name = _vtx_name;
     
     distance_3d = sqrt(pow(X2-X1,2)+pow(Y2-Y1,2)+pow(Z2-Z1,2)); //Distance between lashing represent in 3D
     // printf("\nL=[%f] distance_3d=[%f] P1=[%f %f %f] P2=[%f %f %f]\n",L,distance_3d,X1,Y1,Z1,X2,Y2,Z2);
@@ -255,9 +256,10 @@ double bisectionCatenary::resolveBisection(double a1, double b1,int mode_)
     double x_a , x_b;
     points_interval it_points_interval;
 
-    bool find_sign_change = true;
+    bool find_sign_change = false;
     double add_sign = 0.0;
-    while(find_sign_change){
+    interval_finded = true;
+    while(!find_sign_change){
         find_sign_change = signChange(a1-add_sign, b1+add_sign, mode_);  // To find smallers interval where can be find the solution, depend on the sign change
         add_sign = add_sign + 5.0;
     }
@@ -344,21 +346,25 @@ bool bisectionCatenary::signChange(double a2, double b2, int mode_)
     if (vector_sign_change.size() < 1.0 )
     {
         if (mode_ == 0){
-            ROS_ERROR("NOT SOLUTION FOR phi() !!! Interval [a2=%f , b2=%f] doesn't enclose a root Vertex[%i]",a2,b2,id_vertex);
+            ROS_ERROR("NOT SOLUTION FOR phi() !!! Interval [a2=%f , b2=%f] doesn't enclose a root Vertex[%i] ,Vertex-%s",a2,b2,id_vertex,vertex_name.c_str());
             // ROS_ERROR("=== kConst = [%f] bs_p = [%f] c_value =[%f]  YB =[%f] XB =[%f]",kConst,bs_p,c_value,YB,XB );
             // ROS_ERROR("=== vertex[%i] P_init=[%f %f %f] P_final=[%f %f %f]  L=[%f] ",id_vertex,X1,Y1,Z1,X2,Y2,Z2,L);
-            return true;
+            interval_finded = false;
+            return false;
         }
         if (mode_ == 1){
-            ROS_ERROR("NOT SOLUTION FOR Catenary_A() !!! Interval [a2=%f , b2=%f] doesn't enclose a root Vertex[%i]",a2,b2,id_vertex);
+            ROS_ERROR("NOT SOLUTION FOR Catenary_A() !!! Interval [a2=%f , b2=%f] doesn't enclose a root Vertex[%i] ,Vertex-%s",a2,b2,id_vertex,vertex_name.c_str());
             // ROS_ERROR("=== kConst = [%f] bs_p = [%f] c_value =[%f]  YB =[%f] XB =[%f]",kConst,bs_p,c_value,YB,XB );
             // ROS_ERROR("=== vertex[%i] P_init=[%f %f %f] P_final=[%f %f %f]  L=[%f] ",id_vertex,X1,Y1,Z1,X2,Y2,Z2,L);
-            return true;
+            interval_finded = false;
+            return false;
         }
         if (mode_ == 2){
-            ROS_ERROR("NOT SOLUTION FOR Catenary_B() !!! Interval [a2=%f , b2=%f] doesn't enclose a root Vertex[%i]",a2,b2,id_vertex);
+            ROS_ERROR("NOT SOLUTION FOR Catenary_B() !!! Interval [a2=%f , b2=%f] doesn't enclose a root Vertex[%i] ,Vertex-%s",a2,b2,id_vertex,vertex_name.c_str());
             // ROS_ERROR("=== kConst = [%f] bs_p = [%f] c_value =[%f]  YB =[%f] XB =[%f] bs_X0=[%f]",kConst,bs_p,c_value,YB,XB,bs_X0);
             // ROS_ERROR("=== vertex[%i] P_init=[%f %f %f] P_final=[%f %f %f]  L=[%f] ",id_vertex,X1,Y1,Z1,X2,Y2,Z2,L);
+            interval_finded = false;
+            return false;
             // bound_a = a;
             // for (int i = 0; i < n_points; i++) 
             // {
@@ -370,8 +376,22 @@ bool bisectionCatenary::signChange(double a2, double b2, int mode_)
             // }
         }
     }
+    else if (vector_sign_change.size() >= 1.0 && !interval_finded){
+        if (mode_ == 0){
+            ROS_INFO("SOLUTION FINDED FOR phi() !!! Interval [a2=%f , b2=%f] enclose root for Vertex[%i] ,Vertex-%s",a2,b2,id_vertex,vertex_name.c_str());
+            return true;
+        }
+        if (mode_ == 1){
+            ROS_INFO("SOLUTION FINDED FOR Catenary_A() !!! Interval [a2=%f , b2=%f] enclose root for Vertex[%i] ,Vertex-%s",a2,b2,id_vertex,vertex_name.c_str());
+            return true;
+        }
+        if (mode_ == 2){
+            ROS_INFO("SOLUTION FINDED FOR Catenary_B() !!! Interval [a2=%f , b2=%f] enclose root for Vertex[%i] ,Vertex-%s",a2,b2,id_vertex,vertex_name.c_str());
+            return true;
+        }
+    }
     else{
-        return false;
+        return true;
     }
 }
 
