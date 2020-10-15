@@ -87,6 +87,7 @@ class G2OCatenaryEdge : public BaseBinaryEdge<3, vector<double>, VertexPointXYZ,
 		double sum_error_per_cat;
 		double factor_error_straight_catenary;
 		double factor_negative_z;
+		double factor_error_0;
 
 		void computeError()
 		{
@@ -140,6 +141,7 @@ class G2OCatenaryEdge : public BaseBinaryEdge<3, vector<double>, VertexPointXYZ,
 				_d_cat_obs_prev = 10000.0;
 
 				factor_negative_z = 0.0;
+				factor_error_0 = 1.0;
 
 				n_points_cat_dis = ceil(1.5*ceil(_length_catenary)); // parameter to ignore collsion points in the begining and in the end of catenary
 				if (n_points_cat_dis < 5)
@@ -155,17 +157,25 @@ class G2OCatenaryEdge : public BaseBinaryEdge<3, vector<double>, VertexPointXYZ,
 					_obstacles_near_catenary = _nn.nearestObstacleVertex(kdT_From_NN , p_cat,obstacles_Points);
 					double _d_cat_obs = (p_cat-_obstacles_near_catenary).norm();
 
-					if (_d_cat_obs < _radius && (i > n_points_cat_dis )){
-						sum_error_per_cat = 100000.0 * exp(_radius -_d_cat_obs_prev) + sum_error_per_cat;
-						factor_error_straight_catenary = 0.0;
+					if (_d_cat_obs < _radius && (i > n_points_cat_dis ) && (i < _points_catenary.size()-n_points_cat_dis/2)){
+						sum_error_per_cat = 100000.0 * exp(_radius -_d_cat_obs) + sum_error_per_cat;
+						// factor_error_straight_catenary = 0.0;
+						// if(pose->id() == 20 || pose->id() == 19 || pose->id() == 18)
+						// 	printf("_d_cat_obs < _radius vertex=[%i] sum_error_per_cat=[%f]\n",pose->id(),sum_error_per_cat);
 					}
 
+					if(_obstacles_near_catenary.z() > p_cat.z() && _d_cat_obs < _radius +0.15 && (i > n_points_cat_dis ) && (i < _points_catenary.size()-n_points_cat_dis/2)){
+						factor_error_straight_catenary = 0.0;
+					}
 					// Analysis II: To check if there are catenary points above z= 0.0
 					if (p_cat.z() < bound_z_negative){
 						count_negative_z++;
+						factor_error_0 = 0.0;
+						factor_error_straight_catenary = 1.0;
 						factor_negative_z = 1.0;
 						if ( p_cat.z() < lower_point_cat_z)
 							lower_point_cat_z = p_cat.z();
+					// printf("p_cat.z() < bound_z_negative vertex=[%i]\n",pose->id());
 					}
 				}
 		
@@ -173,9 +183,12 @@ class G2OCatenaryEdge : public BaseBinaryEdge<3, vector<double>, VertexPointXYZ,
 				// Computed Error[1]: To straight the Cable
 				// Computed Error[2]: To Avoid -z valus for catenary
 				_error[0] =  sum_error_per_cat;
-				_error[1] = 2.0*(_length_catenary -  _d_curr)*factor_error_straight_catenary; 
+				_error[1] = 10.0*(_length_catenary -  _d_curr)*factor_error_straight_catenary; 
 				// _error[2] = 100000000.0*(double)(count_negative_z)*_length_catenary;
-				_error[2] = 100000000.0*exp( bound_z_negative - p_cat.z()) * factor_negative_z;
+				_error[2] = 10000000.0*exp(10.0*(bound_z_negative + sqrt(pow(bound_z_negative - p_cat.z(),2))) ) * factor_negative_z;
+				// if(pose->id() == 10){
+				// 	printf("Vertex=[%i] , Error=[%f %f %f] length_catenary=[%f]\n",pose->id(),_error[0],_error[1],_error[2],_length_catenary);
+				// }
 			}
 		}
 
@@ -203,7 +216,6 @@ class G2OCatenaryEdge : public BaseBinaryEdge<3, vector<double>, VertexPointXYZ,
 			bound_bisection_a = _fa; 
 			bound_bisection_b = _fb;
 		}
-
 
 
 	protected: 

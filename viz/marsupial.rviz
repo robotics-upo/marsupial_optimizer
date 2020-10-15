@@ -163,7 +163,21 @@ Visualization Manager:
         catenary_10: true
         catenary_11: true
         catenary_12: true
+        catenary_13: true
+        catenary_14: true
+        catenary_15: true
+        catenary_16: true
+        catenary_17: true
+        catenary_18: true
+        catenary_19: true
         catenary_2: true
+        catenary_20: true
+        catenary_21: true
+        catenary_22: true
+        catenary_23: true
+        catenary_24: true
+        catenary_25: true
+        catenary_26: true
         catenary_3: true
         catenary_4: true
         catenary_5: true
@@ -225,25 +239,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 7.266183376312256
+      Distance: 12.934815406799316
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.4573791027069092
-        Y: 0.3584175109863281
-        Z: -4.76837158203125e-7
+        X: -1.0701221227645874
+        Y: 1.9061532020568848
+        Z: 4.76837158203125e-7
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.1102021113038063
+      Pitch: -0.1647978127002716
       Target Frame: <Fixed Frame>
       Value: XYOrbit (rviz)
-      Yaw: 4.593109130859375
+      Yaw: 5.288172245025635
     Saved: ~
 Window Geometry:
   Displays:

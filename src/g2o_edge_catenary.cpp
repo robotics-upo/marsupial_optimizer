@@ -48,8 +48,17 @@ namespace g2o {
 		std::string string_marker;
 		std::string ns_marker;
 
-		double c_color1 = (_suffix / (double)_n_v)* 0.5;
-		double c_color2 = (_suffix / (double)_n_v)* 0.5;
+
+		double c_color1 = (_suffix / (double)_n_v)*0.5;
+		double c_color2 = (_suffix / (double)_n_v)*0.5;
+		double c_color3;
+		if (_suffix%2 == 0)
+			c_color3 = 0.5;
+		else
+			c_color3 = 0.0;
+		
+		
+
 		// printf ("c_color = [%f] _suffix=[%i]  _n_v=[%i]\n",c_color, _suffix, _n_v);
 	  	
 		string_marker = std::to_string(_suffix);
@@ -81,9 +90,9 @@ namespace g2o {
 			_marker.markers[i].scale.y = 0.06;
 			_marker.markers[i].scale.z = 0.06;
 			_marker.markers[i].color.a = 1.0;
-			_marker.markers[i].color.r = 0.9;
-			_marker.markers[i].color.g = c_color1;
-			_marker.markers[i].color.b = 0.0;
+			_marker.markers[i].color.r = 1.0 - c_color1;
+			_marker.markers[i].color.g = c_color2;
+			_marker.markers[i].color.b = c_color3;
 		}	
 		catenary_marker_pub_.publish(_marker);
 	}

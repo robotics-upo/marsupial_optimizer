@@ -375,7 +375,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			edgeCatenary->vertices()[1] = optimizer.vertices()[i+size-1.0+size];
 			edgeCatenary->readKDTree(nn_.kdtree,nn_.obs_points);
 			edgeCatenary->setRadius(radius_collition_catenary);
-			edgeCatenary->numberVerticesNotFixed(size-2);
+			edgeCatenary->numberVerticesNotFixed(size);
 			edgeCatenary->setInitialPosCatUGV(ugv_pos_catenary);
 			edgeCatenary->setMeasurement(v_initial_length_catenary);
 			edgeCatenary->setBoundForBisection(bound_bisection_a,bound_bisection_b);
@@ -407,7 +407,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		// }
 
 		if (!continue_optimizing)
-			std::cout << std::endl <<  "==================================================="  << std::endl << "Optimization  started !!" << std::endl;
+			std::cout <<  "==================================================="  << std::endl << "Optimization  started !!" << std::endl;
 		// optimizer.save("antithing_before.g2o");
 		optimizer.initializeOptimization();
 		optimizer.setVerbose(true);
@@ -470,7 +470,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			// Aqui le tengo que decir al servicio que goal es success
 			// ¿¿Que condicion para parar el proceso  utilizar??????
 			// REVISAR ESTO UNA VEZ HECHAS LAS PRUEBAS
-			std::cout << std::endl << "...Temporal data saved in txt file." << std::endl << std::endl;
+			std::cout << "...Temporal data saved in txt file." << std::endl << std::endl;
 			ROS_INFO("Optimizer Local Planner: Goal position successfully achieved");
 			ros::Duration(5.0).sleep();
 			action_result.arrived = true;
@@ -483,12 +483,18 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		else
 		{
 			auto n_loop = j_ + 1;
-			std::cout << std::endl <<"Optimization number " << n_loop << " finished, starting new proccess !!!!!!!!!!!!!!!!!!!!!!!" << std::endl << "==================================================="<< std::endl << std::endl;
+			std::cout << std::endl <<"Optimization number " << n_loop << " finished, starting new proccess !!!!!!!!!!!!!!!!!!!!!!!" << std::endl << std::endl;
 			optimizer.clear();
 		}
-		
+
+		for (size_t k_ = 0; k_ < v_initial_length_catenary.size(); k_++){
+			printf("Optimized length_catenary=[%f] for vertex=[%lu]\n",v_initial_length_catenary[k_],k_);
+		}
+		std::cout << "==================================================="<< std::endl << std::endl;
 	}
 	optimizer.clear();
+
+
 }
 
 
@@ -954,7 +960,7 @@ void OptimizerLocalPlanner::checkObstaclesBetweenCatenaries(std::vector <double>
 			else
 				equal_status ="catenary2.size() < catenary1.size()";
 
-			if ( j > n_points_cat_dis2 ){
+			if ( j > n_points_cat_dis2  && j < _pre_points_catenary2.size()-n_points_cat_dis2/2 ){
 				Eigen::Vector3d _pc1, _pc2;
 				_pc1.x() = _pre_points_catenary1[id_c2_to_c1].x;
 				_pc1.y() = _pre_points_catenary1[id_c2_to_c1].y;
@@ -978,12 +984,12 @@ void OptimizerLocalPlanner::checkObstaclesBetweenCatenaries(std::vector <double>
 					_vectorOUT.push_back(best_length2);
 					break;
 				}
-				double _x, _y , _z;
-				_x = _pc2.x() - _pc1.x();
-				_y = _pc2.y() - _pc1.y();
-				_z = _pc2.z() - _pc1.z();
-				double dist_pc2_pc1 = sqrt(_x*_x)+ sqrt(_y*_y) + sqrt(_z*_z);
-				// double dist_pc2_pc1 = (_pc2 - _pc1).norm();
+				// double _x, _y , _z;
+				// _x = _pc2.x() - _pc1.x();
+				// _y = _pc2.y() - _pc1.y();
+				// _z = _pc2.z() - _pc1.z();
+				// double dist_pc2_pc1 = sqrt(_x*_x)+ sqrt(_y*_y) + sqrt(_z*_z);
+				double dist_pc2_pc1 = (_pc2 - _pc1).norm();
 				_num_points = (int)(ceil(dist_pc2_pc1 * 10.0));
 				_vector_points_line.clear();
 				straightTrajectoryVertices(_pc1.x(),_pc1.y(),_pc1.z(),_pc2.x(),_pc2.y(),_pc2.z(),_num_points,_vector_points_line);
