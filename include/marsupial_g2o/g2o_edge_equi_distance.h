@@ -32,7 +32,9 @@ namespace g2o
 
 			double average = (_d1 + _d2 + _d3) / 3.0;
 
-			_error[0] = factor_ *( (average -_d1) + (average - _d2) + (average - _d3));
+			_error[0] = factor_ *(average - _d1);
+			_error[1] = factor_ *(average - _d2);
+			_error[2] = factor_ *(average - _d3);
 			
 			// printf("EquiDistance: error=[%f] [%i-%i]_d1 = [%f]  [%i-%i]_d2 = [%f] \n",_error[0],pose2->id(),pose1->id(),_d1,pose3->id(),pose2->id(),_d2);
 		}

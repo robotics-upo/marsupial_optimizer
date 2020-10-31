@@ -1,3 +1,5 @@
+<?xml version="1.0" ?>
+
 <sdf version='1.6'>
   <world name='default'>
     <light name='sun' type='directional'>
@@ -81,61 +83,6 @@
       <elevation>0</elevation>
       <heading_deg>0</heading_deg>
     </spherical_coordinates>
-    <state world_name='default'>
-      <sim_time>36 114000000</sim_time>
-      <real_time>30 728210274</real_time>
-      <wall_time>1604144127 989525066</wall_time>
-      <iterations>30569</iterations>
-      <model name='ground_plane'>
-        <pose frame=''>0 0 0 0 -0 0</pose>
-        <scale>1 1 1</scale>
-        <link name='link'>
-          <pose frame=''>0 0 0 0 -0 0</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-      </model>
-      <model name='stage_2_model'>
-        <pose frame=''>-0.001505 0.432264 1.725 0 -0 0.000959</pose>
-        <scale>1 1 1</scale>
-        <link name='link_0'>
-          <pose frame=''>4.699 -0.095712 1 0 -0 0.000959</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-        <link name='link_0_clone'>
-          <pose frame=''>-4.70102 -0.074791 1 0 -0 0.000959</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-        <link name='link_1'>
-          <pose frame=''>0.004693 -0.100214 3.88298 0 -0 0.000959</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-        <link name='link_2'>
-          <pose frame=''>0.002679 1.99979 2.3 0 -0 0.000959</pose>
-          <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0 0 0 0 -0 0</acceleration>
-          <wrench>0 0 0 0 -0 0</wrench>
-        </link>
-      </model>
-      <light name='sun'>
-        <pose frame=''>0 0 10 0 -0 0</pose>
-      </light>
-    </state>
-    <gui fullscreen='0'>
-      <camera name='user_camera'>
-        <pose frame=''>-0.367118 -15.3357 4.02518 0 0.05164 1.55138</pose>
-        <view_controller>orbit</view_controller>
-        <projection_type>perspective</projection_type>
-      </camera>
-    </gui>
-    <plugin name='gazebo_octomap' filename='libBuildOctomapPlugin.so'/>
     <model name='stage_2_model'>
       <link name='link_0'>
         <inertial>
@@ -335,18 +282,18 @@
       </link>
       <link name='link_1'>
         <inertial>
-          <mass>2.87601</mass>
+          <mass>4.01332</mass>
           <inertia>
-            <ixx>4.327</ixx>
+            <ixx>5.7212</ixx>
             <ixy>0</ixy>
             <ixz>0</ixz>
-            <iyy>0.731984</iyy>
+            <iyy>0.668887</iyy>
             <iyz>0</iyz>
-            <izz>4.07435</izz>
+            <izz>5.7212</izz>
           </inertia>
           <pose frame=''>0 0 0 0 -0 0</pose>
         </inertial>
-        <pose frame=''>0.005687 -0.532484 2.15798 0 -0 0</pose>
+        <pose frame=''>0.005687 -0.532484 1.7 0 -0 0</pose>
         <gravity>1</gravity>
         <self_collide>0</self_collide>
         <kinematic>0</kinematic>
@@ -355,7 +302,7 @@
           <pose frame=''>0 0 0 0 -0 0</pose>
           <geometry>
             <box>
-              <size>1 4 1.5</size>
+              <size>1 4 2</size>
             </box>
           </geometry>
           <material>
@@ -381,7 +328,7 @@
           <pose frame=''>0 0 0 0 -0 0</pose>
           <geometry>
             <box>
-              <size>1 4 1.43324</size>
+              <size>1 4 2</size>
             </box>
           </geometry>
           <surface>
@@ -582,7 +529,64 @@
       </joint>
       <static>0</static>
       <allow_auto_disable>1</allow_auto_disable>
-      <pose frame=''>-0.001505 0.432264 1.725 0 -0 0.000959</pose>
+      <pose frame=''>-0.005687 0.532484 3.0 0 -0 0</pose>
     </model>
-  </world>
+    <state world_name='default'>
+      <sim_time>5 545000000</sim_time>
+      <real_time>5 581750796</real_time>
+      <wall_time>1598021830 218557883</wall_time>
+      <iterations>5545</iterations>
+      <model name='ground_plane'>
+        <pose frame=''>0 0 0 0 -0 0</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='stage_2_model'>
+        <pose frame=''>-0.005687 0.532484 1.725 0 -0 0</pose>
+        <scale>1 1 1</scale>
+        <link name='link_0'>
+          <pose frame=''>4.5 0 1 0 -0 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+        <link name='link_0_clone'>
+          <pose frame=''>-4.5 0 1 0 -0 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+        <link name='link_1'>
+          <pose frame=''>0 0 3.6 0 -0 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+        <link name='link_2'>
+          <pose frame=''>0 2.1 2.3 0 -0 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <light name='sun'>
+        <pose frame=''>0 0 10 0 -0 0</pose>
+      </light>
+    </state>
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <pose frame=''>9.96364 -11.2374 6.57138 -0 0.21164 2.39538</pose>
+        <view_controller>orbit</view_controller>
+        <projection_type>perspective</projection_type>
+      </camera>
+    </gui>
+    
+    <plugin name='gazebo_octomap' filename='libBuildOctomapPlugin.so'/>
+ 
+ </world>
 </sdf>

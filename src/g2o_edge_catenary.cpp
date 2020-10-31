@@ -71,12 +71,13 @@ namespace g2o {
 			_marker.markers[i].header.stamp = ros::Time::now();
 			_marker.markers[i].ns = ns_marker;
 			_marker.markers[i].id = i+1;
+			// _marker.markers[i].id = (_suffix*1000) + (i+1);
 			_marker.markers[i].action = visualization_msgs::Marker::ADD;
 			if (i % 5 == 0)
 				_marker.markers[i].type = visualization_msgs::Marker::CUBE;
 			else
 				_marker.markers[i].type = visualization_msgs::Marker::SPHERE;
-			_marker.markers[i].lifetime = ros::Duration(400);
+			_marker.markers[i].lifetime = ros::Duration(100);
 			// printf("markerPoints : _marker[%lu].pose.position [%f %f %f]\n",i,_vector[i].x,_vector[i].y,_vector[i].z);
 			_marker.markers[i].pose.position.x = _vector[i].x; 
 			_marker.markers[i].pose.position.y = _vector[i].y; 
@@ -97,12 +98,13 @@ namespace g2o {
 		catenary_marker_pub_.publish(_marker);
 	}
 
-	void G2OCatenaryEdge::clearMarkers(visualization_msgs::MarkerArray _marker,auto _s)
+	void G2OCatenaryEdge::clearMarkers(visualization_msgs::MarkerArray _marker,auto _s, int _suffix)
 	{
 		_marker.markers.clear();
 		_marker.markers.resize(_s);
 
 		for (auto i = 0 ; i < _s; i++){
+			// _marker.markers[i].id = (_suffix*1000) + (i+1);
 			_marker.markers[i].action = visualization_msgs::Marker::DELETEALL;
 		}
 		catenary_marker_pub_.publish(_marker);

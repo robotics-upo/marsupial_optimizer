@@ -72,12 +72,12 @@ int main(int argc, char **argv)
 
     ManagerTf mtf(nh,pnh);
 
-	ros::Rate r(ros::Duration(0.05));
+	// ros::Rate r(ros::Duration(0.05));
     
 	while (ros::ok()) {
         ros::spinOnce();
 		mtf.initializationTf();
-        r.sleep();
+        // r.sleep();
     }	
 	
 	return 0;

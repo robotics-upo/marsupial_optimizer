@@ -1,8 +1,8 @@
 stage_2_pos_final_1:
     pose:
-        x: 2.6
-        y: 1.4
-        z: 2.4
+        x: 3.0
+        y: 1.0
+        z: 2.8
     orientation:
         x: 0.0
         y: 0.0
@@ -11,9 +11,9 @@ stage_2_pos_final_1:
 
 stage_2_pos_final_2:
     pose:
-        x: 2.6
+        x: 3.0
         y: -0.2
-        z: 2.4
+        z: 2.8
     orientation:
         x: 0.0
         y: 0.0
@@ -22,9 +22,9 @@ stage_2_pos_final_2:
 
 stage_2_pos_final_3:
     pose:
-        x: 2.6
+        x: 3.0
         y: -1.6
-        z: 2.6
+        z: 2.8
     orientation:
         x: 0.0
         y: 0.0
@@ -33,9 +33,9 @@ stage_2_pos_final_3:
 
 stage_2_pos_final_4:
     pose:
-        x: 1.0
-        y: 1.4
-        z: 2.4
+        x: 1.2
+        y: 1.0
+        z: 2.6
     orientation:
         x: 0.0
         y: 0.0
@@ -44,7 +44,7 @@ stage_2_pos_final_4:
 
 stage_2_pos_final_5:
     pose:
-        x: 1.0
+        x: 1.2
         y: -0.2
         z: 2.6
     orientation:
@@ -55,7 +55,7 @@ stage_2_pos_final_5:
 
 stage_2_pos_final_6:
     pose:
-        x: 1.0
+        x: 1.2
         y: -1.6
         z: 2.6
     orientation:

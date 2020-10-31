@@ -2,15 +2,31 @@
     <!-- ////////// -->
     <BehaviorTree ID="BehaviorTree">
         <Sequence>
-            <Action ID="WaitSeconds" name="WaitSeconds1" duration="2"/>
-            <Action ID="UPOGoToGoalByName" name="GoToGoal1" state="gpf1" action="/Make_Plan" goal_name="stage_3_pos_final_1"/>
-            <Action ID="WaitSeconds" name="WaitSeconds2" duration="2"/>
-            <Action ID="UPOGoToGoalByName" name="GoToGoal2" state="gpf2" action="/Make_Plan" goal_name="stage_3_pos_final_2"/>
-            <Action ID="WaitSeconds" name="WaitSeconds3" duration="2"/>
-            <Action ID="UPOGoToGoalByName" name="GoToGoal3" state="gpf3" action="/Make_Plan" goal_name="stage_3_pos_final_3"/>
-            <Action ID="WaitSeconds" name="WaitSecondsEnd" duration="2"/>
-            <Action ID="UPOGoToGoalByName" name="GoToGoal4" state="gpf4" action="/Make_Plan" goal_name="stage_3_pos_final_4"/>
-            <Action ID="WaitSeconds" name="WaitSecondsEnd" duration="1"/>
+            <Action name="WaitSeconds1" ID="WaitSeconds" duration="2"/>
+            <ForceSuccess name="ForceSuccess1">
+                <Repeat num_cycles="10">
+                    <Action goal_name="stage_3_pos_final_1" name="GoToGoal1" action="/Make_Plan" ID="UPOGoToGoalByName" state="gpf1"/>
+                </Repeat>
+            </ForceSuccess>
+            <Action name="WaitSeconds2" ID="WaitSeconds" duration="2"/>
+            <ForceSuccess name="ForceSuccess2">
+                <Repeat num_cycles="10">
+                    <Action goal_name="stage_3_pos_final_2" name="GoToGoal2" action="/Make_Plan" ID="UPOGoToGoalByName" state="gpf2"/>
+                </Repeat>
+            </ForceSuccess>
+            <Action name="WaitSeconds3" ID="WaitSeconds" duration="2"/>
+            <ForceSuccess name="ForceSuccess3">
+                <Repeat num_cycles="10">
+                    <Action goal_name="stage_3_pos_final_3" name="GoToGoal3" action="/Make_Plan" ID="UPOGoToGoalByName" state="gpf3"/>
+                </Repeat>
+            </ForceSuccess>
+            <Action name="WaitSecondsEnd" ID="WaitSeconds" duration="2"/>
+            <ForceSuccess name="ForceSuccess4">
+                <Repeat num_cycles="10">
+                    <Action goal_name="stage_3_pos_final_4" name="GoToGoal4" action="/Make_Plan" ID="UPOGoToGoalByName" state="gpf4"/>
+                </Repeat>
+            </ForceSuccess>
+            <Action name="WaitSecondsEnd" ID="WaitSeconds" duration="1"/>
         </Sequence>
     </BehaviorTree>
     <!-- ////////// -->

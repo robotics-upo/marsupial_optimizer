@@ -9,8 +9,6 @@
 #include "g2o/config.h"
 #include "g2o/core/base_multi_edge.h"
 
-#include "misc.hpp"
-
 namespace g2o 
 {
 

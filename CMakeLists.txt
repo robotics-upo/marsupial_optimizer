@@ -12,7 +12,6 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib
   message_generation
   std_msgs
-  marsupial_actions
   upo_actions
   dynamic_reconfigure
 )
@@ -24,6 +23,7 @@ find_package(Boost REQUIRED COMPONENTS system thread graph)
 find_package(SUITESPARSE REQUIRED)
 find_package(G2O REQUIRED)
 find_package(PCL 1.11 REQUIRED)
+# find_package(PCL 1.8 REQUIRED) #To compile with ThetaStar
 
 
 # Eigen3 FindScript Backward compatibility (ubuntu saucy)
@@ -152,7 +152,6 @@ catkin_package(
   std_msgs 
   message_generation 
   message_runtime
-  marsupial_actions
   upo_actions
   DEPENDS SUITESPARSE G2O
 )
@@ -184,7 +183,9 @@ add_library(marsupial_g2o
   src/g2o_edge_velocity.cpp
   src/g2o_edge_acceleration.cpp
   src/g2o_edge_catenary.cpp
+  src/g2o_edge_dynamic_catenary.cpp
   src/optimizer_publisher_tf_node.cpp
+  src/bisection_catenary_3D.cpp
   ) 
 target_link_libraries(marsupial_g2o
    ${EXTERNAL_LIBS}
@@ -197,7 +198,7 @@ target_link_libraries(marsupial_g2o
 # add_dependencies(marsupial_node ${PROJECT_NAME}_gencfg)
 # target_link_libraries(marsupial_node marsupial_g2o ${EXTERNAL_LIBS} ${catkin_LIBRARIES})
 
-add_executable(optimizer_local_planner_node src/optimizer_local_planner_node.cpp src/optimizer_local_planner.cpp src/bisection_catenary_3D.cpp)
+add_executable(optimizer_local_planner_node src/optimizer_local_planner_node.cpp src/optimizer_local_planner.cpp )
 add_dependencies(optimizer_local_planner_node ${PROJECT_NAME}_gencfg)
 target_link_libraries(optimizer_local_planner_node marsupial_g2o ${EXTERNAL_LIBS} ${catkin_LIBRARIES})
 

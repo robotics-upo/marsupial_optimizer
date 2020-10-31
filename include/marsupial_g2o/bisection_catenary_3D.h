@@ -50,7 +50,7 @@ class bisectionCatenary
         // ~bisectionCatenary();
 
         virtual double phi(double x);
-        virtual double distanceC(double p); //Calculate distance from floor to point C
+        virtual double distanceC(double _xb, double p); //Calculate distance from floor to point C
         virtual double catenaryPointA(double x);
         virtual double catenaryPointB(double y);
         virtual double evaluteCatenaryChain(double x_);
@@ -60,18 +60,18 @@ class bisectionCatenary
         virtual bool signChange(double a, double b, int mode_);
         virtual double computeFunction(double xr_aux, int mode_);
         virtual void getPointCatenary3D(vector<geometry_msgs::Point> &_v_p);
+        virtual void getPointCatenaryStraight(vector<geometry_msgs::Point> &_v_p);
         virtual void directionVectorAxes();
         virtual void configBisection(double _l, double _x1, double _y1, double _z1, double _x2, double _y2, double _z2, int _id, string _vtx_name);
         virtual void resetVariables();
-        virtual void setNumberPointsCatenary(int _n_p);
+        virtual void setNumberPointsCatenary(double _n_p);
         virtual void setFactorBisection(double _fa,double _fb);
 
         //Length Catenary Chain 
         double L; 
         //Lashing points(X1,Y1,Z1) and (X2,Y2,Z2)
         double X1,Y1,Z1,X2,Y2,Z2;
-        //Distance between lashing points in Axes X and Y represented in 2D plane
-        double XB,YB;    
+          
     // printf("enter setNumberPointsCatenary\n");
         double factor_bisection_a,factor_bisection_b;
 
@@ -81,6 +81,9 @@ class bisectionCatenary
 
     double straight_tolerance;
     double kConst;
+
+     //Distance between lashing points in Axes X and Y represented in 2D plane
+    double XB,YB; 
 
     double Ap, Bp; //Xtreme values Interval to evaluate Phi() Function 
     double Ax, Bx; //Xtreme values Interval to evaluate Catenary_A() Function

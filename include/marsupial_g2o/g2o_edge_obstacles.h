@@ -28,7 +28,8 @@ class G2OObstaclesEdge : public BaseUnaryEdge<1, double, VertexPointXYZ>
 		G2OObstaclesEdge();
         
 		double size_trajectory_;
-		double factor_ = 4.0;
+		double factor_ = 10.0;
+		double ws_limit = 100.0;
 
 		NearNeighbor nn;
 		Eigen::Vector3d near_;
@@ -39,15 +40,19 @@ class G2OObstaclesEdge : public BaseUnaryEdge<1, double, VertexPointXYZ>
 		{
     		const VertexPointXYZ * pose = static_cast<const VertexPointXYZ*> (_vertices[0]);
 
-			near_ = nn.nearestObstacleVertex(kdT_From_NN , pose->estimate(),obstacles_Points);
-			double _d = (pose->estimate()-near_).norm();
-			
-			if (_d < _measurement){
-				// _error[0] = factor_ * exp(_measurement - 2.0*_measurement*_d); 
-				_error[0] = factor_ * exp(_measurement - 4.0*_d); 
+			if (pose->estimate().x() >  ws_limit || pose->estimate().x() <  -1.0*ws_limit || pose->estimate().y() >  ws_limit || pose->estimate().y() <  -1.0*ws_limit || pose->estimate().z() >  ws_limit || pose->estimate().z() <  0.0*ws_limit ){
+				_error[0] = factor_ *(pose->estimate()).norm();
 			}
-			else {
-				_error[0] = 0.0;
+			else{
+				near_ = nn.nearestObstacleVertex(kdT_From_NN , pose->estimate(),obstacles_Points);
+				double _d = (pose->estimate()-near_).norm();
+				if (_d < _measurement){
+					// _error[0] = factor_ * exp(_measurement - 2.0*_measurement*_d); 
+					_error[0] = factor_ * exp(_measurement - 4.0*_d); 
+				}
+				else {
+					_error[0] = 0.0;
+				}
 			}
 		}
 

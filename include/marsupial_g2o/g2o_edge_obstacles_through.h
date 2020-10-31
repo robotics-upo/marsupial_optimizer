@@ -40,6 +40,8 @@ class G2OThroughObstaclesEdge : public BaseBinaryEdge<1, double, VertexPointXYZ,
 		double approximation_ = 0.2;
 		double factor_ = 100000.0;
 
+		double ws_limit = 100.0;
+
 		NearNeighbor nn;
 		Eigen::Vector3d near_;
 		pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN;
@@ -50,126 +52,128 @@ class G2OThroughObstaclesEdge : public BaseBinaryEdge<1, double, VertexPointXYZ,
     		const VertexPointXYZ * pose1 = static_cast<const VertexPointXYZ*> (_vertices[0]);
     		const VertexPointXYZ * pose2 = static_cast<const VertexPointXYZ*> (_vertices[1]);
 
-
 			bool inside_x, inside_y, inside_z;
-			double _d1 = (pose1->estimate()-near_).norm();
-			double _d2 = (pose2->estimate()-near_).norm();
-			double _d = (pose1->estimate()-pose2->estimate()).norm();
 
-			_vector_points_line.clear();
-			_vectorMainObstacles.clear();
+			if ((pose1->estimate().x() >  ws_limit || pose1->estimate().x() <  -1.0*ws_limit || pose1->estimate().y() >  ws_limit || pose1->estimate().y() <  -1.0*ws_limit || pose1->estimate().z() >  ws_limit || pose1->estimate().z() <  0.0*ws_limit ) ||
+				(pose2->estimate().x() >  ws_limit || pose2->estimate().x() <  -1.0*ws_limit || pose2->estimate().y() >  ws_limit || pose2->estimate().y() <  -1.0*ws_limit || pose2->estimate().z() >  ws_limit || pose2->estimate().z() <  0.0*ws_limit )){
+					_error[0] = factor_ *(pose1->estimate()-pose2->estimate()).norm();
+			}
+			else{
+				_vector_points_line.clear();
+				_vectorMainObstacles.clear();
 
-			straightTrajectoryVertices(pose1->estimate().x(),pose1->estimate().y(),pose1->estimate().z(),pose2->estimate().x(),pose2->estimate().y(),pose2->estimate().z(),num_points,_vector_points_line);
-			
-			for (size_t i =0; i <_vector_points_line.size();i++){
-
-				inside_x = false;
-				inside_y = false;
-				inside_z = false;
-				Eigen::Vector3d obstacles_;
-				near_ = nn.nearestObstacleVertex(kdT_From_NN , _vector_points_line[i],obstacles_Points);
-
-				if (pose1->estimate().x() < pose2->estimate().x()){
-					if ((pose1->estimate().x() - approximation_) < near_.x() && (pose2->estimate().x() + approximation_) > near_.x()){
-						inside_x = true;
-						obstacles_.x()=near_.x();					
-					}
-				}
-				else if (pose1->estimate().x() > pose2->estimate().x()){
-					if ((pose1->estimate().x() + approximation_) > near_.x() && (pose2->estimate().x() - approximation_) < near_.x()){
-						inside_x = true;
-						obstacles_.x()=near_.x();					
-					}
-				}
-				else if (pose1->estimate().x() == pose2->estimate().x()){
-					if ((pose1->estimate().x() + approximation_) > near_.x() && (pose1->estimate().x() - approximation_) < near_.x()){
-						inside_x = true;
-						obstacles_.x()=near_.x();					
-					}
-				}
-				else
-					inside_x = false;
-
-
-				if (pose1->estimate().y() < pose2->estimate().y()){
-					if ((pose1->estimate().y() - approximation_) < near_.y() && (pose2->estimate().y() + approximation_) > near_.y()){
-						inside_y = true;
-						obstacles_.y()=near_.y();					
-					}
-				}
-				else if (pose1->estimate().y() > pose2->estimate().y()){
-					if ((pose1->estimate().y() + approximation_) > near_.y() &&  (pose2->estimate().y() - approximation_) < near_.y()){
-						inside_y = true;
-						obstacles_.y()=near_.y();					
-					}
-				}
-				else if (pose1->estimate().y() == pose2->estimate().y()){
-					if ((pose1->estimate().y() + approximation_) > near_.y() && (pose1->estimate().y() - approximation_) < near_.y()){
-						inside_y = true;
-						obstacles_.y()=near_.y();					
-					}
-				}
-				else
-					inside_y = false;
-
+				straightTrajectoryVertices(pose1->estimate().x(),pose1->estimate().y(),pose1->estimate().z(),pose2->estimate().x(),pose2->estimate().y(),pose2->estimate().z(),num_points,_vector_points_line);
 				
-				if (pose1->estimate().z() < pose2->estimate().z()){
-					if ((pose1->estimate().z() - approximation_) < near_.z() && (pose2->estimate().z() + approximation_) > near_.z()){
-						inside_z = true;
-						obstacles_.z()=near_.z();					
+				for (size_t i =0; i <_vector_points_line.size();i++){
+
+					inside_x = false;
+					inside_y = false;
+					inside_z = false;
+					Eigen::Vector3d obstacles_;
+					near_ = nn.nearestObstacleVertex(kdT_From_NN , _vector_points_line[i],obstacles_Points);
+
+					if (pose1->estimate().x() < pose2->estimate().x()){
+						if ((pose1->estimate().x() - approximation_) < near_.x() && (pose2->estimate().x() + approximation_) > near_.x()){
+							inside_x = true;
+							obstacles_.x()=near_.x();					
+						}
+					}
+					else if (pose1->estimate().x() > pose2->estimate().x()){
+						if ((pose1->estimate().x() + approximation_) > near_.x() && (pose2->estimate().x() - approximation_) < near_.x()){
+							inside_x = true;
+							obstacles_.x()=near_.x();					
+						}
+					}
+					else if (pose1->estimate().x() == pose2->estimate().x()){
+						if ((pose1->estimate().x() + approximation_) > near_.x() && (pose1->estimate().x() - approximation_) < near_.x()){
+							inside_x = true;
+							obstacles_.x()=near_.x();					
+						}
+					}
+					else
+						inside_x = false;
+
+
+					if (pose1->estimate().y() < pose2->estimate().y()){
+						if ((pose1->estimate().y() - approximation_) < near_.y() && (pose2->estimate().y() + approximation_) > near_.y()){
+							inside_y = true;
+							obstacles_.y()=near_.y();					
+						}
+					}
+					else if (pose1->estimate().y() > pose2->estimate().y()){
+						if ((pose1->estimate().y() + approximation_) > near_.y() &&  (pose2->estimate().y() - approximation_) < near_.y()){
+							inside_y = true;
+							obstacles_.y()=near_.y();					
+						}
+					}
+					else if (pose1->estimate().y() == pose2->estimate().y()){
+						if ((pose1->estimate().y() + approximation_) > near_.y() && (pose1->estimate().y() - approximation_) < near_.y()){
+							inside_y = true;
+							obstacles_.y()=near_.y();					
+						}
+					}
+					else
+						inside_y = false;
+
+					
+					if (pose1->estimate().z() < pose2->estimate().z()){
+						if ((pose1->estimate().z() - approximation_) < near_.z() && (pose2->estimate().z() + approximation_) > near_.z()){
+							inside_z = true;
+							obstacles_.z()=near_.z();					
+						}
+					}
+					else if (pose1->estimate().z() > pose2->estimate().z()){
+						if ((pose1->estimate().z() + approximation_) > near_.z() && (pose2->estimate().z() - approximation_) < near_.z()){
+							inside_z = true;
+							obstacles_.z()=near_.z();					
+						}
+					}
+					else if (pose1->estimate().z() == pose2->estimate().z()){
+						if ((pose1->estimate().z() + approximation_) > near_.z() && (pose1->estimate().z() - approximation_) < near_.z()){
+							inside_z = true;
+							obstacles_.z()=near_.z();					
+						}
+					}
+					else
+						inside_z = false;
+
+					if (inside_x && inside_y && inside_z){
+						_vectorMainObstacles.push_back(obstacles_);
 					}
 				}
-				else if (pose1->estimate().z() > pose2->estimate().z()){
-					if ((pose1->estimate().z() + approximation_) > near_.z() && (pose2->estimate().z() - approximation_) < near_.z()){
-						inside_z = true;
-						obstacles_.z()=near_.z();					
-					}
+
+				_sum_obstacle_x = _sum_obstacle_y = _sum_obstacle_z = 0.0;
+				if (_vectorMainObstacles.size() == 0)
+					_size_vector = 0;
+				else
+					_size_vector = _vectorMainObstacles.size();
+
+				for (int k=0 ; k < _size_vector; k++){
+					_sum_obstacle_x = _vectorMainObstacles[k].x() + _sum_obstacle_x;
+					_sum_obstacle_y = _vectorMainObstacles[k].y() + _sum_obstacle_y;
+					_sum_obstacle_z = _vectorMainObstacles[k].z() + _sum_obstacle_z;
 				}
-				else if (pose1->estimate().z() == pose2->estimate().z()){
-					if ((pose1->estimate().z() + approximation_) > near_.z() && (pose1->estimate().z() - approximation_) < near_.z()){
-						inside_z = true;
-						obstacles_.z()=near_.z();					
-					}
+				_main_obstacle.x() = (_sum_obstacle_x) / _size_vector;
+				_main_obstacle.y() = (_sum_obstacle_y) / _size_vector;
+				_main_obstacle.z() = (_sum_obstacle_z) / _size_vector;
+
+
+				double _do1 = (pose1->estimate()-_main_obstacle).norm();
+				double _do2 = (pose2->estimate()-_main_obstacle).norm();
+
+				if (_size_vector >= _size_vector_marker){
+					_main_obstacle_marker = _main_obstacle;
+					_size_vector_marker = _size_vector;	
+				}
+
+				if (inside_x && inside_y && inside_z)
+				{
+					_error[0] = factor_ *(_do1+_do2); 
+
 				}
 				else
-					inside_z = false;
-
-				if (inside_x && inside_y && inside_z){
-					_vectorMainObstacles.push_back(obstacles_);
+					_error[0] = 0.0; 
 				}
-			}
-
-			_sum_obstacle_x = _sum_obstacle_y = _sum_obstacle_z = 0.0;
-			if (_vectorMainObstacles.size() == 0)
-				_size_vector = 0;
-			else
-				_size_vector = _vectorMainObstacles.size();
-
-			for (int k=0 ; k < _size_vector; k++){
-				_sum_obstacle_x = _vectorMainObstacles[k].x() + _sum_obstacle_x;
-				_sum_obstacle_y = _vectorMainObstacles[k].y() + _sum_obstacle_y;
-				_sum_obstacle_z = _vectorMainObstacles[k].z() + _sum_obstacle_z;
-			}
-			_main_obstacle.x() = (_sum_obstacle_x) / _size_vector;
-			_main_obstacle.y() = (_sum_obstacle_y) / _size_vector;
-			_main_obstacle.z() = (_sum_obstacle_z) / _size_vector;
-
-
-			double _do1 = (pose1->estimate()-_main_obstacle).norm();
-			double _do2 = (pose2->estimate()-_main_obstacle).norm();
-
-			if (_size_vector >= _size_vector_marker){
-				_main_obstacle_marker = _main_obstacle;
-				_size_vector_marker = _size_vector;	
-			}
-
-			if (inside_x && inside_y && inside_z)
-			{
-				_error[0] = factor_ *(_do1+_do2); 
-
-			}
-			else
-				_error[0] = 0.0; 
 		}
 
 		virtual bool read(std::istream& is);

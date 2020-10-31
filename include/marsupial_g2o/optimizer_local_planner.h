@@ -52,6 +52,7 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "marsupial_g2o/g2o_edge_velocity.h" 
 #include "marsupial_g2o/g2o_edge_acceleration.h" 
 #include "marsupial_g2o/g2o_edge_catenary.h"
+#include "marsupial_g2o/g2o_edge_dynamic_catenary.h"
 
 #include "marsupial_g2o/g2o_vertex_timediff.h"
 #include "marsupial_g2o/g2o_vertex_catenary_length.h"
@@ -168,6 +169,7 @@ public:
 	void getPointsFromGlobalPath(trajectory_msgs::MultiDOFJointTrajectory _path,vector<Eigen::Vector3d> &_v_gp);
 	void checkObstaclesBetweenCatenaries(std::vector <double> _vectorIN,std::vector <double> &_vectorOUT, auto _s);
 	void straightTrajectoryVertices(double x1, double y1, double z1, double x2, double y2, double z2, int _n_v_u, std::vector<Eigen::Vector3d> &_v);
+	void getDataForOptimizerAnalysis();
 
 	upo_actions::ExecutePathResult action_result;
 
@@ -180,13 +182,11 @@ public:
 
 	ofstream file_in_pos,file_in_time ,file_in_velocity, file_in_difftime, file_in_acceleration;
 	ofstream file_out_pos, file_out_time, file_out_velocity, file_out_difftime, file_out_acceleration;
-	std::string path= "/home/simon/";
+	std::string path;
 	int n_iter_opt;	//Iterations Numbers of Optimizer
 	double initial_multiplicative_factor_length_catenary;
-	double radius_collition_catenary,min_distance_add_new_point;
-	double w_alpha, w_beta, w_iota, w_gamma, w_delta, w_epsilon, w_zeta, w_eta, w_theta, w_kappa;
-	// double initial_pos_ugv_x, initial_pos_ugv_y, initial_pos_ugv_z, initial_pos_ugv_yaw, initial_pos_ugv_pitch, initial_pos_ugv_roll, pos_uav_above_ugv;
-
+	double radius_collition_catenary,min_distance_add_new_point,dynamic_catenary;
+	double w_alpha, w_beta, w_iota, w_gamma, w_delta, w_epsilon, w_zeta, w_eta, w_theta, w_kappa,w_lambda;
 
 	NearNeighbor nn_;
 
@@ -246,25 +246,35 @@ public:
 	bool verbose_optimizer;
 
 	void setStraightTrajectory(double x1, double y1, double z1, double x2, double y2, double z2, int n_v_u_);	//Function to create a straight line from point A to B
-	void getSlopXYZAxes( vector<float> &m_);
+	// void getSlopXYZAxes( vector<float> &m_);
 	typedef vector<structPose> PoseSequence;
 	typedef vector<structTime> TimeSequence;
 	typedef vector<structDistance> DistanceSequence;
 	typedef vector<structLengthCatenary> LengthCatenarySequence;
-	PoseSequence pose_vec_opt_; 
-	DistanceSequence dist_vec_; 
-	TimeSequence time_vec_;
-	LengthCatenarySequence len_cat_vec_;
+	DistanceSequence vec_dist_init; 
+	TimeSequence vec_time_init;
+	PoseSequence vec_pose_opt; 
+	LengthCatenarySequence vec_len_cat_opt , vec_len_cat_init;
 	float d3D_;
 	float n_points; 
-	vector<float> v_slopeXYZ;
+	// vector<float> v_slopeXYZ;
 	vector<double> v_pre_initial_length_catenary;
 	vector<double> v_initial_length_catenary;
 
+	double z_constraint;
+
 	int count_edges, n_total_edges, n_edges_before_catenary;
+
+	std::ofstream ofs;
+	std::string output_file, name_output_file;
+	std::vector<double> vec_time_opt, vec_dist_opt, vec_vel_opt, vec_acc_opt;
+	std::vector<Eigen::Vector3d> vec_pose_init;
+	ros::Time start_time_opt_, final_time_opt_;
+	int stage_number, num_pos_initial, num_goal;
 
 private:
 	void resetFlags();
+	void cleanVectors();
 	double global_path_length;
 	double bound, velocity , angle_min_traj, acceleration,bound_bisection_a,bound_bisection_b;
 	geometry_msgs::Point ugv_pos_catenary;
