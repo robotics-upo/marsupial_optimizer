@@ -42,5 +42,18 @@ rosrun marsupial_g2o marsupial_installation.sh
 
 ## Usage
 
+Five scenarios with different feature can be set to test the optimizer. S1: Open environment, S2: Narrow/constrained environment, S3: Confined environment, S4: Confined environment, S5: Open environment. To set te 
+
+
+
+. To set the 
+To launch the environment just launch the provided launch/nix_world.launch file.
+
+```
+roslaunch nix_simulator nix_world.launch
+```
+
+It will launch the NIX prototype inside the mockup given by the ESMERA consortium. The plaform accepts input command velocities with the ROS 'cmd_vel' topic. It also offers odometry measures in the 'odom' topic (to this date the estimation is the ground truth pose).
+
 
 ## Optional extras
