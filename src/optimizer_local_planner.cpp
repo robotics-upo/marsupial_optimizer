@@ -53,7 +53,7 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(tf2_ros::Buffer *tfBuffer_)
   	nh->param<bool>("write_data_for_analysis",write_data_for_analysis, false);
 	nh->param("path", path, (std::string) "/home/simon/");
 	nh->param("name_output_file", name_output_file, (std::string) "optimization_test");
-	nh->param<int>("stage_number", stage_number, 1);
+	nh->param<int>("scenario_number", scenario_number, 1);
 	nh->param<int>("num_pos_initial", num_pos_initial, 1);
 	nh->param<int>("num_goal", num_goal, 0);
 		
@@ -473,7 +473,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		// std::string n_, n_test;
 		// n_t = std::to_string(num_pos_initial);
 		// n_test_ = "test_"+n_+"/";
-		output_file = path+name_output_file+"_stage_"+std::to_string(stage_number)+"_InitPos_"+std::to_string(num_pos_initial)+"_goal_"+std::to_string(num_goal)+".txt";
+		output_file = path+name_output_file+"_stage_"+std::to_string(scenario_number)+"_InitPos_"+std::to_string(num_pos_initial)+"_goal_"+std::to_string(num_goal)+".txt";
 		ofs.open(output_file.c_str(), std::ofstream::app);
 		if (write_data_for_analysis)
 			getDataForOptimizerAnalysis();

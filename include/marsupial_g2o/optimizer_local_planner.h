@@ -270,7 +270,7 @@ public:
 	std::vector<double> vec_time_opt, vec_dist_opt, vec_vel_opt, vec_acc_opt;
 	std::vector<Eigen::Vector3d> vec_pose_init;
 	ros::Time start_time_opt_, final_time_opt_;
-	int stage_number, num_pos_initial, num_goal;
+	int scenario_number, num_pos_initial, num_goal;
 	bool write_data_for_analysis;
 
 private:

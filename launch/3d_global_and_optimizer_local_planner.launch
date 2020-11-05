@@ -17,7 +17,7 @@
     <arg name="bound_bisection_b"    default="400.0"/>   
     <arg name="length_tether_max"    default="10.0"/>   
 
-    <arg name="stage_number"        default="1"/>
+    <arg name="scenario_number"        default="1"/>
     <arg name="num_pos_initial"         default="1"/>
     <arg name="num_goal"         default="0"/>
 
@@ -98,7 +98,7 @@
             #Parameter to write file 
             <param name="write_data_for_analysis"    value="false"/>     
             <param name="name_output_file"    value="results_optimization"/>     
-            <param name="stage_number"    value="$(arg stage_number)"/>     
+            <param name="scenario_number"    value="$(arg scenario_number)"/>     
             <param name="num_pos_initial"   value="$(arg num_pos_initial)"/>     
             <param name="num_goal"   value="$(arg num_goal)"/>     
             <param name="path"   value="/home/simon/results_optimizer/"/>     
