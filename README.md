@@ -12,4 +12,13 @@ The components encoded as constraint and objective function are local with respe
 
 ## Installation
 
-This package contains the implementation of a "g2o-based optimizer" to obtain the optimized navigation path of a drone tied with a cable to a ground robot, a robotic configuration known as marsupial. The optimizer is based on C ++, ROS Melodic and g2o.
+In this section you will find the installation instructions for making it work. Next section (prerequisites) tells you the environment in which the package has been tested.
+
+### Prerrequisites and dependencies
+
+This package has been designed and tested in a x86_64 machine under a Linux 18.04 operating system and ROS Melodic distribution. Besides, our update depends script lets you easilly install the following dependencies:
+
+- G2O
+- lazy_theta_star
+- upo_actions
+- behavior_tree
