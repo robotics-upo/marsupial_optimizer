@@ -42,18 +42,18 @@ rosrun marsupial_g2o marsupial_installation.sh
 
 ## Usage
 
-Five scenarios with different feature can be set to use the optimizer. S1: Open environment, S2: Narrow/constrained environment, S3: Confined environment, S4: Confined environment, S5: Open environment. To set te 
+Five scenarios with different feature can be set to use the optimizer. S1: Open environment, S2: Narrow/constrained environment, S3: Confined environment, S4: Confined environment, S5: Open environment, as show the next figure.
 
 <p align="center">
     <img src="worlds/5_scenarios.png" width="1000">
 </p>
 
+The package has a set of predefined configurations (and completely extendable according to the user's need) that relate the stage number, initial position number and ending position number. The initial position can be check in ```/cfg``` and the final position in ```/trees/resources/```.
 
-. To set the 
-To launch the environment just launch the provided launch/nix_world.launch file.
+To launch the optimizer just launch the provided ```launch/marsupial_optimization_trayectory.launch``` file. To manage the scenario and initial position predefined is recomend to use the parameter for this launch, ```scenario_number``` and ```num_pos_initial```. For example to use, S2 and initial position 2: 
 
 ```
-roslaunch nix_simulator nix_world.launch
+roslaunch marsupial_g2o marsupial_optimization_trayectory.launch scenario_number:=2 num_pos_initial:=2
 ```
 
 It will launch the NIX prototype inside the mockup given by the ESMERA consortium. The plaform accepts input command velocities with the ROS 'cmd_vel' topic. It also offers odometry measures in the 'odom' topic (to this date the estimation is the ground truth pose).
