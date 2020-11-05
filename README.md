@@ -22,3 +22,14 @@ This package has been designed and tested in a x86_64 machine under a Linux 18.0
 - lazy_theta_star
 - upo_actions
 - behavior_tree
+
+### Instalation steps:
+
+1- Clone this repository into the source of your catkin workspace. Please refer to http://wiki.ros.org/catkin/Tutorials/create_a_workspace to setup a new workspace.
+
+2- 
+
+## Usage
+
+
+## Optional extras
