@@ -2,6 +2,10 @@
 
 This package provides a framework to solve non-linear optimization problem for 3D trajectory planning in a marsupial robot configuration. Specifically, the configuration consists of an unmanned aerial vehicle (UAV) tied to an unmanned ground vehicle (UGV). The result is a collision-free trajectory for UAV and tether.
 
+<p align="center">
+    <img src="worlds/scenario_2.gif" width="400">
+</p>
+
 The optimization assumes static UGV position and estimates the problem states such as UAV and tether related with: UAV  position,  tether length, and UAV trajectory time. 
 
 Different components such as UAV and tether positions, distance obstacles and temporal aspects of the motion (velocities and accelerations) are encoded as constraint and objective function. In consequence, the problem determining the values of the states optimizing a weighted multi-objective function.
