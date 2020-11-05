@@ -34,7 +34,7 @@ This package has been designed and tested in a x86_64 machine under a Linux 18.0
 rosrun marsupial_g2o g2o_installation.sh
 ```
 
-3- Finally call the marsupial_installation.sh script to install marsupial_g2o package.
+3- Finally call marsupial_installation.sh script to install marsupial_g2o package.
 
 ```
 rosrun marsupial_g2o marsupial_installation.sh
