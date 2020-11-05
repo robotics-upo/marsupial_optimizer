@@ -8,8 +8,6 @@ Different components such as UAV and tether positions, distance obstacles and te
 
 The components encoded as constraint and objective function are local with respect to the problem states. Thus, the optimization is solved by formulating the problem as a sparse factor graph. For that g2o is used as the engine for graph optimization [https://github.com/RainerKuemmerle/g2o].
 
-## Documentation
-
 ## Installation
 
 In this section you will find the installation instructions for making it work. Next section (prerequisites) tells you the environment in which the package has been tested.
