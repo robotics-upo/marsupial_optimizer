@@ -41,8 +41,7 @@ rosrun marsupial_g2o marsupial_setup.sh
 rosrun marsupial_g2o g2o_installation.sh
 ```
 
-
-
+4- Finally compile your workspace using ```catkin_make``` 
 
 ## Usage
 
