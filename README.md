@@ -42,7 +42,7 @@ rosrun marsupial_g2o marsupial_installation.sh
 
 ## Usage
 
-Five scenarios with different feature can be set to test the optimizer. S1: Open environment, S2: Narrow/constrained environment, S3: Confined environment, S4: Confined environment, S5: Open environment. To set te 
+Five scenarios with different feature can be set to use the optimizer. S1: Open environment, S2: Narrow/constrained environment, S3: Confined environment, S4: Confined environment, S5: Open environment. To set te 
 
 <p align="center">
     <img src="worlds/5_scenarios.png" width="1000">
