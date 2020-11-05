@@ -59,5 +59,3 @@ roslaunch marsupial_g2o marsupial_optimization_trayectory.launch scenario_number
 It will launch the optimizer and the visualization of the environment and marsupial robots in RVIZ. 
 
 To start the optimization proccess is neccesary to publishing a desired goal position in the topic ```/Make_Plan/goal```.
-
-## Optional extras
