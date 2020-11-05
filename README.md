@@ -48,15 +48,16 @@ Five scenarios with different feature can be set to use the optimizer. S1: Open 
     <img src="worlds/5_scenarios.png" width="1000">
 </p>
 
-The package has a set of predefined configurations (and completely extendable according to the user's need) that relate the stage number, initial position number and ending position number. The initial position can be check in ```/cfg``` and the final position in ```/trees/resources/```.
+The package has a set of predefined configurations (and completely extendable according to the user's need) that relate the stage number, initial position number and goal position number. The initial position can be check in ```/cfg``` and the goal position in ```/trees/resources/```.
 
-To launch the optimizer just launch the provided ```launch/marsupial_optimization_trayectory.launch``` file. To manage the scenario and initial position predefined is recomend to use the parameter for this launch, ```scenario_number``` and ```num_pos_initial```. For example to use, S2 and initial position 2: 
+To launch the optimizer just launch the provided ```launch/marsupial_optimization_trayectory.launch``` file. To manage the scenario and initial position predefined is recomend to use the parameter for this launch, ```scenario_number``` and ```num_pos_initial```. Thus, for example to use S2 and initial position 2: 
 
 ```
 roslaunch marsupial_g2o marsupial_optimization_trayectory.launch scenario_number:=2 num_pos_initial:=2
 ```
 
-It will launch the NIX prototype inside the mockup given by the ESMERA consortium. The plaform accepts input command velocities with the ROS 'cmd_vel' topic. It also offers odometry measures in the 'odom' topic (to this date the estimation is the ground truth pose).
+It will launch the optimizer and the visualization of the environment and marsupial robots in RVIZ. 
 
+To start the optimization proccess is neccesary to publishing a desired goal position in the topic ```/Make_Plan/goal```.
 
 ## Optional extras
