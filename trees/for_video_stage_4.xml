@@ -2,43 +2,13 @@
     <!-- ////////// -->
     <BehaviorTree ID="BehaviorTree">
         <Sequence>
-            <Action duration="2" name="Stage1WaitSeconds1" ID="WaitSeconds"/>
+            <Action ID="WaitSeconds" duration="2" name="Stage1WaitSeconds2"/>
             <ForceSuccess>
                 <Repeat num_cycles="1">
-                    <Action action="/Make_Plan" goal_name="stage_1_pos_final_1" state="gpf1" name="Stage1GoToGoal1" ID="UPOGoToGoalByName"/>
+                    <Action ID="UPOGoToGoalByName" state="gpf2" goal_name="stage_4_pos_final_5" name="Stage1GoToGoal2" action="/Make_Plan"/>
                 </Repeat>
             </ForceSuccess>
-            <Action duration="2" name="Stage1WaitSeconds2" ID="WaitSeconds"/>
-            <ForceSuccess>
-                <Repeat num_cycles="1">
-                    <Action action="/Make_Plan" goal_name="stage_1_pos_final_2" state="gpf2" name="Stage1GoToGoal2" ID="UPOGoToGoalByName"/>
-                </Repeat>
-            </ForceSuccess>
-            <Action duration="2" name="Stage1WaitSeconds3" ID="WaitSeconds"/>
-            <ForceSuccess>
-                <Repeat num_cycles="1">
-                    <Action action="/Make_Plan" goal_name="stage_1_pos_final_3" state="gpf3" name="Stage1GoToGoal3" ID="UPOGoToGoalByName"/>
-                </Repeat>
-            </ForceSuccess>
-            <Action duration="2" name="Stage1WaitSeconds4" ID="WaitSeconds"/>
-            <ForceSuccess>
-                <Repeat num_cycles="1">
-                    <Action action="/Make_Plan" goal_name="stage_1_pos_final_4" state="gpf4" name="Stage1GoToGoa4" ID="UPOGoToGoalByName"/>
-                </Repeat>
-            </ForceSuccess>
-            <Action duration="2" name="Stage1WaitSeconds5" ID="WaitSeconds"/>
-            <ForceSuccess>
-                <Repeat num_cycles="1">
-                    <Action action="/Make_Plan" goal_name="stage_1_pos_final_5" state="gpf5" name="Stage1GoToGoal5" ID="UPOGoToGoalByName"/>
-                </Repeat>
-            </ForceSuccess>
-            <Action duration="2" name="WaitSecondsEnd" ID="WaitSeconds"/>
-            <ForceSuccess>
-                <Repeat num_cycles="1">
-                    <Action action="/Make_Plan" goal_name="stage_1_pos_final_6" state="gpf6" name="Stage1GoToGoal6" ID="UPOGoToGoalByName"/>
-                </Repeat>
-            </ForceSuccess>
-            <Action duration="1" name="WaitSecondsEnd" ID="WaitSeconds"/>
+            <Action ID="WaitSeconds" duration="3" name="WaitSecondsEnd"/>
         </Sequence>
     </BehaviorTree>
     <!-- ////////// -->
@@ -49,10 +19,25 @@
         <Condition ID="CheckBool">
             <input_port type="bool" name="input">Input boolean value</input_port>
         </Condition>
+        <SubTree ID="CheckDoorandEnter">
+            <input_port name="action"/>
+            <input_port name="detection_action"/>
+            <input_port name="door"/>
+            <output_port name="out_door"/>
+        </SubTree>
+        <SubTree ID="CheckFireAndExtinguish">
+            <input_port name="actextinguish">Extinguish Action Name</input_port>
+            <input_port name="actgoto">GoTo Action Name</input_port>
+            <input_port name="fire">Fire waypoint</input_port>
+            <output_port name="found_fire">Name of the Fire WP if found</output_port>
+        </SubTree>
         <Action ID="CheckKey">
             <input_port type="std::string" name="no_key">Key to determine if key to say 'no' has benn pressed</input_port>
             <input_port type="std::string" name="yes_key">Key to determine if key to say 'yes' has been pressed</input_port>
         </Action>
+        <SubTree ID="CheckResetRequest">
+            <output_port name="reset_requested"/>
+        </SubTree>
         <Condition ID="CompareNumbers">
             <input_port type="std::string" name="comparison_op">Comparison operator. Valid operators are &lt;, >, &lt;=, >=, == and !=</input_port>
             <input_port type="double" name="first">First operand</input_port>
@@ -110,6 +95,13 @@
         <Action ID="ErrorLog">
             <input_port type="std::string" name="message">Message to log</input_port>
         </Action>
+        <SubTree ID="ExitBuilding">
+            <input_port name="robot_action">Action Service Interface</input_port>
+            <input_port name="window">Window to Exit</input_port>
+        </SubTree>
+        <SubTree ID="ExtinguishFacadeFire">
+            <output_port name="fire_found">WP where fire is found, none otherwise</output_port>
+        </SubTree>
         <Action ID="FatalLog">
             <input_port type="std::string" name="message">Message to log</input_port>
         </Action>
@@ -123,6 +115,7 @@
             <input_port type="std::string" name="input">String to look into</input_port>
             <input_port type="std::vector&lt;std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> >, std::allocator&lt;std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> > > >" name="substrings">Substrings to look for</input_port>
         </Action>
+        <SubTree ID="Floor0SurveyAndExtinguish"/>
         <Decorator ID="ForEachLoop">
             <input_port type="bool" name="break_on_child_failure">Break loop on child failure?</input_port>
             <input_port type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> >, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer>" name="input">Input sequence</input_port>

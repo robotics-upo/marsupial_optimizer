@@ -198,7 +198,7 @@ class G2OCatenaryEdge : public BaseBinaryEdge<3, vector<double>, VertexPointXYZ,
 				// Computed Error[1]: To straight the Cable
 				// Computed Error[2]: To Avoid -z valus for catenary
 				_error[0] =  sum_error_per_cat;
-				_error[1] = 8.0*(_length_catenary -  _d_curr*1.002)*factor_error_straight_catenary; 
+				_error[1] = 6.0*(_length_catenary -  _d_curr*1.002)*factor_error_straight_catenary; 
 				// _error[2] = 100000000.0*(double)(count_negative_z)*_length_catenary;
 				_error[2] = 10000000.0*_length_catenary*exp(10.0*(bound_z_negative + sqrt(pow(bound_z_negative - p_cat.z(),2))) ) * factor_negative_z;
 				// printf("error[0]=[%f] error[1]=[%f] error[2]=[%f] verterx=[%i] d_curr=[%f] length_catenary=[%f]\n",_error[0],_error[1],_error[2], pose->id(),_d_curr,_length_catenary);

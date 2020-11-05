@@ -185,7 +185,7 @@ public:
 	std::string path;
 	int n_iter_opt;	//Iterations Numbers of Optimizer
 	double initial_multiplicative_factor_length_catenary;
-	double radius_collition_catenary,min_distance_add_new_point,dynamic_catenary;
+	double distance_catenary_obstacle,min_distance_add_new_point,dynamic_catenary;
 	double w_alpha, w_beta, w_iota, w_gamma, w_delta, w_epsilon, w_zeta, w_eta, w_theta, w_kappa,w_lambda;
 
 	NearNeighbor nn_;
@@ -271,12 +271,13 @@ public:
 	std::vector<Eigen::Vector3d> vec_pose_init;
 	ros::Time start_time_opt_, final_time_opt_;
 	int stage_number, num_pos_initial, num_goal;
+	bool write_data_for_analysis;
 
 private:
 	void resetFlags();
 	void cleanVectors();
 	double global_path_length;
-	double bound, velocity , angle_min_traj, acceleration,bound_bisection_a,bound_bisection_b;
+	double distance_obstacle, velocity , angle_min_traj, acceleration,bound_bisection_a,bound_bisection_b;
 	geometry_msgs::Point ugv_pos_catenary;
 
     // void pointsSub(const PointCloud::ConstPtr &points);

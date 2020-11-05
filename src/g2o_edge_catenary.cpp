@@ -77,7 +77,7 @@ namespace g2o {
 				_marker.markers[i].type = visualization_msgs::Marker::CUBE;
 			else
 				_marker.markers[i].type = visualization_msgs::Marker::SPHERE;
-			_marker.markers[i].lifetime = ros::Duration(100);
+			_marker.markers[i].lifetime = ros::Duration(400);
 			// printf("markerPoints : _marker[%lu].pose.position [%f %f %f]\n",i,_vector[i].x,_vector[i].y,_vector[i].z);
 			_marker.markers[i].pose.position.x = _vector[i].x; 
 			_marker.markers[i].pose.position.y = _vector[i].y; 

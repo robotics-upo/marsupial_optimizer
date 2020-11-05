@@ -5,7 +5,7 @@
     <arg name="num_pos_initial"         default="1"/>
     <arg name="num_goal"         default="0"/>
     <arg name="pos_uav_above_ugv"         default="1.0"/> #meters UAV above UGV
-    <arg name="use_catenary_planning" default="false"/>
+    <arg name="use_catenary_planning" default="true"/>
 
 
     <rosparam command="load" file="$(find marsupial_g2o)/cfg/stage_$(arg stage_number).yaml" />

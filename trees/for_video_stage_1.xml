@@ -2,43 +2,25 @@
     <!-- ////////// -->
     <BehaviorTree ID="BehaviorTree">
         <Sequence>
-            <Action duration="2" name="Stage1WaitSeconds1" ID="WaitSeconds"/>
+            <Action name="Stage1WaitSeconds2" ID="WaitSeconds" duration="2"/>
             <ForceSuccess>
                 <Repeat num_cycles="1">
-                    <Action action="/Make_Plan" goal_name="stage_1_pos_final_1" state="gpf1" name="Stage1GoToGoal1" ID="UPOGoToGoalByName"/>
+                    <Action goal_name="stage_1_pos_final_2" name="Stage1GoToGoal2" action="/Make_Plan" state="gpf2" ID="UPOGoToGoalByName"/>
                 </Repeat>
             </ForceSuccess>
-            <Action duration="2" name="Stage1WaitSeconds2" ID="WaitSeconds"/>
+            <Action name="Stage1WaitSeconds5" ID="WaitSeconds" duration="2"/>
             <ForceSuccess>
                 <Repeat num_cycles="1">
-                    <Action action="/Make_Plan" goal_name="stage_1_pos_final_2" state="gpf2" name="Stage1GoToGoal2" ID="UPOGoToGoalByName"/>
+                    <Action goal_name="stage_1_pos_final_5" name="Stage1GoToGoal5" action="/Make_Plan" state="gpf5" ID="UPOGoToGoalByName"/>
                 </Repeat>
             </ForceSuccess>
-            <Action duration="2" name="Stage1WaitSeconds3" ID="WaitSeconds"/>
+            <Action name="WaitSecondsEnd" ID="WaitSeconds" duration="2"/>
             <ForceSuccess>
                 <Repeat num_cycles="1">
-                    <Action action="/Make_Plan" goal_name="stage_1_pos_final_3" state="gpf3" name="Stage1GoToGoal3" ID="UPOGoToGoalByName"/>
+                    <Action goal_name="stage_1_pos_final_6" name="Stage1GoToGoal6" action="/Make_Plan" state="gpf6" ID="UPOGoToGoalByName"/>
                 </Repeat>
             </ForceSuccess>
-            <Action duration="2" name="Stage1WaitSeconds4" ID="WaitSeconds"/>
-            <ForceSuccess>
-                <Repeat num_cycles="1">
-                    <Action action="/Make_Plan" goal_name="stage_1_pos_final_4" state="gpf4" name="Stage1GoToGoa4" ID="UPOGoToGoalByName"/>
-                </Repeat>
-            </ForceSuccess>
-            <Action duration="2" name="Stage1WaitSeconds5" ID="WaitSeconds"/>
-            <ForceSuccess>
-                <Repeat num_cycles="1">
-                    <Action action="/Make_Plan" goal_name="stage_1_pos_final_5" state="gpf5" name="Stage1GoToGoal5" ID="UPOGoToGoalByName"/>
-                </Repeat>
-            </ForceSuccess>
-            <Action duration="2" name="WaitSecondsEnd" ID="WaitSeconds"/>
-            <ForceSuccess>
-                <Repeat num_cycles="1">
-                    <Action action="/Make_Plan" goal_name="stage_1_pos_final_6" state="gpf6" name="Stage1GoToGoal6" ID="UPOGoToGoalByName"/>
-                </Repeat>
-            </ForceSuccess>
-            <Action duration="1" name="WaitSecondsEnd" ID="WaitSeconds"/>
+            <Action name="WaitSecondsEnd" ID="WaitSeconds" duration="1"/>
         </Sequence>
     </BehaviorTree>
     <!-- ////////// -->
@@ -95,10 +77,10 @@
             <output_port type="void" name="output">Output variable</output_port>
         </Action>
         <Decorator ID="CooldownMilliseconds">
-            <input_port default="0" type="unsigned int" name="cooldown">Cooldown time</input_port>
+            <input_port type="unsigned int" name="cooldown" default="0">Cooldown time</input_port>
         </Decorator>
         <Decorator ID="CooldownSeconds">
-            <input_port default="0" type="unsigned int" name="cooldown">Cooldown time</input_port>
+            <input_port type="unsigned int" name="cooldown" default="0">Cooldown time</input_port>
         </Decorator>
         <Action ID="CopyJson">
             <input_port type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> >, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer>" name="input">Input variable</input_port>
@@ -177,7 +159,7 @@
             <output_port type="tf::StampedTransform" name="output">Result transform</output_port>
             <input_port type="std::string" name="source_frame">Origin TF frame</input_port>
             <input_port type="std::string" name="target_frame">Target TF frame</input_port>
-            <input_port default="0" type="bool" name="use_last_available">Use last available transform?</input_port>
+            <input_port type="bool" name="use_last_available" default="0">Use last available transform?</input_port>
         </Action>
         <Decorator ID="Loop"/>
         <Action ID="MathOperationFloat">
@@ -193,20 +175,20 @@
             <input_port type="int" name="second">Second operand</input_port>
         </Action>
         <Action ID="MonitorStdBool">
-            <input_port default="0" type="bool" name="consume_msgs">Should messages be consumed?</input_port>
-            <input_port default="1" type="unsigned int" name="queue_size">Subscriber callback queue size</input_port>
+            <input_port type="bool" name="consume_msgs" default="0">Should messages be consumed?</input_port>
+            <input_port type="unsigned int" name="queue_size" default="1">Subscriber callback queue size</input_port>
             <output_port type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> >, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer>" name="serialized_output">Serialized ROS message [std_msgs::Bool_&lt;std::allocator&lt;void> >]</output_port>
             <input_port type="std::string" name="topic">Topic to subscribe</input_port>
         </Action>
         <Action ID="MonitorStdFloat64">
-            <input_port default="0" type="bool" name="consume_msgs">Should messages be consumed?</input_port>
-            <input_port default="1" type="unsigned int" name="queue_size">Subscriber callback queue size</input_port>
+            <input_port type="bool" name="consume_msgs" default="0">Should messages be consumed?</input_port>
+            <input_port type="unsigned int" name="queue_size" default="1">Subscriber callback queue size</input_port>
             <output_port type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> >, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer>" name="serialized_output">Serialized ROS message [std_msgs::Float64_&lt;std::allocator&lt;void> >]</output_port>
             <input_port type="std::string" name="topic">Topic to subscribe</input_port>
         </Action>
         <Action ID="MonitorStdInt32">
-            <input_port default="0" type="bool" name="consume_msgs">Should messages be consumed?</input_port>
-            <input_port default="1" type="unsigned int" name="queue_size">Subscriber callback queue size</input_port>
+            <input_port type="bool" name="consume_msgs" default="0">Should messages be consumed?</input_port>
+            <input_port type="unsigned int" name="queue_size" default="1">Subscriber callback queue size</input_port>
             <output_port type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char>, std::allocator&lt;char> >, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer>" name="serialized_output">Serialized ROS message [std_msgs::Int32_&lt;std::allocator&lt;void> >]</output_port>
             <input_port type="std::string" name="topic">Topic to subscribe</input_port>
         </Action>
@@ -216,14 +198,14 @@
         <Decorator ID="OnlyOnce"/>
         <Action ID="PublishBool">
             <input_port type="bool" name="data">Auto-generated field from std_msgs::Bool_&lt;std::allocator&lt;void> ></input_port>
-            <input_port default="0" type="bool" name="latch">Latch messages?</input_port>
-            <input_port default="1" type="unsigned int" name="queue_size">Internal publisher queue size</input_port>
+            <input_port type="bool" name="latch" default="0">Latch messages?</input_port>
+            <input_port type="unsigned int" name="queue_size" default="1">Internal publisher queue size</input_port>
             <input_port type="std::string" name="topic">Topic to publish to</input_port>
         </Action>
         <Action ID="PublishStdString">
             <input_port type="std::string" name="data">Auto-generated field from std_msgs::String_&lt;std::allocator&lt;void> ></input_port>
-            <input_port default="0" type="bool" name="latch">Latch messages?</input_port>
-            <input_port default="1" type="unsigned int" name="queue_size">Internal publisher queue size</input_port>
+            <input_port type="bool" name="latch" default="0">Latch messages?</input_port>
+            <input_port type="unsigned int" name="queue_size" default="1">Internal publisher queue size</input_port>
             <input_port type="std::string" name="topic">Topic to publish to</input_port>
         </Action>
         <Action ID="RandomFloat">
@@ -237,14 +219,14 @@
             <output_port type="int" name="result">Random result value</output_port>
         </Action>
         <Action ID="RandomSequenceValue">
-            <input_port default=";" type="std::string" name="delimiter">Sequence entries delimiter</input_port>
+            <input_port type="std::string" name="delimiter" default=";">Sequence entries delimiter</input_port>
             <output_port type="std::string" name="output">Result random sequence entry</output_port>
             <input_port type="std::string" name="sequence">Sequence to randomize</input_port>
         </Action>
         <Action ID="SubscribeUPOGoal">
-            <input_port default="0" type="bool" name="consume_msgs">Should messages be consumed?</input_port>
+            <input_port type="bool" name="consume_msgs" default="0">Should messages be consumed?</input_port>
             <output_port type="upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> >" name="output">Received ROS message [upo_actions::MakePlanGoal_&lt;std::allocator&lt;void> >]</output_port>
-            <input_port default="1" type="unsigned int" name="queue_size">Subscriber callback queue size</input_port>
+            <input_port type="unsigned int" name="queue_size" default="1">Subscriber callback queue size</input_port>
             <input_port type="std::string" name="topic">Topic to subscribe</input_port>
         </Action>
         <Action ID="UPOFireDetection3D">
@@ -301,10 +283,10 @@
             <output_port type="double" name="z">Window z</output_port>
         </Action>
         <Action ID="WaitMilliseconds">
-            <input_port default="0" type="unsigned int" name="duration">Time to wait</input_port>
+            <input_port type="unsigned int" name="duration" default="0">Time to wait</input_port>
         </Action>
         <Action ID="WaitSeconds">
-            <input_port default="0" type="unsigned int" name="duration">Time to wait</input_port>
+            <input_port type="unsigned int" name="duration" default="0">Time to wait</input_port>
         </Action>
         <Action ID="WarnLog">
             <input_port type="std::string" name="message">Message to log</input_port>
