@@ -22,9 +22,9 @@ This package has been designed and tested in a x86_64 machine under a Ubuntu 18.
 
 - G2O (https://github.com/RainerKuemmerle/g2).
 - PCL
-- lazy_theta_star_planners (package available under request, contacts: simon.martinez@uantof.cl, daletei@upo.es)
-- upo_actions (package available under request, contacts: simon.martinez@uantof.cl, daletei@upo.es)
-- upo_markers (package available under request, contacts: simon.martinez@uantof.cl, daletei@upo.es)
+- lazy_theta_star_planners (package available under request, contacts: <simon.martinez@uantof.cl>, <daletei@upo.es>)
+- upo_actions (package available under request, contacts: <simon.martinez@uantof.cl>, <daletei@upo.es>)
+- upo_markers (package available under request, contacts: <simon.martinez@uantof.cl>, <daletei@upo.es>)
 
 ### Installation steps:
 
