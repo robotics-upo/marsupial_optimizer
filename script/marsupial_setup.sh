@@ -1,10 +1,20 @@
-read -p "Marsupial setup. Press a ENTER to contine. (CTRL+C) to cancel"
+read -p "Installing package dependencies marsupial optimizer. Press a ENTER to contine. (CTRL+C) to cancel"
 
 #! /bin/bash
 
-sudo apt-get update
 
-sudo apt-get install libgoogle-glog-dev
+cd ../..
 
-sudo apt-get install ros-$ROS_DISTRO-octomap ros-$ROS_DISTRO-octomap-ros ros-$ROS_DISTRO-octomap-msgs
-sudo apt-get install ros-$ROS_DISTRO-mav-msgs ros-$ROS_DISTRO-mavlink ros-$ROS_DISTRO-mavros ros-$ROS_DISTRO-mav-comm 
+#To install planner lazy-theta 3D*
+git clone https://github.com/robotics-upo/lazy_theta_star_planners.git
+
+#To get action for actionlib
+git clone https://github.com/robotics-upo/upo_actions.git
+
+#To get a marker in the desired frame_link
+git clone https://github.com/robotics-upo/upo_markers.git
+
+
+
+
+
