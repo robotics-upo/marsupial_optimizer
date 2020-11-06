@@ -10,7 +10,7 @@ The optimization assumes static UGV position ,and estimates the problem states s
 
 Different components such as UAV and tether positions, distance obstacles and temporal aspects of the motion (velocities and accelerations) are encoded as constraint and objective function. In consequence, the problem determining the values of the states optimizing a weighted multi-objective function.
 
-The components encoded as constraint and objective function are local with respect to the problem states. Thus, the optimization is solved by formulating the problem as a sparse factor graph. For that g2o is used as the engine for graph optimization [https://github.com/RainerKuemmerle/g2o].
+The components encoded as constraint and objective function are local with respect to the problem states. Thus, the optimization is solved by formulating the problem as a sparse factor graph. For that g2o is used as the engine for graph optimization [ g2o: A General Framework for Graph Optimization](http://ais.informatik.uni-freiburg.de/publications/papers/kuemmerle11icra.pdf).
 
 ## Installation
 
@@ -20,11 +20,11 @@ In this section you will find the installation instructions for making it work. 
 
 This package has been designed and tested in a x86_64 machine under a Ubuntu 18.04 operating system and ROS Melodic distribution. Besides, the scripts provided lets you easily install the following dependencies:
 
-- G2O
+- G2O (https://github.com/RainerKuemmerle/g2).
 - PCL
-- lazy_theta_star
-- upo_actions
-- upo_markers
+- lazy_theta_star_planners (package available under request, contacts: simon.martinez@uantof.cl, daletei@upo.es)
+- upo_actions (package available under request, contacts: simon.martinez@uantof.cl, daletei@upo.es)
+- upo_markers (package available under request, contacts: simon.martinez@uantof.cl, daletei@upo.es)
 
 ### Installation steps:
 
