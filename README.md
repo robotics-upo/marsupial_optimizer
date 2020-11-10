@@ -20,7 +20,7 @@ In this section you will find the installation instructions for making it work. 
 
 This package has been designed and tested in a x86_64 machine under a Ubuntu 18.04 operating system and ROS Melodic distribution. Besides, the scripts provided lets you easily install the following dependencies:
 
-- G2O (https://github.com/RainerKuemmerle/g2).
+- G2O (https://github.com/RainerKuemmerle/g2o).
 - PCL
 - lazy_theta_star_planners (package available under request, contacts: <simon.martinez@uantof.cl>, <daletei@upo.es>)
 - upo_actions (package available under request, contacts: <simon.martinez@uantof.cl>, <daletei@upo.es>)
