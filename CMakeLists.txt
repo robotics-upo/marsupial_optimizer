@@ -32,10 +32,12 @@
 # for them in Ceres' config.h if appropriate.
 
 cmake_minimum_required(VERSION 2.8.3)
-project(marsupial_g2o)
+project(marsupial_g2o CXX)
 
 # Set to Release in order to speed up the program significantly
 set(CMAKE_BUILD_TYPE Release) #None, Debug, Release, RelWithDebInfo, MinSizeRel
+
+# add_compile_options(-std=c++14)
 
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
@@ -65,8 +67,10 @@ catkin_package(
 if (BUILD_SHARED_LIBS)
   remove_definitions(-DCERES_BUILDING_SHARED_LIBRARY)
 endif()
-add_executable(hellosimon src/hellosimon.cc)
-target_link_libraries(hellosimon Ceres::ceres)
+
+
+add_executable(optimizer_local_planner src/optimizer_local_planner.cc)
+target_link_libraries(optimizer_local_planner Ceres::ceres)
 # As this is a C file #including <math.h> we have to explicitly add the math
 # library (libm). Although some compilers (dependent upon options) will accept
 # the indirect link to libm via Ceres, at least GCC 4.8 on pure Debian won't.
