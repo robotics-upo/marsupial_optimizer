@@ -50,7 +50,14 @@ find_package(catkin REQUIRED COMPONENTS
   upo_actions
   dynamic_reconfigure
 )
-find_package(Ceres REQUIRED PATHS "/home/simon/")
+
+message(STATUS "System: ${CMAKE_SYSTEM}")
+## System dependencies are found with CMake's conventions
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake_modules)
+message(STATUS "${CMAKE_MODULE_PATH}")
+find_package(Ceres REQUIRED)
+find_package(PCL 1.11 REQUIRED)
+
 
 catkin_package(
   INCLUDE_DIRS include ${EXTERNAL_INCLUDE_DIRS}
@@ -64,13 +71,22 @@ catkin_package(
   upo_actions
 )
 
+set(EXTERNAL_INCLUDE_DIRS ${Eigen_INCLUDE_DIRS} ${SUITESPARSE_INCLUDE_DIRS} ${PCL_INCLUDE_DIRS} )
+set(EXTERNAL_LIBS ${SUITESPARSE_LIBRARIES} ${PCL_LIBRARIES} )
+
 if (BUILD_SHARED_LIBS)
   remove_definitions(-DCERES_BUILDING_SHARED_LIBRARY)
 endif()
 
+include_directories(
+  ${catkin_INCLUDE_DIRS}
+  ${CERES_INCLUDE_DIRS}
+)
+
+include_directories(include)
 
 add_executable(optimizer_local_planner src/optimizer_local_planner.cc)
-target_link_libraries(optimizer_local_planner Ceres::ceres)
+target_link_libraries(optimizer_local_planner Ceres::ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES} ${EXTERNAL_LIBS})
 # As this is a C file #including <math.h> we have to explicitly add the math
 # library (libm). Although some compilers (dependent upon options) will accept
 # the indirect link to libm via Ceres, at least GCC 4.8 on pure Debian won't.
