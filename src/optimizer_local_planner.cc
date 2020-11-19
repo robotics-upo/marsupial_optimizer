@@ -25,11 +25,16 @@ int main(int argc, char** argv) {
   std::vector <double> initial_time;  
   double initial_velocity;
 
+	NearNeighbor nn_;
+
   double pose1[4];
   double pose2[4];
   double pose3[4];
   double time1[1];
   double time2[1];
+
+  // pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN = nn_.kdtree;
+	// pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points = nn_.obs_points;
 
   Problem problem;
 
@@ -40,11 +45,12 @@ int main(int argc, char** argv) {
     problem.AddResidualBlock(cost_function1, NULL, pose1, pose2);
   }
 
-  // for (int i = 0; i < path.size(); ++i) {
-  //   pose1[0] = path[i].x(); pose1[1] = path[i].y(); pose1[2] = path[i].z(); pose1[3] = length[i];
-  //   CostFunction* cost_function2  = new AutoDiffCostFunction<ObstacleDistanceFunctor, 1, 4>(new ObstacleDistanceFunctor(1.0, 1.0)); 
-  //   problem.AddResidualBlock(cost_function2, NULL, pose1);
-  // }
+  for (int i = 0; i < path.size(); ++i) {
+    pose1[0] = path[i].x(); pose1[1] = path[i].y(); pose1[2] = path[i].z(); pose1[3] = length[i];
+    // CostFunction* cost_function2  = new AutoDiffCostFunction<ObstacleDistanceFunctor, 1, 4>(new ObstacleDistanceFunctor(1.0, 1.0, kdT_From_NN, obstacles_Points)); 
+    CostFunction* cost_function2  = new AutoDiffCostFunction<ObstacleDistanceFunctor, 1, 4>(new ObstacleDistanceFunctor(1.0, 1.0, nn_.kdtree, nn_.obs_points)); 
+    problem.AddResidualBlock(cost_function2, NULL, pose1);
+  }
 
   for (int i = 0; i < path.size() - 2 ; ++i) {
     pose1[0] = path[i].x(); pose1[1] = path[i].y(); pose1[2] = path[i].z(); pose1[3] = length[i];

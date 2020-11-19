@@ -36,6 +36,7 @@ class NearNeighbor
 		virtual void setKDTree(const std::vector<Eigen::Vector3d> &obs_);
 		virtual void setKDTree(const sensor_msgs::PointCloud2 &pc2_);
 	    virtual Eigen::Vector3d nearestObstacleVertex(const pcl::KdTreeFLANN <pcl::PointXYZ> &kdT_, Eigen::Vector3d vert_, pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_);
+		virtual Eigen::Matrix<double, 3, 1> nearestObstacleVertexCeres(const pcl::KdTreeFLANN <pcl::PointXYZ> &kdT_, Eigen::Matrix<double,3,1> vert_, pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_ );
 		virtual bool radiusNearestObstacleVertex(const pcl::KdTreeFLANN <pcl::PointXYZ> &kdT_, Eigen::Vector3d vert_, pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_ , float _radius);
 		virtual double distanceObstacleVertex(const pcl::KdTreeFLANN <pcl::PointXYZ> &kdT_, Eigen::Vector3d vert_);
 
@@ -99,6 +100,25 @@ inline Eigen::Vector3d NearNeighbor::nearestObstacleVertex(const pcl::KdTreeFLAN
 	ret_.x() = o_p_->points[pointIdxNKNSearch[0]].x;
 	ret_.y() = o_p_->points[pointIdxNKNSearch[0]].y;
 	ret_.z() = o_p_->points[pointIdxNKNSearch[0]].z;
+
+	return ret_;
+}
+
+inline Eigen::Matrix<double, 3, 1> NearNeighbor::nearestObstacleVertexCeres(const pcl::KdTreeFLANN <pcl::PointXYZ> &kdT_, Eigen::Matrix<double,3,1> vert_, pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_)
+{
+	Eigen::Matrix<double, 3, 1> ret_;
+	
+	pcl::PointXYZ searchPoints(vert_(0,1),vert_(1,1),vert_(2,1));
+
+	// K nearest neighbor search
+	std::vector<int> pointIdxNKNSearch(K);
+	std::vector<float> pointNKNSquaredDistance(K);
+	
+	// Get closest point
+	kdT_.nearestKSearch(searchPoints, 1, pointIdxNKNSearch, pointNKNSquaredDistance);
+	ret_(0,0) = o_p_->points[pointIdxNKNSearch[0]].x;
+	ret_(1,0) = o_p_->points[pointIdxNKNSearch[0]].y;
+	ret_(2,0) = o_p_->points[pointIdxNKNSearch[0]].z;
 
 	return ret_;
 }
