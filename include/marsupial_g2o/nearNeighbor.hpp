@@ -36,7 +36,7 @@ class NearNeighbor
 		virtual void setKDTree(const std::vector<Eigen::Vector3d> &obs_);
 		virtual void setKDTree(const sensor_msgs::PointCloud2 &pc2_);
 	    virtual Eigen::Vector3d nearestObstacleVertex(const pcl::KdTreeFLANN <pcl::PointXYZ> &kdT_, Eigen::Vector3d vert_, pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_);
-		virtual void nearestObstacleVertexCeres(const pcl::KdTreeFLANN <pcl::PointXYZ> &kdT_, double x_, double y_, double z_, pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_, double &ret_x_, double &ret_y_, double &ret_z_);
+		virtual Eigen::Matrix<double, 4, 1> nearestObstacleVertexCeres(const pcl::KdTreeFLANN <pcl::PointXYZ> &kdT_, double x_, double y_, double z_, pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_, double ret_x_, double ret_y_, double ret_z_);
 		virtual bool radiusNearestObstacleVertex(const pcl::KdTreeFLANN <pcl::PointXYZ> &kdT_, Eigen::Vector3d vert_, pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_ , float _radius);
 		virtual double distanceObstacleVertex(const pcl::KdTreeFLANN <pcl::PointXYZ> &kdT_, Eigen::Vector3d vert_);
 
@@ -104,10 +104,11 @@ inline Eigen::Vector3d NearNeighbor::nearestObstacleVertex(const pcl::KdTreeFLAN
 	return ret_;
 }
 
-inline void NearNeighbor::nearestObstacleVertexCeres(const pcl::KdTreeFLANN <pcl::PointXYZ> &kdT_, double x_, double y_, double z_, pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_, double &ret_x_, double &ret_y_, double &ret_z_)
+inline Eigen::Matrix<double, 4, 1> NearNeighbor::nearestObstacleVertexCeres(const pcl::KdTreeFLANN <pcl::PointXYZ> &kdT_, double x_, double y_, double z_, pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_, double ret_x_, double ret_y_, double ret_z_)
 {
-	// Eigen::Matrix<double, 4, 1> ret_;
-	
+	Eigen::Matrix<double, 4, 1> ret_;
+	// Eigen::Vector3d ret_;
+
 	pcl::PointXYZ searchPoints(x_,y_,z_);
 
 	// K nearest neighbor search
@@ -116,11 +117,17 @@ inline void NearNeighbor::nearestObstacleVertexCeres(const pcl::KdTreeFLANN <pcl
 	
 	// Get closest point
 	kdT_.nearestKSearch(searchPoints, 1, pointIdxNKNSearch, pointNKNSquaredDistance);
-	ret_x_ = o_p_->points[pointIdxNKNSearch[0]].x;
-	ret_y_ = o_p_->points[pointIdxNKNSearch[0]].y;
-	ret_z_ = o_p_->points[pointIdxNKNSearch[0]].z;
+	// ret_x_ = o_p_->points[pointIdxNKNSearch[0]].x;
+	// ret_y_ = o_p_->points[pointIdxNKNSearch[0]].y;
+	// ret_z_ = o_p_->points[pointIdxNKNSearch[0]].z;
+	// ret_.x() = o_p_->points[pointIdxNKNSearch[0]].x;
+	// ret_.y() = o_p_->points[pointIdxNKNSearch[0]].y;
+	// ret_.z() = o_p_->points[pointIdxNKNSearch[0]].z;
+	ret_[0] = o_p_->points[pointIdxNKNSearch[0]].x;
+	ret_[1] = o_p_->points[pointIdxNKNSearch[0]].y;
+	ret_[2] = o_p_->points[pointIdxNKNSearch[0]].z;
 
-	// return ret_;
+	return ret_;
 }
 
 inline bool NearNeighbor::radiusNearestObstacleVertex(const pcl::KdTreeFLANN <pcl::PointXYZ> &kdT_, Eigen::Vector3d vert_, pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_ , float _radius)

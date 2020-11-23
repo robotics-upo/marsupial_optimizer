@@ -45,10 +45,14 @@ int main(int argc, char** argv) {
     problem.AddResidualBlock(cost_function1, NULL, pose1, pose2);
   }
 
+  // for (int i = 0; i < path.size(); ++i) {
+  //   pose1[0] = path[i].x(); pose1[1] = path[i].y(); pose1[2] = path[i].z(); pose1[3] = length[i];
+  //   CostFunction* cost_function2  = new AutoDiffCostFunction<ObstacleDistanceFunctor, 1, 4>(new ObstacleDistanceFunctor(1.0, 1.0, nn_.kdtree, nn_.obs_points)); 
+  //   problem.AddResidualBlock(cost_function2, NULL, pose1);
+  // }
   for (int i = 0; i < path.size(); ++i) {
     pose1[0] = path[i].x(); pose1[1] = path[i].y(); pose1[2] = path[i].z(); pose1[3] = length[i];
-    // CostFunction* cost_function2  = new AutoDiffCostFunction<ObstacleDistanceFunctor, 1, 4>(new ObstacleDistanceFunctor(1.0, 1.0, kdT_From_NN, obstacles_Points)); 
-    CostFunction* cost_function2  = new AutoDiffCostFunction<ObstacleDistanceFunctor, 1, 4>(new ObstacleDistanceFunctor(1.0, 1.0, nn_.kdtree, nn_.obs_points)); 
+    CostFunction* cost_function2  = new AutoDiffCostFunction<ObstacleDistanceFunctor::Affine4DWithDistortion, 1, 4>(new ObstacleDistanceFunctor::Affine4DWithDistortion(1.0, 1.0, nn_.kdtree, nn_.obs_points)); 
     problem.AddResidualBlock(cost_function2, NULL, pose1);
   }
 
