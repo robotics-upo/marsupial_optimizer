@@ -20,9 +20,9 @@ public:
   TimeFunctor(double weight_factor, double init_time): wf_(weight_factor), it_(init_time) {}
 
   template <typename T>
-  bool operator()(const T* const time1, T* residual) const {
+  bool operator()(const T* const state1, T* residual) const {
 
-  residual[0] =  wf_ * (time1[0] - it_);
+  residual[0] =  wf_ * (state1[3] - it_);
 
   return true;
   }

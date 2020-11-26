@@ -4,62 +4,16 @@ Simon Martinez Rozas, 2020
 Service Robotics Lab, University Pablo de Olavide , Seville, Spain 
  */
 
-
 #ifndef _OPTIMIZER_LOCAL_PLANNER_H_
 #define _OPTIMIZER_LOCAL_PLANNER_H_
-
-#include "g2o/core/optimization_algorithm_gauss_newton.h"
-#include "g2o/types/icp/types_icp.h"
-
-#include "g2o/stuff/command_args.h"
 
 #include <Eigen/StdVector>
 #include <random>
 #include <stdint.h>
 
-#include "g2o/solvers/dense/linear_solver_dense.h"
-
-//g2o
-#include <g2o/core/block_solver.h>
-#include <g2o/core/factory.h>
-#include <g2o/core/linear_solver.h>
-#include <g2o/core/optimization_algorithm_factory.h>
-#include <g2o/core/optimization_algorithm_levenberg.h>
-#include <g2o/core/sparse_optimizer.h>
-#include <g2o/core/sparse_optimizer_terminate_action.h>
-
-#include <g2o/core/robust_kernel.h>
-#include <g2o/core/robust_kernel_impl.h>
-
-#include <g2o/solvers/eigen/linear_solver_eigen.h>
-#include <g2o/solvers/cholmod/linear_solver_cholmod.h>
-#include "g2o/solvers/csparse/linear_solver_csparse.h"
-#include <g2o/solvers/dense/linear_solver_dense.h>
-#include <g2o/solvers/pcg/linear_solver_pcg.h>
-
-#include <g2o/stuff/macros.h>
-
-#include <g2o/types/slam3d/types_slam3d.h>
-#include <g2o/types/slam3d_addons/types_slam3d_addons.h>
-
-#include "marsupial_g2o/g2o_edge_distance_vertex.h"
-#include "marsupial_g2o/g2o_edge_obstacles.h"
-#include "marsupial_g2o/g2o_edge_obstacles_through.h"
-#include "marsupial_g2o/g2o_edge_distance_xyz.h"
-#include "marsupial_g2o/g2o_edge_kinematics.h"
-#include "marsupial_g2o/g2o_edge_equi_distance.h"
-#include "marsupial_g2o/g2o_edge_time.h"
-#include "marsupial_g2o/g2o_edge_velocity.h" 
-#include "marsupial_g2o/g2o_edge_acceleration.h" 
-#include "marsupial_g2o/g2o_edge_catenary.h"
-#include "marsupial_g2o/g2o_edge_dynamic_catenary.h"
-
-#include "marsupial_g2o/g2o_vertex_timediff.h"
-#include "marsupial_g2o/g2o_vertex_catenary_length.h"
-#include "g2o/types/slam3d/vertex_pointxyz.h"
-
-#include "marsupial_g2o/nearNeighbor.hpp"
+#include "marsupial_g2o/near_neighbor.hpp"
 #include "marsupial_g2o/bisection_catenary_3D.h"
+#include "marsupial_g2o/marker_publisher.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -68,6 +22,18 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include <string>
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
+
+#include "ceres/ceres.h"
+#include "glog/logging.h"
+#include "Eigen/Core"
+
+#include "marsupial_g2o/ceres_contrain_equidistance.hpp"
+#include "marsupial_g2o/ceres_contrain_obstacles.hpp"
+#include "marsupial_g2o/ceres_contrain_kinematics.hpp"
+#include "marsupial_g2o/ceres_contrain_time.hpp"
+#include "marsupial_g2o/ceres_contrain_velocity.hpp"
+#include "marsupial_g2o/ceres_contrain_acceleration.hpp"
+#include "marsupial_g2o/ceres_contrain_catenary.hpp"
 
 //ROS
 #include <ros/ros.h>
@@ -98,24 +64,23 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #define PRINTF_CYAN "\x1B[36m"
 #define PRINTF_WHITE "\x1B[37m"
 
-
 using namespace Eigen;
 using namespace std;
 using namespace g2o;
 
-struct structPose
-{
-	int id;
-	Eigen::Vector3d position;
-    g2o::VertexPointXYZ *vertex;
-};
+using ceres::AutoDiffCostFunction;
+using ceres::NumericDiffCostFunction;
+using ceres::CENTRAL;
+using ceres::CostFunction;
+using ceres::Problem;
+using ceres::Solve;
+using ceres::Solver;
+
 
 struct structTime
 {
-	int id_from;
-	int id_to;
+	int id;
 	double time;
-	// g2o::VertexTimeDiff vertex;
 };
 
 struct structDistance
@@ -129,7 +94,10 @@ struct structLengthCatenary
 {
 	int id;
 	double length;
-	g2o::VertexCatenaryLength *vertex;
+};
+
+struct parameterBlock{
+	double parameter[5];
 };
 
 class OptimizerLocalPlanner
@@ -149,8 +117,8 @@ public:
 	void initializeSubscribers();
 	void initializePublishers();
 	void readOctomapCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
-	void getMarkerPoints(visualization_msgs::MarkerArray &marker_, vector<structPose> _vector, std::string ns, int j_);
-	void getMarkerLines(visualization_msgs::MarkerArray &marker_, vector<structPose> _vector, std::string ns, int j_);
+	// void getMarkerPoints(visualization_msgs::MarkerArray &marker_, vector<structPose> _vector, std::string ns, int j_);
+	// void getMarkerLines(visualization_msgs::MarkerArray &marker_, vector<structPose> _vector, std::string ns, int j_);
 	void tfListener(void);
 	void configServices();
 	void executeOptimizerPathPreemptCB();
@@ -158,8 +126,7 @@ public:
 	void dynRecCb(marsupial_g2o::OptimizationParamsConfig &config, uint32_t level);
 	void collisionMapCallBack(const octomap_msgs::OctomapConstPtr &msg);
 	void configMarkers(std::string ns, std::string frame);
-	void clearMarkers(auto _s);
-	void publishTrajMarker3D(vector<structPose> _vector) ;
+	// void clearMarkers(auto _s);
 	void calculateDistanceVertices(vector<Eigen::Vector3d> _path,vector<structDistance> &_v_sD);
 	void getTemporalState(vector<structTime> &_time, vector<structDistance> _v_sD, double _vel);
 	void writeTemporalDataBeforeOptimization(void);
@@ -177,6 +144,10 @@ public:
 
 	ros::NodeHandlePtr nh;
 	tf2_ros::Buffer *tfBuffer;
+
+	Solver::Options options;
+  	Solver::Summary summary;
+  	Problem problem;
 	
 	tf::TransformListener listener;
 
@@ -186,31 +157,15 @@ public:
 	int n_iter_opt;	//Iterations Numbers of Optimizer
 	double initial_multiplicative_factor_length_catenary;
 	double distance_catenary_obstacle,min_distance_add_new_point,dynamic_catenary;
-	double w_alpha, w_beta, w_iota, w_gamma, w_delta, w_epsilon, w_zeta, w_eta, w_theta, w_kappa,w_lambda;
+	double w_alpha, w_beta, w_gamma, w_delta, w_epsilon, w_zeta, w_eta;
 
 	NearNeighbor nn_;
-
-	SparseOptimizer optimizer;
-	g2o::VertexPointXYZ* vertexPose;
-	g2o::VertexTimeDiff* vertexTime;
-	g2o::VertexCatenaryLength* vertexCatenaryLength;
-
-	g2o::G2ODistanceVertexEdge* edgeDistanceVertex;
-	g2o::G2ODistanceXYZEdge* edgeDistanceXYZ;
-	g2o::G2OKinematicsEdge* edgeKinetics;
-	g2o::G2OObstaclesEdge* edgeObstaclesNear;
-	g2o::G2OThroughObstaclesEdge* edgeThroughObstacles;
-	g2o::G2OEquiDistanceEdge* edgeEquiDistance;
-	g2o::G2OCatenaryEdge* edgeCatenary;
+	MarkerPublisher mp_;
 
 	//! Manage Data Vertices and Edges
 	vector<float> v_mXYZ_;
 
-	vector<Eigen::Vector3d> new_path_from_global;
-
-	// actionlib::SimpleActionServer<marsupial_actions::OptimizationTrajectoryAction> optimization_trajectory_action_server_;
-	// marsupial_actions::OptimizationTrajectoryFeedback feedback_; //variable stores the feedback/intermediate results
-    // marsupial_actions::OptimizationTrajectoryResult result_; //variable stores the final output
+	vector<Eigen::Vector3d> new_path;
 
     std::unique_ptr<ExecutePathServer> execute_path_srv_ptr;
     std::unique_ptr<Navigate3DClient> navigation3DClient;
@@ -228,15 +183,14 @@ public:
 	typedef visualization_msgs::Marker RVizMarker;
 
 	std::string action_name_;
-	// std::string uav_base_frame, ugv_base_frame;
 
 	ros::Subscriber octomap_sub_,local_map_sub;
-	ros::Publisher traj_marker_pub_,visMarkersPublisher;
+	ros::Publisher traj_marker_pub_;
 
 	ros::Publisher catenary_marker_pub_;
-	visualization_msgs::MarkerArray _catenary_marker;
-	void markerPoints(visualization_msgs::MarkerArray _marker, std::vector<geometry_msgs::Point> _vector, int _suffix, int _n_v);
-	void clearMarkers(visualization_msgs::MarkerArray _marker,auto _s);
+	visualization_msgs::MarkerArray catenary_marker;
+	// void markerPoints(visualization_msgs::MarkerArray _marker, std::vector<geometry_msgs::Point> _vector, int _suffix, int _n_v);
+	// void clearMarkers(visualization_msgs::MarkerArray _marker,auto _s);
 
 	geometry_msgs::Point obs_oct;
 
@@ -246,18 +200,16 @@ public:
 	bool verbose_optimizer;
 
 	void setStraightTrajectory(double x1, double y1, double z1, double x2, double y2, double z2, int n_v_u_);	//Function to create a straight line from point A to B
-	// void getSlopXYZAxes( vector<float> &m_);
-	typedef vector<structPose> PoseSequence;
 	typedef vector<structTime> TimeSequence;
 	typedef vector<structDistance> DistanceSequence;
 	typedef vector<structLengthCatenary> LengthCatenarySequence;
+	vector<parameterBlock> states;
 	DistanceSequence vec_dist_init; 
 	TimeSequence vec_time_init;
-	PoseSequence vec_pose_opt; 
+	vector<Eigen::Vector3d> vec_pose_opt; 
 	LengthCatenarySequence vec_len_cat_opt , vec_len_cat_init;
 	float d3D_;
 	float n_points; 
-	// vector<float> v_slopeXYZ;
 	vector<double> v_pre_initial_length_catenary;
 	vector<double> v_initial_length_catenary;
 
@@ -277,10 +229,8 @@ private:
 	void resetFlags();
 	void cleanVectors();
 	double global_path_length;
-	double distance_obstacle, velocity , angle_min_traj, acceleration,bound_bisection_a,bound_bisection_b;
+	double distance_obstacle, initial_velocity , angle_min_traj, acceleration,bound_bisection_a,bound_bisection_b;
 	geometry_msgs::Point ugv_pos_catenary;
-
-    // void pointsSub(const PointCloud::ConstPtr &points);
 
 };
 

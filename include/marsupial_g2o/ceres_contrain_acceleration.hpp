@@ -20,13 +20,13 @@ public:
   AccelerationFunctor(double weight_factor, double init_acc): wf_(weight_factor), ia_(init_acc) {}
 
   template <typename T>
-  bool operator()(const T* const pose1, const T* const pose2, const T* const pose3, const T* const time1, const T* const time2,T* residual) const {
+  bool operator()(const T* const state1, const T* const state2, const T* const state3, T* residual) const {
 
-	T d1_ = ( pow(pose1[0]-pose2[0],2) + pow(pose1[1]-pose2[1],2) + pow(pose1[2]-pose2[2],2) );
-	T d2_ = ( pow(pose2[0]-pose3[0],2) + pow(pose2[1]-pose3[1],2) + pow(pose2[2]-pose3[2],2) );
-	T v1_ = d1_ / time1[0];
-	T v2_ = d2_ / time2[0];
-  T a_ = (v1_ - v2_)/(time1[0] + time2[0]);
+	T d1_ = ( pow(state1[0]-state2[0],2) + pow(state1[1]-state2[1],2) + pow(state1[2]-state2[2],2) );
+	T d2_ = ( pow(state2[0]-state3[0],2) + pow(state2[1]-state3[1],2) + pow(state2[2]-state3[2],2) );
+	T v1_ = d1_ / (state1[3] - state2[3]);
+	T v2_ = d2_ / (state2[3] - state3[3]);
+  T a_ = (v1_ - v2_)/((state1[3] - state2[3]) + (state2[3] - state3[3]));
 
 	residual[0] =  wf_ * exp( sqrt((a_ - ia_)*(a_ - ia_)));
 

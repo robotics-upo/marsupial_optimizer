@@ -85,8 +85,20 @@ include_directories(
 
 include_directories(include)
 
-add_executable(optimizer_local_planner src/optimizer_local_planner.cc)
-target_link_libraries(optimizer_local_planner Ceres::ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES} ${EXTERNAL_LIBS})
+add_library(marsupial_g2o 
+  src/bisection_catenary_3D.cpp
+  ) 
+target_link_libraries(marsupial_g2o
+   ${EXTERNAL_LIBS}
+   ${catkin_LIBRARIES}
+)
+
+# add_executable(optimizer_local_planner src/optimizer_local_planner.cc)
+# target_link_libraries(optimizer_local_planner Ceres::ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES} ${EXTERNAL_LIBS})
+
+add_executable(optimizer_local_planner_node src/optimizer_local_planner_node.cpp src/optimizer_local_planner.cc )
+# add_dependencies(optimizer_local_planner_node ${PROJECT_NAME}_gencfg)
+target_link_libraries(optimizer_local_planner_node marsupial_g2o  Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES})
 # As this is a C file #including <math.h> we have to explicitly add the math
 # library (libm). Although some compilers (dependent upon options) will accept
 # the indirect link to libm via Ceres, at least GCC 4.8 on pure Debian won't.

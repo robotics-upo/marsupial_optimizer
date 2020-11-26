@@ -20,8 +20,8 @@ public:
   EquiDistanceFunctor(double weight_factor, double initial_distance): wf_(weight_factor), int_d_(initial_distance) {}
 
   template <typename T>
-  bool operator()(const T* const pose1, const T* const pose2, T* residual) const {
-    residual[0] = wf_ * ( (pow(int_d_,2) - pow(pose1[0]-pose2[0],2)) + (pow(int_d_,2) - pow(pose1[1]-pose2[1],2)) + (pow(int_d_,2) - pow(pose1[2]-pose2[2],2)) );
+  bool operator()(const T* const state1, const T* const state2, T* residual) const {
+    residual[0] = wf_ * ( (pow(int_d_,2) - pow(state1[0]-state2[0],2)) + (pow(int_d_,2) - pow(state1[1]-state2[1],2)) + (pow(int_d_,2) - pow(state1[2]-state2[2],2)) );
     return true;
   }
 

@@ -20,10 +20,10 @@ public:
   KinematicsFunctor(double weight_factor, double angle_bound): wf_(weight_factor), ang_(angle_bound) {}
 
   template <typename T>
-  bool operator()(const T* const pose1, const T* const pose2, const T* const pose3, T* residual) const {
+  bool operator()(const T* const state1, const T* const state2, const T* const state3, T* residual) const {
 
-	T vector1[3] = {pose2[0]-pose1[0],pose2[1]-pose1[1],pose2[2]-pose1[2]};
-	T vector2[3] = {pose2[0]-pose3[0],pose2[1]-pose3[1],pose2[2]-pose3[2]};
+	T vector1[3] = {state2[0]-state1[0],state2[1]-state1[1],state2[2]-state1[2]};
+	T vector2[3] = {state2[0]-state3[0],state2[1]-state3[1],state2[2]-state3[2]};
 
 	T dot_product = (vector2[0] * vector1[0]) + (vector2[1] * vector1[1]) + (vector2[2] * vector1[2]);
 	T norm_vector1 = sqrt((vector1[0] * vector1[0]) + (vector1[1] * vector1[1]) + (vector1[2] * vector1[2]));

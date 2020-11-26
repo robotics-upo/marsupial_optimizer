@@ -1,100 +1,982 @@
-#include "ceres/ceres.h"
-#include "glog/logging.h"
-#include "Eigen/Core"
+/*
+Optimizer Local Planner based in g2o for Marsupial Robotics COnfiguration 
+Simon Martinez Rozas, 2020 
+Service Robotics Lab, University Pablo de Olavide , Seville, Spain 
+ */
 
-#include "marsupial_g2o/ceres_contrain_equidistance.hpp"
-#include "marsupial_g2o/ceres_contrain_obstacles.hpp"
-#include "marsupial_g2o/ceres_contrain_kinematics.hpp"
-#include "marsupial_g2o/ceres_contrain_time.hpp"
-#include "marsupial_g2o/ceres_contrain_velocity.hpp"
-#include "marsupial_g2o/ceres_contrain_acceleration.hpp"
+#include "marsupial_g2o/optimizer_local_planner.h"
 
 
-using ceres::AutoDiffCostFunction;
-using ceres::CostFunction;
-using ceres::Problem;
-using ceres::Solve;
-using ceres::Solver;
+OptimizerLocalPlanner::OptimizerLocalPlanner(tf2_ros::Buffer *tfBuffer_)
+{
+	nh.reset(new ros::NodeHandle("~"));
+	tf_list_ptr.reset(new tf::TransformListener(ros::Duration(5)));
+    tfBuffer = tfBuffer_;
+	
+	resetFlags();
 
+	nh.reset(new ros::NodeHandle("~"));
+    tf_list.reset(new tf::TransformListener);
 
-int main(int argc, char** argv) {
-  google::InitGoogleLogging(argv[0]);
+	nh->param<double>("w_alpha", w_alpha,0.1);
+	nh->param<double>("w_beta",	w_beta,0.1);
+	nh->param<double>("w_gamma", w_gamma,0.1);
+	nh->param<double>("w_delta", w_delta,0.1);
+	nh->param<double>("w_epsilon", w_epsilon,0.1);
+	nh->param<double>("w_zeta", w_zeta,0.1);
+	nh->param<double>("w_eta", w_eta,0.1);
 
-  std::vector <Eigen::Vector3d> path;  
-  std::vector <double> length;  
-  std::vector <double> initial_time;  
-  double initial_velocity;
+  	nh->param<double>("initial_multiplicative_factor_length_catenary", initial_multiplicative_factor_length_catenary,1.0); //Can't be lower than 1.0 or "catenary < distance between UGV and vertex" 	
 
-	NearNeighbor nn_;
+	nh->param<int>("n_iter_opt", n_iter_opt,200);
+	nh->param<double>("distance_obstacle", distance_obstacle,2.0);
+	nh->param<double>("initial_velocity", initial_velocity,1.0);
+	nh->param<double>("acceleration", acceleration,0.0);
+	nh->param<double>("angle_min_traj", angle_min_traj, M_PI / 15.0);
+	nh->param<double>("distance_catenary_obstacle", distance_catenary_obstacle, 0.1);
+	nh->param<double>("dynamic_catenary", dynamic_catenary, 0.5);
+	nh->param<double>("min_distance_add_new_point", min_distance_add_new_point, 0.5);
+	nh->param<double>("bound_bisection_a", bound_bisection_a,100.0);
+	nh->param<double>("bound_bisection_b", bound_bisection_b,100.0);
 
-  double pose1[4];
-  double pose2[4];
-  double pose3[4];
-  double time1[1];
-  double time2[1];
+	nh->param<double>("z_constraint", z_constraint,0.0);
 
-  // pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN = nn_.kdtree;
-	// pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points = nn_.obs_points;
+	nh->param<double>("td_", td_, 0.5);
+		
+	nh->param<bool>("verbose_optimizer",verbose_optimizer, true);
 
-  Problem problem;
+	nh->param<bool>("write_data_for_analysis",write_data_for_analysis, false);
+	nh->param("path", path, (std::string) "/home/simon/");
+	nh->param("name_output_file", name_output_file, (std::string) "optimization_test");
+	nh->param<int>("scenario_number", scenario_number, 1);
+	nh->param<int>("num_pos_initial", num_pos_initial, 1);
+	nh->param<int>("num_goal", num_goal, 0);
+		
+	nh->param("debug", debug, (bool)0);
+ 	 nh->param("show_config", showConfig, (bool)0);
 
-  for (int i = 0; i < path.size() - 1 ; ++i) {
-    pose1[0] = path[i].x(); pose1[1] = path[i].y(); pose1[2] = path[i].z(); pose1[3] = length[i];
-    pose2[0] = path[i+1].x(); pose2[1] = path[i+1].y(); pose2[2] = path[i+1].z(); pose2[3] = length[i+1];
-    CostFunction* cost_function1  = new AutoDiffCostFunction<EquiDistanceFunctor, 1, 4, 4>(new EquiDistanceFunctor(1.0, 2.0)); 
-    problem.AddResidualBlock(cost_function1, NULL, pose1, pose2);
-  }
+	ROS_INFO_COND(showConfig, PRINTF_GREEN "Optimizer Local Planner 3D Node Configuration:\n");
+	// ROS_INFO_COND(showConfig, PRINTF_GREEN "\t Trajectory Position Increments = [%.2f], Tolerance: [%.2f]", traj_dxy_max, traj_pos_tol);
+	// ROS_INFO_COND(showConfig, PRINTF_GREEN "\t Robot base frame: %s, World frame: %s", uav_base_frame.c_str(), world_frame.c_str());
+	// ROS_INFO_COND(showConfig, PRINTF_GREEN "\t Workspace:\t X:[%.2f, %.2f]\t Y:[%.2f, %.2f]\t Z: [%.2f, %.2f]", ws_x_max, ws_x_min, ws_y_max, ws_y_min, ws_z_max, ws_z_min);
+	// ROS_INFO_COND(showConfig, PRINTF_GREEN "\t Map Resolution: %.2f\t Map H inflaction: %.2f\t Map V Inflaction: %.2f", map_resolution, map_h_inflaction, map_v_inflaction);
+	// ROS_INFO_COND(showConfig, PRINTF_GREEN "\t Z weight cost: %.2f\t Z not inflate: %.2f", z_weight_cost, z_not_inflate);
+		
 
-  // for (int i = 0; i < path.size(); ++i) {
-  //   pose1[0] = path[i].x(); pose1[1] = path[i].y(); pose1[2] = path[i].z(); pose1[3] = length[i];
-  //   CostFunction* cost_function2  = new AutoDiffCostFunction<ObstacleDistanceFunctor, 1, 4>(new ObstacleDistanceFunctor(1.0, 1.0, nn_.kdtree, nn_.obs_points)); 
-  //   problem.AddResidualBlock(cost_function2, NULL, pose1);
-  // }
-  for (int i = 0; i < path.size(); ++i) {
-    pose1[0] = path[i].x(); pose1[1] = path[i].y(); pose1[2] = path[i].z(); pose1[3] = length[i];
-    CostFunction* cost_function2  = new AutoDiffCostFunction<ObstacleDistanceFunctor::Affine4DWithDistortion, 1, 4>(new ObstacleDistanceFunctor::Affine4DWithDistortion(1.0, 1.0, nn_.kdtree, nn_.obs_points)); 
-    problem.AddResidualBlock(cost_function2, NULL, pose1);
-  }
+	initializeSubscribers();
+	initializePublishers();
+	setupOptimizer();
+	cleanVectors();
+	ROS_INFO("alpha=[%f] beta=[%f] gamma=[%f] delta=[%f] epsilon=[%f] zeta=[%f] eta=[%f]",w_alpha,w_beta,w_gamma,w_delta,w_epsilon,w_zeta,w_eta);
+	ROS_INFO("Optimizer_Local_Planner: Parameters loaded, ready for Optimization Process. Waiting for Action!!");
+    // clearMarkers(0);
+	traj_marker_pub_.publish(points_marker);
+	traj_marker_pub_.publish(lines_marker);
+	configServices();
+}
 
-  for (int i = 0; i < path.size() - 2 ; ++i) {
-    pose1[0] = path[i].x(); pose1[1] = path[i].y(); pose1[2] = path[i].z(); pose1[3] = length[i];
-    pose2[0] = path[i+1].x(); pose2[1] = path[i+1].y(); pose2[2] = path[i+1].z(); pose2[3] = length[i+1];
-    pose3[0] = path[i+2].x(); pose3[1] = path[i+2].y(); pose3[2] = path[i+2].z(); pose3[3] = length[i+2];
-    CostFunction* cost_function3  = new AutoDiffCostFunction<KinematicsFunctor, 1, 4, 4, 4>(new KinematicsFunctor(1.0, 25.0)); 
-    problem.AddResidualBlock(cost_function3, NULL, pose1, pose2, pose3);
-  }
+void OptimizerLocalPlanner::initializeSubscribers()
+{
+	bool useOctomap;
+    nh->param("use_octomap", useOctomap, (bool)false);
+    if (useOctomap)
+    {
+        local_map_sub = nh->subscribe<octomap_msgs::Octomap>("/octomap_binary_local", 1, &OptimizerLocalPlanner::collisionMapCallBack, this);
+    }
+    else
+    {
+        // local_map_sub = nh->subscribe<PointCloud>("/points", 1, &OptimizerLocalPlanner::pointsSub, this);
+    }
+    octomap_sub_ = nh->subscribe( "/octomap_point_cloud_centers", 1,  &OptimizerLocalPlanner::readOctomapCallback, this);
+    ROS_INFO("Optimizer_Local_Planner: Subscribers Initialized");
+}
 
-  for (int i = 0; i < initial_time.size() ; ++i) {
-    time1[0] = initial_time[i];
-    CostFunction* cost_function4  = new AutoDiffCostFunction<TimeFunctor, 1, 1>(new TimeFunctor(1.0, initial_time[i])); 
-    problem.AddResidualBlock(cost_function4, NULL, time1);
-  }
+void OptimizerLocalPlanner::initializePublishers()
+{
+  traj_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("opt_trajectory_marker", 2);
+	catenary_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("catenary_marker", 100);
 
-  for (int i = 0; i < initial_time.size() ; ++i) {
-    pose1[0] = path[i].x(); pose1[1] = path[i].y(); pose1[2] = path[i].z(); pose1[3] = length[i];
-    pose2[0] = path[i+1].x(); pose2[1] = path[i+1].y(); pose2[2] = path[i+1].z(); pose2[3] = length[i+1];
-    time1[0] = initial_time[i];
-    CostFunction* cost_function5  = new AutoDiffCostFunction<VelocityFunctor, 1, 4, 4, 1>(new VelocityFunctor(1.0, initial_velocity)); 
-    problem.AddResidualBlock(cost_function5, NULL, pose1, pose2, time1);
-  }
+  ROS_INFO("Optimizer_Local_Planner: Publishers Initialized");
+}
 
-  for (int i = 0; i < initial_time.size() - 1; ++i) {
-    pose1[0] = path[i].x(); pose1[1] = path[i].y(); pose1[2] = path[i].z(); pose1[3] = length[i];
-    pose2[0] = path[i+1].x(); pose2[1] = path[i+1].y(); pose2[2] = path[i+1].z(); pose2[3] = length[i+1];
-    pose3[0] = path[i+2].x(); pose3[1] = path[i+2].y(); pose3[2] = path[i+2].z(); pose3[3] = length[i+2];
-    time1[0] = initial_time[i];
-    time2[0] = initial_time[i+1];
-    CostFunction* cost_function6  = new AutoDiffCostFunction<AccelerationFunctor, 1, 4, 4, 4, 1, 1>(new AccelerationFunctor(1.0, initial_velocity)); 
-    problem.AddResidualBlock(cost_function6, NULL, pose1, pose2, pose3, time1, time2);
-  }
+void OptimizerLocalPlanner::resetFlags()
+{
+  mapReceived = false;
+	continue_optimizing = false;
+}
 
+void OptimizerLocalPlanner::cleanVectors()
+{
+	vec_time_init.clear();
+	vec_dist_init.clear();
+	vec_pose_init.clear();
+	vec_len_cat_init.clear();
+}
 
-  Solver::Options options;
+void OptimizerLocalPlanner::configServices()
+{
+    execute_path_srv_ptr.reset(new ExecutePathServer(*nh, "/Execute_Plan", false));
+    execute_path_srv_ptr->registerGoalCallback(boost::bind(&OptimizerLocalPlanner::executeOptimizerPathGoalCB, this));
+    execute_path_srv_ptr->registerPreemptCallback(boost::bind(&OptimizerLocalPlanner::executeOptimizerPathPreemptCB, this));
+    execute_path_srv_ptr->start();
+}
+
+void OptimizerLocalPlanner::setupOptimizer()
+{
   options.max_num_iterations = 100;
   options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
   options.minimizer_progress_to_stdout = true;
-  Solver::Summary summary;
-  Solve(options, &problem, &summary);
-  std::cout << summary.FullReport() << "\n";
-  return 0;
+  
+  
 }
+
+void OptimizerLocalPlanner::dynRecCb(marsupial_g2o::OptimizationParamsConfig &config, uint32_t level)
+{
+    // this->cost_weight = config.cost_weight;
+    // this->lof_distance = config.lof_distance;
+    // this->occ_threshold = config.occ_threshold;
+    // this->goal_weight = config.goal_weight;
+}
+
+void OptimizerLocalPlanner::readOctomapCallback(const sensor_msgs::PointCloud2::ConstPtr& msg)
+{
+	  nn_.setInput(*msg);
+}
+
+void OptimizerLocalPlanner::collisionMapCallBack(const octomap_msgs::OctomapConstPtr &msg)
+{
+    mapReceived = true;
+}
+
+void OptimizerLocalPlanner::executeOptimizerPathPreemptCB()
+{
+    ROS_INFO_COND(debug, "Goal Preempted");
+    execute_path_srv_ptr->setPreempted(); // set the action state to preempted
+
+    resetFlags();
+    mp_.clearMarkersPointLines(points_marker, lines_marker, traj_marker_pub_,0);
+}
+
+
+void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
+{
+  ROS_INFO_COND(debug, PRINTF_GREEN "Optimizer Local Planner Goal received in action server mode");
+  auto path_shared_ptr = execute_path_srv_ptr->acceptNewGoal();
+  globalTrajectory = path_shared_ptr->path;
+	vector<float> length_catenary_initial;
+	length_catenary_initial = path_shared_ptr->length_catenary;
+	printf("length_catenary_initial.size=[%lu]\n",length_catenary_initial.size());
+
+	for (size_t i = 0; i < globalTrajectory.points.size(); i++){
+		printf("point=[%lu/%lu] GlobalTrayectoryPointTranslation=[%f %f %f]\n",i+1, globalTrajectory.points.size(),
+		globalTrajectory.points.at(i).transforms[0].translation.x, globalTrajectory.points.at(i).transforms[0].translation.y, globalTrajectory.points.at(i).transforms[0].translation.z);
+	}
+		
+	getPointsFromGlobalPath(globalTrajectory,new_path);
+    auto size = new_path.size();
+    ROS_INFO_COND(debug, PRINTF_GREEN "Number of Vertices to optimize = [%lu] = size",size);
+
+	// setInitialLengthCatenaryAndPosUGV(v_initial_length_catenary, size);
+	// ros::Duration(4.0).sleep();
+	preComputeLengthCatenary(v_pre_initial_length_catenary, size);
+	printf("ugv_pos_reel_catenary=[%f %f %f]\n",ugv_pos_catenary.x,ugv_pos_catenary.y,ugv_pos_catenary.z);
+	checkObstaclesBetweenCatenaries(v_pre_initial_length_catenary,v_initial_length_catenary,size);
+	ros::Duration(6.0).sleep();
+	mp_.clearMarkers(catenary_marker, 50, catenary_marker_pub_);
+	ros::Duration(1.0).sleep();
+
+	count_edges = 0;
+
+	// resetFlags();
+  mp_.clearMarkersPointLines(points_marker, lines_marker, traj_marker_pub_,0);
+	calculateDistanceVertices(new_path,vec_dist_init);
+ 	getTemporalState(vec_time_init,vec_dist_init,initial_velocity);
+
+
+	if (!continue_optimizing){
+		std::cout << std::endl <<  "==================================================="  << std::endl 
+		<< "Preparing to execute Optimization: Creating Vertices and Edges!!" << std::endl;
+	}
+
+	// 
+	// std::vector<double> states;
+
+	for (size_t i = 0 ; i < new_path.size(); i ++){
+		parameterBlock parameter_block;
+		parameter_block.parameter[0] = new_path[i].x();
+		parameter_block.parameter[1] = new_path[i].y(); 
+		parameter_block.parameter[2] = new_path[i].z(); 
+		parameter_block.parameter[3] = vec_time_init[i].time;
+		parameter_block.parameter[4] = v_initial_length_catenary[i];
+		states.push_back(parameter_block);
+	}
+    
+	/*
+	*
+	* Parameter is given by "state". The state dimention is 5, pose_x, pose_y, pose_z, time, length_tether
+	* To Fix:
+	* 1. Take in account that first and last vertex should be static.
+	* 2. Join coinstain with same Loop For  
+	* 3. Parameters for Catenary Constrain
+	*/
+
+	/*** Cost Function I : Equidistance constrain ***/
+	for (int i = 0; i < new_path.size() - 1; ++i) {
+		// state1[0] = new_path[i].x(); state1[1] = new_path[i].y(); state1[2] = new_path[i].z(); state1[3] = vec_time_init[i].time; state1[4] = v_initial_length_catenary[i];
+		// state2[0] = new_path[i+1].x(); state2[1] = new_path[i+1].y(); state2[2] = new_path[i+1].z(); state2[3] = vec_time_init[i+1].time; state2[4] = v_initial_length_catenary[i+1];
+		CostFunction* cost_function1  = new AutoDiffCostFunction<EquiDistanceFunctor, 1, 5, 5>(new EquiDistanceFunctor(w_alpha, 2.0)); 
+		problem.AddResidualBlock(cost_function1, NULL, states[i].parameter , states[i+1].parameter);
+	}
+
+	/*** Cost Function II : Obstacles constrain ***/
+	// for (int i = 0; i < new_path[.size(); ++i) {
+	//   state1[0] = new_path[i].x(); state1[1] = new_path[i].y(); state1[2] = new_path[i].z(); state1[3] = vec_time_init[i].time; state1[4] = v_initial_length_catenary[i];
+	//   CostFunction* cost_function2  = new AutoDiffCostFunction<ObstacleDistanceFunctor, 1, 5>(new ObstacleDistanceFunctor(1.0, 1.0, nn_.kdtree, nn_.obs_points)); 
+	//   problem.AddResidualBlock(cost_function2, NULL, state1);
+	// }
+	for (int i = 0; i < new_path.size(); ++i) {
+		// state1[0] = new_path[i].x(); state1[1] = new_path[i].y(); state1[2] = new_path[i].z(); state1[3] = vec_time_init[i].time; state1[4] = v_initial_length_catenary[i];
+		CostFunction* cost_function2  = new NumericDiffCostFunction<ObstacleDistanceFunctor, CENTRAL, 1, 5>(new ObstacleDistanceFunctor(w_beta, 1.0, nn_.kdtree, nn_.obs_points)); 
+		problem.AddResidualBlock(cost_function2, NULL, states[i].parameter);
+	}
+
+	/*** Cost Function III : Kinematic constrain ***/
+	for (int i = 0; i < new_path.size() - 2; ++i) {
+		// state1[0] = new_path[i].x(); state1[1] = new_path[i].y(); state1[2] = new_path[i].z(); state1[3] = vec_time_init[i].time; state1[4] = v_initial_length_catenary[i];
+		// state2[0] = new_path[i+1].x(); state2[1] = new_path[i+1].y(); state2[2] = new_path[i+1].z(); state2[3] = vec_time_init[i+1].time; state2[4] = v_initial_length_catenary[i+1];
+		// state3[0] = new_path[i+2].x(); state3[1] = new_path[i+2].y(); state3[2] = new_path[i+2].z(); state3[3] = vec_time_init[i+2].time; state3[4] = v_initial_length_catenary[i+2];
+		CostFunction* cost_function3  = new AutoDiffCostFunction<KinematicsFunctor, 1, 5, 5, 5>(new KinematicsFunctor(w_gamma, 25.0)); 
+		problem.AddResidualBlock(cost_function3, NULL, states[i].parameter, states[i+1].parameter, states[i+2].parameter);
+	}
+
+	/*** Cost Function IV : Time constrain ***/
+	for (int i = 0; i < new_path.size(); ++i) {
+		// state1[0] = new_path[i].x(); state1[1] = new_path[i].y(); state1[2] = new_path[i].z(); state1[3] = vec_time_init[i].time; state1[4] = v_initial_length_catenary[i];
+		CostFunction* cost_function4  = new AutoDiffCostFunction<TimeFunctor, 1, 5>(new TimeFunctor(w_delta, vec_time_init[i].time)); 
+		problem.AddResidualBlock(cost_function4, NULL, states[i].parameter);
+	}
+
+	/*** Cost Function V : Velocity constrain ***/
+	for (int i = 0; i < new_path.size() - 1; ++i) {
+		// state1[0] = new_path[i].x(); state1[1] = new_path[i].y(); state1[2] = new_path[i].z(); state1[3] = vec_time_init[i].time; state1[4] = v_initial_length_catenary[i];
+		// state2[0] = new_path[i+1].x(); state2[1] = new_path[i+1].y(); state2[2] = new_path[i+1].z(); state2[3] = vec_time_init[i+1].time; state2[4] = v_initial_length_catenary[i+1];
+		CostFunction* cost_function5  = new AutoDiffCostFunction<VelocityFunctor, 1, 5, 5>(new VelocityFunctor(w_epsilon, initial_velocity)); 
+		problem.AddResidualBlock(cost_function5, NULL, states[i].parameter, states[i+1].parameter);
+	}
+
+	/*** Cost Function VI : Acceleration constrain ***/
+	for (int i = 0; i < new_path.size() - 2; ++i) {
+		// state1[0] = new_path[i].x(); state1[1] = new_path[i].y(); state1[2] = new_path[i].z(); state1[3] = vec_time_init[i].time; state1[4] = v_initial_length_catenary[i];
+		// state2[0] = new_path[i+1].x(); state2[1] = new_path[i+1].y(); state2[2] = new_path[i+1].z(); state2[3] = vec_time_init[i+1].time; state2[4] = v_initial_length_catenary[i+1];
+		// state3[0] = new_path[i+2].x(); state3[1] = new_path[i+2].y(); state3[2] = new_path[i+2].z(); state3[3] = vec_time_init[i+2].time; state3[4] = v_initial_length_catenary[i+2];
+		CostFunction* cost_function6  = new AutoDiffCostFunction<AccelerationFunctor, 1, 5, 5, 5>(new AccelerationFunctor(w_zeta, initial_velocity)); 
+		problem.AddResidualBlock(cost_function6, NULL, states[i].parameter, states[i+1].parameter, states[i+2].parameter);
+	}
+
+	/*** Cost Function VII : Catenary constrain  ***/
+	for (int i = 0; i < new_path.size(); ++i) {
+		// state1[0] = new_path[i].x(); state1[1] = new_path[i].y(); state1[2] = new_path[i].z(); state1[3] = vec_time_init[i].time; state1[4] = v_initial_length_catenary[i];
+		CostFunction* cost_function7  = new NumericDiffCostFunction<CatenaryFunctor, CENTRAL, 3, 5>
+										(new CatenaryFunctor(w_eta, distance_catenary_obstacle, v_initial_length_catenary[i], nn_.kdtree, nn_.obs_points, z_constraint, bound_bisection_a, bound_bisection_b, ugv_pos_catenary, size)); 
+		problem.AddResidualBlock(cost_function7, NULL, states[i].parameter);
+	}
+
+	if (!continue_optimizing)
+		std::cout <<  "==================================================="  << std::endl << "Optimization  started !!" << std::endl;
+
+  
+	start_time_opt_ = ros::Time::now();
+	ceres::Solve(options, &problem, &summary);
+	std::cout << summary.FullReport() << "\n";
+	final_time_opt_ = ros::Time::now();
+
+	std::cout << std::endl <<"Optimization Proccess Completed !!!" << std::endl << "===================================================" << std::endl << "Saving Temporal data in txt file ..." << std::endl;
+
+	vec_pose_opt.clear();
+	vec_len_cat_opt.clear();
+	vec_dist_opt.clear();
+	vec_time_opt.clear();
+	vec_vel_opt.clear();
+	vec_acc_opt.clear();
+	new_path.clear(); //clear the path to set the optimizer solution as path
+	v_initial_length_catenary.clear();
+	
+  	for (size_t i = 0; i < size; i++){
+		Eigen::Vector3d position_ = Eigen::Vector3d(states[i].parameter[0],states[i].parameter[1],states[i].parameter[2]);
+		vec_pose_opt.push_back(position_);
+		structLengthCatenary vLC;
+		vLC.length = states[i].parameter[4];
+		vLC.id = i;
+		vec_len_cat_opt.push_back(vLC);
+		v_initial_length_catenary.push_back(vLC.length);
+	}
+
+	mp_.getMarkerPoints(points_marker,vec_pose_opt,"points_lines",1);
+	mp_.getMarkerLines(lines_marker,vec_pose_opt,"points_lines",1);
+	traj_marker_pub_.publish(points_marker);
+	traj_marker_pub_.publish(lines_marker);
+
+	writeTemporalDataAfterOptimization(size);
+
+	ros::Duration(td_).sleep();
+
+	output_file = path+name_output_file+"_stage_"+std::to_string(scenario_number)+"_InitPos_"+std::to_string(num_pos_initial)+"_goal_"+std::to_string(num_goal)+".txt";
+	ofs.open(output_file.c_str(), std::ofstream::app);
+	// if (write_data_for_analysis)
+	// 	getDataForOptimizerAnalysis();
+
+	cleanVectors();		//Clear vector after optimization and previus the next iteration
+
+	std::cout << "...Temporal data saved in txt file." << std::endl << std::endl;
+	ROS_INFO("Optimizer Local Planner: Goal position successfully achieved");
+	ros::Duration(10.0).sleep();
+	action_result.arrived = true;
+	execute_path_srv_ptr->setSucceeded(action_result);
+
+	std::cout <<"Optimization Local Planner Proccess ended !!!!!!!!!!!!!!!!!!!!!!!" << std::endl << "==================================================="<< std::endl << std::endl;
+	resetFlags();
+
+	for (size_t k_ = 0; k_ < v_initial_length_catenary.size(); k_++){
+		printf("Optimized length_catenary=[%f] for vertex=[%lu]\n",v_initial_length_catenary[k_],k_);
+	}
+	
+  std::cout << "==================================================="<< std::endl << std::endl;
+	
+	// optimizer.clear();
+}
+
+void OptimizerLocalPlanner::getDataForOptimizerAnalysis()
+{
+	bisectionCatenary bsCat;
+	std::vector<geometry_msgs::Point> v_points_catenary_opt_,v_points_catenary_init_;
+
+	// Writing general data for initial analysis
+	double init_compute_time_, init_traj_distance_, init_traj_time_, init_traj_vel_, init_traj_vel_max_, init_traj_vel_mean_, init_traj_acc_,init_traj_acc_max_,init_traj_acc_mean_;
+	init_compute_time_ = init_traj_distance_ = init_traj_time_ = init_traj_vel_ = init_traj_vel_max_ = init_traj_vel_mean_ = init_traj_acc_ = init_traj_acc_max_ = init_traj_acc_mean_=0.0;
+
+	//Length and Time Trajectory Initial
+	for(size_t j = 0 ; j < vec_time_init.size() ; j++){
+		init_traj_time_ = vec_time_init[j].time + init_traj_time_;
+		init_traj_distance_ = vec_dist_init[j].dist + init_traj_distance_;
+		init_traj_vel_ = (vec_dist_init[j].dist / vec_time_init[j].time)+init_traj_vel_; 
+		if (init_traj_vel_max_ < (vec_dist_init[j].dist / vec_time_init[j].time))
+			init_traj_vel_max_ = (vec_dist_init[j].dist / vec_time_init[j].time);
+	}
+	init_traj_vel_mean_ = init_traj_vel_ / (double)vec_time_init.size();
+
+	//Acceleration Trajectory Initial
+	for(size_t j = 0 ; j < vec_time_init.size()-1 ; j++){
+		init_traj_acc_ = ( ((vec_dist_init[j].dist / vec_time_init[j].time ) - (vec_dist_init[j+1].dist/vec_time_init[j+1].time)) / (vec_time_init[j].time +vec_time_init[j+1].time) ) + init_traj_acc_; ;
+		if (init_traj_acc_max_ < ( ((vec_dist_init[j].dist / vec_time_init[j].time )- (vec_dist_init[j+1].dist/vec_time_init[j+1].time)) / (vec_time_init[j].time +vec_time_init[j+1].time) ) )
+			init_traj_acc_max_ = ( ((vec_dist_init[j].dist / vec_time_init[j].time )- (vec_dist_init[j+1].dist/vec_time_init[j+1].time)) / (vec_time_init[j].time +vec_time_init[j+1].time) );
+	}
+	init_traj_acc_mean_ = init_traj_acc_ / (double)(vec_time_init.size()-1);
+
+	//Distance Obstacles Initial
+	double distance_obs_init_ , distance_obs_init_min_, distance_obs_init_mean_;
+	distance_obs_init_ = distance_obs_init_mean_ = 0.0;
+	distance_obs_init_min_ = 1000.0;
+	for(size_t j = 0 ; j < vec_pose_init.size(); j ++){
+		Eigen::Vector3d p_init_ = vec_pose_init[j];
+		Eigen::Vector3d nearest_obs_p_ = nn_.nearestObstacleVertex(nn_.kdtree, p_init_ , nn_.obs_points);
+		distance_obs_init_ = (p_init_- nearest_obs_p_).norm() + distance_obs_init_;
+		if(distance_obs_init_min_ > (p_init_- nearest_obs_p_).norm() )
+			distance_obs_init_min_ = (p_init_- nearest_obs_p_).norm();
+	}
+	distance_obs_init_mean_ = distance_obs_init_ / (double)vec_pose_init.size();
+
+	//Distance Catenary Obstacles Initial
+	double distance_obs_cat_init_ , distance_obs_cat_init_min_, distance_obs_cat_init_mean_;
+	distance_obs_cat_init_ = distance_obs_cat_init_mean_ = 0.0;
+	distance_obs_cat_init_min_ = 1000.0;
+	int count_cat_p_init_ = 0;
+	for(size_t j = 0 ; j < vec_pose_init.size(); j ++){
+		bsCat.setNumberPointsCatenary(vec_len_cat_init[j].length*10.0);
+		bsCat.setFactorBisection(bound_bisection_a,bound_bisection_b);
+		bsCat.configBisection(vec_len_cat_init[j].length,ugv_pos_catenary.x,ugv_pos_catenary.y,ugv_pos_catenary.z,vec_pose_init[j].x(),vec_pose_init[j].y(),vec_pose_init[j].z(),j,"data_init_cat");
+		v_points_catenary_init_.clear();
+		bsCat.getPointCatenary3D(v_points_catenary_init_);
+
+		int n_p_cat_dis_ = ceil(1.5*ceil(vec_len_cat_init[j].length)); // parameter to ignore collsion points in the begining and in the end of catenary
+		if (n_p_cat_dis_ < 5)
+			n_p_cat_dis_ = 5;
+
+		for (size_t k= 0 ; k < v_points_catenary_init_.size() ; k++){
+			if(k > n_p_cat_dis_ && k < v_points_catenary_init_.size()-floor(n_p_cat_dis_/2.0)){
+				count_cat_p_init_++;
+				Eigen::Vector3d p_cat_init_; 
+				p_cat_init_.x()= v_points_catenary_init_[k].x;
+				p_cat_init_.y()= v_points_catenary_init_[k].y;
+				p_cat_init_.z()= v_points_catenary_init_[k].z;
+				Eigen::Vector3d nearest_obs_p = nn_.nearestObstacleVertex(nn_.kdtree, p_cat_init_ , nn_.obs_points);
+				distance_obs_cat_init_ = (p_cat_init_- nearest_obs_p).norm() + distance_obs_cat_init_;
+				if(distance_obs_cat_init_min_ > (p_cat_init_- nearest_obs_p).norm() )
+					distance_obs_cat_init_min_ = (p_cat_init_- nearest_obs_p).norm();
+			}
+			// printf("OBstacle Initial: vertex=[%lu/%lu] v_points_catenary_init_.size=[%lu] count_cat_p_init_=[%i] reel_pos=[%f %f %f] pos_vertex=[%f %f %f]\n",
+			// j,vec_pose_init.size(),v_points_catenary_init_.size(),count_cat_p_init_,ugv_pos_catenary.x,ugv_pos_catenary.y,ugv_pos_catenary.z,vec_pose_init[j].x(),vec_pose_init[j].y(),vec_pose_init[j].z());
+		}
+	}
+	distance_obs_cat_init_mean_ = distance_obs_cat_init_/ (double)count_cat_p_init_++;
+
+	
+	// Writing general data for optimized analysis
+	double opt_compute_time_, opt_traj_distance_, opt_traj_time_, opt_traj_vel_, opt_traj_vel_max_, opt_traj_vel_mean_, opt_traj_acc_, opt_traj_acc_max_, opt_traj_acc_mean_;
+	opt_compute_time_ = opt_traj_distance_ = opt_traj_time_ = opt_traj_vel_ = opt_traj_vel_max_ = opt_traj_vel_mean_ = opt_traj_acc_ = opt_traj_acc_max_ = opt_traj_acc_mean_ = 0.0;
+
+	//Compute Time Optimization
+	opt_compute_time_ = (final_time_opt_ - start_time_opt_).toSec();
+
+	//Length, Time, Velocity Trajectory Optimized
+	for (size_t j = 0; j < vec_time_opt.size() ; j++){
+		opt_traj_time_ = vec_time_opt[j] + opt_traj_time_;
+		opt_traj_distance_ = vec_dist_opt[j] + opt_traj_distance_;
+		opt_traj_vel_ = vec_vel_opt[j] + opt_traj_vel_;
+		if (opt_traj_vel_max_ < vec_vel_opt[j])
+			opt_traj_vel_max_ = vec_vel_opt[j];
+	}
+	opt_traj_vel_mean_ = opt_traj_vel_ / (double)vec_time_opt.size();
+
+	//Acceleration Trajectory Optimized
+	for (size_t j = 0; j < vec_acc_opt.size() ; j++){
+		opt_traj_acc_ = vec_acc_opt[j] + opt_traj_acc_;
+		if (fabs(opt_traj_acc_max_) < fabs(vec_acc_opt[j]))
+			opt_traj_acc_max_ = vec_acc_opt[j];
+	}
+	opt_traj_acc_mean_ = opt_traj_acc_ / (double)vec_acc_opt.size();
+
+
+	//Distance Point Obstacles
+	double distance_obs_opt_ , distance_obs_opt_min_, distance_obs_opt_mean_;
+	distance_obs_opt_ = distance_obs_opt_mean_ = 0.0;
+	distance_obs_opt_min_ = 1000.0;
+	for(size_t j = 0 ; j < vec_pose_opt.size(); j ++){
+		Eigen::Vector3d p_opt_ = vec_pose_opt[j];
+		Eigen::Vector3d nearest_obs_p_ = nn_.nearestObstacleVertex(nn_.kdtree, p_opt_ , nn_.obs_points);
+		distance_obs_opt_ = (p_opt_- nearest_obs_p_).norm() + distance_obs_opt_;
+		if(distance_obs_opt_min_ > (p_opt_- nearest_obs_p_).norm() )
+			distance_obs_opt_min_ = (p_opt_- nearest_obs_p_).norm();
+	}
+	distance_obs_opt_mean_ = distance_obs_opt_ / (double)vec_pose_opt.size();
+
+	//Distance Catenary Obstacles Optimized
+	double distance_obs_cat_opt_ , distance_obs_cat_opt_min_, distance_obs_cat_opt_mean_;
+	distance_obs_cat_opt_ = distance_obs_cat_opt_mean_ = 0.0;
+	distance_obs_cat_opt_min_ = 1000.0;
+	int count_cat_p_opt_ = 0;
+
+	for(size_t j = 0 ; j < vec_pose_opt.size(); j ++){
+		bsCat.setNumberPointsCatenary(vec_len_cat_opt[j].length*10.0);
+		bsCat.setFactorBisection(bound_bisection_a,bound_bisection_b);
+		bsCat.configBisection(vec_len_cat_opt[j].length,ugv_pos_catenary.x,ugv_pos_catenary.y,ugv_pos_catenary.z,vec_pose_opt[j].x(),vec_pose_opt[j].y(),vec_pose_opt[j].z(),j,"data_opt_cat");
+		v_points_catenary_opt_.clear();
+		bsCat.getPointCatenary3D(v_points_catenary_opt_);
+
+		int n_p_cat_dis_ = ceil(1.5*ceil(vec_len_cat_opt[j].length)); // parameter to ignore collsion points in the begining and in the end of catenary
+		if (n_p_cat_dis_ < 5)
+			n_p_cat_dis_ = 5;
+
+		for (size_t k= 0 ; k < v_points_catenary_opt_.size() ; k++){
+			if(k > n_p_cat_dis_ && k < v_points_catenary_opt_.size()-floor(n_p_cat_dis_/2.0)){
+				count_cat_p_opt_++;
+				Eigen::Vector3d p_cat_opt_; 
+				p_cat_opt_.x()= v_points_catenary_opt_[k].x;
+				p_cat_opt_.y()= v_points_catenary_opt_[k].y;
+				p_cat_opt_.z()= v_points_catenary_opt_[k].z;
+				Eigen::Vector3d nearest_obs_p = nn_.nearestObstacleVertex(nn_.kdtree, p_cat_opt_ , nn_.obs_points);
+				distance_obs_cat_opt_ = (p_cat_opt_- nearest_obs_p).norm() + distance_obs_cat_opt_;
+				if(distance_obs_cat_opt_min_ > (p_cat_opt_- nearest_obs_p).norm() )
+					distance_obs_cat_opt_min_ = (p_cat_opt_- nearest_obs_p).norm();
+			}
+		// printf("Obstacles Optimized: vertex=[%lu/%lu] vec_pose_opt.size=[%lu] v_points_catenary_opt_.size=[%lu] count_cat_p_opt = [%i]\n",j, vec_pose_opt.size(),vec_pose_opt.size(),v_points_catenary_opt_.size(),count_cat_p_opt_);
+		}
+	}
+	distance_obs_cat_opt_mean_ = distance_obs_cat_opt_/ (double)count_cat_p_opt_++;
+
+
+	if (ofs.is_open()) {
+		std::cout << "Saving data in output file: " << output_file << std::endl;
+		ofs << opt_compute_time_ << "," 
+		    << init_traj_distance_ << "," 
+		    << opt_traj_distance_ << ","
+			<< init_traj_time_ << "," 
+			<< opt_traj_time_ << "," 
+			<< distance_obs_init_mean_ << ","
+			<< distance_obs_init_min_ << ","
+			<< distance_obs_opt_mean_ << "," 
+			<< distance_obs_opt_min_ << "," 
+			<< distance_obs_cat_init_mean_ << "," 
+			<< distance_obs_cat_init_min_ << "," 
+			<< distance_obs_cat_opt_mean_ << "," 
+			<< distance_obs_cat_opt_min_ << ","
+			<< init_traj_vel_mean_ << "," 
+			<< init_traj_vel_max_ << ","
+			<< opt_traj_vel_mean_ << ","
+			<< opt_traj_vel_max_ << ","
+			<< init_traj_acc_mean_ << ","
+			<< init_traj_acc_max_ << "," 
+			<< opt_traj_acc_mean_ << ","
+			<< opt_traj_acc_max_ 
+			<<std::endl;
+	} 
+	else {
+		std::cout << "Couldn't be open the output data file" << std::endl;
+	}
+	ofs.close();
+}
+
+
+void OptimizerLocalPlanner::getPointsFromGlobalPath(trajectory_msgs::MultiDOFJointTrajectory _path,vector<Eigen::Vector3d> &_v_gp)
+{
+	float x, y, z;
+	Eigen::Vector3d _p;
+    double D = 0.0;
+	int n = 0;
+	_v_gp.clear();
+	int _count = 1; 
+	
+    for (size_t i = 0; i < _path.points.size()-1; i++)
+    {
+        x = _path.points.at(i+1).transforms[0].translation.x - _path.points.at(i).transforms[0].translation.x;
+		y = _path.points.at(i+1).transforms[0].translation.y - _path.points.at(i).transforms[0].translation.y;
+		z = _path.points.at(i+1).transforms[0].translation.z - _path.points.at(i).transforms[0].translation.z;
+        D = sqrt(x * x + y * y + z * z);
+		if (D > min_distance_add_new_point){
+			n = floor(D / min_distance_add_new_point);
+			double xp = x/((double)n+1.0);
+			double yp = y/((double)n+1.0);
+			double zp = z/((double)n+1.0);
+			_p.x() = _path.points.at(i).transforms[0].translation.x;
+			_p.y() = _path.points.at(i).transforms[0].translation.y;
+			_p.z() = _path.points.at(i).transforms[0].translation.z;
+			_v_gp.push_back(_p);
+			printf("point =[%i] getPointsFromGlobalPath = [%f %f %f]\n",_count,_p.x(),_p.y(),_p.z());
+			_count++;
+			for (int j=0; j< n ; j++){
+				_p = Eigen::Vector3d(0.0,0.0,0.0);
+				_p.x() = _path.points.at(i).transforms[0].translation.x + xp*(1.0+(double)j);
+				_p.y() = _path.points.at(i).transforms[0].translation.y + yp*(1.0+(double)j);
+				_p.z() = _path.points.at(i).transforms[0].translation.z + zp*(1.0+(double)j);
+				_v_gp.push_back(_p);
+				printf("point =[%i] getPointsFromGlobalPath = [%f %f %f]\n",_count,_p.x(),_p.y(),_p.z());
+				_count++;
+			}
+		}
+		else{
+			_p.x() = _path.points.at(i).transforms[0].translation.x;
+			_p.y() = _path.points.at(i).transforms[0].translation.y;
+			_p.z() = _path.points.at(i).transforms[0].translation.z;
+			_v_gp.push_back(_p);
+			printf("point =[%i] getPointsFromGlobalPath = [%f %f %f]\n",_count,_p.x(),_p.y(),_p.z());
+			_count++;
+		}
+    }
+	_p.x() = _path.points.at(_path.points.size()-1).transforms[0].translation.x;
+	_p.y() = _path.points.at(_path.points.size()-1).transforms[0].translation.y;
+	_p.z() = _path.points.at(_path.points.size()-1).transforms[0].translation.z;
+	_v_gp.push_back(_p);
+	printf("point =[%i] getPointsFromGlobalPath = [%f %f %f]\n",_count,_p.x(),_p.y(),_p.z());
+	_count++;
+
+	for (size_t i = 0 ; i <  _v_gp.size() ; i++){
+		vec_pose_init.push_back(_v_gp[i]);
+	}
+}
+
+void OptimizerLocalPlanner::calculateDistanceVertices(vector<Eigen::Vector3d> _path,vector<structDistance> &_v_sD)
+{
+	structDistance _sD;
+	float x, y, z;
+	_v_sD.clear();
+    double pL = 0;
+    for (size_t i = 0; i < _path.size()-1; i++)
+    {
+    x = new_path[i+1].x() - new_path[i].x();
+		y = new_path[i+1].y() - new_path[i].y();
+		z = new_path[i+1].z() - new_path[i].z();
+        pL= sqrt(x * x + y * y + z * z);
+		_sD.id_from = i;
+		_sD.id_to = i+ 1;
+		_sD.dist = pL;
+		_v_sD.push_back(_sD);
+    }
+}
+
+void OptimizerLocalPlanner::getTemporalState(vector<structTime> &_time, vector<structDistance> _v_sD, double _vel)
+{
+	structTime _sT;
+	_time.clear();
+	double _dT = 0;
+	for (size_t i= 0 ; i < new_path.size(); i++){
+		_sT.id = i;
+    if (i == 0){
+      _sT.time = 0.0;
+		  _time.push_back(_sT);
+    }
+		else{
+      _dT = (_v_sD[i-1].dist)/_vel;
+  		_sT.time = _dT;
+      _time.push_back(_sT);
+    }
+	}
+}
+
+void OptimizerLocalPlanner::writeTemporalDataBeforeOptimization(void){
+	//! Save temporal state before optimization
+	file_in_time.open (path+"initial_time.txt");
+	file_in_velocity.open (path+"initial_velocity.txt");
+	file_in_acceleration.open (path+"initial_acceleration.txt");
+	
+	double _sum_dist = 0.0;
+	double _sum_dT = 0.0;
+	for (size_t i = 0; i < vec_time_init.size(); i++){
+		_sum_dist = _sum_dist + vec_dist_init[i].dist;
+		_sum_dT = _sum_dT + vec_time_init[i].time;	
+		file_in_time << setprecision(6) << _sum_dist << ";" << _sum_dT << endl;
+		file_in_velocity  << setprecision(6) << _sum_dist << ";" << initial_velocity << endl;
+		if (i > 0)
+			file_in_acceleration << setprecision(6) << _sum_dist << ";" << acceleration << endl;
+	}
+	file_in_time.close();	
+	file_in_velocity.close();	
+	file_in_acceleration.close();
+}
+
+void OptimizerLocalPlanner::writeTemporalDataAfterOptimization(auto _s)
+{
+	//! Save Temporal Data Optimized in File.txt 
+	file_out_time.open (path+"optimized_time.txt");
+	file_out_velocity.open (path+"optimized_velocity.txt");
+	file_out_acceleration.open (path+"optimized_acceleration.txt");
+	double sum_dispos_ = 0.0;
+	double sum_diffTime_ = 0.0;
+	double new_vel_ = 0.0;
+	for (size_t i=0; i < _s -1; ++i)
+	{
+		double difftime_ = states[i].parameter[3];
+		vec_time_opt.push_back(difftime_);
+		double dist_ = (vec_pose_opt[i] - vec_pose_opt[i+1]).norm();
+		vec_dist_opt.push_back(dist_);
+		sum_dispos_ = dist_ + sum_dispos_;
+		vec_vel_opt.push_back(new_vel_);
+		file_out_time << setprecision(6) << sum_dispos_ << ";" << sum_diffTime_ << endl;
+		file_out_velocity << setprecision(6) << sum_dispos_ << ";" << new_vel_ << endl;
+		// 	file_out_difftime << setprecision(6) << sum_dispos << ";" << difftime->estimate() << endl;
+	}
+	double sumdis_ = 0.0;
+	for (size_t i = 0; i < _s-2; i++)
+	{
+		double difftime1_ = states[i].parameter[3];
+		double difftime2_ = states[i+1].parameter[3];
+
+		double distance1_ = (vec_pose_opt[i+1] - vec_pose_opt[i]).norm();	
+		double distance2_ = (vec_pose_opt[i+2] - vec_pose_opt[i+1]).norm();
+		if (i==0)
+			sumdis_ = distance1_;
+		sumdis_ = sumdis_ + distance2_;
+		double diffTime_ = difftime1_ + difftime2_;
+		double velocity1_ = distance1_ / difftime1_;
+		double velocity2_ = distance2_ / difftime2_;
+		double acceleration_ = (velocity2_-velocity1_)/diffTime_;
+		vec_acc_opt.push_back(acceleration_);
+		file_out_acceleration << setprecision(6) << sumdis_ << ";" << acceleration_ << endl;
+	}
+	file_out_time.close();
+	file_out_velocity.close();
+	file_out_acceleration.close();
+}
+
+void OptimizerLocalPlanner::setInitialLengthCatenaryAndPosUGV(std::vector <double> &_vector, auto _s)
+{
+	tfListener();
+
+	_vector.clear();
+	for (size_t i = 0; i < _s; i++){
+		double _dist_X_c_v = (ugv_pos_catenary.x - new_path[i].x());
+		double _dist_Y_c_v = (ugv_pos_catenary.y - new_path[i].y());
+		double _dist_Z_c_v = (ugv_pos_catenary.z - new_path[i].z());
+		
+		double _dist_c_v = sqrt(_dist_X_c_v * _dist_X_c_v + _dist_Y_c_v * _dist_Y_c_v + _dist_Z_c_v * _dist_Z_c_v)*initial_multiplicative_factor_length_catenary;  
+		
+		_vector.push_back(_dist_c_v);
+	}
+}
+
+void OptimizerLocalPlanner::preComputeLengthCatenary(std::vector <double> &_vector, auto _s)
+{
+	std::vector<geometry_msgs::Point> _pre_points_catenary;
+	Eigen::Vector3d _obstacles_near_catenary;
+	Eigen::Vector3d _p_cat;
+	struct catenaryStates{
+		int _vertex;
+		double _initial;
+		double _final;
+		int _n_collision;
+		double _mf;
+	};
+	vector <catenaryStates> _v_cat_states;
+	catenaryStates _cat_states;
+
+	double _mF = initial_multiplicative_factor_length_catenary;
+	double _best_length= 0.0;
+	int _best_n_collision= 10000;
+	bool _state_collision_z ;
+	int _n_collision;
+	
+	tfListener();
+	double _bound_z_negative = z_constraint;
+	_vector.clear();
+
+	size_t i=0;
+	_v_cat_states.clear();
+	int change_vertex = -1;
+
+	while (i < _s){
+		double _dist_X_c_v = (ugv_pos_catenary.x - new_path[i].x());
+		double _dist_Y_c_v = (ugv_pos_catenary.y - new_path[i].y());
+		double _dist_Z_c_v = (ugv_pos_catenary.z - new_path[i].z());
+		double _dist_c_v = sqrt(_dist_X_c_v * _dist_X_c_v + _dist_Y_c_v * _dist_Y_c_v + _dist_Z_c_v * _dist_Z_c_v);
+		double _length = _dist_c_v * _mF;
+
+		if (change_vertex != i){
+			_cat_states._vertex = i;
+			_cat_states._initial = _length;
+			_cat_states._final = -1;
+			_cat_states._n_collision = -1;
+			_cat_states._mf = -1;
+			change_vertex = i;
+		}
+
+		_state_collision_z = false;
+		_n_collision = 0;
+		
+		bisectionCatenary bsC;
+		bsC.setNumberPointsCatenary(_length*10.0);
+		bsC.setFactorBisection(bound_bisection_a,bound_bisection_b);
+		bsC.configBisection(_length,ugv_pos_catenary.x,ugv_pos_catenary.y,ugv_pos_catenary.z,new_path[i].x(),new_path[i].y(),new_path[i].z(),i,"pre_compute_cat");
+		_pre_points_catenary.clear();
+		bsC.getPointCatenary3D(_pre_points_catenary);
+
+		int _n_points_cat_dis = ceil(1.5*ceil(_length)); // parameter to ignore collsion points in the begining and in the end of catenary
+		if (_n_points_cat_dis < 5)
+			_n_points_cat_dis = 5;
+
+		for (size_t j = 0 ; j <_pre_points_catenary.size() ; j++){
+			if (j > _n_points_cat_dis ){
+				if(_pre_points_catenary[j].z < _bound_z_negative){
+					ROS_ERROR("Pre Compute Catenary with z_value(%f) < z_bound(%f): IMPOSIBLE continue increasing length=[%f] for vertex=[%lu]",_pre_points_catenary[j].z,_bound_z_negative,_length,i);
+					_state_collision_z= true;
+					break;
+				}
+				
+				_p_cat.x()= _pre_points_catenary[j].x;
+				_p_cat.y()= _pre_points_catenary[j].y;
+				_p_cat.z()= _pre_points_catenary[j].z;
+
+				_obstacles_near_catenary = nn_.nearestObstacleVertex(nn_.kdtree, _p_cat, nn_.obs_points);
+				double _d_cat_obs = (_p_cat-_obstacles_near_catenary).norm();
+
+				if (_d_cat_obs < distance_catenary_obstacle){
+					_n_collision++;
+				}
+			}
+		}
+
+		if (_n_collision > 0 || _state_collision_z){
+			_mF = _mF + 0.01;
+
+			if (_n_collision < _best_n_collision && !_state_collision_z){
+				_best_length = _length;
+				_best_n_collision = _n_collision;	
+			}
+			if(_state_collision_z){
+					_cat_states._final = _best_length;
+				    _cat_states._mf = _mF;
+					_cat_states._n_collision = _best_n_collision;
+					_v_cat_states.push_back(_cat_states);
+					_mF = initial_multiplicative_factor_length_catenary; 
+					_vector.push_back(_best_length);
+					i++;
+					_best_n_collision = 10000;
+			}
+		}
+		else{
+			_cat_states._final = _length;
+			_cat_states._mf = _mF;
+			_cat_states._n_collision = _n_collision;
+			_v_cat_states.push_back(_cat_states);
+			_mF = initial_multiplicative_factor_length_catenary; 
+			_vector.push_back(_length);
+			i++;
+			_best_n_collision = 10000;
+		}
+	}
+	printf("---------------------------------------------------------------------------------------------\n");
+	for(size_t i = 0; i < _v_cat_states.size(); i++){
+		printf("preComputeLengthCatenary: Got it PRE LENGTH catenary = [vertex=%i , initial=%f , final=%f , n_coll=%i , mf=%f]\n",
+		_v_cat_states[i]._vertex,_v_cat_states[i]._initial,_v_cat_states[i]._final,_v_cat_states[i]._n_collision,_v_cat_states[i]._mf);
+	}
+}
+
+void OptimizerLocalPlanner::tfListener(){
+
+	tf::StampedTransform transform;
+    listener.lookupTransform("/map", "/reel_base_link", ros::Time(0), transform);
+
+	ugv_pos_catenary.x = transform.getOrigin().x();
+	ugv_pos_catenary.y = transform.getOrigin().y();
+	ugv_pos_catenary.z = transform.getOrigin().z();
+}
+
+
+void OptimizerLocalPlanner::checkObstaclesBetweenCatenaries(std::vector <double> _vectorIN,std::vector <double> &_vectorOUT, auto _s)
+{
+	int _num_points;
+	double _length1,_length2;
+	bool obst_between_catenaries=false;
+	std::vector<geometry_msgs::Point> _pre_points_catenary1;
+	std::vector<geometry_msgs::Point> _pre_points_catenary2;
+	std::vector<geometry_msgs::Point> _v_factor1, _v_factor2;
+	std::vector<Eigen::Vector3d> _vector_points_line;
+	bisectionCatenary bsC1, bsC2;
+
+	_vectorOUT.clear();
+	int i = 0;
+	int _count_obst;
+	bool _z_collision;
+	double _mf = 1.0;
+	double best_count_obs = 10000;
+	double best_length2 = 0.0;
+
+	_vectorOUT.push_back(_vectorIN[0]);
+	while( i < _s-1){
+		if(_vectorIN[i] ==_vectorOUT[i])
+			_length1 = _vectorIN[i];
+		else
+			_length1 = _vectorOUT[i];
+		if (!obst_between_catenaries)
+			_length2 = _vectorIN[i+1];
+		else
+			_length2 = _vectorIN[i+1] * _mf;
+		
+		bsC1.setNumberPointsCatenary(_length1*10.0);
+		bsC1.setFactorBisection(bound_bisection_a,bound_bisection_b);
+		bsC1.configBisection(_length1,ugv_pos_catenary.x,ugv_pos_catenary.y,ugv_pos_catenary.z,new_path[i].x(),new_path[i].y(),new_path[i].z(),i,"pre_compute_cat1");
+		_pre_points_catenary1.clear();
+		bsC1.getPointCatenary3D(_pre_points_catenary1);
+		
+		bsC2.setNumberPointsCatenary(_length2*10.0);
+		bsC2.setFactorBisection(bound_bisection_a,bound_bisection_b);
+		bsC2.configBisection(_length2,ugv_pos_catenary.x,ugv_pos_catenary.y,ugv_pos_catenary.z,new_path[i+1].x(),new_path[i+1].y(),new_path[i+1].z(),i,"pre_compute_cat2");
+		_pre_points_catenary2.clear();
+		bsC2.getPointCatenary3D(_pre_points_catenary2);
+
+		double n_points_cat_dis1 = ceil(1.5*ceil(_length1)); // parameter to ignore collsion points in the begining and in the end of catenary
+		if (n_points_cat_dis1 < 5)
+			n_points_cat_dis1 = 5;
+		double n_points_cat_dis2 = ceil(1.5*ceil(_length2)); // parameter to ignore collsion points in the begining and in the end of catenary
+		if (n_points_cat_dis2 < 5)
+			n_points_cat_dis2 = 5;			
+
+		double rate;
+		string equal_status;
+		rate = (double)_pre_points_catenary1.size()/(double)_pre_points_catenary2.size();	
+
+		_count_obst = 0;
+		_z_collision = false;
+		for (size_t j=0; j< _pre_points_catenary2.size(); j++){
+			int id_c2_to_c1; 
+			id_c2_to_c1 = ceil((j+1)*rate) -1 ;
+			if (_pre_points_catenary1.size() <= _pre_points_catenary2.size())
+				equal_status ="catenary1.size() <= catenary2.size()";
+			else
+				equal_status ="catenary2.size() < catenary1.size()";
+
+			if ( j > n_points_cat_dis2  && j < _pre_points_catenary2.size()-n_points_cat_dis2/2 ){
+				Eigen::Vector3d _pc1, _pc2;
+				_pc1.x() = _pre_points_catenary1[id_c2_to_c1].x;
+				_pc1.y() = _pre_points_catenary1[id_c2_to_c1].y;
+				_pc1.z() = _pre_points_catenary1[id_c2_to_c1].z;
+				_pc2.x() = _pre_points_catenary2[j].x;
+				_pc2.y() = _pre_points_catenary2[j].y;
+				_pc2.z() = _pre_points_catenary2[j].z;
+				if (_pc1.z() < 0.1 ){
+					ROS_ERROR("Warning: Not Posible to get feasible lenght for catenary1 %i , best_length2=[%f]",i,best_length2);
+					i++;
+					_z_collision = true;
+					_mf = 1.0;
+					_vectorOUT.push_back(best_length2);
+					break;
+				}
+				if ( _pc2.z()<0.1){
+					ROS_ERROR("Warning: Not Posible to get feasible lenght for catenary2 %i , best_length2=[%f]",i+1,best_length2);
+					i++;
+					_z_collision = true;
+					_mf = 1.0;
+					_vectorOUT.push_back(best_length2);
+					break;
+				}
+
+				double dist_pc2_pc1 = (_pc2 - _pc1).norm();
+				_num_points = (int)(ceil(dist_pc2_pc1 * 10.0));
+				_vector_points_line.clear();
+				straightTrajectoryVertices(_pc1.x(),_pc1.y(),_pc1.z(),_pc2.x(),_pc2.y(),_pc2.z(),_num_points,_vector_points_line);
+				for (size_t k =0; k <_vector_points_line.size(); k++){
+					Eigen::Vector3d _near = nn_.nearestObstacleVertex(nn_.kdtree, _vector_points_line[k], nn_.obs_points);
+					double dist_straight_line_obstacle = (_vector_points_line[k] -_near).norm();
+					double _radius_cat_straight = 0.1;
+					if (dist_straight_line_obstacle < _radius_cat_straight){
+						_count_obst++;
+					}
+				}
+			}
+		}
+
+		if(_count_obst > 0){
+			_mf = _mf + 0.01;
+			obst_between_catenaries = true ;
+			best_length2 = _length2;
+		}
+		else if(!_z_collision){
+			_mf = 1.0;
+			obst_between_catenaries = false;
+			_vectorOUT.push_back(_length2);
+			i++;
+		}
+		mp_.markerPoints(catenary_marker ,_pre_points_catenary1, i-1, _s-2, catenary_marker_pub_);
+		mp_.markerPoints(catenary_marker ,_pre_points_catenary2, i,_s-2, catenary_marker_pub_);
+	}
+	
+	printf("---------------------------------------------------------------------------------------------\n");
+	for(size_t i = 0; i < _vectorOUT.size(); i++){
+		structLengthCatenary l_;
+		l_.id = i;
+		l_.length = _vectorOUT[i];
+		vec_len_cat_init.push_back(l_);
+		printf("checkObstaclesBetweenCatenaries: Got it LENGTH catenary = [vertex=%lu , initial=%f , final=%f ]\n",i,_vectorIN[i],_vectorOUT[i]);
+	}
+}
+
+void OptimizerLocalPlanner::straightTrajectoryVertices(double x1, double y1, double z1, double x2, double y2, double z2, int _n_v_u, std::vector<Eigen::Vector3d> &_v)
+{
+	double _x, _y, _z;
+	double _d= sqrt(pow(x2-x1,2)+pow(y2-y1,2)+pow(z2-z1,2));
+	double distance_xy = sqrt(pow(x2-x1,2)+pow(y2-y1,2));
+	double distance_xz = sqrt(pow(x2-x1,2)+pow(z2-z1,2));
+	if (distance_xy < 0.00001)
+		distance_xy = 0.00001;
+	if (distance_xz < 0.00001)
+		distance_xz = 0.00001;
+
+	double interval_xy = distance_xy/_n_v_u;		// Size of the interval between points in axes xy
+	double interval_xz = distance_xz/_n_v_u;		// Size of the interval between points in axes xz
+	for(int i = 1 ; i< _n_v_u+1 ; i++)
+	{
+		_x = x1 + i*interval_xy * ((x2-x1)/distance_xy);
+		_y = y1 + i*interval_xy * ((y2-y1)/distance_xy);
+		_z = z1 + i*interval_xz * ((z2-z1)/distance_xz);
+	
+		_v.push_back(Eigen::Vector3d(_x,_y,_z));
+	}
+}
+
