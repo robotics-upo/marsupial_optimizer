@@ -22,9 +22,9 @@ class MarkerPublisher
 		~MarkerPublisher(){};
 		void markerPoints(visualization_msgs::MarkerArray _marker, std::vector<geometry_msgs::Point> _vector, int _suffix, int _n_v, ros::Publisher c_m_pub_);
 		void clearMarkers(visualization_msgs::MarkerArray _marker, auto _s, ros::Publisher c_m_pub_);
-		void getMarkerPoints(visualization_msgs::MarkerArray &marker_, vector<Eigen::Vector3d> _vector, std::string ns, int j_);
-		void getMarkerLines(visualization_msgs::MarkerArray &marker_, vector<Eigen::Vector3d> _vector, std::string ns, int j_);
-		void clearMarkersPointLines(visualization_msgs::MarkerArray p_m_, visualization_msgs::MarkerArray l_m_, ros::Publisher traj_m_pub_, auto _s);
+		void getMarkerPoints(visualization_msgs::MarkerArray &marker_, vector<Eigen::Vector3d> _vector, std::string ns);
+		void getMarkerLines(visualization_msgs::MarkerArray &marker_, vector<Eigen::Vector3d> _vector, std::string ns);
+		void clearMarkersPointLines(visualization_msgs::MarkerArray &p_m_, visualization_msgs::MarkerArray &l_m_, ros::Publisher traj_m_pub_, auto _s);
 
 	protected:
 
@@ -92,22 +92,25 @@ inline void MarkerPublisher::clearMarkers(visualization_msgs::MarkerArray _marke
     c_m_pub_.publish(_marker);
 }
 
-inline void MarkerPublisher::getMarkerPoints(visualization_msgs::MarkerArray &marker_, vector<Eigen::Vector3d> _vector, std::string ns, int j_)
+inline void MarkerPublisher::getMarkerPoints(visualization_msgs::MarkerArray &marker_, vector<Eigen::Vector3d> vector_, std::string ns_)
 {
-	for (size_t i = 0; i < _vector.size(); i++){
+	for (size_t i = 0; i < vector_.size(); i++){
+
 		marker_.markers[i].header.frame_id = "/map";
 		marker_.markers[i].header.stamp = ros::Time::now();
-		marker_.markers[i].ns = "points";
+		marker_.markers[i].ns = ns_;
 		marker_.markers[i].id = i+1;
+
 		marker_.markers[i].action = visualization_msgs::Marker::ADD;
 		if (i % 5 == 0)
 			marker_.markers[i].type = visualization_msgs::Marker::CUBE;
 		else
 			marker_.markers[i].type = visualization_msgs::Marker::SPHERE;
+		
 		marker_.markers[i].lifetime = ros::Duration(400);
-		marker_.markers[i].pose.position.x = _vector[i].x();
-		marker_.markers[i].pose.position.y = _vector[i].y();
-		marker_.markers[i].pose.position.z = _vector[i].z();
+		marker_.markers[i].pose.position.x = vector_[i].x();
+		marker_.markers[i].pose.position.y = vector_[i].y();
+		marker_.markers[i].pose.position.z = vector_[i].z();
 		marker_.markers[i].pose.orientation.x = 0.0;
 		marker_.markers[i].pose.orientation.y = 0.0;
 		marker_.markers[i].pose.orientation.z = 0.0;
@@ -122,13 +125,13 @@ inline void MarkerPublisher::getMarkerPoints(visualization_msgs::MarkerArray &ma
 	}	
 }
 
-inline void MarkerPublisher::getMarkerLines(visualization_msgs::MarkerArray &marker_, vector<Eigen::Vector3d> _vector, std::string ns, int j_)
+inline void MarkerPublisher::getMarkerLines(visualization_msgs::MarkerArray &marker_, vector<Eigen::Vector3d> _vector, std::string ns_)
 {
 	for (size_t i = 0; i < _vector.size()-1; i++){
 		geometry_msgs::Point _p1, _p2; 
 		marker_.markers[i].header.frame_id = "/map";
 		marker_.markers[i].header.stamp = ros::Time::now();
-		marker_.markers[i].ns = "points";
+		marker_.markers[i].ns = ns_;
 		marker_.markers[i].id = i + _vector.size()+2;
 		marker_.markers[i].action = visualization_msgs::Marker::ADD;
 		marker_.markers[i].type = visualization_msgs::Marker::LINE_STRIP;
@@ -155,7 +158,7 @@ inline void MarkerPublisher::getMarkerLines(visualization_msgs::MarkerArray &mar
 	}
 }
 
-void MarkerPublisher::clearMarkersPointLines(visualization_msgs::MarkerArray p_m_, visualization_msgs::MarkerArray l_m_, ros::Publisher traj_m_pub_, auto _s)
+void MarkerPublisher::clearMarkersPointLines(visualization_msgs::MarkerArray &p_m_, visualization_msgs::MarkerArray &l_m_, ros::Publisher traj_m_pub_, auto _s)
 {
 	l_m_.markers.clear();
 	p_m_.markers.clear();

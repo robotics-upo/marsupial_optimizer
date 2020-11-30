@@ -4,8 +4,8 @@ Simon Martinez Rozas, 2020
 Service Robotics Lab, University Pablo de Olavide , Seville, Spain 
  */
 
-#ifndef _OPTIMIZER_LOCAL_PLANNER_H_
-#define _OPTIMIZER_LOCAL_PLANNER_H_
+#ifndef _OPTIMIZER_LOCAL_PLANNER_CERES_H_
+#define _OPTIMIZER_LOCAL_PLANNER_CERES_H_
 
 #include <Eigen/StdVector>
 #include <random>
@@ -13,7 +13,7 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 
 #include "marsupial_g2o/near_neighbor.hpp"
 #include "marsupial_g2o/bisection_catenary_3D.h"
-#include "marsupial_g2o/marker_publisher.hpp"
+// #include "marsupial_g2o/marker_publisher.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -49,7 +49,6 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
 
-// #include <marsupial_actions/OptimizationTrajectoryAction.h>
 #include <upo_actions/ExecutePathAction.h>
 #include <upo_actions/NavigateAction.h>
 #include <upo_actions/Navigate3DAction.h>
@@ -125,7 +124,7 @@ public:
 	void executeOptimizerPathGoalCB();
 	void dynRecCb(marsupial_g2o::OptimizationParamsConfig &config, uint32_t level);
 	void collisionMapCallBack(const octomap_msgs::OctomapConstPtr &msg);
-	void configMarkers(std::string ns, std::string frame);
+	// void configMarkers(std::string ns, std::string frame);
 	// void clearMarkers(auto _s);
 	void calculateDistanceVertices(vector<Eigen::Vector3d> _path,vector<structDistance> &_v_sD);
 	void getTemporalState(vector<structTime> &_time, vector<structDistance> _v_sD, double _vel);
@@ -137,6 +136,12 @@ public:
 	void checkObstaclesBetweenCatenaries(std::vector <double> _vectorIN,std::vector <double> &_vectorOUT, auto _s);
 	void straightTrajectoryVertices(double x1, double y1, double z1, double x2, double y2, double z2, int _n_v_u, std::vector<Eigen::Vector3d> &_v);
 	void getDataForOptimizerAnalysis();
+
+	void markerPoints(visualization_msgs::MarkerArray _marker, std::vector<geometry_msgs::Point> _vector, int _suffix, int _n_v, ros::Publisher c_m_pub_);
+	void clearMarkers(visualization_msgs::MarkerArray _marker, auto _s, ros::Publisher c_m_pub_);
+	void getMarkerPoints(visualization_msgs::MarkerArray &marker_, vector<Eigen::Vector3d> _vector, std::string ns);
+	void getMarkerLines(visualization_msgs::MarkerArray &marker_, vector<Eigen::Vector3d> _vector, std::string ns);
+	void clearMarkersPointLines(auto _s);
 
 	upo_actions::ExecutePathResult action_result;
 
@@ -229,7 +234,7 @@ private:
 	void resetFlags();
 	void cleanVectors();
 	double global_path_length;
-	double distance_obstacle, initial_velocity , angle_min_traj, acceleration,bound_bisection_a,bound_bisection_b;
+	double distance_obstacle, initial_velocity, angle_min_traj, acceleration,bound_bisection_a,bound_bisection_b;
 	geometry_msgs::Point ugv_pos_catenary;
 
 };

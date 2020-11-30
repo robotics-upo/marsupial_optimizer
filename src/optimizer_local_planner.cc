@@ -154,7 +154,7 @@ void OptimizerLocalPlanner::executeOptimizerPathPreemptCB()
     execute_path_srv_ptr->setPreempted(); // set the action state to preempted
 
     resetFlags();
-    mp_.clearMarkersPointLines(points_marker, lines_marker, traj_marker_pub_,0);
+    mp_.clearMarkersPointLines(points_marker, lines_marker,traj_marker_pub_,0);
 }
 
 
@@ -181,14 +181,14 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	preComputeLengthCatenary(v_pre_initial_length_catenary, size);
 	printf("ugv_pos_reel_catenary=[%f %f %f]\n",ugv_pos_catenary.x,ugv_pos_catenary.y,ugv_pos_catenary.z);
 	checkObstaclesBetweenCatenaries(v_pre_initial_length_catenary,v_initial_length_catenary,size);
-	ros::Duration(6.0).sleep();
+	ros::Duration(1.0).sleep();
 	mp_.clearMarkers(catenary_marker, 50, catenary_marker_pub_);
 	ros::Duration(1.0).sleep();
 
 	count_edges = 0;
 
 	// resetFlags();
-  mp_.clearMarkersPointLines(points_marker, lines_marker, traj_marker_pub_,0);
+  	mp_.clearMarkersPointLines(points_marker, lines_marker,traj_marker_pub_,size);
 	calculateDistanceVertices(new_path,vec_dist_init);
  	getTemporalState(vec_time_init,vec_dist_init,initial_velocity);
 
@@ -300,7 +300,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	vec_acc_opt.clear();
 	new_path.clear(); //clear the path to set the optimizer solution as path
 	v_initial_length_catenary.clear();
-	
+
   	for (size_t i = 0; i < size; i++){
 		Eigen::Vector3d position_ = Eigen::Vector3d(states[i].parameter[0],states[i].parameter[1],states[i].parameter[2]);
 		vec_pose_opt.push_back(position_);
@@ -311,8 +311,8 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		v_initial_length_catenary.push_back(vLC.length);
 	}
 
-	mp_.getMarkerPoints(points_marker,vec_pose_opt,"points_lines",1);
-	mp_.getMarkerLines(lines_marker,vec_pose_opt,"points_lines",1);
+	mp_.getMarkerPoints(points_marker,vec_pose_opt,"points_lines");
+	mp_.getMarkerLines(lines_marker,vec_pose_opt,"points_lines");
 	traj_marker_pub_.publish(points_marker);
 	traj_marker_pub_.publish(lines_marker);
 
@@ -329,7 +329,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 
 	std::cout << "...Temporal data saved in txt file." << std::endl << std::endl;
 	ROS_INFO("Optimizer Local Planner: Goal position successfully achieved");
-	ros::Duration(10.0).sleep();
+	ros::Duration(2.0).sleep();
 	action_result.arrived = true;
 	execute_path_srv_ptr->setSucceeded(action_result);
 
@@ -979,4 +979,3 @@ void OptimizerLocalPlanner::straightTrajectoryVertices(double x1, double y1, dou
 		_v.push_back(Eigen::Vector3d(_x,_y,_z));
 	}
 }
-

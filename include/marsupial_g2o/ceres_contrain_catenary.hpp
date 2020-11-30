@@ -37,7 +37,7 @@ struct CatenaryFunctor {
     {
         NearNeighbor nn_;
         bisectionCatenary bC_;
-        MarkerPublisher mP_;
+        // MarkerPublisher mP_;
         double d_[1];
         double near_[4];
 
@@ -67,12 +67,12 @@ struct CatenaryFunctor {
 		}
 
         id_marker_ = 1;
-		if (prev_size_marker_ >= points_catenary.size() )
-			mP_.clearMarkers(catenary_marker_, prev_size_marker_, catenary_marker_pub);
-		else
-			mP_.clearMarkers(catenary_marker_, points_catenary.size(), catenary_marker_pub);
+		// if (prev_size_marker_ >= points_catenary.size() )
+		// 	mP_.clearMarkers(catenary_marker_, prev_size_marker_, catenary_marker_pub);
+		// else
+		// 	mP_.clearMarkers(catenary_marker_, points_catenary.size(), catenary_marker_pub);
 			
-		mP_.markerPoints(catenary_marker_, points_catenary, id_marker_, n_vertices_, catenary_marker_pub);
+		// mP_.markerPoints(catenary_marker_, points_catenary, id_marker_, n_vertices_, catenary_marker_pub);
 		prev_size_marker_ = points_catenary.size();
 
 		int count_negative_z = 0;
