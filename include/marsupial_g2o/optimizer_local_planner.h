@@ -161,7 +161,7 @@ public:
 	std::string path;
 	int n_iter_opt;	//Iterations Numbers of Optimizer
 	double initial_multiplicative_factor_length_catenary;
-	double distance_catenary_obstacle,min_distance_add_new_point,dynamic_catenary;
+	double distance_catenary_obstacle,min_distance_add_new_point,dynamic_catenary, initial_distance_states;
 	double w_alpha, w_beta, w_gamma, w_delta, w_epsilon, w_zeta, w_eta;
 
 	NearNeighbor nn_;

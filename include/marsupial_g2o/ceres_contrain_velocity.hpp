@@ -23,7 +23,7 @@ public:
   bool operator()(const T* const state1, const T* const state2, T* residual) const {
 
 	T d_ = pow(state1[0]-state2[0],2) + pow(state1[1]-state2[1],2) + pow(state1[2]-state2[2],2) ;
-	T v_ = d_ / (state1[3] - state2[3]);
+	T v_ = d_ / (state2[3] - state1[3]);
 
 	residual[0] =  wf_ * exp( sqrt((v_ - iv_)*(v_ - iv_)));
 

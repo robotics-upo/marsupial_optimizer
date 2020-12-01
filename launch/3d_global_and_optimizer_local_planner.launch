@@ -70,18 +70,18 @@
 
             <param name="w_alpha" value="0.6"/>   # equi-distance 
             <param name="w_beta"    value="0.8"/>   # obstacles 
-            <param name="w_gamma"   value="0.4"/>   # kinematics 
-            <param name="w_delta"    value="0.05"/>  # time 
-            <param name="w_epsilon"     value="0.3"/>   # velocity 
-            <param name="w_zeta"   value="1.0"/>   # acceleration 
+            <param name="w_gamma"   value="0.6"/>   # kinematics 
+            <param name="w_delta"    value="0.1"/>  # time 
+            <param name="w_epsilon"     value="0.1"/>   # velocity 
+            <param name="w_zeta"   value="0.1"/>   # acceleration 
             <param name="w_eta"   value="0.9"/>   # catenary 
             <!-- <param name="w_lambda"   value="0.0"/>   # dynamic catenary  -->
             <param name="n_iter_opt"    value="60"/>   <!-- number max. of iterations per optimization --> 
             <param name="n_time_optimize"    value="1"/>   <!-- number Loop-For to execute optimizer --> 
             <param name="td_"    value="0.0"/>   <!-- Time Sleep between optimization in Loop-For --> 
             <param name="initial_multiplicative_factor_length_catenary"   value="1.002"/>    <!-- This parameter multiply the length between UGV and vertex to adjust Catenary-->
-            <param name="distance_obstacle"         value="2.0"/> <!-- bound distance UAV to obstacles [m]-->
-            <param name="velocity"      value="2.0"/> <!-- [m/seg]  Constant velocity during trajectory-->
+            <param name="distance_obstacle"         value="1.0"/> <!-- bound distance UAV to obstacles [m]-->
+            <param name="initial_velocity"      value="2.0"/> <!-- [m/seg]  Constant velocity during trajectory-->
             <param name="acceleration"  value="0.0"/> <!-- [m/seg^2]  0 acceleration during trajectory-->
             <param name="angle_min_traj"  value="$(eval 3.1415 / 6.0)"/> 
             <param name="min_distance_add_new_point" value="1.0"/>  
@@ -98,7 +98,7 @@
             <param name="scenario_number"    value="$(arg scenario_number)"/>     
             <param name="num_pos_initial"   value="$(arg num_pos_initial)"/>     
             <param name="num_goal"   value="$(arg num_goal)"/>     
-            <param name="path"   value="/home/simon/results_optimizer/"/>     
+            <param name="path"   value="/home/simon/"/>     
         </node>
 
 
