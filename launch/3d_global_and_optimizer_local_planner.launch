@@ -72,8 +72,8 @@
             <param name="w_beta"    value="0.8"/>   # obstacles 
             <param name="w_gamma"   value="0.6"/>   # kinematics 
             <param name="w_delta"    value="0.1"/>  # time 
-            <param name="w_epsilon"     value="0.1"/>   # velocity 
-            <param name="w_zeta"   value="0.1"/>   # acceleration 
+            <param name="w_epsilon"     value="0.2"/>   # velocity 
+            <param name="w_zeta"   value="0.2"/>   # acceleration 
             <param name="w_eta"   value="0.9"/>   # catenary 
             <!-- <param name="w_lambda"   value="0.0"/>   # dynamic catenary  -->
             <param name="n_iter_opt"    value="60"/>   <!-- number max. of iterations per optimization --> 

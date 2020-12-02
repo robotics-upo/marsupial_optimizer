@@ -680,6 +680,7 @@ void OptimizerLocalPlanner::writeTemporalDataAfterOptimization(auto _s)
 	double sum_difftime_ = 0.0;
 	for (size_t i=0; i < _s -1; ++i){
 		double difftime_ = ( states[i+1].parameter[3] - states[i].parameter[3]);
+		
 		vec_time_opt.push_back(difftime_);
 		double dist_ = (vec_pose_opt[i] - vec_pose_opt[i+1]).norm();
 		vec_dist_opt.push_back(dist_);
