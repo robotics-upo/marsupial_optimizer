@@ -68,9 +68,9 @@
             
             <param name="verbose_optimizer" value="$(arg verbose_optimizer)"/>
 
-            <param name="w_alpha" value="0.6"/>   # equi-distance 
+            <param name="w_alpha" value="0.1"/>   # equi-distance 
             <param name="w_beta"    value="0.8"/>   # obstacles 
-            <param name="w_gamma"   value="0.6"/>   # kinematics 
+            <param name="w_gamma"   value="0.1"/>   # kinematics 
             <param name="w_delta"    value="0.1"/>  # time 
             <param name="w_epsilon"     value="0.2"/>   # velocity 
             <param name="w_zeta"   value="0.2"/>   # acceleration 

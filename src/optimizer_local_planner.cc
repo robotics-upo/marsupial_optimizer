@@ -202,6 +202,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	// 
 	// std::vector<double> states;
 	states.clear();
+	printf("[_]states.parameter=[_positi_x _positi_y _positi_z __time__ _length_]\n");
 	for (size_t i = 0 ; i < new_path.size(); i ++){
 		parameterBlock parameter_block;
 		int count = 0;
@@ -227,12 +228,12 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	/*** Cost Function I : Equidistance constrain ***/
 	for (int i = 0; i <  states.size() - 1 ; ++i) {
 		CostFunction* cost_function1  = new AutoDiffCostFunction<EquiDistanceFunctor, 1, 5, 5>(new EquiDistanceFunctor(w_alpha*10.0, initial_distance_states)); 
-		problem.AddResidualBlock(cost_function1, NULL, states[i].parameter , states[i+1].parameter);
+		problem.AddResidualBlock(cost_function1, NULL, states[i].parameter, states[i+1].parameter);
 		if (i == 0)
 			problem.SetParameterBlockConstant(states[i].parameter);
 		if (i == (states.size() - 2))
 			problem.SetParameterBlockConstant(states[i+1].parameter);
-		printf("initial_distance_states = %f state[i]=[%f %f %f] state[i+1]=[%f %f %f]\n",initial_distance_states,states[i].parameter[0],states[i].parameter[1],states[i].parameter[2],states[i+1].parameter[0],states[i+1].parameter[1],states[i+1].parameter[2]);
+		// printf("initial_distance_states = %f state[i]=[%f %f %f] state[i+1]=[%f %f %f]\n",initial_distance_states,states[i].parameter[0],states[i].parameter[1],states[i].parameter[2],states[i+1].parameter[0],states[i+1].parameter[1],states[i+1].parameter[2]);
 	}
 
 	/*** Cost Function II : Obstacles constrain ***/
@@ -264,51 +265,52 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		// printf("state.parameter[3]= %f \n",states[i].parameter[3]);
 	}
 
-	/*** Cost Function V : Velocity constrain ***/
+	// /*** Cost Function V : Velocity constrain ***/
 	for (int i = 0; i < states.size() - 1; ++i) {
 		CostFunction* cost_function5  = new AutoDiffCostFunction<VelocityFunctor, 1, 5, 5>(new VelocityFunctor(w_epsilon, initial_velocity)); 
 		problem.AddResidualBlock(cost_function5, NULL, states[i].parameter, states[i+1].parameter);
-		if (i == 0)
-			problem.SetParameterBlockConstant(states[i].parameter);
+		// if (i == 0)
+		// 	problem.SetParameterBlockConstant(states[i].parameter);
 		// if (i == (states.size() - 2))
 		// 	problem.SetParameterBlockConstant(states[i+1].parameter);
 	}
 
-	/*** Cost Function VI : Acceleration constrain ***/
-	for (int i = 0; i < states.size() - 2; ++i) {
-		CostFunction* cost_function6  = new AutoDiffCostFunction<AccelerationFunctor, 1, 5, 5, 5>(new AccelerationFunctor(w_zeta, initial_velocity)); 
-		problem.AddResidualBlock(cost_function6, NULL, states[i].parameter, states[i+1].parameter, states[i+2].parameter);
-		if (i == 0)
-			problem.SetParameterBlockConstant(states[i].parameter);
-		// if (i == (states.size() - 3))
-		// 	problem.SetParameterBlockConstant(states[i+2].parameter);
-	}
-
-	/*** Cost Function VII : Catenary constrain  ***/
-	// for (int i = 1; i < states.size(); ++i) {
-	// 	CostFunction* cost_function7  = new NumericDiffCostFunction<CatenaryFunctor, CENTRAL, 3, 5>
-	// 									(new CatenaryFunctor(w_eta, distance_catenary_obstacle, v_initial_length_catenary[i], nn_.kdtree, nn_.obs_points, z_constraint, bound_bisection_a, bound_bisection_b, ugv_pos_catenary, size)); 
-	// 	problem.AddResidualBlock(cost_function7, NULL, states[i].parameter);
+	// /*** Cost Function VI : Acceleration constrain ***/
+	// for (int i = 0; i < states.size() - 2; ++i) {
+	// 	CostFunction* cost_function6  = new AutoDiffCostFunction<AccelerationFunctor, 1, 5, 5, 5>(new AccelerationFunctor(w_zeta, initial_velocity)); 
+	// 	problem.AddResidualBlock(cost_function6, NULL, states[i].parameter, states[i+1].parameter, states[i+2].parameter);
 	// 	if (i == 0)
 	// 		problem.SetParameterBlockConstant(states[i].parameter);
-	// 	if (i == (states.size() - 1))
-	// 		problem.SetParameterBlockConstant(states[i].parameter);
+	// 	// if (i == (states.size() - 3))
+	// 	// 	problem.SetParameterBlockConstant(states[i+2].parameter);
 	// }
 
-	/*** Cost Function VIII : Dynamic Catenary constrain  ***/
-	// for (int i = 1; i < states.size(); ++i) {
-	// 	CostFunction* cost_function8  = new NumericDiffCostFunction<CatenaryFunctor, CENTRAL, 3, 5>
-	// 									(new CatenaryFunctor(w_eta, distance_catenary_obstacle, v_initial_length_catenary[i], nn_.kdtree, nn_.obs_points, z_constraint, bound_bisection_a, bound_bisection_b, ugv_pos_catenary, size)); 
-	// 	problem.AddResidualBlock(cost_function8, NULL, states[i].parameter);
-	// }
+	// /*** Cost Function VII : Catenary constrain  ***/
+	// // for (int i = 1; i < states.size(); ++i) {
+	// // 	CostFunction* cost_function7  = new NumericDiffCostFunction<CatenaryFunctor, CENTRAL, 3, 5>
+	// // 									(new CatenaryFunctor(w_eta, distance_catenary_obstacle, v_initial_length_catenary[i], nn_.kdtree, nn_.obs_points, z_constraint, bound_bisection_a, bound_bisection_b, ugv_pos_catenary, size)); 
+	// // 	problem.AddResidualBlock(cost_function7, NULL, states[i].parameter);
+	// // 	if (i == 0)
+	// // 		problem.SetParameterBlockConstant(states[i].parameter);
+	// // 	if (i == (states.size() - 1))
+	// // 		problem.SetParameterBlockConstant(states[i].parameter);
+	// // }
+
+	// /*** Cost Function VIII : Dynamic Catenary constrain  ***/
+	// // for (int i = 1; i < states.size(); ++i) {
+	// // 	CostFunction* cost_function8  = new NumericDiffCostFunction<CatenaryFunctor, CENTRAL, 3, 5>
+	// // 									(new CatenaryFunctor(w_eta, distance_catenary_obstacle, v_initial_length_catenary[i], nn_.kdtree, nn_.obs_points, z_constraint, bound_bisection_a, bound_bisection_b, ugv_pos_catenary, size)); 
+	// // 	problem.AddResidualBlock(cost_function8, NULL, states[i].parameter);
+	// // }
 
 
 	if (!continue_optimizing)
 		std::cout <<  "==================================================="  << std::endl << "Optimization  started !!" << std::endl;
 
 	start_time_opt_ = ros::Time::now();
+
 	ceres::Solve(options, &problem, &summary);
-	std::cout << summary.FullReport() << "\n";
+	std::cout << summary.BriefReport() << "\n";
 	final_time_opt_ = ros::Time::now();
 
 	std::cout << std::endl <<"Optimization Proccess Completed !!!" << std::endl << "===================================================" << std::endl << "Saving Temporal data in txt file ..." << std::endl;
@@ -654,12 +656,11 @@ void OptimizerLocalPlanner::writeTemporalDataBeforeOptimization(void){
 	file_in_acceleration.open (path+"initial_acceleration.txt");
 	
 	double _sum_dist = 0.0;
-	double sum_difftime_ = 0.0;
 	for (size_t i = 0; i < vec_time_init.size() - 1; i++){
 		_sum_dist = _sum_dist + vec_dist_init[i].dist;
-		double difftime_ = vec_time_init[i+1].time - vec_time_init[i].time;	
-		sum_difftime_ = sum_difftime_ + difftime_;
-		file_in_time << setprecision(6) << _sum_dist << ";" << sum_difftime_ << endl;
+		// if (i== 0)
+		// 	file_in_time << setprecision(6) << _sum_dist << ";" << vec_time_init[i].time << endl;
+		file_in_time << setprecision(6) << _sum_dist << ";" << vec_time_init[i+1].time << endl;
 		file_in_velocity  << setprecision(6) << _sum_dist << ";" << initial_velocity << endl;
 		if (i > 0)
 			file_in_acceleration << setprecision(6) << _sum_dist << ";" << acceleration << endl;
