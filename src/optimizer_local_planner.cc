@@ -269,10 +269,11 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	for (int i = 0; i < states.size() - 1; ++i) {
 		CostFunction* cost_function5  = new AutoDiffCostFunction<VelocityFunctor, 1, 5, 5>(new VelocityFunctor(w_epsilon, initial_velocity)); 
 		problem.AddResidualBlock(cost_function5, NULL, states[i].parameter, states[i+1].parameter);
-		// if (i == 0)
-		// 	problem.SetParameterBlockConstant(states[i].parameter);
-		// if (i == (states.size() - 2))
-		// 	problem.SetParameterBlockConstant(states[i+1].parameter);
+		printf("states[i+1].parameter[3] = %f \n", states[i+1].parameter[3]);
+		if (i == 0)
+			problem.SetParameterBlockConstant(states[i].parameter);
+		if (i == (states.size() - 2))
+			problem.SetParameterBlockConstant(states[i+1].parameter);
 	}
 
 	// /*** Cost Function VI : Acceleration constrain ***/
@@ -632,7 +633,7 @@ void OptimizerLocalPlanner::getTemporalState(vector<structTime> &_time, vector<s
 	structTime _sT;
 	_time.clear();
 	double _dT = 0;
-	double _sum_time = 0.0;
+	// double _sum_time = 0.0;
 	for (size_t i= 0 ; i < new_path.size(); i++){
 		_sT.id = i;
 		if (i == 0){
@@ -641,8 +642,9 @@ void OptimizerLocalPlanner::getTemporalState(vector<structTime> &_time, vector<s
 		}
 		else{
 			_dT = (_v_sD[i-1].dist)/_vel;
-			_sum_time = _sum_time + _dT;
-			_sT.time = _sum_time;
+			// _sum_time = _sum_time + _dT;
+			// _sT.time = _sum_time;
+			_sT.time = _dT;
 			_time.push_back(_sT);
 		}
 	printf("getTemporalState: time = [%f]\n",_dT);
@@ -656,11 +658,13 @@ void OptimizerLocalPlanner::writeTemporalDataBeforeOptimization(void){
 	file_in_acceleration.open (path+"initial_acceleration.txt");
 	
 	double _sum_dist = 0.0;
+	double _sum_time = 0.0;
 	for (size_t i = 0; i < vec_time_init.size() - 1; i++){
 		_sum_dist = _sum_dist + vec_dist_init[i].dist;
+		_sum_time = _sum_time + vec_time_init[i+1].time;
 		// if (i== 0)
 		// 	file_in_time << setprecision(6) << _sum_dist << ";" << vec_time_init[i].time << endl;
-		file_in_time << setprecision(6) << _sum_dist << ";" << vec_time_init[i+1].time << endl;
+		file_in_time << setprecision(6) << _sum_dist << ";" << _sum_time << endl;
 		file_in_velocity  << setprecision(6) << _sum_dist << ";" << initial_velocity << endl;
 		if (i > 0)
 			file_in_acceleration << setprecision(6) << _sum_dist << ";" << acceleration << endl;
@@ -680,8 +684,11 @@ void OptimizerLocalPlanner::writeTemporalDataAfterOptimization(auto _s)
 	double new_vel_ = 0.0;
 	double sum_difftime_ = 0.0;
 	for (size_t i=0; i < _s -1; ++i){
-		double difftime_ = ( states[i+1].parameter[3] - states[i].parameter[3]);
-		
+		if ( i == 0){
+			vec_time_opt.push_back(states[i].parameter[3]);
+			file_out_time << setprecision(6) << sum_dispos_ << ";" << states[i].parameter[3] << endl;
+		}
+		double difftime_ = states[i+1].parameter[3];
 		vec_time_opt.push_back(difftime_);
 		double dist_ = (vec_pose_opt[i] - vec_pose_opt[i+1]).norm();
 		vec_dist_opt.push_back(dist_);
