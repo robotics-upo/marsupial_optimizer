@@ -9,13 +9,13 @@ int main(int argc, char** argv) {
 
   double a_, x0_, y0_;
   double x1_, y1_, z1_, x2_, y2_, z2_, l_;
-  x1_ = 25.0;
-  y1_ = 40.0;
-  z1_ = 50.0;
-  x2_ = 50.0;
-  y2_ = 15.0;
-  z2_ = 30.0;
-  l_ = 50.0;
+  x1_ = -3.2;
+  y1_ = -0.2;
+  z1_ = 2.22;
+  x2_ = -2.6;
+  y2_ = -0.2;
+  z2_ = 2.916667;
+  l_ = 0.746565;
   cS.setMaxNumIterations(200);
   cS.solve(x1_, y1_, z1_, x2_, y2_, z2_, l_, a_, x0_, y0_, v_points_catenary_3D);
 

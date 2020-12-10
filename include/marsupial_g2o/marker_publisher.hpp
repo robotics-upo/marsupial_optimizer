@@ -22,8 +22,8 @@ class MarkerPublisher
 		~MarkerPublisher(){};
 		void markerPoints(visualization_msgs::MarkerArray _marker, std::vector<geometry_msgs::Point> _vector, int _suffix, int _n_v, ros::Publisher c_m_pub_);
 		void clearMarkers(visualization_msgs::MarkerArray _marker, auto _s, ros::Publisher c_m_pub_);
-		void getMarkerPoints(visualization_msgs::MarkerArray &marker_, vector<Eigen::Vector3d> _vector, std::string ns);
-		void getMarkerLines(visualization_msgs::MarkerArray &marker_, vector<Eigen::Vector3d> _vector, std::string ns);
+		void getMarkerPoints(visualization_msgs::MarkerArray &marker_, std::vector<Eigen::Vector3d> _vector, std::string ns);
+		void getMarkerLines(visualization_msgs::MarkerArray &marker_, std::vector<Eigen::Vector3d> _vector, std::string ns);
 		void clearMarkersPointLines(visualization_msgs::MarkerArray &p_m_, visualization_msgs::MarkerArray &l_m_, ros::Publisher traj_m_pub_, auto _s);
 
 	protected:
@@ -92,7 +92,7 @@ inline void MarkerPublisher::clearMarkers(visualization_msgs::MarkerArray _marke
     c_m_pub_.publish(_marker);
 }
 
-inline void MarkerPublisher::getMarkerPoints(visualization_msgs::MarkerArray &marker_, vector<Eigen::Vector3d> vector_, std::string ns_)
+inline void MarkerPublisher::getMarkerPoints(visualization_msgs::MarkerArray &marker_, std::vector<Eigen::Vector3d> vector_, std::string ns_)
 {
 	for (size_t i = 0; i < vector_.size(); i++){
 
@@ -125,7 +125,7 @@ inline void MarkerPublisher::getMarkerPoints(visualization_msgs::MarkerArray &ma
 	}	
 }
 
-inline void MarkerPublisher::getMarkerLines(visualization_msgs::MarkerArray &marker_, vector<Eigen::Vector3d> _vector, std::string ns_)
+inline void MarkerPublisher::getMarkerLines(visualization_msgs::MarkerArray &marker_, std::vector<Eigen::Vector3d> _vector, std::string ns_)
 {
 	for (size_t i = 0; i < _vector.size()-1; i++){
 		geometry_msgs::Point _p1, _p2; 

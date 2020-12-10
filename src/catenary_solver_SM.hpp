@@ -22,7 +22,7 @@ class LengthCostFunctor
       _yB = yB; 
       _l = length;
       _k = (sqrt(_l*_l - _yB*_yB) )/ (_xB);
-      printf("value _k = [%f]\n",_k);
+      printf("values: l=[%f] , yB=[%f] , xB=[%f] , k = [%f]\n", _l, _yB, _xB, _k);
     }
 
     ~LengthCostFunctor(void) 
@@ -202,7 +202,7 @@ class CatenarySolver
             }
             printf("Points Catenary X_= %f , Y_= %f , Z = %f\n", _vector3D[i].x(),_vector3D[i].y(),_vector3D[i].z());
         }
-        printf("\nFOUND IT!! The lowest point Catenary 3D X_= %f , Y_= %f , Z = %f\n", _vector3D[pos_lower_point].x(), _vector3D[pos_lower_point].y(), _vector3D[pos_lower_point].z());
+        // printf("\nFOUND IT!! The lowest point Catenary 3D X_= %f , Y_= %f , Z = %f\n", _vector3D[pos_lower_point].x(), _vector3D[pos_lower_point].y(), _vector3D[pos_lower_point].z());
       }
     }
 

@@ -34,6 +34,6 @@
     args="2 marsupial_g2o 3d_global_and_optimizer_local_planner.launch use_catenary_planning:=$(arg use_catenary_planning) scenario_number:=$(arg scenario_number) num_pos_initial:=$(arg num_pos_initial) num_goal:=$(arg num_goal)"/>
         
     <!-- RViz -->
-    <node pkg="rviz" name="rviz" type="rviz" args="-d $(find marsupial_g2o)/viz/$(arg viz_file).rviz" if="$(arg rviz)"/>
+    <!-- <node pkg="rviz" name="rviz" type="rviz" args="-d $(find marsupial_g2o)/viz/$(arg viz_file).rviz" if="$(arg rviz)"/> -->
 
 </launch>

@@ -12,7 +12,7 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include <stdint.h>
 
 #include "marsupial_g2o/near_neighbor.hpp"
-#include "marsupial_g2o/bisection_catenary_3D.h"
+// #include "marsupial_g2o/bisection_catenary_3D.h"
 // #include "marsupial_g2o/marker_publisher.hpp"
 
 #include <iostream>
@@ -34,6 +34,9 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "marsupial_g2o/ceres_contrain_velocity.hpp"
 #include "marsupial_g2o/ceres_contrain_acceleration.hpp"
 #include "marsupial_g2o/ceres_contrain_catenary.hpp"
+
+#include "marsupial_g2o/catenary_solver_ceres.hpp"
+
 
 //ROS
 #include <ros/ros.h>
@@ -96,7 +99,7 @@ struct structLengthCatenary
 };
 
 struct parameterBlock{
-	double parameter[5];
+	double parameter[6];
 };
 
 class OptimizerLocalPlanner
@@ -234,7 +237,7 @@ private:
 	void resetFlags();
 	void cleanVectors();
 	double global_path_length;
-	double distance_obstacle, initial_velocity, angle_min_traj, acceleration,bound_bisection_a,bound_bisection_b;
+	double distance_obstacle, initial_velocity, angle_min_traj, initial_acceleration,bound_bisection_a,bound_bisection_b;
 	geometry_msgs::Point ugv_pos_catenary;
 
 };

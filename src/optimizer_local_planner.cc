@@ -31,7 +31,7 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(tf2_ros::Buffer *tfBuffer_)
 	nh->param<int>("n_iter_opt", n_iter_opt,200);
 	nh->param<double>("distance_obstacle", distance_obstacle,2.0);
 	nh->param<double>("initial_velocity", initial_velocity,1.0);
-	nh->param<double>("acceleration", acceleration,0.0);
+	nh->param<double>("initial_acceleration", initial_acceleration,0.0);
 	nh->param<double>("angle_min_traj", angle_min_traj, M_PI / 15.0);
 	nh->param<double>("distance_catenary_obstacle", distance_catenary_obstacle, 0.1);
 	nh->param<double>("dynamic_catenary", dynamic_catenary, 0.5);
@@ -160,9 +160,9 @@ void OptimizerLocalPlanner::executeOptimizerPathPreemptCB()
 
 void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 {
-  ROS_INFO_COND(debug, PRINTF_GREEN "Optimizer Local Planner Goal received in action server mode");
-  auto path_shared_ptr = execute_path_srv_ptr->acceptNewGoal();
-  globalTrajectory = path_shared_ptr->path;
+  	ROS_INFO_COND(debug, PRINTF_GREEN "Optimizer Local Planner Goal received in action server mode");
+  	auto path_shared_ptr = execute_path_srv_ptr->acceptNewGoal();
+  	globalTrajectory = path_shared_ptr->path;
 	vector<float> length_catenary_initial;
 	length_catenary_initial = path_shared_ptr->length_catenary;
 	printf("length_catenary_initial.size=[%lu]\n",length_catenary_initial.size());
@@ -183,7 +183,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	checkObstaclesBetweenCatenaries(v_pre_initial_length_catenary,v_initial_length_catenary,size);
 	ros::Duration(1.0).sleep();
 	mp_.clearMarkers(catenary_marker, 50, catenary_marker_pub_);
-	ros::Duration(1.0).sleep();
+	ros::Duration(2.0).sleep();
 
 	count_edges = 0;
 
@@ -211,6 +211,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		parameter_block.parameter[2] = new_path[i].z(); 
 		parameter_block.parameter[3] = vec_time_init[i].time;
 		parameter_block.parameter[4] = v_initial_length_catenary[i];
+		parameter_block.parameter[5] = i;
 		states.push_back(parameter_block);
 		printf("[%lu]states.parameter=[%f %f %f %f %f]\n",i,parameter_block.parameter[0],parameter_block.parameter[1],parameter_block.parameter[2],parameter_block.parameter[3],parameter_block.parameter[4]);
 	}
@@ -225,30 +226,30 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	* 4. All the Loop For begin in 1 to not consider the first state (it is fixed) and finishing one iteration before that last state (last state also fixed)
 	*/
 
+
 	/*** Cost Function I : Equidistance constrain ***/
 	for (int i = 0; i <  states.size() - 1 ; ++i) {
-		CostFunction* cost_function1  = new AutoDiffCostFunction<EquiDistanceFunctor, 1, 5, 5>(new EquiDistanceFunctor(w_alpha*10.0, initial_distance_states)); 
+		CostFunction* cost_function1  = new AutoDiffCostFunction<EquiDistanceFunctor, 1, 6, 6>(new EquiDistanceFunctor(w_alpha*10.0, initial_distance_states)); 
 		problem.AddResidualBlock(cost_function1, NULL, states[i].parameter, states[i+1].parameter);
 		if (i == 0)
 			problem.SetParameterBlockConstant(states[i].parameter);
 		if (i == (states.size() - 2))
 			problem.SetParameterBlockConstant(states[i+1].parameter);
-		// printf("initial_distance_states = %f state[i]=[%f %f %f] state[i+1]=[%f %f %f]\n",initial_distance_states,states[i].parameter[0],states[i].parameter[1],states[i].parameter[2],states[i+1].parameter[0],states[i+1].parameter[1],states[i+1].parameter[2]);
 	}
 
 	/*** Cost Function II : Obstacles constrain ***/
-	for (int i = 0; i < states.size() ; ++i) {
-		CostFunction* cost_function2  = new NumericDiffCostFunction<ObstacleDistanceFunctor, CENTRAL, 1, 5>(new ObstacleDistanceFunctor(w_beta*10.0, distance_obstacle, nn_.kdtree, nn_.obs_points)); 
-		problem.AddResidualBlock(cost_function2, NULL, states[i].parameter);
+	for (int i = 0; i < states.size(); ++i) {
+    	CostFunction* cost_function2  = new AutoDiffCostFunction<ObstacleDistanceFunctor::ObstaclesFunctor, 1, 6>(new ObstacleDistanceFunctor::ObstaclesFunctor(w_beta*10.0, distance_obstacle, nn_.kdtree, nn_.obs_points)); 
+    	problem.AddResidualBlock(cost_function2, NULL, states[i].parameter);
 		if (i == 0 )
 			problem.SetParameterBlockConstant(states[i].parameter);
 		if (i == (states.size() - 1))
 			problem.SetParameterBlockConstant(states[i].parameter);
-	}
+  	}
 
 	/*** Cost Function III : Kinematic constrain ***/
 	for (int i = 0; i < states.size() - 2; ++i) {
-		CostFunction* cost_function3  = new AutoDiffCostFunction<KinematicsFunctor, 1, 5, 5, 5>(new KinematicsFunctor(w_gamma, angle_min_traj)); 
+		CostFunction* cost_function3  = new AutoDiffCostFunction<KinematicsFunctor, 1, 6, 6, 6>(new KinematicsFunctor(w_gamma, angle_min_traj)); 
 		problem.AddResidualBlock(cost_function3, NULL, states[i].parameter, states[i+1].parameter, states[i+2].parameter);
 		if (i == 0)
 			problem.SetParameterBlockConstant(states[i].parameter);
@@ -258,49 +259,48 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 
 	/*** Cost Function IV : Time constrain ***/
 	for (int i = 0; i < states.size(); ++i) {
-		CostFunction* cost_function4  = new AutoDiffCostFunction<TimeFunctor, 1, 5>(new TimeFunctor(w_delta, vec_time_init[i].time)); 
+		CostFunction* cost_function4  = new AutoDiffCostFunction<TimeFunctor, 1, 6>(new TimeFunctor(w_delta, vec_time_init[i].time)); 
 		problem.AddResidualBlock(cost_function4, NULL, states[i].parameter);
 		if (i == 0)
 			problem.SetParameterBlockConstant(states[i].parameter);
-		// printf("state.parameter[3]= %f \n",states[i].parameter[3]);
 	}
 
-	// /*** Cost Function V : Velocity constrain ***/
+	/*** Cost Function V : Velocity constrain ***/
 	for (int i = 0; i < states.size() - 1; ++i) {
-		CostFunction* cost_function5  = new AutoDiffCostFunction<VelocityFunctor, 1, 5, 5>(new VelocityFunctor(w_epsilon, initial_velocity)); 
+		CostFunction* cost_function5  = new AutoDiffCostFunction<VelocityFunctor, 1, 6, 6>(new VelocityFunctor(w_epsilon, initial_velocity)); 
 		problem.AddResidualBlock(cost_function5, NULL, states[i].parameter, states[i+1].parameter);
-		printf("states[i+1].parameter[3] = %f \n", states[i+1].parameter[3]);
 		if (i == 0)
 			problem.SetParameterBlockConstant(states[i].parameter);
-		if (i == (states.size() - 2))
-			problem.SetParameterBlockConstant(states[i+1].parameter);
+		// if (i == (states.size() - 2))
+		// 	problem.SetParameterBlockConstant(states[i+1].parameter);
 	}
 
-	// /*** Cost Function VI : Acceleration constrain ***/
-	// for (int i = 0; i < states.size() - 2; ++i) {
-	// 	CostFunction* cost_function6  = new AutoDiffCostFunction<AccelerationFunctor, 1, 5, 5, 5>(new AccelerationFunctor(w_zeta, initial_velocity)); 
-	// 	problem.AddResidualBlock(cost_function6, NULL, states[i].parameter, states[i+1].parameter, states[i+2].parameter);
-	// 	if (i == 0)
-	// 		problem.SetParameterBlockConstant(states[i].parameter);
-	// 	// if (i == (states.size() - 3))
-	// 	// 	problem.SetParameterBlockConstant(states[i+2].parameter);
-	// }
+	/*** Cost Function VI : Acceleration constrain ***/
+	for (int i = 0; i < states.size() - 2; ++i) {
+		CostFunction* cost_function6  = new AutoDiffCostFunction<AccelerationFunctor, 1, 6, 6, 6>(new AccelerationFunctor(w_zeta, initial_acceleration)); 
+		problem.AddResidualBlock(cost_function6, NULL, states[i].parameter, states[i+1].parameter, states[i+2].parameter);
+		if (i == 0)
+			problem.SetParameterBlockConstant(states[i].parameter);
+		// if (i == (states.size() - 3))
+		// 	problem.SetParameterBlockConstant(states[i+2].parameter);
+	}
 
-	// /*** Cost Function VII : Catenary constrain  ***/
-	// // for (int i = 1; i < states.size(); ++i) {
-	// // 	CostFunction* cost_function7  = new NumericDiffCostFunction<CatenaryFunctor, CENTRAL, 3, 5>
-	// // 									(new CatenaryFunctor(w_eta, distance_catenary_obstacle, v_initial_length_catenary[i], nn_.kdtree, nn_.obs_points, z_constraint, bound_bisection_a, bound_bisection_b, ugv_pos_catenary, size)); 
-	// // 	problem.AddResidualBlock(cost_function7, NULL, states[i].parameter);
-	// // 	if (i == 0)
-	// // 		problem.SetParameterBlockConstant(states[i].parameter);
-	// // 	if (i == (states.size() - 1))
-	// // 		problem.SetParameterBlockConstant(states[i].parameter);
-	// // }
+	/*** Cost Function VII : Catenary constrain  ***/
+	for (int i = 0; i < states.size(); ++i) {
+		CostFunction* cost_function7  = new NumericDiffCostFunction<CatenaryFunctor, CENTRAL, 1, 6>
+										(new CatenaryFunctor(w_eta * 10.0, distance_catenary_obstacle, v_initial_length_catenary[i], nn_.kdtree, nn_.obs_points, ugv_pos_catenary,size,nh)); 
+		problem.AddResidualBlock(cost_function7, NULL, states[i].parameter);
+		// problem.AddParameterBlock(states[i].parameter, 5);
+		if (i == 0)
+			problem.SetParameterBlockConstant(states[i].parameter);
+		if (i == (states.size() - 1))
+			problem.SetParameterBlockConstant(states[i].parameter);
+	}
 
 	// /*** Cost Function VIII : Dynamic Catenary constrain  ***/
 	// // for (int i = 1; i < states.size(); ++i) {
 	// // 	CostFunction* cost_function8  = new NumericDiffCostFunction<CatenaryFunctor, CENTRAL, 3, 5>
-	// // 									(new CatenaryFunctor(w_eta, distance_catenary_obstacle, v_initial_length_catenary[i], nn_.kdtree, nn_.obs_points, z_constraint, bound_bisection_a, bound_bisection_b, ugv_pos_catenary, size)); 
+	// // 									(new CatenaryFunctor(w_eta, distance_catenary_obstacle, v_initial_length_catenary[i], nn_.kdtree, nn_.obs_points, bound_bisection_a, bound_bisection_b, ugv_pos_catenary, size)); 
 	// // 	problem.AddResidualBlock(cost_function8, NULL, states[i].parameter);
 	// // }
 
@@ -370,7 +370,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 
 void OptimizerLocalPlanner::getDataForOptimizerAnalysis()
 {
-	bisectionCatenary bsCat;
+	// bisectionCatenary bsCat;
 	std::vector<geometry_msgs::Point> v_points_catenary_opt_,v_points_catenary_init_;
 
 	// Writing general data for initial analysis
@@ -414,11 +414,11 @@ void OptimizerLocalPlanner::getDataForOptimizerAnalysis()
 	distance_obs_cat_init_min_ = 1000.0;
 	int count_cat_p_init_ = 0;
 	for(size_t j = 0 ; j < vec_pose_init.size(); j ++){
-		bsCat.setNumberPointsCatenary(vec_len_cat_init[j].length*10.0);
-		bsCat.setFactorBisection(bound_bisection_a,bound_bisection_b);
-		bsCat.configBisection(vec_len_cat_init[j].length,ugv_pos_catenary.x,ugv_pos_catenary.y,ugv_pos_catenary.z,vec_pose_init[j].x(),vec_pose_init[j].y(),vec_pose_init[j].z(),j,"data_init_cat");
-		v_points_catenary_init_.clear();
-		bsCat.getPointCatenary3D(v_points_catenary_init_);
+		// bsCat.setNumberPointsCatenary(vec_len_cat_init[j].length*10.0);
+		// bsCat.setFactorBisection(bound_bisection_a,bound_bisection_b);
+		// bsCat.configBisection(vec_len_cat_init[j].length,ugv_pos_catenary.x,ugv_pos_catenary.y,ugv_pos_catenary.z,vec_pose_init[j].x(),vec_pose_init[j].y(),vec_pose_init[j].z(),j,"data_init_cat");
+		// v_points_catenary_init_.clear();
+		// bsCat.getPointCatenary3D(v_points_catenary_init_);
 
 		int n_p_cat_dis_ = ceil(1.5*ceil(vec_len_cat_init[j].length)); // parameter to ignore collsion points in the begining and in the end of catenary
 		if (n_p_cat_dis_ < 5)
@@ -436,8 +436,6 @@ void OptimizerLocalPlanner::getDataForOptimizerAnalysis()
 				if(distance_obs_cat_init_min_ > (p_cat_init_- nearest_obs_p).norm() )
 					distance_obs_cat_init_min_ = (p_cat_init_- nearest_obs_p).norm();
 			}
-			// printf("OBstacle Initial: vertex=[%lu/%lu] v_points_catenary_init_.size=[%lu] count_cat_p_init_=[%i] reel_pos=[%f %f %f] pos_vertex=[%f %f %f]\n",
-			// j,vec_pose_init.size(),v_points_catenary_init_.size(),count_cat_p_init_,ugv_pos_catenary.x,ugv_pos_catenary.y,ugv_pos_catenary.z,vec_pose_init[j].x(),vec_pose_init[j].y(),vec_pose_init[j].z());
 		}
 	}
 	distance_obs_cat_init_mean_ = distance_obs_cat_init_/ (double)count_cat_p_init_++;
@@ -489,11 +487,11 @@ void OptimizerLocalPlanner::getDataForOptimizerAnalysis()
 	int count_cat_p_opt_ = 0;
 
 	for(size_t j = 0 ; j < vec_pose_opt.size(); j ++){
-		bsCat.setNumberPointsCatenary(vec_len_cat_opt[j].length*10.0);
-		bsCat.setFactorBisection(bound_bisection_a,bound_bisection_b);
-		bsCat.configBisection(vec_len_cat_opt[j].length,ugv_pos_catenary.x,ugv_pos_catenary.y,ugv_pos_catenary.z,vec_pose_opt[j].x(),vec_pose_opt[j].y(),vec_pose_opt[j].z(),j,"data_opt_cat");
-		v_points_catenary_opt_.clear();
-		bsCat.getPointCatenary3D(v_points_catenary_opt_);
+		// bsCat.setNumberPointsCatenary(vec_len_cat_opt[j].length*10.0);
+		// bsCat.setFactorBisection(bound_bisection_a,bound_bisection_b);
+		// bsCat.configBisection(vec_len_cat_opt[j].length,ugv_pos_catenary.x,ugv_pos_catenary.y,ugv_pos_catenary.z,vec_pose_opt[j].x(),vec_pose_opt[j].y(),vec_pose_opt[j].z(),j,"data_opt_cat");
+		// v_points_catenary_opt_.clear();
+		// bsCat.getPointCatenary3D(v_points_catenary_opt_);
 
 		int n_p_cat_dis_ = ceil(1.5*ceil(vec_len_cat_opt[j].length)); // parameter to ignore collsion points in the begining and in the end of catenary
 		if (n_p_cat_dis_ < 5)
@@ -623,7 +621,7 @@ void OptimizerLocalPlanner::calculateDistanceVertices(vector<Eigen::Vector3d> _p
 		_sD.id_to = i+ 1;
 		_sD.dist = pL;
 		_v_sD.push_back(_sD);
-		printf("calculateDistanceVertices: dist = [%f]\n",pL);
+		// printf("calculateDistanceVertices: dist = [%f]\n",pL);
     }
 	initial_distance_states = sum_distance_ / (_path.size()-1);
 }
@@ -647,7 +645,7 @@ void OptimizerLocalPlanner::getTemporalState(vector<structTime> &_time, vector<s
 			_sT.time = _dT;
 			_time.push_back(_sT);
 		}
-	printf("getTemporalState: time = [%f]\n",_dT);
+	// printf("getTemporalState: time = [%f]\n",_dT);
 	}
 }
 
@@ -667,7 +665,7 @@ void OptimizerLocalPlanner::writeTemporalDataBeforeOptimization(void){
 		file_in_time << setprecision(6) << _sum_dist << ";" << _sum_time << endl;
 		file_in_velocity  << setprecision(6) << _sum_dist << ";" << initial_velocity << endl;
 		if (i > 0)
-			file_in_acceleration << setprecision(6) << _sum_dist << ";" << acceleration << endl;
+			file_in_acceleration << setprecision(6) << _sum_dist << ";" << initial_acceleration << endl;
 	}
 	file_in_time.close();	
 	file_in_velocity.close();	
@@ -703,8 +701,8 @@ void OptimizerLocalPlanner::writeTemporalDataAfterOptimization(auto _s)
 	double sumdis_ = 0.0;
 	for (size_t i = 0; i < _s-2; i++)
 	{
-		double difftime1_ = states[i+1].parameter[3] - states[i].parameter[3];
-		double difftime2_ = states[i+2].parameter[3] - states[i+1].parameter[3];
+		double difftime1_ = states[i+1].parameter[3];
+		double difftime2_ = states[i+2].parameter[3];
 
 		double distance1_ = (vec_pose_opt[i+1] - vec_pose_opt[i]).norm();	
 		double distance2_ = (vec_pose_opt[i+2] - vec_pose_opt[i+1]).norm();
@@ -787,12 +785,16 @@ void OptimizerLocalPlanner::preComputeLengthCatenary(std::vector <double> &_vect
 		_state_collision_z = false;
 		_n_collision = 0;
 		
-		bisectionCatenary bsC;
-		bsC.setNumberPointsCatenary(_length*10.0);
-		bsC.setFactorBisection(bound_bisection_a,bound_bisection_b);
-		bsC.configBisection(_length,ugv_pos_catenary.x,ugv_pos_catenary.y,ugv_pos_catenary.z,new_path[i].x(),new_path[i].y(),new_path[i].z(),i,"pre_compute_cat");
+		// bisectionCatenary bsC;
+		// bsC.setNumberPointsCatenary(_length*10.0);
+		// bsC.setFactorBisection(bound_bisection_a,bound_bisection_b);
+		// bsC.configBisection(_length,ugv_pos_catenary.x,ugv_pos_catenary.y,ugv_pos_catenary.z,new_path[i].x(),new_path[i].y(),new_path[i].z(),i,"pre_compute_cat");
+		// _pre_points_catenary.clear();
+		// bsC.getPointCatenary3D(_pre_points_catenary);
+		CatenarySolver cS_;
 		_pre_points_catenary.clear();
-		bsC.getPointCatenary3D(_pre_points_catenary);
+		cS_.setMaxNumIterations(100);
+  		cS_.solve(ugv_pos_catenary.x,ugv_pos_catenary.y,ugv_pos_catenary.z,new_path[i].x(),new_path[i].y(),new_path[i].z(), _length, _pre_points_catenary);
 
 		int _n_points_cat_dis = ceil(1.5*ceil(_length)); // parameter to ignore collsion points in the begining and in the end of catenary
 		if (_n_points_cat_dis < 5)
@@ -875,7 +877,9 @@ void OptimizerLocalPlanner::checkObstaclesBetweenCatenaries(std::vector <double>
 	std::vector<geometry_msgs::Point> _pre_points_catenary2;
 	std::vector<geometry_msgs::Point> _v_factor1, _v_factor2;
 	std::vector<Eigen::Vector3d> _vector_points_line;
-	bisectionCatenary bsC1, bsC2;
+	// bisectionCatenary bsC1, bsC2;
+	CatenarySolver _cS1, _cS2;
+
 
 	_vectorOUT.clear();
 	int i = 0;
@@ -896,17 +900,23 @@ void OptimizerLocalPlanner::checkObstaclesBetweenCatenaries(std::vector <double>
 		else
 			_length2 = _vectorIN[i+1] * _mf;
 		
-		bsC1.setNumberPointsCatenary(_length1*10.0);
-		bsC1.setFactorBisection(bound_bisection_a,bound_bisection_b);
-		bsC1.configBisection(_length1,ugv_pos_catenary.x,ugv_pos_catenary.y,ugv_pos_catenary.z,new_path[i].x(),new_path[i].y(),new_path[i].z(),i,"pre_compute_cat1");
+		// bsC1.setNumberPointsCatenary(_length1*10.0);
+		// bsC1.setFactorBisection(bound_bisection_a,bound_bisection_b);
+		// bsC1.configBisection(_length1,ugv_pos_catenary.x,ugv_pos_catenary.y,ugv_pos_catenary.z,new_path[i].x(),new_path[i].y(),new_path[i].z(),i,"pre_compute_cat1");
+		// _pre_points_catenary1.clear();
+		// bsC1.getPointCatenary3D(_pre_points_catenary1);
 		_pre_points_catenary1.clear();
-		bsC1.getPointCatenary3D(_pre_points_catenary1);
+		_cS1.setMaxNumIterations(100);
+  		_cS1.solve(ugv_pos_catenary.x,ugv_pos_catenary.y,ugv_pos_catenary.z,new_path[i].x(),new_path[i].y(),new_path[i].z(), _length1, _pre_points_catenary1);
 		
-		bsC2.setNumberPointsCatenary(_length2*10.0);
-		bsC2.setFactorBisection(bound_bisection_a,bound_bisection_b);
-		bsC2.configBisection(_length2,ugv_pos_catenary.x,ugv_pos_catenary.y,ugv_pos_catenary.z,new_path[i+1].x(),new_path[i+1].y(),new_path[i+1].z(),i,"pre_compute_cat2");
+		// bsC2.setNumberPointsCatenary(_length2*10.0);
+		// bsC2.setFactorBisection(bound_bisection_a,bound_bisection_b);
+		// bsC2.configBisection(_length2,ugv_pos_catenary.x,ugv_pos_catenary.y,ugv_pos_catenary.z,new_path[i+1].x(),new_path[i+1].y(),new_path[i+1].z(),i,"pre_compute_cat2");
+		// _pre_points_catenary2.clear();
+		// bsC2.getPointCatenary3D(_pre_points_catenary2);
 		_pre_points_catenary2.clear();
-		bsC2.getPointCatenary3D(_pre_points_catenary2);
+		_cS2.setMaxNumIterations(100);
+  		_cS2.solve(ugv_pos_catenary.x,ugv_pos_catenary.y,ugv_pos_catenary.z,new_path[i+1].x(),new_path[i+1].y(),new_path[i+1].z(), _length2, _pre_points_catenary2);
 
 		double n_points_cat_dis1 = ceil(1.5*ceil(_length1)); // parameter to ignore collsion points in the begining and in the end of catenary
 		if (n_points_cat_dis1 < 5)

@@ -106,9 +106,6 @@ inline Eigen::Vector3d NearNeighbor::nearestObstacleVertex(const pcl::KdTreeFLAN
 
 inline bool NearNeighbor::nearestObstacleVertexCeres(const pcl::KdTreeFLANN <pcl::PointXYZ> &kdT_, double x_, double y_, double z_, pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_, double &ret_x_, double &ret_y_, double &ret_z_)
 {
-	Eigen::Matrix<double, 4, 1> ret_;
-	// Eigen::Vector3d ret_;
-
 	pcl::PointXYZ searchPoints(x_,y_,z_);
 
 	// K nearest neighbor search
@@ -120,12 +117,6 @@ inline bool NearNeighbor::nearestObstacleVertexCeres(const pcl::KdTreeFLANN <pcl
 	ret_x_ = o_p_->points[pointIdxNKNSearch[0]].x;
 	ret_y_ = o_p_->points[pointIdxNKNSearch[0]].y;
 	ret_z_ = o_p_->points[pointIdxNKNSearch[0]].z;
-	// ret_.x() = o_p_->points[pointIdxNKNSearch[0]].x;
-	// ret_.y() = o_p_->points[pointIdxNKNSearch[0]].y;
-	// ret_.z() = o_p_->points[pointIdxNKNSearch[0]].z;
-	//ret_[0] = o_p_->points[pointIdxNKNSearch[0]].x;
-	//ret_[1] = o_p_->points[pointIdxNKNSearch[0]].y;
-	//ret_[2] = o_p_->points[pointIdxNKNSearch[0]].z;
 
 	return true;
 }
