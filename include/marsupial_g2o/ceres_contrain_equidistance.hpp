@@ -21,7 +21,7 @@ public:
 
   template <typename T>
   bool operator()(const T* const state1, const T* const state2, T* residual) const {
-    residual[0] = wf_ *  ( pow(int_d_,2) - ( (pow(state1[0]-state2[0],2)) + pow(state1[1]-state2[1],2) + pow(state1[2]-state2[2],2) ) );
+    residual[0] = wf_ *  ( pow(int_d_,2) - ( (pow(state1[1]-state2[1],2)) + pow(state1[2]-state2[2],2) + pow(state1[3]-state2[3],2) ) );
     return true;
   }
 

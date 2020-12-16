@@ -98,8 +98,20 @@ struct structLengthCatenary
 	double length;
 };
 
-struct parameterBlock{
-	double parameter[6];
+// struct parameterBlock{
+// 	double parameter[6];
+// };
+
+struct parameterBlockPos{
+	double parameter[4];
+};
+
+struct parameterBlockTime{
+	double parameter[2];
+};
+
+struct parameterBlockLength{
+	double parameter[2];
 };
 
 class OptimizerLocalPlanner
@@ -210,7 +222,10 @@ public:
 	typedef vector<structTime> TimeSequence;
 	typedef vector<structDistance> DistanceSequence;
 	typedef vector<structLengthCatenary> LengthCatenarySequence;
-	vector<parameterBlock> states;
+	// vector<parameterBlock> states;
+	vector<parameterBlockPos> statesPos;
+	vector<parameterBlockTime> statesTime;
+	vector<parameterBlockLength> statesLength;
 	DistanceSequence vec_dist_init; 
 	TimeSequence vec_time_init;
 	vector<Eigen::Vector3d> vec_pose_opt; 

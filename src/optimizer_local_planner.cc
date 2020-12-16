@@ -199,21 +199,25 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		<< "Preparing to execute Optimization: Creating Vertices and Edges!!" << std::endl;
 	}
 
-	// 
-	// std::vector<double> states;
-	states.clear();
+	statesPos.clear();
+	statesLength.clear();
 	printf("[_]states.parameter=[_positi_x _positi_y _positi_z __time__ _length_]\n");
 	for (size_t i = 0 ; i < new_path.size(); i ++){
-		parameterBlock parameter_block;
-		int count = 0;
-		parameter_block.parameter[0] = new_path[i].x();
-		parameter_block.parameter[1] = new_path[i].y(); 
-		parameter_block.parameter[2] = new_path[i].z(); 
-		parameter_block.parameter[3] = vec_time_init[i].time;
-		parameter_block.parameter[4] = v_initial_length_catenary[i];
-		parameter_block.parameter[5] = i;
-		states.push_back(parameter_block);
-		printf("[%lu]states.parameter=[%f %f %f %f %f]\n",i,parameter_block.parameter[0],parameter_block.parameter[1],parameter_block.parameter[2],parameter_block.parameter[3],parameter_block.parameter[4]);
+		parameterBlockPos parameter_block_pos;
+		parameterBlockTime parameter_block_time;
+		parameterBlockLength parameter_block_length;
+		parameter_block_pos.parameter[0] = i;
+		parameter_block_pos.parameter[1] = new_path[i].x();
+		parameter_block_pos.parameter[2] = new_path[i].y(); 
+		parameter_block_pos.parameter[3] = new_path[i].z(); 
+		parameter_block_time.parameter[0] = i;
+		parameter_block_time.parameter[1] = vec_time_init[i].time;
+		parameter_block_length.parameter[0] = i;
+		parameter_block_length.parameter[1] = v_initial_length_catenary[i];
+		statesPos.push_back(parameter_block_pos);
+		statesTime.push_back(parameter_block_time);
+		statesLength.push_back(parameter_block_length);
+		printf("[%lu]states.parameter=[%f %f %f %f %f]\n",i,parameter_block_pos.parameter[1],parameter_block_pos.parameter[2],parameter_block_pos.parameter[3],parameter_block_time.parameter[1],parameter_block_length.parameter[1]);
 	}
     
 	/*
@@ -228,79 +232,79 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 
 
 	/*** Cost Function I : Equidistance constrain ***/
-	for (int i = 0; i <  states.size() - 1 ; ++i) {
-		CostFunction* cost_function1  = new AutoDiffCostFunction<EquiDistanceFunctor, 1, 6, 6>(new EquiDistanceFunctor(w_alpha*10.0, initial_distance_states)); 
-		problem.AddResidualBlock(cost_function1, NULL, states[i].parameter, states[i+1].parameter);
+	for (int i = 0; i <  statesPos.size() - 1 ; ++i) {
+		CostFunction* cost_function1  = new AutoDiffCostFunction<EquiDistanceFunctor, 1, 4, 4>(new EquiDistanceFunctor(w_alpha*10.0, initial_distance_states)); 
+		problem.AddResidualBlock(cost_function1, NULL, statesPos[i].parameter, statesPos[i+1].parameter);
 		if (i == 0)
-			problem.SetParameterBlockConstant(states[i].parameter);
-		if (i == (states.size() - 2))
-			problem.SetParameterBlockConstant(states[i+1].parameter);
+			problem.SetParameterBlockConstant(statesPos[i].parameter);
+		if (i == (statesPos.size() - 2))
+			problem.SetParameterBlockConstant(statesPos[i+1].parameter);
 	}
 
 	/*** Cost Function II : Obstacles constrain ***/
-	for (int i = 0; i < states.size(); ++i) {
-    	CostFunction* cost_function2  = new AutoDiffCostFunction<ObstacleDistanceFunctor::ObstaclesFunctor, 1, 6>(new ObstacleDistanceFunctor::ObstaclesFunctor(w_beta*10.0, distance_obstacle, nn_.kdtree, nn_.obs_points)); 
-    	problem.AddResidualBlock(cost_function2, NULL, states[i].parameter);
-		if (i == 0 )
-			problem.SetParameterBlockConstant(states[i].parameter);
-		if (i == (states.size() - 1))
-			problem.SetParameterBlockConstant(states[i].parameter);
+	for (int i = 0; i < statesPos.size(); ++i) {
+    	CostFunction* cost_function2  = new AutoDiffCostFunction<ObstacleDistanceFunctor::ObstaclesFunctor, 1, 4>(new ObstacleDistanceFunctor::ObstaclesFunctor(w_beta*10.0, distance_obstacle, nn_.kdtree, nn_.obs_points)); 
+    	problem.AddResidualBlock(cost_function2, NULL, statesPos[i].parameter);
+		// if (i == 0 )
+		// 	problem.SetParameterBlockConstant(statesPos[i].parameter);
+		// if (i == (statesPos.size() - 1))
+		// 	problem.SetParameterBlockConstant(statesPos[i].parameter);
   	}
 
 	/*** Cost Function III : Kinematic constrain ***/
-	for (int i = 0; i < states.size() - 2; ++i) {
-		CostFunction* cost_function3  = new AutoDiffCostFunction<KinematicsFunctor, 1, 6, 6, 6>(new KinematicsFunctor(w_gamma, angle_min_traj)); 
-		problem.AddResidualBlock(cost_function3, NULL, states[i].parameter, states[i+1].parameter, states[i+2].parameter);
-		if (i == 0)
-			problem.SetParameterBlockConstant(states[i].parameter);
-		if (i == (states.size() - 3))
-			problem.SetParameterBlockConstant(states[i+2].parameter);
+	for (int i = 0; i < statesPos.size() - 2; ++i) {
+		CostFunction* cost_function3  = new AutoDiffCostFunction<KinematicsFunctor, 1, 4, 4, 4>(new KinematicsFunctor(w_gamma, angle_min_traj)); 
+		problem.AddResidualBlock(cost_function3, NULL, statesPos[i].parameter, statesPos[i+1].parameter, statesPos[i+2].parameter);
+		// if (i == 0)
+		// 	problem.SetParameterBlockConstant(statesPos[i].parameter);
+		// if (i == (statesPos.size() - 3))
+		// 	problem.SetParameterBlockConstant(statesPos[i+2].parameter);
 	}
 
 	/*** Cost Function IV : Time constrain ***/
-	for (int i = 0; i < states.size(); ++i) {
-		CostFunction* cost_function4  = new AutoDiffCostFunction<TimeFunctor, 1, 6>(new TimeFunctor(w_delta, vec_time_init[i].time)); 
-		problem.AddResidualBlock(cost_function4, NULL, states[i].parameter);
+	for (int i = 0; i < statesTime.size(); ++i) {
+		CostFunction* cost_function4  = new AutoDiffCostFunction<TimeFunctor, 1, 2>(new TimeFunctor(w_delta, vec_time_init[i].time)); 
+		problem.AddResidualBlock(cost_function4, NULL, statesTime[i].parameter);
 		if (i == 0)
-			problem.SetParameterBlockConstant(states[i].parameter);
+			problem.SetParameterBlockConstant(statesTime[i].parameter);
 	}
 
 	/*** Cost Function V : Velocity constrain ***/
-	for (int i = 0; i < states.size() - 1; ++i) {
-		CostFunction* cost_function5  = new AutoDiffCostFunction<VelocityFunctor, 1, 6, 6>(new VelocityFunctor(w_epsilon, initial_velocity)); 
-		problem.AddResidualBlock(cost_function5, NULL, states[i].parameter, states[i+1].parameter);
-		if (i == 0)
-			problem.SetParameterBlockConstant(states[i].parameter);
-		// if (i == (states.size() - 2))
-		// 	problem.SetParameterBlockConstant(states[i+1].parameter);
+	for (int i = 0; i < statesTime.size() - 1; ++i) {
+		CostFunction* cost_function5  = new AutoDiffCostFunction<VelocityFunctor, 1, 4, 4, 2>(new VelocityFunctor(w_epsilon, initial_velocity)); 
+		problem.AddResidualBlock(cost_function5, NULL, statesPos[i].parameter, statesPos[i+1].parameter, statesTime[i+1].parameter);
+		// if (i == 0)
+		// 	problem.SetParameterBlockConstant(statesPos[i].parameter);
+		// if (i == (statesPos.size() - 2))
+		// 	problem.SetParameterBlockConstant(statesPos[i+1].parameter);
 	}
 
 	/*** Cost Function VI : Acceleration constrain ***/
-	for (int i = 0; i < states.size() - 2; ++i) {
-		CostFunction* cost_function6  = new AutoDiffCostFunction<AccelerationFunctor, 1, 6, 6, 6>(new AccelerationFunctor(w_zeta, initial_acceleration)); 
-		problem.AddResidualBlock(cost_function6, NULL, states[i].parameter, states[i+1].parameter, states[i+2].parameter);
-		if (i == 0)
-			problem.SetParameterBlockConstant(states[i].parameter);
-		// if (i == (states.size() - 3))
-		// 	problem.SetParameterBlockConstant(states[i+2].parameter);
+	for (int i = 0; i < statesTime.size() - 2; ++i) {
+		CostFunction* cost_function6  = new AutoDiffCostFunction<AccelerationFunctor, 1, 4, 4, 4, 2, 2>(new AccelerationFunctor(w_zeta, initial_acceleration)); 
+		problem.AddResidualBlock(cost_function6, NULL, statesPos[i].parameter, statesPos[i+1].parameter, statesPos[i+2].parameter, statesTime[i+1].parameter, statesTime[i+2].parameter);
+		// if (i == 0)
+		// 	problem.SetParameterBlockConstant(statesPos[i].parameter);
+		// if (i == (statesPos.size() - 3))
+		// 	problem.SetParameterBlockConstant(statesPos[i+2].parameter);
 	}
 
 	/*** Cost Function VII : Catenary constrain  ***/
-	for (int i = 0; i < states.size(); ++i) {
-		CostFunction* cost_function7  = new NumericDiffCostFunction<CatenaryFunctor, CENTRAL, 2, 6>
+	for (int i = 0; i < statesLength.size(); ++i) {
+		CostFunction* cost_function7  = new NumericDiffCostFunction<CatenaryFunctor, CENTRAL, 2, 4, 2>
 										(new CatenaryFunctor(w_eta * 10.0, distance_catenary_obstacle, v_initial_length_catenary[i], nn_.kdtree, nn_.obs_points, ugv_pos_catenary,size,nh)); 
-		problem.AddResidualBlock(cost_function7, NULL, states[i].parameter);
+		problem.AddResidualBlock(cost_function7, NULL, statesPos[i].parameter, statesLength[i].parameter);
 		if (i == 0)
-			problem.SetParameterBlockConstant(states[i].parameter);
-		if (i == (states.size() - 1))
-			problem.SetParameterBlockConstant(states[i].parameter);
+			problem.SetParameterBlockConstant(statesLength[i].parameter);
+		// if (i == (statesLength.size() - 1))
+		// 	problem.SetParameterBlockConstant(statesLength[i].parameter);
 	}
 
 	// /*** Cost Function VIII : Dynamic Catenary constrain  ***/
-	// // for (int i = 1; i < states.size(); ++i) {
+	// // for (int i = 1; i < statesLength.size(); ++i) {
 	// // 	CostFunction* cost_function8  = new NumericDiffCostFunction<CatenaryFunctor, CENTRAL, 3, 5>
 	// // 									(new CatenaryFunctor(w_lambda, distance_catenary_obstacle, v_initial_length_catenary[i], nn_.kdtree, nn_.obs_points, bound_bisection_a, bound_bisection_b, ugv_pos_catenary, size)); 
-	// // 	problem.AddResidualBlock(cost_function8, NULL, states[i].parameter);
+	// // 	problem.AddResidualBlock(cost_function8, NULL, statesLength[i].parameter);
 	// // }
 
 
@@ -325,29 +329,29 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	v_initial_length_catenary.clear();
 
   	for (size_t i = 0; i < size; i++){
-		Eigen::Vector3d position_ = Eigen::Vector3d(states[i].parameter[0],states[i].parameter[1],states[i].parameter[2]);
+		Eigen::Vector3d position_ = Eigen::Vector3d(statesPos[i].parameter[1],statesPos[i].parameter[2],statesPos[i].parameter[3]);
 		vec_pose_opt.push_back(position_);
 		structLengthCatenary vLC;
-		vLC.length = states[i].parameter[4];
+		vLC.length = statesLength[i].parameter[1];
 		vLC.id = i;
 		vec_len_cat_opt.push_back(vLC);
 		v_initial_length_catenary.push_back(vLC.length);
 	}
 
 	// mp_.clearMarkers(catenary_marker, 100, catenary_marker_pub_);
-	for(size_t i = 0; i < states.size(); i++){
+	for(size_t i = 0; i < statesPos.size(); i++){
 		std::vector<geometry_msgs::Point> points_catenary_final;
 		CatenarySolver cSX_;
 		cSX_.setMaxNumIterations(100);
-	  	cSX_.solve(ugv_pos_catenary.x, ugv_pos_catenary.y, ugv_pos_catenary.z, states[i].parameter[0], states[i].parameter[1], states[i].parameter[2], states[i].parameter[4], points_catenary_final);
+	  	cSX_.solve(ugv_pos_catenary.x, ugv_pos_catenary.y, ugv_pos_catenary.z, statesPos[i].parameter[1], statesPos[i].parameter[2], statesPos[i].parameter[3], statesLength[i].parameter[1], points_catenary_final);
 		if (i == 0 || i == 1){
 			for (size_t j= 0; j < points_catenary_final.size(); j++){
 				printf("points_catenary_final size=[%lu]  points=[%f %f %f] \n", points_catenary_final.size(),  points_catenary_final[j].x, points_catenary_final[j].y, points_catenary_final[j].z);
 			}
 		}
 		mp_.markerPoints(catenary_marker, points_catenary_final, i, size, catenary_marker_pub_);
-		double _d_ = sqrt(pow(ugv_pos_catenary.x -states[i].parameter[0],2) + pow(ugv_pos_catenary.y - states[i].parameter[1],2) + pow(ugv_pos_catenary.z-states[i].parameter[2],2));
-		printf("points_catenary_final.size()=[%lu] ugv_reel_pos[%lu] = [%f %f %f] , statesPos[%lu]=[%f %f %f] , l=[%f] d=[%f]\n",points_catenary_final.size(),i,ugv_pos_catenary.x, ugv_pos_catenary.y, ugv_pos_catenary.z,i,states[i].parameter[0], states[i].parameter[1], states[i].parameter[2],states[i].parameter[4],_d_);
+		double _d_ = sqrt(pow(ugv_pos_catenary.x -statesPos[i].parameter[1],2) + pow(ugv_pos_catenary.y - statesPos[i].parameter[2],2) + pow(ugv_pos_catenary.z-statesPos[i].parameter[3],2));
+		printf("points_catenary_final.size()=[%lu] ugv_reel_pos[%lu] = [%f %f %f] , statesPos[%lu]=[%f %f %f] , l=[%f] d=[%f]\n",points_catenary_final.size(),i,ugv_pos_catenary.x, ugv_pos_catenary.y, ugv_pos_catenary.z,i,statesPos[i].parameter[1], statesPos[i].parameter[2], statesPos[i].parameter[3],statesLength[i].parameter[1],_d_);
 		points_catenary_final.clear();
 	}
 
@@ -699,10 +703,10 @@ void OptimizerLocalPlanner::writeTemporalDataAfterOptimization(auto _s)
 	double sum_difftime_ = 0.0;
 	for (size_t i=0; i < _s -1; ++i){
 		if ( i == 0){
-			vec_time_opt.push_back(states[i].parameter[3]);
-			file_out_time << setprecision(6) << sum_dispos_ << ";" << states[i].parameter[3] << endl;
+			vec_time_opt.push_back(statesTime[i].parameter[1]);
+			file_out_time << setprecision(6) << sum_dispos_ << ";" << statesTime[i].parameter[1] << endl;
 		}
-		double difftime_ = states[i+1].parameter[3];
+		double difftime_ = statesTime[i+1].parameter[1];
 		vec_time_opt.push_back(difftime_);
 		double dist_ = (vec_pose_opt[i] - vec_pose_opt[i+1]).norm();
 		vec_dist_opt.push_back(dist_);
@@ -717,8 +721,8 @@ void OptimizerLocalPlanner::writeTemporalDataAfterOptimization(auto _s)
 	double sumdis_ = 0.0;
 	for (size_t i = 0; i < _s-2; i++)
 	{
-		double difftime1_ = states[i+1].parameter[3];
-		double difftime2_ = states[i+2].parameter[3];
+		double difftime1_ = statesTime[i+1].parameter[1];
+		double difftime2_ = statesTime[i+2].parameter[1];
 
 		double distance1_ = (vec_pose_opt[i+1] - vec_pose_opt[i]).norm();	
 		double distance2_ = (vec_pose_opt[i+2] - vec_pose_opt[i+1]).norm();

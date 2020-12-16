@@ -22,7 +22,7 @@ public:
   template <typename T>
   bool operator()(const T* const state1, T* residual) const {
 
-  residual[0] =  wf_ * (state1[3] - it_);
+  residual[0] =  wf_ * (state1[1] - it_);
 
   return true;
   }

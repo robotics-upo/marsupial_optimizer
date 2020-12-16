@@ -22,8 +22,8 @@ public:
   template <typename T>
   bool operator()(const T* const state1, const T* const state2, const T* const state3, T* residual) const {
 
-	T vector1[3] = {state2[0]-state1[0],state2[1]-state1[1],state2[2]-state1[2]};
-	T vector2[3] = {state2[0]-state3[0],state2[1]-state3[1],state2[2]-state3[2]};
+	T vector1[3] = {state2[1]-state1[1],state2[2]-state1[2],state2[3]-state1[3]};
+	T vector2[3] = {state2[1]-state3[1],state2[2]-state3[2],state2[3]-state3[3]};
 
 	T dot_product = (vector2[0] * vector1[0]) + (vector2[1] * vector1[1]) + (vector2[2] * vector1[2]);
 	T norm_vector1 = sqrt((vector1[0] * vector1[0]) + (vector1[1] * vector1[1]) + (vector1[2] * vector1[2]));
