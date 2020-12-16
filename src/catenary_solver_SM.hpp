@@ -21,7 +21,7 @@ class LengthCostFunctor
       _xB = xB;
       _yB = yB; 
       _l = length;
-      _k = (sqrt(_l*_l - _yB*_yB) )/ (_xB);
+      _k = (sqrt(fabs(_l*_l - _yB*_yB)) )/ (_xB);
       printf("values: l=[%f] , yB=[%f] , xB=[%f] , k = [%f]\n", _l, _yB, _xB, _k);
     }
 
@@ -154,6 +154,7 @@ class CatenarySolver
           y_value = evaluteCatenaryChain(x_value, _xc, _yc, _a);
           point_catenary_2D.x = x_value;
           point_catenary_2D.y = y_value;
+          printf("point 2D = [ %f %f] \n",point_catenary_2D.x,point_catenary_2D.y);
           v_points_catenary_2D.push_back(point_catenary_2D);
           x_value = x_value + x_step;
       }
@@ -238,15 +239,20 @@ class CatenarySolver
     bool solve(double x1, double y1, double z1, double x2, double y2, double z2, double length,
                double &a, double &x0, double &y0, std::vector<Eigen::Vector3d> &_vector3D)
     {
+        
+        //variables to compute optimization
         double _xB = sqrt(pow(x2 - x1,2)+pow(y2 - y1,2));
         double _yB = z2 - z1;
+
+        //variables to save values from optimization
         _vector3D.clear();
         x_const = y_const = z_const = 0;
 
 
+        
         /***First Part: Get phi value from Length equation***/
         double phi[1];
-        phi[0] = 1.0;
+        phi[0] = 4.0;
         
         // Build the problem.
         Problem prob1;
@@ -266,7 +272,7 @@ class CatenarySolver
 
         // Get the solution
         double _a = _xB/(2.0 * phi[0]);  
-        std::cout << std::endl <<" _a: " << _a << std::endl;
+        std::cout << std::endl <<" _a: " << _a <<" xB: "<< _xB<< std::endl;
 
 
         /***Second Part: Get x0 and y0 values from Points equations***/
@@ -318,8 +324,4 @@ class CatenarySolver
     }
 };
 
-
-
 #endif
-
-

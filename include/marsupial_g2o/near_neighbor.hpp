@@ -36,7 +36,7 @@ class NearNeighbor
 		virtual void setKDTree(const std::vector<Eigen::Vector3d> &obs_);
 		virtual void setKDTree(const sensor_msgs::PointCloud2 &pc2_);
 	    virtual Eigen::Vector3d nearestObstacleVertex(const pcl::KdTreeFLANN <pcl::PointXYZ> &kdT_, Eigen::Vector3d vert_, pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_);
-		virtual bool nearestObstacleVertexCeres(const pcl::KdTreeFLANN <pcl::PointXYZ> &kdT_, double x_, double y_, double z_, pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_, double &ret_x_, double &ret_y_, double &ret_z_);
+		virtual bool nearestObstacleStateCeres(const pcl::KdTreeFLANN <pcl::PointXYZ> &kdT_, double x_, double y_, double z_, pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_, double &ret_x_, double &ret_y_, double &ret_z_);
 		virtual bool radiusNearestObstacleVertex(const pcl::KdTreeFLANN <pcl::PointXYZ> &kdT_, Eigen::Vector3d vert_, pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_ , float _radius);
 		virtual double distanceObstacleVertex(const pcl::KdTreeFLANN <pcl::PointXYZ> &kdT_, Eigen::Vector3d vert_);
 
@@ -104,7 +104,7 @@ inline Eigen::Vector3d NearNeighbor::nearestObstacleVertex(const pcl::KdTreeFLAN
 	return ret_;
 }
 
-inline bool NearNeighbor::nearestObstacleVertexCeres(const pcl::KdTreeFLANN <pcl::PointXYZ> &kdT_, double x_, double y_, double z_, pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_, double &ret_x_, double &ret_y_, double &ret_z_)
+inline bool NearNeighbor::nearestObstacleStateCeres(const pcl::KdTreeFLANN <pcl::PointXYZ> &kdT_, double x_, double y_, double z_, pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_, double &ret_x_, double &ret_y_, double &ret_z_)
 {
 	pcl::PointXYZ searchPoints(x_,y_,z_);
 

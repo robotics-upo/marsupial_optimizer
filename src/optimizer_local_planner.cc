@@ -26,7 +26,7 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(tf2_ros::Buffer *tfBuffer_)
 	nh->param<double>("w_zeta", w_zeta,0.1);
 	nh->param<double>("w_eta", w_eta,0.1);
 
-  	nh->param<double>("initial_multiplicative_factor_length_catenary", initial_multiplicative_factor_length_catenary,1.0); //Can't be lower than 1.0 or "catenary < distance between UGV and vertex" 	
+  	nh->param<double>("initial_multiplicative_factor_length_catenary", initial_multiplicative_factor_length_catenary,1.0); //Can't be lower than 1.0 or "catenary < distance between UGV and state" 	
 
 	nh->param<int>("n_iter_opt", n_iter_opt,200);
 	nh->param<double>("distance_obstacle", distance_obstacle,2.0);
@@ -123,7 +123,7 @@ void OptimizerLocalPlanner::configServices()
 
 void OptimizerLocalPlanner::setupOptimizer()
 {
-  options.max_num_iterations = 100;
+  options.max_num_iterations = n_iter_opt;
   options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
   options.minimizer_progress_to_stdout = true;
   
@@ -220,7 +220,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	*
 	* Parameter is given by "state". The state dimention is 5, pose_x, pose_y, pose_z, time, length_tether
 	* To Fix:
-	* 1. Take in account that first and last vertex should be static.
+	* 1. Take in account that first and last state should be static.
 	* 2. Join coinstain with same Loop For  
 	* 3. Parameters for Catenary Constrain
 	* 4. All the Loop For begin in 1 to not consider the first state (it is fixed) and finishing one iteration before that last state (last state also fixed)
@@ -287,10 +287,9 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 
 	/*** Cost Function VII : Catenary constrain  ***/
 	for (int i = 0; i < states.size(); ++i) {
-		CostFunction* cost_function7  = new NumericDiffCostFunction<CatenaryFunctor, CENTRAL, 1, 6>
+		CostFunction* cost_function7  = new NumericDiffCostFunction<CatenaryFunctor, CENTRAL, 2, 6>
 										(new CatenaryFunctor(w_eta * 10.0, distance_catenary_obstacle, v_initial_length_catenary[i], nn_.kdtree, nn_.obs_points, ugv_pos_catenary,size,nh)); 
 		problem.AddResidualBlock(cost_function7, NULL, states[i].parameter);
-		// problem.AddParameterBlock(states[i].parameter, 5);
 		if (i == 0)
 			problem.SetParameterBlockConstant(states[i].parameter);
 		if (i == (states.size() - 1))
@@ -300,7 +299,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	// /*** Cost Function VIII : Dynamic Catenary constrain  ***/
 	// // for (int i = 1; i < states.size(); ++i) {
 	// // 	CostFunction* cost_function8  = new NumericDiffCostFunction<CatenaryFunctor, CENTRAL, 3, 5>
-	// // 									(new CatenaryFunctor(w_eta, distance_catenary_obstacle, v_initial_length_catenary[i], nn_.kdtree, nn_.obs_points, bound_bisection_a, bound_bisection_b, ugv_pos_catenary, size)); 
+	// // 									(new CatenaryFunctor(w_lambda, distance_catenary_obstacle, v_initial_length_catenary[i], nn_.kdtree, nn_.obs_points, bound_bisection_a, bound_bisection_b, ugv_pos_catenary, size)); 
 	// // 	problem.AddResidualBlock(cost_function8, NULL, states[i].parameter);
 	// // }
 
@@ -335,6 +334,23 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		v_initial_length_catenary.push_back(vLC.length);
 	}
 
+	// mp_.clearMarkers(catenary_marker, 100, catenary_marker_pub_);
+	for(size_t i = 0; i < states.size(); i++){
+		std::vector<geometry_msgs::Point> points_catenary_final;
+		CatenarySolver cSX_;
+		cSX_.setMaxNumIterations(100);
+	  	cSX_.solve(ugv_pos_catenary.x, ugv_pos_catenary.y, ugv_pos_catenary.z, states[i].parameter[0], states[i].parameter[1], states[i].parameter[2], states[i].parameter[4], points_catenary_final);
+		if (i == 0 || i == 1){
+			for (size_t j= 0; j < points_catenary_final.size(); j++){
+				printf("points_catenary_final size=[%lu]  points=[%f %f %f] \n", points_catenary_final.size(),  points_catenary_final[j].x, points_catenary_final[j].y, points_catenary_final[j].z);
+			}
+		}
+		mp_.markerPoints(catenary_marker, points_catenary_final, i, size, catenary_marker_pub_);
+		double _d_ = sqrt(pow(ugv_pos_catenary.x -states[i].parameter[0],2) + pow(ugv_pos_catenary.y - states[i].parameter[1],2) + pow(ugv_pos_catenary.z-states[i].parameter[2],2));
+		printf("points_catenary_final.size()=[%lu] ugv_reel_pos[%lu] = [%f %f %f] , statesPos[%lu]=[%f %f %f] , l=[%f] d=[%f]\n",points_catenary_final.size(),i,ugv_pos_catenary.x, ugv_pos_catenary.y, ugv_pos_catenary.z,i,states[i].parameter[0], states[i].parameter[1], states[i].parameter[2],states[i].parameter[4],_d_);
+		points_catenary_final.clear();
+	}
+
 	mp_.getMarkerPoints(points_marker,vec_pose_opt,"points_lines");
 	mp_.getMarkerLines(lines_marker,vec_pose_opt,"points_lines");
 	traj_marker_pub_.publish(points_marker);
@@ -361,7 +377,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	resetFlags();
 
 	for (size_t k_ = 0; k_ < v_initial_length_catenary.size(); k_++){
-		printf("Optimized length_catenary=[%f] for vertex=[%lu]\n",v_initial_length_catenary[k_],k_);
+		printf("Optimized length_catenary=[%f] for state=[%lu]\n",v_initial_length_catenary[k_],k_);
 	}
 	
   std::cout << "==================================================="<< std::endl << std::endl;
@@ -509,7 +525,7 @@ void OptimizerLocalPlanner::getDataForOptimizerAnalysis()
 				if(distance_obs_cat_opt_min_ > (p_cat_opt_- nearest_obs_p).norm() )
 					distance_obs_cat_opt_min_ = (p_cat_opt_- nearest_obs_p).norm();
 			}
-		// printf("Obstacles Optimized: vertex=[%lu/%lu] vec_pose_opt.size=[%lu] v_points_catenary_opt_.size=[%lu] count_cat_p_opt = [%i]\n",j, vec_pose_opt.size(),vec_pose_opt.size(),v_points_catenary_opt_.size(),count_cat_p_opt_);
+		// printf("Obstacles Optimized: state=[%lu/%lu] vec_pose_opt.size=[%lu] v_points_catenary_opt_.size=[%lu] count_cat_p_opt = [%i]\n",j, vec_pose_opt.size(),vec_pose_opt.size(),v_points_catenary_opt_.size(),count_cat_p_opt_);
 		}
 	}
 	distance_obs_cat_opt_mean_ = distance_obs_cat_opt_/ (double)count_cat_p_opt_++;
@@ -743,7 +759,7 @@ void OptimizerLocalPlanner::preComputeLengthCatenary(std::vector <double> &_vect
 	Eigen::Vector3d _obstacles_near_catenary;
 	Eigen::Vector3d _p_cat;
 	struct catenaryStates{
-		int _vertex;
+		int _state;
 		double _initial;
 		double _final;
 		int _n_collision;
@@ -764,7 +780,7 @@ void OptimizerLocalPlanner::preComputeLengthCatenary(std::vector <double> &_vect
 
 	size_t i=0;
 	_v_cat_states.clear();
-	int change_vertex = -1;
+	int change_state = -1;
 
 	while (i < _s){
 		double _dist_X_c_v = (ugv_pos_catenary.x - new_path[i].x());
@@ -773,13 +789,13 @@ void OptimizerLocalPlanner::preComputeLengthCatenary(std::vector <double> &_vect
 		double _dist_c_v = sqrt(_dist_X_c_v * _dist_X_c_v + _dist_Y_c_v * _dist_Y_c_v + _dist_Z_c_v * _dist_Z_c_v);
 		double _length = _dist_c_v * _mF;
 
-		if (change_vertex != i){
-			_cat_states._vertex = i;
+		if (change_state != i){
+			_cat_states._state = i;
 			_cat_states._initial = _length;
 			_cat_states._final = -1;
 			_cat_states._n_collision = -1;
 			_cat_states._mf = -1;
-			change_vertex = i;
+			change_state = i;
 		}
 
 		_state_collision_z = false;
@@ -803,7 +819,7 @@ void OptimizerLocalPlanner::preComputeLengthCatenary(std::vector <double> &_vect
 		for (size_t j = 0 ; j <_pre_points_catenary.size() ; j++){
 			if (j > _n_points_cat_dis ){
 				if(_pre_points_catenary[j].z < _bound_z_negative){
-					ROS_ERROR("Pre Compute Catenary with z_value(%f) < z_bound(%f): IMPOSIBLE continue increasing length=[%f] for vertex=[%lu]",_pre_points_catenary[j].z,_bound_z_negative,_length,i);
+					ROS_ERROR("Pre Compute Catenary with z_value(%f) < z_bound(%f): IMPOSIBLE continue increasing length=[%f] for state=[%lu]",_pre_points_catenary[j].z,_bound_z_negative,_length,i);
 					_state_collision_z= true;
 					break;
 				}
@@ -852,8 +868,8 @@ void OptimizerLocalPlanner::preComputeLengthCatenary(std::vector <double> &_vect
 	}
 	printf("---------------------------------------------------------------------------------------------\n");
 	for(size_t i = 0; i < _v_cat_states.size(); i++){
-		printf("preComputeLengthCatenary: Got it PRE LENGTH catenary = [vertex=%i , initial=%f , final=%f , n_coll=%i , mf=%f]\n",
-		_v_cat_states[i]._vertex,_v_cat_states[i]._initial,_v_cat_states[i]._final,_v_cat_states[i]._n_collision,_v_cat_states[i]._mf);
+		printf("preComputeLengthCatenary: Got it PRE LENGTH catenary = [state=%i , initial=%f , final=%f , n_coll=%i , mf=%f]\n",
+		_v_cat_states[i]._state,_v_cat_states[i]._initial,_v_cat_states[i]._final,_v_cat_states[i]._n_collision,_v_cat_states[i]._mf);
 	}
 }
 
@@ -1000,7 +1016,7 @@ void OptimizerLocalPlanner::checkObstaclesBetweenCatenaries(std::vector <double>
 		l_.id = i;
 		l_.length = _vectorOUT[i];
 		vec_len_cat_init.push_back(l_);
-		printf("checkObstaclesBetweenCatenaries: Got it LENGTH catenary = [vertex=%lu , initial=%f , final=%f ]\n",i,_vectorIN[i],_vectorOUT[i]);
+		printf("checkObstaclesBetweenCatenaries: Got it LENGTH catenary = [state=%lu , initial=%f , final=%f ]\n",i,_vectorIN[i],_vectorOUT[i]);
 	}
 }
 

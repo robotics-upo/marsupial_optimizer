@@ -16,7 +16,6 @@
 #include <pcl/point_types.h>
 
 #include "marsupial_g2o/near_neighbor.hpp"
-// #include "marsupial_g2o/bisection_catenary_3D.h"
 #include "marsupial_g2o/marker_publisher.hpp"
 #include "marsupial_g2o/catenary_solver_ceres.hpp"
 
@@ -42,10 +41,9 @@ struct CatenaryFunctor {
 	    NearNeighbor nn;
 
         double d_[1];
-        double d_min[1] = {1000.0};
+        double d_min[1] = {40.0};
 
    		int id_marker_;		// Related with Marker frame.id
-        // int prev_size_marker_ = 0; // Save the previus size value of the catenary for vertex optimized To delete marker 
         int n_points_cat_dis;
 
         double lower_point_cat_z;
@@ -54,16 +52,10 @@ struct CatenaryFunctor {
 	    std::vector<geometry_msgs::Point> points_catenary;
 
 		double dist_ = sqrt((state1[0]-ugv_pc_.x)*(state1[0]-ugv_pc_.x) + (state1[1]-ugv_pc_.y)*(state1[1]-ugv_pc_.y) + (state1[2]-ugv_pc_.z)*(state1[2]-ugv_pc_.z)); 
+		double safety_length = 1.001 * dist_;
 
-		if (dist_>= state1[4]){
-			// ROS_ERROR ("Length_Catenary < dist_");
-			residual[0] = wf_ * 100000.0 * exp( 1.0*(dist_- state1[4]));
-
-			return true;
-		}
-
-		else{
 			points_catenary.clear();
+
 			cS.setMaxNumIterations(100);
 			cS.solve(ugv_pc_.x, ugv_pc_.y, ugv_pc_.z, state1[0], state1[1], state1[2], state1[4], points_catenary);
 
@@ -88,8 +80,8 @@ struct CatenaryFunctor {
 
 			for (size_t i = 0 ; i < points_catenary.size() ; i++){
 		        double near_[3];
-				if (i >= n_points_cat_dis){
-					nn.nearestObstacleVertexCeres(kdT_ , points_catenary[i].x, points_catenary[i].y, points_catenary[i].z, o_p_, near_[0], near_[1], near_[2]);
+				if (i >= n_points_cat_dis && (i < points_catenary.size() - n_points_cat_dis/2.0) ){
+					nn.nearestObstacleStateCeres(kdT_ , points_catenary[i].x, points_catenary[i].y, points_catenary[i].z, o_p_, near_[0], near_[1], near_[2]);
 					d_[0] = sqrt((points_catenary[i].x-near_[0])*(points_catenary[i].x-near_[0]) + (points_catenary[i].y-near_[1])*(points_catenary[i].y-near_[1]) + (points_catenary[i].z-near_[2])*(points_catenary[i].z-near_[2]));
 
 					if (d_[0] < d_min[0]){
@@ -101,12 +93,20 @@ struct CatenaryFunctor {
 					}
 				}
 			}
-			residual[0] = wf_ * exp(20.0*(sb_ - d_min[0])) * state1[4]/dist_;
-			// printf("sb_=[%f] , d_min[0]=[%f] , result=[%f] , residual =[%f] , points_catenary.size()=[%lu] , id_state=[%f] point_in_cat[%lu]=[%f %f %f]\n", 
-			// sb_, d_min[0], wf_ * exp(20.0*(sb_ - d_min[0])), residual[0], points_catenary.size(), state1[5], _num_pos_nearest_point_cat, _point_cat_nearest_obs[0], _point_cat_nearest_obs[1], _point_cat_nearest_obs[2]);
+
+			if (safety_length>= state1[4])
+				ROS_ERROR ("state[%f] ,  Length_Catenary < dist_  ( [%f] < [%f] )",state1[5], state1[4], safety_length);
+			
+
+			residual[0] = wf_ * 4.0 /(1+exp(40.0*(d_min[0]-sb_)));
+			residual[1] = wf_ * 4.0 /(1+exp(40.0*(state1[4]- safety_length)));
+			// ROS_INFO("state = [%f] residual[0]= %f , residual[1]= %f",state1[5],residual[0],residual[1]);
+		
+			// printf("sb_=[%f] , d_min[0]=[%f] , result[0]=[%f] , residual =[%f] , points_catenary.size()=[%lu] , id_state=[%f] point_in_cat[%lu]=[%f %f %f]\n", 
+			// sb_, d_min[0], wf_ / d_min[0], residual[0], points_catenary.size(), state1[5], _num_pos_nearest_point_cat, _point_cat_nearest_obs[0], _point_cat_nearest_obs[1], _point_cat_nearest_obs[2]);
 
 			return true;
-		}
+		// }
     }
 
     double wf_, sb_, ilc_;

@@ -202,7 +202,6 @@ public:
 
 	geometry_msgs::Point obs_oct;
 
-	int n_time_optimize;
 	bool continue_optimizing;
 	double td_;
 	bool verbose_optimizer;

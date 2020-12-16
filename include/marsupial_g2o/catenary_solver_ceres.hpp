@@ -21,7 +21,7 @@ class LengthCostFunctor
       _xB = xB;
       _yB = yB; 
       _l = length;
-      _k = (sqrt(_l*_l - _yB*_yB) )/ (_xB);
+      _k = (sqrt(fabs(_l*_l - _yB*_yB)) )/ (_xB);
       // printf("value _k = [%f]\n",_k);
     }
 
@@ -100,9 +100,9 @@ class CatenarySolver
 
     CatenarySolver(void) 
     {
-        // google::InitGoogleLogging("CatenaryCeresSolver"); // uncomment only if doesn't  exist other InitGoogleLogging 
-        _max_num_iterations = 50;
-        _num_point_per_unit_length = 10;
+      // google::InitGoogleLogging("CatenaryCeresSolver"); // uncomment only if doesn't  exist other InitGoogleLogging 
+      _max_num_iterations = 50;
+      _num_point_per_unit_length = 10;
     }
 
     ~CatenarySolver(void)
@@ -251,7 +251,7 @@ class CatenarySolver
 
         /***First Part: Get phi value from Length equation***/
         double phi[1];
-        phi[0] = 1.0;
+        phi[0] = 4.0;
         
         // Build the problem.
         Problem prob1;
@@ -302,6 +302,7 @@ class CatenarySolver
 
         // Get the solution
         a = _a; x0 = x[0]; y0 = x[1]; 
+
         // std::cout << std::endl <<"a_: " << a << " , x0: " << x0 << " , y0: "<< y0 << std::endl;
 
         double _h = fabs(y0)- a;
@@ -322,8 +323,4 @@ class CatenarySolver
     }
 };
 
-
-
 #endif
-
-

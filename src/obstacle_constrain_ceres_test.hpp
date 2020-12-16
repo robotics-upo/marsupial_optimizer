@@ -37,7 +37,7 @@ public:
                         double *near_) const 
         {
             NearNeighbor nn;
-            nn.nearestObstacleVertexCeres(kdT_ , pose[0],pose[1], pose[2], o_p_, near_[0], near_[1], near_[2]);
+            nn.nearestObstacleStateCeres(kdT_ , pose[0],pose[1], pose[2], o_p_, near_[0], near_[1], near_[2]);
             return true;
         }
 
