@@ -92,7 +92,7 @@
             <param name="bound_bisection_b" value="$(arg bound_bisection_b)"/> <!-- range to get solution in bisection method for Z axes-->
             <param name="z_constraint"      value="0.1"/> <!-- Z constraint under pos reel UGV-->
             #Parameter to write file 
-            <param name="write_data_for_analysis"    value="false"/>     
+            <param name="write_data_for_analysis"    value="true"/>     
             <param name="name_output_file"    value="results_optimization"/>     
             <param name="scenario_number"    value="$(arg scenario_number)"/>     
             <param name="num_pos_initial"   value="$(arg num_pos_initial)"/>     

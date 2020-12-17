@@ -398,29 +398,29 @@ void OptimizerLocalPlanner::getDataForOptimizerAnalysis()
 	init_compute_time_ = init_traj_distance_ = init_traj_time_ = init_traj_vel_ = init_traj_vel_max_ = init_traj_vel_mean_ = init_traj_acc_ = init_traj_acc_max_ = init_traj_acc_mean_=0.0;
 
 	//Length and Time Trajectory Initial
-	for(size_t j = 0 ; j < vec_time_init.size() ; j++){
-		init_traj_time_ = vec_time_init[j].time + init_traj_time_;
-		init_traj_distance_ = vec_dist_init[j].dist + init_traj_distance_;
-		init_traj_vel_ = (vec_dist_init[j].dist / vec_time_init[j].time)+init_traj_vel_; 
-		if (init_traj_vel_max_ < (vec_dist_init[j].dist / vec_time_init[j].time))
-			init_traj_vel_max_ = (vec_dist_init[j].dist / vec_time_init[j].time);
+	for(size_t i = 0 ; i < vec_time_init.size()-1 ; i++){
+		init_traj_distance_ = vec_dist_init[i].dist + init_traj_distance_;
+		init_traj_vel_ = (vec_dist_init[i].dist / (vec_time_init[i+1].time - vec_time_init[i].time) )+init_traj_vel_; 
+		if (init_traj_vel_max_ < (vec_dist_init[i].dist / (vec_time_init[i+1].time - vec_time_init[i].time)))
+			init_traj_vel_max_ = (vec_dist_init[i].dist / (vec_time_init[i+1].time - vec_time_init[i].time));
 	}
-	init_traj_vel_mean_ = init_traj_vel_ / (double)vec_time_init.size();
+	init_traj_time_ = vec_time_init[vec_time_init.size()-1].time;
+	init_traj_vel_mean_ = init_traj_vel_ / ((double)vec_time_init.size()-1.0);
 
 	//Acceleration Trajectory Initial
-	for(size_t j = 0 ; j < vec_time_init.size()-1 ; j++){
-		init_traj_acc_ = ( ((vec_dist_init[j].dist / vec_time_init[j].time ) - (vec_dist_init[j+1].dist/vec_time_init[j+1].time)) / (vec_time_init[j].time +vec_time_init[j+1].time) ) + init_traj_acc_; ;
-		if (init_traj_acc_max_ < ( ((vec_dist_init[j].dist / vec_time_init[j].time )- (vec_dist_init[j+1].dist/vec_time_init[j+1].time)) / (vec_time_init[j].time +vec_time_init[j+1].time) ) )
-			init_traj_acc_max_ = ( ((vec_dist_init[j].dist / vec_time_init[j].time )- (vec_dist_init[j+1].dist/vec_time_init[j+1].time)) / (vec_time_init[j].time +vec_time_init[j+1].time) );
+	for(size_t i = 0 ; i < vec_time_init.size()-2 ; i++){
+		init_traj_acc_ = ( ((vec_dist_init[i].dist / vec_time_init[i+1].time ) - (vec_dist_init[i+1].dist/vec_time_init[i+2].time)) / (vec_time_init[i+1].time +vec_time_init[i+2].time) ) + init_traj_acc_; ;
+		if (init_traj_acc_max_ < ( ((vec_dist_init[i].dist / vec_time_init[i+1].time )- (vec_dist_init[i+1].dist/vec_time_init[i+2].time)) / (vec_time_init[i+1].time +vec_time_init[i+2].time) ) )
+			init_traj_acc_max_ = ( ((vec_dist_init[i].dist / vec_time_init[i+1].time )- (vec_dist_init[i+1].dist/vec_time_init[i+2].time)) / (vec_time_init[i+1].time +vec_time_init[i+2].time) );
 	}
-	init_traj_acc_mean_ = init_traj_acc_ / (double)(vec_time_init.size()-1);
+	init_traj_acc_mean_ = init_traj_acc_ / (double)(vec_time_init.size()-2.0);
 
 	//Distance Obstacles Initial
 	double distance_obs_init_ , distance_obs_init_min_, distance_obs_init_mean_;
 	distance_obs_init_ = distance_obs_init_mean_ = 0.0;
 	distance_obs_init_min_ = 1000.0;
-	for(size_t j = 0 ; j < vec_pose_init.size(); j ++){
-		Eigen::Vector3d p_init_ = vec_pose_init[j];
+	for(size_t i = 0 ; i < vec_pose_init.size(); i ++){
+		Eigen::Vector3d p_init_ = vec_pose_init[i];
 		Eigen::Vector3d nearest_obs_p_ = nn_.nearestObstacleVertex(nn_.kdtree, p_init_ , nn_.obs_points);
 		distance_obs_init_ = (p_init_- nearest_obs_p_).norm() + distance_obs_init_;
 		if(distance_obs_init_min_ > (p_init_- nearest_obs_p_).norm() )
