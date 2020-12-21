@@ -60,7 +60,7 @@ struct CatenaryFunctor {
 		cS.solve(ugv_pc_.x, ugv_pc_.y, ugv_pc_.z, state1[1], state1[2], state1[3], state2[1], points_catenary);
 
 		if (points_catenary.size()<1.0)
-			ROS_ERROR ("Not posible to get Catenary for state[%f] = [%f %f %f]", state1[0],state1[1], state1[2], state1[3]);
+			ROS_ERROR ("Not posible to get Catenary for state[%f] = [%f %f %f]", state1[1],state1[1], state1[2], state1[3]);
 
 		id_marker_ = state1[0];
 		// if (prev_size_marker_ >= points_catenary.size() )
@@ -96,8 +96,8 @@ struct CatenaryFunctor {
 		if (safety_length>= state2[1])
 			ROS_ERROR ("state[%f] ,  Length_Catenary < dist_  ( [%f] < [%f] )",state1[0], state2[1], safety_length);
 
-		residual[0] = wf_ * 4.0 /(1+exp(40.0*(d_min[0]-sb_)));
-		residual[1] = wf_ * 4.0 /(1+exp(40.0*(state2[1]- safety_length)));
+		residual[0] = wf_ * 4.0 /(1.0 + exp(40.0*(d_min[0]-sb_)));
+		residual[1] = wf_ * 4.0 /(1.0 + exp(40.0*(state2[1]- safety_length)));
 		// ROS_INFO("state = [%f] residual[0]= %f , residual[1]= %f",state1[0],residual[0],residual[1]);
 		
 		// printf("sb_=[%f] , d_min[0]=[%f] , result[0]=[%f] , residual =[%f] , points_catenary.size()=[%lu] , id_state=[%f] point_in_cat[%lu]=[%f %f %f]\n", 

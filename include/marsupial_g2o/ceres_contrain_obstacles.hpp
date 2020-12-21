@@ -66,9 +66,9 @@ public:
             T n_[4];
             (*compute_nearest_distance)(pose1, n_);
 
-            d_ = ((pose1[1]-n_[0])*(pose1[1]-n_[0]) + (pose1[2]-n_[1])*(pose1[2]-n_[1]) + (pose1[3]-n_[2])*(pose1[3]-n_[2]));
+            d_ = sqrt((pose1[1]-n_[0])*(pose1[1]-n_[0]) + (pose1[2]-n_[1])*(pose1[2]-n_[1]) + (pose1[3]-n_[2])*(pose1[3]-n_[2]));
 
-            residual[0] =  wf_ * exp(sb_ - 4.0*d_);
+            residual[0] =  wf_ * exp(sb_*sb_ - 2.0*d_);
 
             return true;
         }

@@ -148,7 +148,7 @@ public:
 	void setInitialLengthCatenaryAndPosUGV(std::vector <double> &_vector, auto _s);
 	void preComputeLengthCatenary(std::vector <double> &_vector, auto _s);
 	void getPointsFromGlobalPath(trajectory_msgs::MultiDOFJointTrajectory _path,vector<Eigen::Vector3d> &_v_gp);
-	void checkObstaclesBetweenCatenaries(std::vector <double> _vectorIN,std::vector <double> &_vectorOUT, auto _s);
+	void checkObstaclesBetweenCatenaries(std::vector <double> _vectorIN, auto _s);
 	void straightTrajectoryVertices(double x1, double y1, double z1, double x2, double y2, double z2, int _n_v_u, std::vector<Eigen::Vector3d> &_v);
 	void getDataForOptimizerAnalysis();
 
@@ -167,7 +167,6 @@ public:
 
 	Solver::Options options;
   	Solver::Summary summary;
-  	Problem problem;
 	
 	tf::TransformListener listener;
 
@@ -233,7 +232,7 @@ public:
 	float d3D_;
 	float n_points; 
 	vector<double> v_pre_initial_length_catenary;
-	vector<double> v_initial_length_catenary;
+	vector<double> v_opt_length_catenary;
 
 	double z_constraint;
 
