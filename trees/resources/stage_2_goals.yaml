@@ -33,7 +33,7 @@ stage_2_pos_final_3:
 
 stage_2_pos_final_4:
     pose:
-        x: 1.4
+        x: 1.6
         y: 0.8
         z: 4.0
     orientation:
@@ -44,7 +44,7 @@ stage_2_pos_final_4:
 
 stage_2_pos_final_5:
     pose:
-        x: 1.4
+        x: 1.6
         y: -0.2
         z: 4.0
     orientation:
@@ -55,7 +55,7 @@ stage_2_pos_final_5:
 
 stage_2_pos_final_6:
     pose:
-        x: 1.4
+        x: 1.6
         y: -1.6
         z: 4.0
     orientation:

@@ -34,6 +34,7 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "marsupial_g2o/ceres_contrain_velocity.hpp"
 #include "marsupial_g2o/ceres_contrain_acceleration.hpp"
 #include "marsupial_g2o/ceres_contrain_catenary.hpp"
+#include "marsupial_g2o/ceres_contrain_dynamic_catenary.hpp"
 
 #include "marsupial_g2o/catenary_solver_ceres.hpp"
 
@@ -176,7 +177,7 @@ public:
 	int n_iter_opt;	//Iterations Numbers of Optimizer
 	double initial_multiplicative_factor_length_catenary;
 	double distance_catenary_obstacle,min_distance_add_new_point,dynamic_catenary, initial_distance_states;
-	double w_alpha, w_beta, w_gamma, w_delta, w_epsilon, w_zeta, w_eta;
+	double w_alpha, w_beta, w_gamma, w_delta, w_epsilon, w_zeta, w_eta, w_lambda;
 
 	NearNeighbor nn_;
 	MarkerPublisher mp_;

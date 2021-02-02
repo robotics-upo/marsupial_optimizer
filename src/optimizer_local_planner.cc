@@ -25,6 +25,7 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(tf2_ros::Buffer *tfBuffer_)
 	nh->param<double>("w_epsilon", w_epsilon,0.1);
 	nh->param<double>("w_zeta", w_zeta,0.1);
 	nh->param<double>("w_eta", w_eta,0.1);
+	nh->param<double>("w_lambda", w_lambda,0.1);
 
   	nh->param<double>("initial_multiplicative_factor_length_catenary", initial_multiplicative_factor_length_catenary,1.0); //Can't be lower than 1.0 or "catenary < distance between UGV and state" 	
 
@@ -67,7 +68,7 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(tf2_ros::Buffer *tfBuffer_)
 	initializePublishers();
 	setupOptimizer();
 	cleanVectors();
-	ROS_INFO("alpha=[%f] beta=[%f] gamma=[%f] delta=[%f] epsilon=[%f] zeta=[%f] eta=[%f]",w_alpha,w_beta,w_gamma,w_delta,w_epsilon,w_zeta,w_eta);
+	ROS_INFO("alpha=[%f] beta=[%f] gamma=[%f] delta=[%f] epsilon=[%f] zeta=[%f] eta=[%f] lambda=[%f]",w_alpha,w_beta,w_gamma,w_delta,w_epsilon,w_zeta,w_eta,w_lambda);
 	ROS_INFO("Optimizer_Local_Planner: Parameters loaded, ready for Optimization Process. Waiting for Action!!");
     // clearMarkers(0);
 	traj_marker_pub_.publish(points_marker);
@@ -233,6 +234,8 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			problem.SetParameterBlockConstant(statesPos[i].parameter);
 		if (i == (statesPos.size() - 2))
 			problem.SetParameterBlockConstant(statesPos[i+1].parameter);
+		problem.SetParameterLowerBound(statesPos[i].parameter, 3, 0.0);
+		problem.SetParameterUpperBound(statesPos[i].parameter, 3, 20.0);
 	}
 
 	/*** Cost Function II : Obstacles constrain ***/
@@ -253,6 +256,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		problem.AddResidualBlock(cost_function4, NULL, statesTime[i].parameter);
 		if (i == 0)
 			problem.SetParameterBlockConstant(statesTime[i].parameter);
+		problem.SetParameterLowerBound(statesTime[i].parameter, 1, 0.0);
 	}
 
 	/*** Cost Function V : Velocity constrain ***/
@@ -278,12 +282,11 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		problem.SetParameterUpperBound(statesLength[i].parameter, 1, 40.0);
 	}
 
-	// /*** Cost Function VIII : Dynamic Catenary constrain  ***/
-	// // for (int i = 1; i < statesLength.size(); ++i) {
-	// // 	CostFunction* cost_function8  = new NumericDiffCostFunction<CatenaryFunctor, CENTRAL, 3, 5>
-	// // 									(new CatenaryFunctor(w_lambda, distance_catenary_obstacle, vec_len_cat_init[i].length, nn_.kdtree, nn_.obs_points, bound_bisection_a, bound_bisection_b, ugv_pos_catenary, size)); 
-	// // 	problem.AddResidualBlock(cost_function8, NULL, statesLength[i].parameter);
-	// // }
+	/*** Cost Function VIII : Dynamic Catenary constrain  ***/
+	for (int i = 0; i < statesLength.size() - 1; ++i) {
+		CostFunction* cost_function8  = new AutoDiffCostFunction<DynamicCatenaryFunctor, 1, 2, 2>(new DynamicCatenaryFunctor(w_lambda, dynamic_catenary)); 
+		problem.AddResidualBlock(cost_function8, NULL, statesLength[i].parameter, statesLength[i+1].parameter);
+	}
 
 	if (!continue_optimizing)
 		std::cout <<  "==================================================="  << std::endl << "Optimization  started !!" << std::endl;
@@ -345,7 +348,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 
 	std::cout << "...Temporal data saved in txt file." << std::endl << std::endl;
 	ROS_INFO("Optimizer Local Planner: Goal position successfully achieved");
-	ros::Duration(20.0).sleep();
+	ros::Duration(5.0).sleep();
 	action_result.arrived = true;
 	execute_path_srv_ptr->setSucceeded(action_result);
 
@@ -477,7 +480,7 @@ void OptimizerLocalPlanner::getDataForOptimizerAnalysis()
 		CatenarySolver cS_;
 		v_points_catenary_opt_.clear();
 		cS_.setMaxNumIterations(100);
-		cS_.solve(ugv_pos_catenary.x, ugv_pos_catenary.y, ugv_pos_catenary.z, vec_pose_init[i].x(), vec_pose_init[i].y(), vec_pose_init[i].z(), vec_len_cat_opt[i].length, v_points_catenary_opt_);
+		cS_.solve(ugv_pos_catenary.x, ugv_pos_catenary.y, ugv_pos_catenary.z, vec_pose_opt[i].x(), vec_pose_opt[i].y(), vec_pose_opt[i].z(), vec_len_cat_opt[i].length, v_points_catenary_opt_);
 		int n_p_cat_dis_ = ceil(1.5*ceil(vec_len_cat_opt[i].length)); // parameter to ignore collsion points in the begining and in the end of catenary
 		if (n_p_cat_dis_ < 5)
 			n_p_cat_dis_ = 5;
@@ -490,6 +493,8 @@ void OptimizerLocalPlanner::getDataForOptimizerAnalysis()
 				p_cat_opt_.z()= v_points_catenary_opt_[j].z;
 				Eigen::Vector3d nearest_obs_p = nn_.nearestObstacleVertex(nn_.kdtree, p_cat_opt_ , nn_.obs_points);
 				distance_obs_cat_opt_ = (p_cat_opt_- nearest_obs_p).norm() + distance_obs_cat_opt_;
+				// if ((p_cat_opt_- nearest_obs_p).norm() > 100.0)
+				// 	printf ( "state[%lu]=[%f %f %f] point_cat[%lu]=[%f %f %f]\n",i,vec_pose_opt[i].x(), vec_pose_opt[i].y(), vec_pose_opt[i].z(),j,p_cat_opt_.x(),p_cat_opt_.y(),p_cat_opt_.z());
 				if(distance_obs_cat_opt_min_ > (p_cat_opt_- nearest_obs_p).norm() )
 					distance_obs_cat_opt_min_ = (p_cat_opt_- nearest_obs_p).norm();
 			}

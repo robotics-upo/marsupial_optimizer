@@ -37,11 +37,6 @@ public:
 
 	if ( (angle < bound1) || (angle > bound2) ) 
 		 residual[0] =  wf_ * exp( sqrt((angle - bound)*(angle - bound)));
-		//  residual[0] = wf_ / angle ;
-	// if (angle < bound1)  
-	// 	 residual[0] =  wf_ * exp( sqrt((bound1 - angle)*(bound1 - angle)));
-	// else if (angle > bound2) 
-	// 	 residual[0] =  wf_ * exp( sqrt((angle - bound2)*(angle - bound2)));
 	else
 		 residual[0] = T(0.0);
 

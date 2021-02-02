@@ -30,7 +30,7 @@ public:
 
 	residual[0] =  wf_ * (a_ - ia_);
 
-    return true;
+  return true;
   }
 
  double wf_, ia_;

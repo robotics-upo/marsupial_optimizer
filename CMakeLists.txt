@@ -58,6 +58,9 @@ message(STATUS "${CMAKE_MODULE_PATH}")
 find_package(Ceres REQUIRED)
 find_package(PCL 1.11 REQUIRED)
 
+generate_dynamic_reconfigure_options(
+  cfg/OptimizationParams.cfg
+)
 
 catkin_package(
   INCLUDE_DIRS include ${EXTERNAL_INCLUDE_DIRS}
@@ -70,6 +73,8 @@ catkin_package(
   message_runtime
   upo_actions
 )
+
+
 
 set(EXTERNAL_INCLUDE_DIRS ${Eigen_INCLUDE_DIRS} ${SUITESPARSE_INCLUDE_DIRS} ${PCL_INCLUDE_DIRS} )
 set(EXTERNAL_LIBS ${SUITESPARSE_LIBRARIES} ${PCL_LIBRARIES} )

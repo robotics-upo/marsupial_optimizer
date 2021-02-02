@@ -21,8 +21,8 @@
     </node>
 
     <!-- Publishing static tf -->
-    <node pkg="tf" type="static_transform_publisher" name="map" args="0 0 0 0 0 0  world /map 10"/> # x y z y p r
-    <node pkg="tf" type="static_transform_publisher" name="reel_base_link" args="0.4 0.0 0.22 -0.0 0.0 0.0  /ugv_base_link /reel_base_link 10"/> # x y z y p r
+    <node pkg="tf" type="static_transform_publisher" name="map_tf_node" args="0 0 0 0 0 0  world /map 10"/> # x y z y p r
+    <node pkg="tf" type="static_transform_publisher" name="reel_base_link_tf_node" args="0.4 0.0 0.22 -0.0 0.0 0.0  /ugv_base_link /reel_base_link 10"/> # x y z y p r
 
     <!-- Launch Octomap of Scenario -->
     <include file="$(find marsupial_g2o)/launch/octomap_server.launch">

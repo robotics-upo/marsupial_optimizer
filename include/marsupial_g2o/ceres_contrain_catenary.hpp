@@ -63,13 +63,11 @@ struct CatenaryFunctor {
 			ROS_ERROR ("Not posible to get Catenary for state[%f] = [%f %f %f]", state1[1],state1[1], state1[2], state1[3]);
 
 		id_marker_ = state1[0];
-		// if (prev_size_marker_ >= points_catenary.size() )
-		// 	mP_.clearMarkers(catenary_marker_, prev_size_marker_, catenary_marker_pub_);
-		// else
-		// 	mP_.clearMarkers(catenary_marker_, points_catenary.size(), catenary_marker_pub_);
 				
-		mP_.markerPoints(catenary_marker_, points_catenary, id_marker_, s_, catenary_marker_pub_);
-		// prev_size_marker_ = points_catenary.size();
+		if (safety_length>= state2[1])
+			ROS_ERROR ("state[%f] ,  Length_Catenary < dist_  ( [%f] < [%f] )",state1[0], state2[1], safety_length);
+		else
+			mP_.markerPoints(catenary_marker_, points_catenary, id_marker_, s_, catenary_marker_pub_);
 
 		n_points_cat_dis = ceil(1.5*ceil(state2[1])); // parameter to ignore collsion points in the begining and in the end of catenary
 		if (n_points_cat_dis < 5)
@@ -93,8 +91,7 @@ struct CatenaryFunctor {
 			}
 		}
 
-		if (safety_length>= state2[1])
-			ROS_ERROR ("state[%f] ,  Length_Catenary < dist_  ( [%f] < [%f] )",state1[0], state2[1], safety_length);
+		
 
 		residual[0] = wf_ * 4.0 /(1.0 + exp(40.0*(d_min[0]-sb_)));
 		residual[1] = wf_ * 4.0 /(1.0 + exp(40.0*(state2[1]- safety_length)));
