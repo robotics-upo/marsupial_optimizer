@@ -2,18 +2,18 @@
 show_config: true
 debug: true
 
-ws_x_max: 40
-ws_y_max: 40
-ws_z_max: 20
+ws_x_max: 5
+ws_y_max: 5
+ws_z_max: 10
 
-ws_x_min: -40
-ws_y_min: -40
+ws_x_min: -9
+ws_y_min: -5
 ws_z_min: 0
-map_resolution: 0.2
+map_resolution: 0.1
 
 map_h_inflaction: 0.2
 map_v_inflaction: 0.2
-z_not_inflate: 0.2
+z_not_inflate: 0.5
 
 z_weight_cost: 1.2
 

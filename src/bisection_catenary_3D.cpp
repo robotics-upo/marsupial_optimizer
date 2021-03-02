@@ -10,7 +10,7 @@
 /**                                                                    */   
 /***********************************************************************/
 
-#include "marsupial_g2o/bisection_catenary_3D.h"
+#include "marsupial_optimizer/bisection_catenary_3D.h"
 
 //////////////////////////////////////////////////////////////////////////
 //Implementation explanation:                                           //

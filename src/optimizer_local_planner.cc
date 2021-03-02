@@ -4,7 +4,7 @@ Simon Martinez Rozas, 2020
 Service Robotics Lab, University Pablo de Olavide , Seville, Spain 
  */
 
-#include "marsupial_g2o/optimizer_local_planner.h"
+#include "marsupial_optimizer/optimizer_local_planner.h"
 
 
 OptimizerLocalPlanner::OptimizerLocalPlanner(tf2_ros::Buffer *tfBuffer_)
@@ -130,7 +130,7 @@ void OptimizerLocalPlanner::setupOptimizer()
   options.minimizer_progress_to_stdout = true;
 }
 
-void OptimizerLocalPlanner::dynRecCb(marsupial_g2o::OptimizationParamsConfig &config, uint32_t level)
+void OptimizerLocalPlanner::dynRecCb(marsupial_optimizer::OptimizationParamsConfig &config, uint32_t level)
 {
     // this->cost_weight = config.cost_weight;
     // this->lof_distance = config.lof_distance;
@@ -164,7 +164,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
   	auto path_shared_ptr = execute_path_srv_ptr->acceptNewGoal();
   	globalTrajectory = path_shared_ptr->path;
 	vector<float> length_catenary_initial;
-	length_catenary_initial = path_shared_ptr->length_catenary;
+	// length_catenary_initial = path_shared_ptr->length_catenary;
 	printf("length_catenary_initial.size=[%lu]\n",length_catenary_initial.size());
 
 	for (size_t i = 0; i < globalTrajectory.points.size(); i++){

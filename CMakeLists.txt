@@ -32,7 +32,7 @@
 # for them in Ceres' config.h if appropriate.
 
 cmake_minimum_required(VERSION 2.8.3)
-project(marsupial_g2o CXX)
+project(marsupial_optimizer CXX)
 
 # Set to Release in order to speed up the program significantly
 set(CMAKE_BUILD_TYPE Release) #None, Debug, Release, RelWithDebInfo, MinSizeRel
@@ -56,7 +56,7 @@ message(STATUS "System: ${CMAKE_SYSTEM}")
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake_modules)
 message(STATUS "${CMAKE_MODULE_PATH}")
 find_package(Ceres REQUIRED)
-find_package(PCL 1.11 REQUIRED)
+find_package(PCL REQUIRED)
 
 generate_dynamic_reconfigure_options(
   cfg/OptimizationParams.cfg
@@ -74,7 +74,9 @@ catkin_package(
   upo_actions
 )
 
-
+include_directories(  ${catkin_INCLUDE_DIRS}  ${PCL_INCLUDE_DIRS} )
+link_directories(${PCL_LIBRARY_DIRS})
+add_definitions(${PCL_DEFINITIONS})
 
 set(EXTERNAL_INCLUDE_DIRS ${Eigen_INCLUDE_DIRS} ${SUITESPARSE_INCLUDE_DIRS} ${PCL_INCLUDE_DIRS} )
 set(EXTERNAL_LIBS ${SUITESPARSE_LIBRARIES} ${PCL_LIBRARIES} )
@@ -90,10 +92,10 @@ include_directories(
 
 include_directories(include)
 
-add_library(marsupial_g2o 
+add_library(marsupial_optimizer 
 src/bisection_catenary_3D.cpp
   ) 
-target_link_libraries(marsupial_g2o
+target_link_libraries(marsupial_optimizer
    ${EXTERNAL_LIBS}
    ${catkin_LIBRARIES}
 )
@@ -103,18 +105,18 @@ target_link_libraries(marsupial_g2o
 
 add_executable(optimizer_local_planner_node src/optimizer_local_planner_node.cpp src/optimizer_local_planner.cc )
 # add_dependencies(optimizer_local_planner_node ${PROJECT_NAME}_gencfg)
-target_link_libraries(optimizer_local_planner_node marsupial_g2o  Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES})
+target_link_libraries(optimizer_local_planner_node marsupial_optimizer  Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES})
 
 add_executable(optimizer_publisher_tf_node src/optimizer_publisher_tf_node.cpp)
 # add_dependencies(optimizer_publisher_tf_node ${PROJECT_NAME}_gencfg)
-target_link_libraries(optimizer_publisher_tf_node marsupial_g2o ${EXTERNAL_LIBS} ${catkin_LIBRARIES})
+target_link_libraries(optimizer_publisher_tf_node marsupial_optimizer ${EXTERNAL_LIBS} ${catkin_LIBRARIES})
 
-add_executable(catenary_solver_test_ceres src/catenary_solver_test_ceres.cpp )
-# add_dependencies(optimizer_local_planner_node ${PROJECT_NAME}_gencfg)
-target_link_libraries(catenary_solver_test_ceres marsupial_g2o  Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES})
+# add_executable(catenary_solver_test_ceres src/catenary_solver_test_ceres.cpp )
+# # add_dependencies(optimizer_local_planner_node ${PROJECT_NAME}_gencfg)
+# target_link_libraries(catenary_solver_test_ceres marsupial_optimizer  Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES})
 
-add_executable(local_plann_optimizer_ceres_test src/local_plann_optimizer_ceres_test.cpp )
-target_link_libraries(local_plann_optimizer_ceres_test marsupial_g2o  Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES})
+# add_executable(local_plann_optimizer_ceres_test src/local_plann_optimizer_ceres_test.cpp )
+# target_link_libraries(local_plann_optimizer_ceres_test marsupial_optimizer  Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES})
 
 
 # As this is a C file #including <math.h> we have to explicitly add the math
