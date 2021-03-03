@@ -1,5 +1,3 @@
-// #include "marsupial_optimizer/optimizer_publisher_tf.hpp"
-
 #include <ros/ros.h>
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
