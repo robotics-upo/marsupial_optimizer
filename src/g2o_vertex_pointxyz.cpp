@@ -24,7 +24,7 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "marsupial_g2o/g2o_vertex_pointxyz.h"
+#include "marsupial_optimizer/g2o_vertex_pointxyz.h"
 #include <stdio.h>
 
 #ifdef G2O_HAVE_OPENGL

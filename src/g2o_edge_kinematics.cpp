@@ -1,4 +1,4 @@
-#include "marsupial_g2o/g2o_edge_kinematics.h"
+#include "marsupial_optimizer/g2o_edge_kinematics.h"
 
 namespace g2o {
 

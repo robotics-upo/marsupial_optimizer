@@ -4,7 +4,8 @@ Simon Martinez Rozas, 2020
 Service Robotics Lab, University Pablo de Olavide , Seville, Spain 
  */
 
-#include "marsupial_g2o/optimizer_local_planner.h"
+#include "marsupial_optimizer/optimizer_local_planner.h"
+
 
 OptimizerLocalPlanner::OptimizerLocalPlanner(tf2_ros::Buffer *tfBuffer_)
 {
@@ -144,6 +145,10 @@ void OptimizerLocalPlanner::setupOptimizer()
     auto linearSolver = g2o::make_unique<LinearSolverDense<BlockSolverX::PoseMatrixType>>(); // Linear equation solver
 
 	auto blockSolver = g2o::make_unique<BlockSolverX>(move(linearSolver));
+
+	// g2o::BlockSolverX::LinearSolverType * linearSolver;
+	// linearSolver = new g2o::LinearSolverEigen<g2o::BlockSolverX::PoseMatrixType>();
+	// g2o::BlockSolverX * blockSolver = new g2o::BlockSolverX(linearSolver);
 	
 	OptimizationAlgorithmLevenberg* optimizationAlgorithm = new OptimizationAlgorithmLevenberg(move(blockSolver));
 	// OptimizationAlgorithmGaussNewton* optimizationAlgorithm = new g2o::OptimizationAlgorithmGaussNewton(move(blockSolver));
@@ -159,7 +164,7 @@ void OptimizerLocalPlanner::setupOptimizer()
 	// getSlopXYZAxes(v_mXYZ_);
 }
 
-void OptimizerLocalPlanner::dynRecCb(marsupial_g2o::OptimizationParamsConfig &config, uint32_t level)
+void OptimizerLocalPlanner::dynRecCb(marsupial_optimizer::OptimizationParamsConfig &config, uint32_t level)
 {
     // this->cost_weight = config.cost_weight;
     // this->lof_distance = config.lof_distance;
@@ -294,7 +299,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			edgeObstaclesNear = new g2o::G2OObstaclesEdge();
 			edgeObstaclesNear->vertices()[0] = optimizer.vertices()[i];
 			edgeObstaclesNear->readKDTree(nn_.kdtree,nn_.obs_points);
-			printf("distance_obstacle=[%]\n",distance_obstacle);
+			printf("distance_obstacle=[%f]\n",distance_obstacle);
 			edgeObstaclesNear->setMeasurement(distance_obstacle);
 			edgeObstaclesNear->setInformation(G2OObstaclesEdge::InformationType::Identity()*w_beta);
 			optimizer.addEdge(edgeObstaclesNear);
@@ -1283,6 +1288,4 @@ void OptimizerLocalPlanner::straightTrajectoryVertices(double x1, double y1, dou
 			_marker.markers[i].action = visualization_msgs::Marker::DELETEALL;
 		}
 		catenary_marker_pub_.publish(_marker);
-	}
-
-
+	}	

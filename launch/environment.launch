@@ -9,8 +9,8 @@
   <!-- <env name="GAZEBO_MODEL_PATH" value="$(find mbzirc_simulator)/models:$(optenv GAZEBO_MODEL_PATH)"/> -->
   <!-- <env name="GAZEBO_RESOURCE_PATH" value="${GAZEBO_RESOURCE_PATH}:$(find mbzirc_simulator)/models"/> -->
   
-  <include file="$(find marsupial_g2o)/launch/empty_world.launch">
-    <arg name="world_name" value="$(find marsupial_g2o)/worlds/$(arg world_name).world"/>
+  <include file="$(find marsupial_optimizer)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find marsupial_optimizer)/worlds/$(arg world_name).world"/>
     <arg name="paused" value="$(arg paused)"/>
 	  <arg name="gui" value="$(arg gui)"/>
     <!--<arg name="headless" value="true"/>-->

@@ -4,7 +4,7 @@
 	<!-- <arg name="map_file" default="stage_1"/> -->
 	<arg name="map_file" default="my_test"/> 
 	
-     <arg name="static_map_file" default="$(find marsupial_g2o)o/maps/$(arg map_file).bt"/>
+     <arg name="static_map_file" default="$(find marsupial_optimizer)o/maps/$(arg map_file).bt"/>
 
 	<node pkg="octomap_server" type="octomap_server_node" name="octomap_server_map" output="screen" args="$(arg static_map_file)">
 		<param name="base_frame_id" value="ugv_base_link"/>

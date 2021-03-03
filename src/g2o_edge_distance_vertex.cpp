@@ -1,4 +1,4 @@
-#include "marsupial_g2o/g2o_edge_distance_vertex.h"
+#include "marsupial_optimizer/g2o_edge_distance_vertex.h"
 
 namespace g2o {
 

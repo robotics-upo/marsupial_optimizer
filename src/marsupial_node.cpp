@@ -1,14 +1,14 @@
 #include "marsupial.hpp"
 #include "ros/ros.h"
 #include <dynamic_reconfigure/server.h>
-#include "marsupial_g2o/OptimizationParamsConfig.h"
+#include "marsupial_optimizer/OptimizationParamsConfig.h"
 
 // ============= Global Variables ================ 
 
 
 // =========== Function declarations =============
 
-void dynamicReconfigureCallback(marsupial_g2o::OptimizationParamsConfig &config, uint32_t level){
+void dynamicReconfigureCallback(marsupial_optimizer::OptimizationParamsConfig &config, uint32_t level){
   // ROS_INFO("Dynamic reconfigure ready to use !!!");
 }
 
@@ -27,8 +27,8 @@ int main(int argc, char** argv) {
   // ros::Rate r(ros::Duration(10));
   ros::Rate r(5);
 
-  dynamic_reconfigure::Server<marsupial_g2o::OptimizationParamsConfig> server_;
-  dynamic_reconfigure::Server<marsupial_g2o::OptimizationParamsConfig>::CallbackType f_;
+  dynamic_reconfigure::Server<marsupial_optimizer::OptimizationParamsConfig> server_;
+  dynamic_reconfigure::Server<marsupial_optimizer::OptimizationParamsConfig>::CallbackType f_;
 
   f_ = boost::bind(&dynamicReconfigureCallback,_1,_2);
   server_.setCallback(f_);

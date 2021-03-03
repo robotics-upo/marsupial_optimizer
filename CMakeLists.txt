@@ -1,8 +1,12 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(marsupial_g2o)
+project(marsupial_optimizer)
 
 # Set to Release in order to speed up the program significantly
-set(CMAKE_BUILD_TYPE Release) #None, Debug, Release, RelWithDebInfo, MinSizeRel
+set(CMAKE_BUILD_TYPE Debug) #None, Debug, Release, RelWithDebInfo, MinSizeRel
+
+set(CMAKE_CXX_STANDARD 14)
+
+add_compile_options(-std=c++14)
 
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
@@ -21,10 +25,13 @@ SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake_modules)
 message(STATUS "${CMAKE_MODULE_PATH}")
 find_package(Boost REQUIRED COMPONENTS system thread graph)
 find_package(SUITESPARSE REQUIRED)
+
 find_package(G2O REQUIRED)
-find_package(PCL 1.11 REQUIRED)
+find_package(PCL 1.8 REQUIRED)
 # find_package(PCL 1.8 REQUIRED) #To compile with ThetaStar
 
+include_directories(${G2O_INCLUDE_DIR})
+message(STATUS "G2O FOUND UNDER ${G2O_INCLUDE_DIR}")
 
 # Eigen3 FindScript Backward compatibility (ubuntu saucy)
 # Since FindEigen.cmake is deprecated starting from jade.
@@ -41,6 +48,7 @@ endif (EXISTS "FindEigen3.cmake")
 set(EXTERNAL_INCLUDE_DIRS ${Eigen_INCLUDE_DIRS} ${SUITESPARSE_INCLUDE_DIRS} ${G2O_INCLUDE_DIR} ${PCL_INCLUDE_DIRS} )
 set(EXTERNAL_LIBS ${SUITESPARSE_LIBRARIES} ${G2O_LIBRARIES} ${PCL_LIBRARIES} )
 
+
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
@@ -48,7 +56,6 @@ set(EXTERNAL_LIBS ${SUITESPARSE_LIBRARIES} ${G2O_LIBRARIES} ${PCL_LIBRARIES} )
 
 
 ## C++11 support
-add_compile_options(-std=c++14)
 ## Unfortunately, the 3d-party dependency libg2o requires c++11 starting from ROS Jade.
 ## Even if the ROS Jade specifications do not want c++11-only packages,
 ## we cannot compile without c++11 enabled. Another option would be to downgrade  
@@ -171,7 +178,7 @@ include_directories(
 
 ## Build the teb_local_planner library
 
-add_library(marsupial_g2o 
+add_library(marsupial_optimizer 
   # src/marsupial_node.cpp
   src/g2o_edge_distance_vertex.cpp 
   src/g2o_edge_obstacles.cpp
@@ -187,7 +194,7 @@ add_library(marsupial_g2o
   src/optimizer_publisher_tf_node.cpp
   src/bisection_catenary_3D.cpp
   ) 
-target_link_libraries(marsupial_g2o
+target_link_libraries(marsupial_optimizer
    ${EXTERNAL_LIBS}
    ${catkin_LIBRARIES}
 )
@@ -196,12 +203,12 @@ target_link_libraries(marsupial_g2o
 
 # add_executable(marsupial_node src/marsupial_node.cpp)
 # add_dependencies(marsupial_node ${PROJECT_NAME}_gencfg)
-# target_link_libraries(marsupial_node marsupial_g2o ${EXTERNAL_LIBS} ${catkin_LIBRARIES})
+# target_link_libraries(marsupial_node marsupial_optimizer ${EXTERNAL_LIBS} ${catkin_LIBRARIES})
 
 add_executable(optimizer_local_planner_node src/optimizer_local_planner_node.cpp src/optimizer_local_planner.cpp )
 add_dependencies(optimizer_local_planner_node ${PROJECT_NAME}_gencfg)
-target_link_libraries(optimizer_local_planner_node marsupial_g2o ${EXTERNAL_LIBS} ${catkin_LIBRARIES})
+target_link_libraries(optimizer_local_planner_node marsupial_optimizer ${EXTERNAL_LIBS} ${catkin_LIBRARIES})
 
 add_executable(optimizer_publisher_tf_node src/optimizer_publisher_tf_node.cpp)
 add_dependencies(optimizer_publisher_tf_node ${PROJECT_NAME}_gencfg)
-target_link_libraries(optimizer_publisher_tf_node marsupial_g2o ${EXTERNAL_LIBS} ${catkin_LIBRARIES})
+target_link_libraries(optimizer_publisher_tf_node marsupial_optimizer ${EXTERNAL_LIBS} ${catkin_LIBRARIES})

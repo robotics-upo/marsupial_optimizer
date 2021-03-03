@@ -1,4 +1,4 @@
-#include "marsupial_g2o/g2o_edge_velocity.h"
+#include "marsupial_optimizer/g2o_edge_velocity.h"
 
 namespace g2o {
 

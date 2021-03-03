@@ -33,7 +33,7 @@
 
         <!-- Global Planner: Theta* -->
         <node pkg="theta_star_2d" type="global_planner_node" name="global_planner_node" output="screen"># launch-prefix="gdb -ex run --args">
-            <rosparam command="load" file="$(find marsupial_g2o)/cfg/3d_global_params.yaml"/>
+            <rosparam command="load" file="$(find marsupial_optimizer)/cfg/3d_global_params.yaml"/>
             <remap from="/Make_Plan" to="Make_Plan"/>
             <remap from="/Execute_Plan" to="Execute_Plan"/>
             <remap from="/points" to="mcl3d_node/map_point_cloud" if="$(eval arg('use_dron') and not arg('use_octomap'))" />
@@ -51,8 +51,8 @@
         </node>
 
         <!-- Local Planner: Optimizer G2O-->
-        <node pkg="marsupial_g2o" type="optimizer_local_planner_node" name="optimizer_local_planner_node" output="screen"># launch-prefix="gdb -ex run --args"> #launch-prefix="valgrind">
-            <rosparam command="load" file="$(find marsupial_g2o)/cfg/3d_local_params.yaml"/>
+        <node pkg="marsupial_optimizer" type="optimizer_local_planner_node" name="optimizer_local_planner_node" output="screen" launch-prefix="gdb -ex run --args"> #launch-prefix="valgrind">
+            <rosparam command="load" file="$(find marsupial_optimizer)/cfg/3d_local_params.yaml"/>
             <remap from="/Execute_Plan" to="Execute_Plan"/>
             <remap from="/Navigation" to="Navigation"/>
             <remap from="/points" to="$(arg lidar_topic)" if="$(eval not arg('use_octomap') and arg('use_dron'))" />

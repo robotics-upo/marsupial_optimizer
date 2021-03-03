@@ -9,11 +9,11 @@
     <arg name="rviz"    default="true"/> 
     <arg name="viz_file"    default="marsupial"/>
 
-    <rosparam command="load" file="$(find marsupial_g2o)/cfg/stage_$(arg scenario_number).yaml" />
+    <rosparam command="load" file="$(find marsupial_optimizer)/cfg/stage_$(arg scenario_number).yaml" />
     <arg name="map_file" default="stage_$(arg scenario_number)"/>
 
     <!-- Publishing UGV and UAV tf -->
-    <node pkg="marsupial_g2o" type="optimizer_publisher_tf_node" name="optimizer_publisher_tf_node" output="screen">
+    <node pkg="marsupial_optimizer" type="optimizer_publisher_tf_node" name="optimizer_publisher_tf_node" output="screen">
         <param name="num_pos_initial" value="$(arg num_pos_initial)"/>
         <param name="pos_uav_above_ugv" value="$(arg pos_uav_above_ugv)"/>
         <param name="uav_base_frame" value="uav_base_link"/>
@@ -25,15 +25,15 @@
     <node pkg="tf" type="static_transform_publisher" name="reel_base_link" args="0.4 0.0 0.22 -0.0 0.0 0.0  /ugv_base_link /reel_base_link 10"/> # x y z y p r
 
     <!-- Launch Octomap of Scenario -->
-    <include file="$(find marsupial_g2o)/launch/octomap_server.launch">
+    <include file="$(find marsupial_optimizer)/launch/octomap_server.launch">
         <arg name="map_file"  value="$(arg map_file)"/>    
     </include>
 
     <!-- Launch Optimizer and Global Planner-->
     <node pkg="timed_roslaunch" type="timed_roslaunch.sh" name="planner_sim" output="screen" 
-    args="2 marsupial_g2o 3d_global_and_optimizer_local_planner.launch use_catenary_planning:=$(arg use_catenary_planning) scenario_number:=$(arg scenario_number) num_pos_initial:=$(arg num_pos_initial) num_goal:=$(arg num_goal)"/>
+    args="2 marsupial_optimizer 3d_global_and_optimizer_local_planner.launch use_catenary_planning:=$(arg use_catenary_planning) scenario_number:=$(arg scenario_number) num_pos_initial:=$(arg num_pos_initial) num_goal:=$(arg num_goal)"/>
         
     <!-- RViz -->
-    <node pkg="rviz" name="rviz" type="rviz" args="-d $(find marsupial_g2o)/viz/$(arg viz_file).rviz" if="$(arg rviz)"/>
+    <node pkg="rviz" name="rviz" type="rviz" args="-d $(find marsupial_optimizer)/viz/$(arg viz_file).rviz" if="$(arg rviz)"/>
 
 </launch>

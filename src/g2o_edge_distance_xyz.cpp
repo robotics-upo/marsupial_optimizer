@@ -1,4 +1,4 @@
-#include "marsupial_g2o/g2o_edge_distance_xyz.h"
+#include "marsupial_optimizer/g2o_edge_distance_xyz.h"
 
 namespace g2o {
 

@@ -1,4 +1,4 @@
-// #include "marsupial_g2o/optimizer_publisher_tf.hpp"
+// #include "marsupial_optimizer/optimizer_publisher_tf.hpp"
 
 #include <ros/ros.h>
 #include <tf/transform_broadcaster.h>

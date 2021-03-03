@@ -35,22 +35,22 @@
 #include <g2o/types/slam3d/types_slam3d.h>
 #include <g2o/types/slam3d_addons/types_slam3d_addons.h>
 
-#include "marsupial_g2o/g2o_edge_distance_vertex.h"
-#include "marsupial_g2o/g2o_edge_obstacles.h"
-#include "marsupial_g2o/g2o_edge_obstacles_through.h"
-#include "marsupial_g2o/g2o_edge_distance_xyz.h"
-#include "marsupial_g2o/g2o_edge_kinematics.h"
-#include "marsupial_g2o/g2o_edge_equi_distance.h"
-#include "marsupial_g2o/g2o_edge_time.h"
-#include "marsupial_g2o/g2o_edge_velocity.h" 
-#include "marsupial_g2o/g2o_edge_acceleration.h" 
+#include "marsupial_optimizer/g2o_edge_distance_vertex.h"
+#include "marsupial_optimizer/g2o_edge_obstacles.h"
+#include "marsupial_optimizer/g2o_edge_obstacles_through.h"
+#include "marsupial_optimizer/g2o_edge_distance_xyz.h"
+#include "marsupial_optimizer/g2o_edge_kinematics.h"
+#include "marsupial_optimizer/g2o_edge_equi_distance.h"
+#include "marsupial_optimizer/g2o_edge_time.h"
+#include "marsupial_optimizer/g2o_edge_velocity.h" 
+#include "marsupial_optimizer/g2o_edge_acceleration.h" 
 
-#include "marsupial_g2o/g2o_vertex_timediff.h"
+#include "marsupial_optimizer/g2o_vertex_timediff.h"
 #include "g2o/types/slam3d/vertex_pointxyz.h"
 
-// #include "marsupial_g2o/obstacles.hpp"
-#include "marsupial_g2o/nearNeighbor.hpp"
-#include "marsupial_g2o/marsupial_cfg.hpp"
+// #include "marsupial_optimizer/obstacles.hpp"
+#include "marsupial_optimizer/nearNeighbor.hpp"
+#include "marsupial_optimizer/marsupial_cfg.hpp"
 
 #include <iostream>
 #include <fstream>
