@@ -1,10 +1,10 @@
-#ifndef __CATENARY_SOLVER_CERES_HPP__
-#define __CATENARY_SOLVER_CERES_HPP__
+#ifndef __CATENARY_SOLVER_TEST_HPP__
+#define __CATENARY_SOLVER_TEST_HPP__
 
 #include "ceres/ceres.h"
 #include "glog/logging.h"
 
-#include <geometry_msgs/Point.h>
+#include "Eigen/Core"
 
 using ceres::CostFunction;
 using ceres::SizedCostFunction;
@@ -22,7 +22,7 @@ class LengthCostFunctor
       _yB = yB; 
       _l = length;
       _k = (sqrt(fabs(_l*_l - _yB*_yB)) )/ (_xB);
-      // printf("value _k = [%f]\n",_k);
+      printf("values: l=[%f] , yB=[%f] , xB=[%f] , k = [%f]\n", _l, _yB, _xB, _k);
     }
 
     ~LengthCostFunctor(void) 
@@ -100,9 +100,9 @@ class CatenarySolver
 
     CatenarySolver(void) 
     {
-      // google::InitGoogleLogging("CatenaryCeresSolver"); // uncomment only if doesn't  exist other InitGoogleLogging 
-      _max_num_iterations = 50;
-      _num_point_per_unit_length = 10;
+        google::InitGoogleLogging("CatenaryCeresSolver");
+        _max_num_iterations = 50;
+        _num_point_per_unit_length = 10;
     }
 
     ~CatenarySolver(void)
@@ -154,12 +154,13 @@ class CatenarySolver
           y_value = evaluteCatenaryChain(x_value, _xc, _yc, _a);
           point_catenary_2D.x = x_value;
           point_catenary_2D.y = y_value;
+          printf("point 2D = [ %f %f] \n",point_catenary_2D.x,point_catenary_2D.y);
           v_points_catenary_2D.push_back(point_catenary_2D);
           x_value = x_value + x_step;
       }
     }
 
-    void convert2DTo3D(double _x1, double _y1, double _z1, double _x2, double _y2, double _z2, std::vector<geometry_msgs::Point> &_vector3D)
+    void convert2DTo3D(double _x1, double _y1, double _z1, double _x2, double _y2, double _z2, std::vector<Eigen::Vector3d> &_vector3D)
     {
       if (x_const && y_const){
         double _dist_3d = sqrt(pow(_x2-_x1,2)+pow(_y2-_y1,2)+pow(_z2-_z1,2)); 
@@ -169,7 +170,7 @@ class CatenarySolver
         double tetha = atan(fabs(_y2-_y1)/fabs(_x2-_x1));
         double Zmin = _z1;
         int pos_lower_point;
-        geometry_msgs::Point point_cat3D;
+        Eigen::Vector3d point_cat3D;
 
         double _direc_x, _direc_y;
         if (_x2 > _x1)
@@ -191,33 +192,33 @@ class CatenarySolver
 
         for(int i=0; i < v_points_catenary_2D.size(); i++)
         {
-            point_cat3D.z = v_points_catenary_2D[i].y;
-            point_cat3D.x = _x1 + _direc_x* cos(tetha) * v_points_catenary_2D[i].x;
-            point_cat3D.y = _y1 + _direc_y* sin(tetha) * v_points_catenary_2D[i].x;
+            point_cat3D.z() = v_points_catenary_2D[i].y;
+            point_cat3D.x() = _x1 + _direc_x* cos(tetha) * v_points_catenary_2D[i].x;
+            point_cat3D.y() = _y1 + _direc_y* sin(tetha) * v_points_catenary_2D[i].x;
             _vector3D.push_back(point_cat3D);
-            if (Zmin > point_cat3D.z)
+            if (Zmin > point_cat3D.z())
             {
-                Zmin = point_cat3D.z;
+                Zmin = point_cat3D.z();
                 pos_lower_point = i;
             }
-            // printf("Points Catenary X_= %f , Y_= %f , Z = %f\n", _vector3D[i].x(),_vector3D[i].y(),_vector3D[i].z());
+            printf("Points Catenary X_= %f , Y_= %f , Z = %f\n", _vector3D[i].x(),_vector3D[i].y(),_vector3D[i].z());
         }
         // printf("\nFOUND IT!! The lowest point Catenary 3D X_= %f , Y_= %f , Z = %f\n", _vector3D[pos_lower_point].x(), _vector3D[pos_lower_point].y(), _vector3D[pos_lower_point].z());
       }
     }
 
-    void getPointCatenaryStraight(double _x1, double _y1, double _z1, double _dis3D, std::vector<geometry_msgs::Point> &_v_p)
+    void getPointCatenaryStraight(double _x1, double _y1, double _z1, double _dis3D, std::vector<Eigen::Vector3d> &_v_p)
     {
 
       double _step = _dis3D / (double) num_point_catenary;
 
       for(int i=0; i < num_point_catenary +1; i++)
       {
-          geometry_msgs::Point _p;
+          Eigen::Vector3d _p;
 
-          _p.x = _x1;
-          _p.y = _y1;
-          _p.z = _z1 + _step* (double)i;    
+          _p.x() = _x1;
+          _p.y() = _y1;
+          _p.z() = _z1 + _step* (double)i;    
           _v_p.push_back(_p);
       }
     }
@@ -236,19 +237,19 @@ class CatenarySolver
     }
 
     bool solve(double x1, double y1, double z1, double x2, double y2, double z2, double length,
-               std::vector<geometry_msgs::Point> &_vector3D)
+               double &a, double &x0, double &y0, std::vector<Eigen::Vector3d> &_vector3D)
     {
+        
         //variables to compute optimization
         double _xB = sqrt(pow(x2 - x1,2)+pow(y2 - y1,2));
         double _yB = z2 - z1;
 
         //variables to save values from optimization
-        double a , x0, y0; 
-
         _vector3D.clear();
         x_const = y_const = z_const = 0;
 
 
+        
         /***First Part: Get phi value from Length equation***/
         double phi[1];
         phi[0] = 4.0;
@@ -260,18 +261,18 @@ class CatenarySolver
 
         // Run the solver!
         Solver::Options options1;
-        options1.minimizer_progress_to_stdout = false;
+        options1.minimizer_progress_to_stdout = true;
         options1.max_num_iterations = _max_num_iterations;
         Solver::Summary summary1;
         Solve(options1, &prob1, &summary1);
 
         // Some debug information
-        // std::cout << summary1.BriefReport() << "\n";
-        // std::cout << std::endl <<"phi: " << phi[0] << std::endl;
+        std::cout << summary1.BriefReport() << "\n";
+        std::cout << std::endl <<"phi: " << phi[0] << std::endl;
 
         // Get the solution
         double _a = _xB/(2.0 * phi[0]);  
-        // std::cout << std::endl <<" _a: " << _a << std::endl;
+        std::cout << std::endl <<" _a: " << _a <<" xB: "<< _xB<< std::endl;
 
 
         /***Second Part: Get x0 and y0 values from Points equations***/
@@ -292,24 +293,24 @@ class CatenarySolver
 
         // Run the solver!
         Solver::Options options2;
-        options2.minimizer_progress_to_stdout = false;
+        options2.minimizer_progress_to_stdout = true;
         options2.max_num_iterations = _max_num_iterations;
         Solver::Summary summary2;
         Solve(options2, &prob2, &summary2);
 
         // Some debug information
-        // std::cout << summary2.BriefReport() << "\n";
+        std::cout << summary2.BriefReport() << "\n";
 
         // Get the solution
         a = _a; x0 = x[0]; y0 = x[1]; 
 
-        // std::cout << std::endl <<"a_: " << a << " , x0: " << x0 << " , y0: "<< y0 << std::endl;
+        std::cout << std::endl <<"a_: " << a << " , x0: " << x0 << " , y0: "<< y0 << std::endl;
 
         double _h = fabs(y0)- a;
         double _xc = x0;
         double _yc = z1 - _h;  
-        // std::cout <<"h: " << _h << " , xc: " << _xc << " , yc: "<< _yc << std::endl;
 
+        std::cout <<"h: " << _h << " , xc: " << _xc << " , yc: "<< _yc << std::endl;
 
         /***Thirs Part: Get points Catenary***/
 

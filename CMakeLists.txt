@@ -35,7 +35,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(marsupial_optimizer CXX)
 
 # Set to Release in order to speed up the program significantly
-set(CMAKE_BUILD_TYPE Release) #None, Debug, Release, RelWithDebInfo, MinSizeRel
+set(CMAKE_BUILD_TYPE Debug) #None, Debug, Release, RelWithDebInfo, MinSizeRel
 
 # add_compile_options(-std=c++14)
 
@@ -100,8 +100,12 @@ target_link_libraries(marsupial_optimizer
    ${catkin_LIBRARIES}
 )
 
-# add_executable(optimizer_local_planner src/optimizer_local_planner.cc)
-# target_link_libraries(optimizer_local_planner Ceres::ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES} ${EXTERNAL_LIBS})
+# add_executable(optimizer_local_planner_fix_ugv src/optimizer_local_planner_fix_ugv.cc)
+# target_link_libraries(optimizer_local_planner_fix_ugv Ceres::ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES} ${EXTERNAL_LIBS})
+
+add_executable(optimizer_local_planner_fix_ugv_node src/optimizer_local_planner_fix_ugv_node.cpp src/optimizer_local_planner_fix_ugv.cc )
+# add_dependencies(optimizer_local_planner_fix_ugv_node ${PROJECT_NAME}_gencfg)
+target_link_libraries(optimizer_local_planner_fix_ugv_node marsupial_optimizer  Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES})
 
 add_executable(optimizer_local_planner_node src/optimizer_local_planner_node.cpp src/optimizer_local_planner.cc )
 # add_dependencies(optimizer_local_planner_node ${PROJECT_NAME}_gencfg)
@@ -112,7 +116,7 @@ add_executable(optimizer_publisher_tf_node src/optimizer_publisher_tf_node.cpp)
 target_link_libraries(optimizer_publisher_tf_node marsupial_optimizer ${EXTERNAL_LIBS} ${catkin_LIBRARIES})
 
 # add_executable(catenary_solver_test_ceres src/catenary_solver_test_ceres.cpp )
-# # add_dependencies(optimizer_local_planner_node ${PROJECT_NAME}_gencfg)
+# # add_dependencies(optimizer_local_planner_fix_ugv_node ${PROJECT_NAME}_gencfg)
 # target_link_libraries(catenary_solver_test_ceres marsupial_optimizer  Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES})
 
 # add_executable(local_plann_optimizer_ceres_test src/local_plann_optimizer_ceres_test.cpp )

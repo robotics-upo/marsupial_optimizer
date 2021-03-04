@@ -27,10 +27,12 @@ https://github.com/robotics-upo/upo_markers.git
 sim_gazebo_plugins # Tengo que subir este paquete
 
 #To install Behavior tree
-sudo apt-get install libqt5svg5-dev ros-$ROS_DISTRO-ros-type-introspection
+sudo apt-get install ros-$ROS_DISTRO-ros-type-introspection
+sudo apt-get install libqt5svg5-dev qtbase5-dev  
+sudo apt install libdw-dev
 
-git clone https://github.com/robotics-upo/Groot.git
-git clone -b develop https://github.com/robotics-upo/behavior_tree_ros.git
+git clone -b v2 https://github.com/robotics-upo/Groot.git
+git clone -b mbzirc https://github.com/robotics-upo/behavior_tree_ros.git
 git clone -b mbzirc https://github.com/robotics-upo/behavior_tree_plugins.git
-git clone https://github.com/robotics-upo/BehaviorTree.CPP.git
+git clone -b mbzirc https://github.com/robotics-upo/BehaviorTree.CPP.git
 

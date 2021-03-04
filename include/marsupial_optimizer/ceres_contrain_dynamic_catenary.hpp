@@ -20,9 +20,9 @@ public:
   DynamicCatenaryFunctor(double weight_factor, double dynamic_catenary): wf_(weight_factor), dc_(dynamic_catenary) {}
 
   template <typename T>
-  bool operator()(const T* const state1, const T* const state2, T* residual) const {
-    T sl_ = state1[1] * 0.2;
-    residual[0] = wf_ *  1.0 / exp (-1.0* pow(state2[1] - state1[1],2)/(2.0 *sl_ * sl_));
+  bool operator()(const T* const stateCat1, const T* const stateCat2, T* residual) const {
+    T sl_ = stateCat1[1] * 0.2;
+    residual[0] = wf_ *  1.0 / exp (-1.0* pow(stateCat2[1] - stateCat1[1],2)/(2.0 *sl_ * sl_));
     return true;
   }
 

@@ -4,16 +4,14 @@ Simon Martinez Rozas, 2020
 Service Robotics Lab, University Pablo de Olavide , Seville, Spain 
  */
 
-#ifndef _OPTIMIZER_LOCAL_PLANNER_CERES_H_
-#define _OPTIMIZER_LOCAL_PLANNER_CERES_H_
+#ifndef _OPTIMIZER_LOCAL_PLANNER_FIX_UGV_CERES_H_
+#define _OPTIMIZER_LOCAL_PLANNER_FIX_UGV_CERES_H_
 
 #include <Eigen/StdVector>
 #include <random>
 #include <stdint.h>
 
-#include "marsupial_g2o/near_neighbor.hpp"
-// #include "marsupial_g2o/bisection_catenary_3D.h"
-// #include "marsupial_g2o/marker_publisher.hpp"
+
 
 #include <iostream>
 #include <fstream>
@@ -27,17 +25,19 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "glog/logging.h"
 #include "Eigen/Core"
 
-#include "marsupial_g2o/ceres_contrain_equidistance.hpp"
-#include "marsupial_g2o/ceres_contrain_obstacles.hpp"
-#include "marsupial_g2o/ceres_contrain_kinematics.hpp"
-#include "marsupial_g2o/ceres_contrain_time.hpp"
-#include "marsupial_g2o/ceres_contrain_velocity.hpp"
-#include "marsupial_g2o/ceres_contrain_acceleration.hpp"
-#include "marsupial_g2o/ceres_contrain_catenary.hpp"
-#include "marsupial_g2o/ceres_contrain_dynamic_catenary.hpp"
+#include "marsupial_optimizer_fix_ugv/ceres_contrain_equidistance.hpp"
+#include "marsupial_optimizer_fix_ugv/ceres_contrain_obstacles.hpp"
+#include "marsupial_optimizer_fix_ugv/ceres_contrain_kinematics.hpp"
+#include "marsupial_optimizer_fix_ugv/ceres_contrain_time.hpp"
+#include "marsupial_optimizer_fix_ugv/ceres_contrain_velocity.hpp"
+#include "marsupial_optimizer_fix_ugv/ceres_contrain_acceleration.hpp"
+#include "marsupial_optimizer_fix_ugv/ceres_contrain_catenary.hpp"
+#include "marsupial_optimizer_fix_ugv/ceres_contrain_dynamic_catenary.hpp"
 
-#include "marsupial_g2o/catenary_solver_ceres.hpp"
-
+#include "misc/catenary_solver_ceres.hpp"
+#include "misc/near_neighbor.hpp"
+// #include "misc/bisection_catenary_3D.h"
+// #include "misc/marker_publisher.hpp"
 
 //ROS
 #include <ros/ros.h>
@@ -56,7 +56,7 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include <upo_actions/ExecutePathAction.h>
 #include <upo_actions/NavigateAction.h>
 #include <upo_actions/Navigate3DAction.h>
-#include "marsupial_g2o/OptimizationParamsConfig.h"
+#include "marsupial_optimizer/OptimizationParamsConfig.h"
 
 #define PRINTF_REGULAR "\x1B[0m"
 #define PRINTF_RED "\x1B[31m"
@@ -69,7 +69,7 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 
 using namespace Eigen;
 using namespace std;
-using namespace g2o;
+// using namespace g2o;
 
 using ceres::AutoDiffCostFunction;
 using ceres::NumericDiffCostFunction;
@@ -138,7 +138,7 @@ public:
 	void configServices();
 	void executeOptimizerPathPreemptCB();
 	void executeOptimizerPathGoalCB();
-	void dynRecCb(marsupial_g2o::OptimizationParamsConfig &config, uint32_t level);
+	void dynRecCb(marsupial_optimizer::OptimizationParamsConfig &config, uint32_t level);
 	void collisionMapCallBack(const octomap_msgs::OctomapConstPtr &msg);
 	// void configMarkers(std::string ns, std::string frame);
 	// void clearMarkers(auto _s);

@@ -15,9 +15,9 @@
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/point_types.h>
 
-#include "marsupial_optimizer/near_neighbor.hpp"
-#include "marsupial_optimizer/marker_publisher.hpp"
-#include "marsupial_optimizer/catenary_solver_ceres.hpp"
+#include "misc/near_neighbor.hpp"
+#include "misc/marker_publisher.hpp"
+#include "misc/catenary_solver_ceres.hpp"
 
 using ceres::AutoDiffCostFunction;
 using ceres::CostFunction;
@@ -28,21 +28,25 @@ using ceres::Solver;
 
 struct CatenaryFunctor {
   CatenaryFunctor(double weight_factor, double safty_bound, double initial_length_catenary,pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points, 
-                 geometry_msgs::Point ugv_pos_catenary, int size, ros::NodeHandlePtr nhP)
-                : wf_(weight_factor), sb_(safty_bound), ilc_(initial_length_catenary), kdT_(kdT_From_NN), o_p_(obstacles_Points), ugv_pc_(ugv_pos_catenary), s_(size)
+                 geometry_msgs::Point pos_reel_ugv, int size, ros::NodeHandlePtr nhP)
+                : wf_(weight_factor), sb_(safty_bound), ilc_(initial_length_catenary), kdT_(kdT_From_NN), o_p_(obstacles_Points), pos_reel_ugv_(pos_reel_ugv),s_(size)
     {
 		catenary_marker_pub_ = nhP->advertise<visualization_msgs::MarkerArray>("catenary_marker", 1);
+		pr_ugv_[0] = pos_reel_ugv_.x;
+		pr_ugv_[1] = pos_reel_ugv_.y;
+		pr_ugv_[2] = pos_reel_ugv_.z;
     }
 
-    bool operator()(const double* state1, const double* state2, double* residual) const 
+    bool operator()(const double* statePos, const double* stateRot, const double* stateCat, double* residual) const 
     {
 		CatenarySolver cS;
         MarkerPublisher mP_;
 	    NearNeighbor nn;
 
         double d_[1];
-        double d_min[1] = {40.0};
+        double d_min[1] = {100.0};
 
+		
    		int id_marker_;		// Related with Marker frame.id
         int n_points_cat_dis;
 
@@ -51,62 +55,66 @@ struct CatenaryFunctor {
         visualization_msgs::MarkerArray catenary_marker_;
 	    std::vector<geometry_msgs::Point> points_catenary;
 
-		double dist_ = sqrt((state1[1]-ugv_pc_.x)*(state1[1]-ugv_pc_.x) + (state1[2]-ugv_pc_.y)*(state1[2]-ugv_pc_.y) + (state1[3]-ugv_pc_.z)*(state1[3]-ugv_pc_.z)); 
+		double dist_ = sqrt((statePos[4]-statePos[1])*(statePos[4]-statePos[1]) + (statePos[5]-statePos[2])*(statePos[5]-statePos[2]) + (statePos[6]-statePos[3])*(statePos[6]-statePos[3])); 
 		double safety_length = 1.001 * dist_;
 
-		points_catenary.clear();
+		double roll_, pitch_, yaw_, lengt_vec_;
+		tf::Quaternion q_(stateRot[1],stateRot[2],stateRot[3],stateRot[4]);
+		tf::Matrix3x3 M_(q_);	
+		M_.getRPY(roll_, pitch_, yaw_);
+		lengt_vec_ =  sqrt(pr_ugv_[0]*pr_ugv_[0] + pr_ugv_[1]*pr_ugv_[1]);
+		double pos_init_cat_[3];
+		pos_init_cat_[0] = statePos[1] + lengt_vec_ *cos(yaw_); 
+		pos_init_cat_[1] = statePos[2] + lengt_vec_ *sin(yaw_);
+		pos_init_cat_[2] = statePos[3] + pr_ugv_[2] ;
 
+		points_catenary.clear();
 		cS.setMaxNumIterations(100);
-		cS.solve(ugv_pc_.x, ugv_pc_.y, ugv_pc_.z, state1[1], state1[2], state1[3], state2[1], points_catenary);
+		cS.solve(pos_init_cat_[0], pos_init_cat_[1], pos_init_cat_[2], statePos[1], statePos[2], statePos[3], stateCat[1], points_catenary);
 
 		if (points_catenary.size()<1.0)
-			ROS_ERROR ("Not posible to get Catenary for state[%f] = [%f %f %f]", state1[1],state1[1], state1[2], state1[3]);
+			ROS_ERROR ("Not posible to get Catenary for state[%f] = [%f %f %f / %f %f %f]", statePos[0],statePos[1], statePos[2], statePos[3], statePos[4], statePos[5], statePos[6]);
 
-		id_marker_ = state1[0];
+		id_marker_ = statePos[0];
 				
-		if (safety_length>= state2[1])
-			ROS_ERROR ("state[%f] ,  Length_Catenary < dist_  ( [%f] < [%f] )",state1[0], state2[1], safety_length);
+		if (safety_length>= stateCat[1])
+			ROS_ERROR ("state[%f] ,  Length_Catenary < dist_  ( [%f] < [%f] )",statePos[0], stateCat[1], safety_length);
 		else
 			mP_.markerPoints(catenary_marker_, points_catenary, id_marker_, s_, catenary_marker_pub_);
 
-		n_points_cat_dis = ceil(1.5*ceil(state2[1])); // parameter to ignore collsion points in the begining and in the end of catenary
+		n_points_cat_dis = ceil(1.5*ceil(stateCat[1])); // parameter to ignore collsion points in the begining and in the end of catenary
 		if (n_points_cat_dis < 5)
 			n_points_cat_dis = 5;
 
-		size_t _num_pos_nearest_point_cat;
-		double _point_cat_nearest_obs[3];
+		// size_t _num_pos_nearest_point_cat;
+		// double _point_cat_nearest_obs[3];
 
 		for (size_t i = 0 ; i < points_catenary.size() ; i++){
 		       double near_[3];
 			if (i >= n_points_cat_dis && (i < points_catenary.size() - n_points_cat_dis/2.0) ){
 				nn.nearestObstacleStateCeres(kdT_ , points_catenary[i].x, points_catenary[i].y, points_catenary[i].z, o_p_, near_[0], near_[1], near_[2]);
-				d_[0] = sqrt((points_catenary[i].x-near_[0])*(points_catenary[i].x-near_[0]) + (points_catenary[i].y-near_[1])*(points_catenary[i].y-near_[1]) + (points_catenary[i].z-near_[2])*(points_catenary[i].z-near_[2]));
+				d_[0] = sqrt((points_catenary[i].x-near_[0])*(points_catenary[i].x-near_[0])+(points_catenary[i].y-near_[1])*(points_catenary[i].y- near_[1])+(points_catenary[i].z-near_[2])*(points_catenary[i].z-near_[2]));
 				if (d_[0] < d_min[0]){
 					d_min[0] = d_[0];
-					_num_pos_nearest_point_cat = i;
-					_point_cat_nearest_obs[0] = points_catenary[i].x; _point_cat_nearest_obs[1] = points_catenary[i].y; _point_cat_nearest_obs[2] = points_catenary[i].z;
-					// printf("[%lu] n_points_cat_dis=[%i] points_catenary=[%f %f %f] near=[%f %f %f] d_[0]=[%f] d_min=[%f]\n", 
-					// i, n_points_cat_dis, points_catenary[i].x, points_catenary[i].y, points_catenary[i].z, near_[0], near_[1], near_[2], d_[0], d_min[0]);
+					// _num_pos_nearest_point_cat = i;
+					// _point_cat_nearest_obs[0] = points_catenary[i].x; 
+					// _point_cat_nearest_obs[1] = points_catenary[i].y; 
+					// _point_cat_nearest_obs[2] = points_catenary[i].z;
 				}
 			}
 		}
 
 		
-
 		residual[0] = wf_ * 4.0 /(1.0 + exp(40.0*(d_min[0]-sb_)));
-		residual[1] = wf_ * 4.0 /(1.0 + exp(40.0*(state2[1]- safety_length)));
-		// ROS_INFO("state = [%f] residual[0]= %f , residual[1]= %f",state1[0],residual[0],residual[1]);
-		
-		// printf("sb_=[%f] , d_min[0]=[%f] , result[0]=[%f] , residual =[%f] , points_catenary.size()=[%lu] , id_state=[%f] point_in_cat[%lu]=[%f %f %f]\n", 
-		// sb_, d_min[0], wf_ / d_min[0], residual[0], points_catenary.size(), state1[0], _num_pos_nearest_point_cat, _point_cat_nearest_obs[0], _point_cat_nearest_obs[1], _point_cat_nearest_obs[2]);
+		residual[1] = wf_ * 4.0 /(1.0 + exp(40.0*(stateCat[1]- safety_length)));
 
 		return true;
-		// }
     }
 
     double wf_, sb_, ilc_;
 	int s_;
-    geometry_msgs::Point ugv_pc_;
+	geometry_msgs::Point pos_reel_ugv_;
+    double pr_ugv_[3];
     pcl::KdTreeFLANN <pcl::PointXYZ> kdT_;
     pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_;
 

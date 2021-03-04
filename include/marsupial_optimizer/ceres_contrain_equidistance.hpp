@@ -17,16 +17,16 @@ using ceres::Solver;
 class EquiDistanceFunctor {
 
 public:
-  EquiDistanceFunctor(double weight_factor, double initial_distance): wf_(weight_factor), int_d_(initial_distance) {}
+  EquiDistanceFunctor(double weight_factor, double initial_distance_ugv, double initial_distance_uav): wf_(weight_factor), int_d_ugv(initial_distance_ugv), int_d_uav(initial_distance_uav) {}
 
   template <typename T>
-  bool operator()(const T* const state1, const T* const state2, T* residual) const {
-    // residual[0] = wf_ *  ( pow(int_d_,2) - ( (pow(state1[1]-state2[1],2)) + pow(state1[2]-state2[2],2) + pow(state1[3]-state2[3],2) ) );
-    residual[0] = wf_ *  1.0/ ( 1.0 + exp( pow(int_d_,2) - ((pow(state1[1]-state2[1],2)) + pow(state1[2]-state2[2],2) + pow(state1[3]-state2[3],2)) ) );
+  bool operator()(const T* const statePos1, const T* const statePos2, T* residual) const {
+    residual[0] = wf_ *  1.0/ ( 1.0 + exp( pow(int_d_ugv,2) - ((pow(statePos1[1]-statePos2[1],2)) + pow(statePos1[2]-statePos2[2],2)) ) );
+    residual[1] = wf_ *  1.0/ ( 1.0 + exp( pow(int_d_uav,2) - ((pow(statePos1[4]-statePos2[4],2)) + pow(statePos1[5]-statePos2[5],2) + pow(statePos1[6]-statePos2[6],2)) ) );
     return true;
   }
 
- double wf_, int_d_;
+ double wf_, int_d_ugv, int_d_uav;
 
  private:
 };

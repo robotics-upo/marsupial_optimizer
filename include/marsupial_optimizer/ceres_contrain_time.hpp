@@ -17,17 +17,18 @@ using ceres::Solver;
 class TimeFunctor {
 
 public:
-  TimeFunctor(double weight_factor, double init_time): wf_(weight_factor), it_(init_time) {}
+  TimeFunctor(double weight_factor, double init_time_ugv, double init_time_uav): wf_(weight_factor), it_ugv_(init_time_ugv), it_uav_(init_time_uav) {}
 
   template <typename T>
-  bool operator()(const T* const state1, T* residual) const {
+  bool operator()(const T* const stateT, T* residual) const 
+  {
+    residual[0] =  wf_ * (stateT[1] - it_ugv_);
+    residual[1] =  wf_ * (stateT[2] - it_uav_);
 
-  residual[0] =  wf_ * (state1[1] - it_);
-
-  return true;
+    return true;
   }
 
- double wf_, it_;
+ double wf_, it_ugv_, it_uav_;
 
  private:
 };

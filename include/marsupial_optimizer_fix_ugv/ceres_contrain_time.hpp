@@ -1,5 +1,5 @@
-#ifndef CERES_CONTRAIN_TIME_HPP
-#define CERES_CONTRAIN_TIME_HPP
+#ifndef CERES_CONTRAIN_TIME_FIX_UGV_HPP
+#define CERES_CONTRAIN_TIME_FIX_UGV_HPP
 
 
 #include "ceres/ceres.h"

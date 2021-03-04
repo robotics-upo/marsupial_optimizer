@@ -1,5 +1,5 @@
-#ifndef CERES_CONTRAIN_OBSTACLES_HPP
-#define CERES_CONTRAIN_OBSTACLES_HPP
+#ifndef CERES_CONTRAIN_OBSTACLES_FIX_UGV_HPP
+#define CERES_CONTRAIN_OBSTACLES_FIX_UGV_HPP
 
 
 #include "ceres/ceres.h"
@@ -11,7 +11,7 @@
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/point_types.h>
 
-#include "marsupial_g2o/near_neighbor.hpp"
+#include "misc/near_neighbor.hpp"
 
 using ceres::AutoDiffCostFunction;
 using ceres::CostFunction;

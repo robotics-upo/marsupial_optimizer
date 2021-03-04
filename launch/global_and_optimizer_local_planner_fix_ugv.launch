@@ -54,7 +54,7 @@
         </node>
 
         <!-- Local Planner: Optimizer G2O-->
-        <node pkg="marsupial_optimizer" type="optimizer_local_planner_node" name="optimizer_local_planner_node" output="screen"># launch-prefix="gdb -ex run --args"> #launch-prefix="valgrind">
+        <node pkg="marsupial_optimizer" type="optimizer_local_planner_fix_ugv_node" name="optimizer_local_planner_fix_ugv_node" output="screen"># launch-prefix="gdb -ex run --args"> #launch-prefix="valgrind">
             <rosparam command="load" file="$(find marsupial_optimizer)/cfg/3d_local_params.yaml"/>
             <remap from="/Execute_Plan" to="Execute_Plan"/>
             <remap from="/Navigation" to="Navigation"/>

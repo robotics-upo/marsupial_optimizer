@@ -1,5 +1,5 @@
-#ifndef CERES_CONTRAIN_CATENARY_HPP
-#define CERES_CONTRAIN_CATENARY_HPP
+#ifndef CERES_CONTRAIN_CATENARY_FIX_UGV_HPP
+#define CERES_CONTRAIN_CATENARY_FIX_UGV_HPP
 
 
 #include "ceres/ceres.h"
@@ -15,9 +15,9 @@
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/point_types.h>
 
-#include "marsupial_g2o/near_neighbor.hpp"
-#include "marsupial_g2o/marker_publisher.hpp"
-#include "marsupial_g2o/catenary_solver_ceres.hpp"
+#include "misc/near_neighbor.hpp"
+#include "misc/marker_publisher.hpp"
+#include "misc/catenary_solver_ceres.hpp"
 
 using ceres::AutoDiffCostFunction;
 using ceres::CostFunction;

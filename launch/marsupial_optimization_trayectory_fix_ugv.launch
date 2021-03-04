@@ -31,7 +31,7 @@
 
     <!-- Launch Optimizer and Global Planner-->
     <node pkg="timed_roslaunch" type="timed_roslaunch.sh" name="planner_sim" output="screen" 
-    args="2 marsupial_optimizer 3d_global_and_optimizer_local_planner.launch use_catenary_planning:=$(arg use_catenary_planning) scenario_number:=$(arg scenario_number) num_pos_initial:=$(arg num_pos_initial) num_goal:=$(arg num_goal)"/>
+    args="2 marsupial_optimizer global_and_optimizer_local_planner_fix_ugv.launch use_catenary_planning:=$(arg use_catenary_planning) scenario_number:=$(arg scenario_number) num_pos_initial:=$(arg num_pos_initial) num_goal:=$(arg num_goal)"/>
         
     <!-- RViz -->
     <!-- <node pkg="rviz" name="rviz" type="rviz" args="-d $(find marsupial_optimizer)/viz/$(arg viz_file).rviz" if="$(arg rviz)"/> -->

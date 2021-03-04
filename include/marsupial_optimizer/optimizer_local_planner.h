@@ -11,10 +11,6 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include <random>
 #include <stdint.h>
 
-#include "marsupial_optimizer/near_neighbor.hpp"
-// #include "marsupial_optimizer/bisection_catenary_3D.h"
-// #include "marsupial_optimizer/marker_publisher.hpp"
-
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -36,8 +32,10 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "marsupial_optimizer/ceres_contrain_catenary.hpp"
 #include "marsupial_optimizer/ceres_contrain_dynamic_catenary.hpp"
 
-#include "marsupial_optimizer/catenary_solver_ceres.hpp"
-
+#include "misc/catenary_solver_ceres.hpp"
+#include "misc/near_neighbor.hpp"
+// #include "misc/bisection_catenary_3D.h"
+// #include "misc/marker_publisher.hpp"
 
 //ROS
 #include <ros/ros.h>
@@ -48,6 +46,7 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include <visualization_msgs/MarkerArray.h>
 #include <visualization_msgs/Marker.h>
 #include <geometry_msgs/Point.h>
+#include <geometry_msgs/Quaternion.h>
 #include <sensor_msgs/PointCloud2.h>
 
 #include <tf/transform_broadcaster.h>
@@ -104,11 +103,15 @@ struct structLengthCatenary
 // };
 
 struct parameterBlockPos{
-	double parameter[4];
+	double parameter[7];
+};
+
+struct parameterBlockRot{
+	double parameter[9];
 };
 
 struct parameterBlockTime{
-	double parameter[2];
+	double parameter[3];
 };
 
 struct parameterBlockLength{
@@ -132,32 +135,21 @@ public:
 	void initializeSubscribers();
 	void initializePublishers();
 	void readOctomapCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
-	// void getMarkerPoints(visualization_msgs::MarkerArray &marker_, vector<structPose> _vector, std::string ns, int j_);
-	// void getMarkerLines(visualization_msgs::MarkerArray &marker_, vector<structPose> _vector, std::string ns, int j_);
-	void tfListener(void);
+	// void tfListener(void);
 	void configServices();
 	void executeOptimizerPathPreemptCB();
 	void executeOptimizerPathGoalCB();
 	void dynRecCb(marsupial_optimizer::OptimizationParamsConfig &config, uint32_t level);
 	void collisionMapCallBack(const octomap_msgs::OctomapConstPtr &msg);
-	// void configMarkers(std::string ns, std::string frame);
-	// void clearMarkers(auto _s);
-	void calculateDistanceVertices(vector<Eigen::Vector3d> _path,vector<structDistance> &_v_sD);
-	void getTemporalState(vector<structTime> &_time, vector<structDistance> _v_sD, double _vel);
+	void calculateDistanceVertices(vector<structDistance> &_v_D_ugv,vector<structDistance> &_v_D_uav);
+	void getTemporalState(vector<structTime> &_time_ugv, vector<structTime> &_time_uav);
 	void writeTemporalDataBeforeOptimization(void);
 	void writeTemporalDataAfterOptimization(auto _s);
-	void setInitialLengthCatenaryAndPosUGV(std::vector <double> &_vector, auto _s);
-	void preComputeLengthCatenary(std::vector <double> &_vector, auto _s);
-	void getPointsFromGlobalPath(trajectory_msgs::MultiDOFJointTrajectory _path,vector<Eigen::Vector3d> &_v_gp);
-	void checkObstaclesBetweenCatenaries(std::vector <double> _vectorIN, auto _s);
-	void straightTrajectoryVertices(double x1, double y1, double z1, double x2, double y2, double z2, int _n_v_u, std::vector<Eigen::Vector3d> &_v);
+	// void setInitialLengthCatenaryAndPosUGV(std::vector <double> &_vector, auto _s);
+	void getPointsFromGlobalPath(trajectory_msgs::MultiDOFJointTrajectory _path, vector<float> l_cat_, vector<Eigen::Vector3d> &v_ugv_, vector<Eigen::Vector3d> &v_uav_);
+	// void straightTrajectoryVertices(double x1, double y1, double z1, double x2, double y2, double z2, int _n_v_u, std::vector<Eigen::Vector3d> &_v);
 	void getDataForOptimizerAnalysis();
-
-	void markerPoints(visualization_msgs::MarkerArray _marker, std::vector<geometry_msgs::Point> _vector, int _suffix, int _n_v, ros::Publisher c_m_pub_);
-	void clearMarkers(visualization_msgs::MarkerArray _marker, auto _s, ros::Publisher c_m_pub_);
-	void getMarkerPoints(visualization_msgs::MarkerArray &marker_, vector<Eigen::Vector3d> _vector, std::string ns);
-	void getMarkerLines(visualization_msgs::MarkerArray &marker_, vector<Eigen::Vector3d> _vector, std::string ns);
-	void clearMarkersPointLines(auto _s);
+	geometry_msgs::Point getReelPoint(const float px_, const float py_, const float pz_,const float qx_, const float qy_, const float qz_, const float qw_, geometry_msgs::Point p_reel_);
 
 	upo_actions::ExecutePathResult action_result;
 
@@ -176,7 +168,7 @@ public:
 	std::string path;
 	int n_iter_opt;	//Iterations Numbers of Optimizer
 	double initial_multiplicative_factor_length_catenary;
-	double distance_catenary_obstacle,min_distance_add_new_point,dynamic_catenary, initial_distance_states;
+	double distance_catenary_obstacle,min_distance_add_new_point,dynamic_catenary, initial_distance_states_ugv, initial_distance_states_uav;
 	double w_alpha, w_beta, w_gamma, w_delta, w_epsilon, w_zeta, w_eta, w_lambda;
 
 	NearNeighbor nn_;
@@ -185,7 +177,6 @@ public:
 	//! Manage Data Vertices and Edges
 	vector<float> v_mXYZ_;
 
-	vector<Eigen::Vector3d> new_path;
 
     std::unique_ptr<ExecutePathServer> execute_path_srv_ptr;
     std::unique_ptr<Navigate3DClient> navigation3DClient;
@@ -214,7 +205,6 @@ public:
 
 	geometry_msgs::Point obs_oct;
 
-	bool continue_optimizing;
 	double td_;
 	bool verbose_optimizer;
 
@@ -222,14 +212,21 @@ public:
 	typedef vector<structTime> TimeSequence;
 	typedef vector<structDistance> DistanceSequence;
 	typedef vector<structLengthCatenary> LengthCatenarySequence;
-	// vector<parameterBlock> states;
+
+	vector<Eigen::Vector3d> new_path_ugv, new_path_uav;
 	vector<parameterBlockPos> statesPos;
+	vector<parameterBlockRot> statesRot;
 	vector<parameterBlockTime> statesTime;
 	vector<parameterBlockLength> statesLength;
-	DistanceSequence vec_dist_init; 
-	TimeSequence vec_time_init;
-	vector<Eigen::Vector3d> vec_pose_opt; 
-	LengthCatenarySequence vec_len_cat_opt , vec_len_cat_init;
+	vector<geometry_msgs::Quaternion> vec_rot_ugv, vec_rot_uav;
+
+	DistanceSequence vec_dist_init_ugv, vec_dist_init_uav; 
+	TimeSequence vec_time_init_ugv, vec_time_init_uav;
+	LengthCatenarySequence vec_len_cat_opt;
+
+	vector<Eigen::Vector3d> vec_pose_ugv_opt, vec_pose_uav_opt; 
+	std::vector<double> vec_time_ugv_opt, vec_time_uav_opt, vec_dist_ugv_opt, vec_dist_uav_opt, vec_vel_ugv_opt, vec_vel_uav_opt, vec_acc_ugv_opt, vec_acc_uav_opt;
+	LengthCatenarySequence vec_len_cat_init;
 	float d3D_;
 	float n_points; 
 	vector<double> v_pre_initial_length_catenary;
@@ -240,20 +237,21 @@ public:
 	int count_edges, n_total_edges, n_edges_before_catenary;
 
 	std::ofstream ofs;
+    double pos_reel_x, pos_reel_y, pos_reel_z;
 	std::string output_file, name_output_file;
-	std::vector<double> vec_time_opt, vec_dist_opt, vec_vel_opt, vec_acc_opt;
-	std::vector<Eigen::Vector3d> vec_pose_init;
+	std::vector<Eigen::Vector3d> vec_pose_init_ugv, vec_pose_init_uav;
 	ros::Time start_time_opt_, final_time_opt_;
 	int scenario_number, num_pos_initial, num_goal;
 	bool write_data_for_analysis;
+	geometry_msgs::Point pos_reel_ugv;
+
 
 private:
 	void resetFlags();
 	void cleanVectors();
 	double global_path_length;
-	double distance_obstacle, initial_velocity, angle_min_traj, initial_acceleration,bound_bisection_a,bound_bisection_b;
+	double distance_obstacle, initial_velocity_ugv, initial_velocity_uav, angle_min_traj, initial_acceleration_ugv, initial_acceleration_uav;
 	geometry_msgs::Point ugv_pos_catenary;
-
 };
 
 #endif

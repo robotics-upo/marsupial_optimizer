@@ -1,4 +1,4 @@
-#include "catenary_solver_SM.hpp"
+#include "catenary_solver_test.hpp"
 // #include "catenary_solver_FC.hpp"
 
 int main(int argc, char** argv) {
