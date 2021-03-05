@@ -22,8 +22,8 @@ class MarkerPublisher
 		~MarkerPublisher(){};
 		void markerPoints(visualization_msgs::MarkerArray _marker, std::vector<geometry_msgs::Point> _vector, int _suffix, int _n_v, ros::Publisher c_m_pub_);
 		void clearMarkers(visualization_msgs::MarkerArray _marker, auto _s, ros::Publisher c_m_pub_);
-		void getMarkerPoints(visualization_msgs::MarkerArray &marker_, std::vector<Eigen::Vector3d> _vector, std::string ns);
-		void getMarkerLines(visualization_msgs::MarkerArray &marker_, std::vector<Eigen::Vector3d> _vector, std::string ns);
+		void getMarkerPoints(visualization_msgs::MarkerArray &marker_, std::vector<Eigen::Vector3d> _vector, std::string ns, int colour_);
+		void getMarkerLines(visualization_msgs::MarkerArray &marker_, std::vector<Eigen::Vector3d> _vector, std::string ns, int colour_);
 		void clearMarkersPointLines(visualization_msgs::MarkerArray &p_m_, visualization_msgs::MarkerArray &l_m_, ros::Publisher traj_m_pub_, auto _s);
 
 	protected:
@@ -92,21 +92,19 @@ inline void MarkerPublisher::clearMarkers(visualization_msgs::MarkerArray _marke
     c_m_pub_.publish(_marker);
 }
 
-inline void MarkerPublisher::getMarkerPoints(visualization_msgs::MarkerArray &marker_, std::vector<Eigen::Vector3d> vector_, std::string ns_)
+inline void MarkerPublisher::getMarkerPoints(visualization_msgs::MarkerArray &marker_, std::vector<Eigen::Vector3d> vector_, std::string ns_, int colour_)
 {
+	// RED: colour_ = 0 ; GREEN : colour_ = 1 ; BLUE: colour_ = 2
 	for (size_t i = 0; i < vector_.size(); i++){
-
 		marker_.markers[i].header.frame_id = "/map";
 		marker_.markers[i].header.stamp = ros::Time::now();
 		marker_.markers[i].ns = ns_;
 		marker_.markers[i].id = i+1;
-
 		marker_.markers[i].action = visualization_msgs::Marker::ADD;
 		if (i % 5 == 0)
 			marker_.markers[i].type = visualization_msgs::Marker::CUBE;
 		else
 			marker_.markers[i].type = visualization_msgs::Marker::SPHERE;
-		
 		marker_.markers[i].lifetime = ros::Duration(400);
 		marker_.markers[i].pose.position.x = vector_[i].x();
 		marker_.markers[i].pose.position.y = vector_[i].y();
@@ -119,14 +117,27 @@ inline void MarkerPublisher::getMarkerPoints(visualization_msgs::MarkerArray &ma
 		marker_.markers[i].scale.y = 0.2;
 		marker_.markers[i].scale.z = 0.2;
 		marker_.markers[i].color.a = 1.0;
-		marker_.markers[i].color.r = 0.0;
-		marker_.markers[i].color.g = 0.0;
-		marker_.markers[i].color.b = 0.9;
+		if (colour_ == 0){
+			marker_.markers[i].color.r = 0.9;
+			marker_.markers[i].color.g = 0.0;
+			marker_.markers[i].color.b = 0.0;
+		}
+		if (colour_ == 1){
+			marker_.markers[i].color.r = 0.0;
+			marker_.markers[i].color.g = 0.9;
+			marker_.markers[i].color.b = 0.0;
+		}
+		if (colour_ == 2){
+			marker_.markers[i].color.r = 0.9;
+			marker_.markers[i].color.g = 0.0;
+			marker_.markers[i].color.b = 0.9;
+		}
 	}	
 }
 
-inline void MarkerPublisher::getMarkerLines(visualization_msgs::MarkerArray &marker_, std::vector<Eigen::Vector3d> _vector, std::string ns_)
+inline void MarkerPublisher::getMarkerLines(visualization_msgs::MarkerArray &marker_, std::vector<Eigen::Vector3d> _vector, std::string ns_, int colour_)
 {
+	// RED: colour_ = 0 ; GREEN : colour_ = 1 ; BLUE: colour_ = 2
 	for (size_t i = 0; i < _vector.size()-1; i++){
 		geometry_msgs::Point _p1, _p2; 
 		marker_.markers[i].header.frame_id = "/map";
@@ -152,9 +163,21 @@ inline void MarkerPublisher::getMarkerLines(visualization_msgs::MarkerArray &mar
 		// marker_.markers[i].scale.y = 0.3;
 		// marker_.markers[i].scale.z = 0.1;
 		marker_.markers[i].color.a = 1.0;
-		marker_.markers[i].color.r = 0.0;
-		marker_.markers[i].color.g = 0.0;
-		marker_.markers[i].color.b = 0.9;
+		if (colour_ == 0){
+			marker_.markers[i].color.r = 0.9;
+			marker_.markers[i].color.g = 0.0;
+			marker_.markers[i].color.b = 0.9;
+		}
+		if (colour_ == 1){
+			marker_.markers[i].color.r = 0.0;
+			marker_.markers[i].color.g = 0.9;
+			marker_.markers[i].color.b = 0.0;
+		}
+		if (colour_ == 2){
+			marker_.markers[i].color.r = 0.0;
+			marker_.markers[i].color.g = 0.0;
+			marker_.markers[i].color.b = 0.9;
+		}
 	}
 }
 

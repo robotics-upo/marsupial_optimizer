@@ -77,8 +77,8 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(tf2_ros::Buffer *tfBuffer_)
 	cleanVectors();
 	ROS_INFO("alpha=[%f] beta=[%f] gamma=[%f] delta=[%f] epsilon=[%f] zeta=[%f] eta=[%f] lambda=[%f]",w_alpha,w_beta,w_gamma,w_delta,w_epsilon,w_zeta,w_eta,w_lambda);
 	ROS_INFO("Optimizer_Local_Planner: Parameters loaded, ready for Optimization Process. Waiting for Action!!");
-	traj_marker_pub_.publish(points_marker);
-	traj_marker_pub_.publish(lines_marker);
+	// traj_marker_uav_pub_.publish(points_uav_marker);
+	// traj_marker_uav_pub_.publish(lines_uav_marker);
 	configServices();
 }
 
@@ -100,10 +100,11 @@ void OptimizerLocalPlanner::initializeSubscribers()
 
 void OptimizerLocalPlanner::initializePublishers()
 {
-  traj_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("opt_trajectory_marker", 2);
+  	traj_marker_ugv_pub_ = nh->advertise<visualization_msgs::MarkerArray>("opt_trajectory_ugv_marker", 2);
+  	traj_marker_uav_pub_ = nh->advertise<visualization_msgs::MarkerArray>("opt_trajectory_uav_marker", 2);
 	catenary_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("catenary_marker", 100);
 
-  ROS_INFO("Optimizer_Local_Planner: Publishers Initialized");
+  	ROS_INFO("Optimizer_Local_Planner: Publishers Initialized");
 }
 
 void OptimizerLocalPlanner::resetFlags()
@@ -168,7 +169,8 @@ void OptimizerLocalPlanner::executeOptimizerPathPreemptCB()
     execute_path_srv_ptr->setPreempted(); // set the action state to preempted
 
     resetFlags();
-    mp_.clearMarkersPointLines(points_marker, lines_marker,traj_marker_pub_,0);
+    mp_.clearMarkersPointLines(points_ugv_marker, lines_ugv_marker, traj_marker_ugv_pub_, 0);
+    mp_.clearMarkersPointLines(points_uav_marker, lines_uav_marker, traj_marker_uav_pub_, 0);
 }
 
 
@@ -193,12 +195,13 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
     ROS_INFO_COND(debug, PRINTF_GREEN "Number of Vertices to optimize = [%lu] = size",size);
 
 	printf("ugv_pos_reel_catenary=[%f %f %f]\n",ugv_pos_catenary.x,ugv_pos_catenary.y,ugv_pos_catenary.z);
-	// mp_.clearMarkers(catenary_marker, 150, catenary_marker_pub_);
+	mp_.clearMarkers(catenary_marker, 150, catenary_marker_pub_);
 	// ros::Duration(2.0).sleep();
 
 	count_edges = 0;
 
-  	// mp_.clearMarkersPointLines(points_marker, lines_marker,traj_marker_pub_,size);
+  	mp_.clearMarkersPointLines(points_ugv_marker, lines_ugv_marker,traj_marker_ugv_pub_,size);
+  	mp_.clearMarkersPointLines(points_uav_marker, lines_uav_marker,traj_marker_uav_pub_,size);
 	calculateDistanceVertices(vec_dist_init_ugv, vec_dist_init_uav);
  	getTemporalState(vec_time_init_ugv, vec_time_init_uav);
 
@@ -266,19 +269,28 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		if (i == (statesPos.size() - 2))
 			problem.SetParameterBlockConstant(statesPos[i+1].parameter);
 		problem.SetParameterLowerBound(statesPos[i].parameter, 3, 0.0);
-		problem.SetParameterUpperBound(statesPos[i].parameter, 3, 20.0);
+		problem.SetParameterUpperBound(statesPos[i].parameter, 3, 1.0);
+		problem.SetParameterLowerBound(statesPos[i].parameter, 6, 0.0);
+		problem.SetParameterUpperBound(statesPos[i].parameter, 6, 20.0);
 	}
 
 	/*** Cost Function II : Obstacles constrain ***/
 	for (int i = 0; i < statesPos.size(); ++i) {
-    	CostFunction* cost_function2  = new AutoDiffCostFunction<ObstacleDistanceFunctor::ObstaclesFunctor, 1, 7>(new ObstacleDistanceFunctor::ObstaclesFunctor(w_beta*10.0, distance_obstacle, nn_.kdtree, nn_.obs_points)); 
+    	CostFunction* cost_function2  = new AutoDiffCostFunction<ObstacleDistanceFunctor::ObstaclesFunctor, 1, 7>
+											(new ObstacleDistanceFunctor::ObstaclesFunctor(w_beta*10.0, distance_obstacle, nn_.kdtree, nn_.obs_points)); 
     	problem.AddResidualBlock(cost_function2, NULL, statesPos[i].parameter);
   	}
 
-	/*** Cost Function III : Kinematic constrain ***/
+	/*** Cost Function III-i : UAV Kinematic constrain ***/
 	for (int i = 0; i < statesPos.size() - 2; ++i) {
-		CostFunction* cost_function3  = new AutoDiffCostFunction<KinematicsFunctor, 2, 7, 7, 7>(new KinematicsFunctor(w_gamma, angle_min_traj)); 
-		problem.AddResidualBlock(cost_function3, NULL, statesPos[i].parameter, statesPos[i+1].parameter, statesPos[i+2].parameter);
+		CostFunction* cost_function3_1  = new AutoDiffCostFunction<KinematicsFunctorUAV, 1, 7, 7, 7>(new KinematicsFunctorUAV(w_gamma, angle_min_traj)); 
+		problem.AddResidualBlock(cost_function3_1, NULL, statesPos[i].parameter, statesPos[i+1].parameter, statesPos[i+2].parameter);
+	}
+
+	/*** Cost Function III-ii : UGV Kinematic constrain ***/
+	for (int i = 0; i < statesPos.size() - 2; ++i) {
+		CostFunction* cost_function3_2  = new AutoDiffCostFunction<KinematicsFunctorUGV, 1, 7, 7, 7>(new KinematicsFunctorUGV(w_gamma, angle_min_traj)); 
+		problem.AddResidualBlock(cost_function3_2, NULL, statesPos[i].parameter, statesPos[i+1].parameter, statesPos[i+2].parameter);
 	}
 
 	/*** Cost Function IV : Time constrain ***/
@@ -304,7 +316,6 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 
 	/*** Cost Function VII : Catenary constrain  ***/
 	for (int i = 0; i < statesLength.size(); ++i) {
-		// ugv_pos_catenary = getReelPoint(vec_pose_init_ugv[i],vec_rot_ugv[i]);
 		CostFunction* cost_function7  = new NumericDiffCostFunction<CatenaryFunctor, CENTRAL, 2, 7, 9, 2>
 										(new CatenaryFunctor(w_eta * 10.0, distance_catenary_obstacle, vec_len_cat_init[i].length, nn_.kdtree, nn_.obs_points, pos_reel_ugv, size, nh)); 
 		problem.AddResidualBlock(cost_function7, NULL, statesPos[i].parameter, statesRot[i].parameter, statesLength[i].parameter);
@@ -315,10 +326,10 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	}
 
 	/*** Cost Function VIII : Dynamic Catenary constrain  ***/
-	for (int i = 0; i < statesLength.size() - 1; ++i) {
-		CostFunction* cost_function8  = new AutoDiffCostFunction<DynamicCatenaryFunctor, 1, 2, 2>(new DynamicCatenaryFunctor(w_lambda, dynamic_catenary)); 
-		problem.AddResidualBlock(cost_function8, NULL, statesLength[i].parameter, statesLength[i+1].parameter);
-	}
+	// for (int i = 0; i < statesLength.size() - 1; ++i) {
+	// 	CostFunction* cost_function8  = new AutoDiffCostFunction<DynamicCatenaryFunctor, 1, 2, 2>(new DynamicCatenaryFunctor(w_lambda, dynamic_catenary)); 
+	// 	problem.AddResidualBlock(cost_function8, NULL, statesLength[i].parameter, statesLength[i+1].parameter);
+	// }
 
 	std::cout <<  "==================================================="  << std::endl << "Optimization  started !!" << std::endl;
 
@@ -367,15 +378,21 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		cSX_.setMaxNumIterations(100);
 	  	cSX_.solve(p_reel_.x, p_reel_.y, p_reel_.z, statesPos[i].parameter[4], statesPos[i].parameter[5], statesPos[i].parameter[6], statesLength[i].parameter[1], points_catenary_final);
 		mp_.markerPoints(catenary_marker, points_catenary_final, i, size, catenary_marker_pub_);
-		double _d_ = sqrt(pow(p_reel_.x -statesPos[i].parameter[1],2) + pow(p_reel_.y - statesPos[i].parameter[2],2) + pow(p_reel_.z-statesPos[i].parameter[3],2));
-		printf("points_catenary_final.size()=[%lu] ugv_reel_pos[%lu] = [%f %f %f] , statesPos[%lu]=[%f %f %f] , l=[%f] d=[%f]\n",points_catenary_final.size(),i,p_reel_.x, p_reel_.y, p_reel_.z,
-																		i,statesPos[i].parameter[1], statesPos[i].parameter[2], statesPos[i].parameter[3],statesLength[i].parameter[1],_d_);
+		double _d_ = sqrt(pow(p_reel_.x -statesPos[i].parameter[4],2) + pow(p_reel_.y - statesPos[i].parameter[5],2) + pow(p_reel_.z-statesPos[i].parameter[6],2));
+		printf("points_catenary_final.size()=[%lu] ugv_pos[%lu] = [%f %f %f] , uav_pos[%lu]=[%f %f %f] , l=[%f] d=[%f]\n",points_catenary_final.size(),
+																												i,statesPos[i].parameter[1], statesPos[i].parameter[2], statesPos[i].parameter[3],
+																												i,statesPos[i].parameter[4], statesPos[i].parameter[5], statesPos[i].parameter[6],
+																												statesLength[i].parameter[1],_d_);
 	}
 
-	mp_.getMarkerPoints(points_marker, vec_pose_uav_opt, "points_m");
-	mp_.getMarkerLines(lines_marker, vec_pose_uav_opt, "lines_m");
-	traj_marker_pub_.publish(points_marker);
-	traj_marker_pub_.publish(lines_marker);
+	mp_.getMarkerPoints(points_ugv_marker, vec_pose_ugv_opt, "points_ugv_m",1);
+	mp_.getMarkerLines(lines_ugv_marker, vec_pose_ugv_opt, "lines_ugv_m",1);
+	mp_.getMarkerPoints(points_uav_marker, vec_pose_uav_opt, "points_uav_m",1);
+	mp_.getMarkerLines(lines_uav_marker, vec_pose_uav_opt, "lines_uav_m",1);
+	traj_marker_ugv_pub_.publish(points_ugv_marker);
+	traj_marker_ugv_pub_.publish(lines_ugv_marker);
+	traj_marker_uav_pub_.publish(points_uav_marker);
+	traj_marker_uav_pub_.publish(lines_uav_marker);
 
 	writeTemporalDataAfterOptimization(size);
 
@@ -690,18 +707,25 @@ void OptimizerLocalPlanner::getPointsFromGlobalPath(trajectory_msgs::MultiDOFJoi
 	v_uav_.clear();
 	int count_ = 1; 
 	
-	// Get position and rotation vector for UGV
     for (size_t i = 0; i < _path.points.size()-1; i++)
     {
+		// Get position and rotation vector for UGV
 		x_ugv_ = _path.points.at(i+1).transforms[0].translation.x - _path.points.at(i).transforms[0].translation.x;
 		y_ugv_ = _path.points.at(i+1).transforms[0].translation.y - _path.points.at(i).transforms[0].translation.y;
 		z_ugv_ = _path.points.at(i+1).transforms[0].translation.z - _path.points.at(i).transforms[0].translation.z;
-        D_ugv_ = sqrt(x_ugv_ * x_ugv_ + y_ugv_ * y_ugv_ + z_ugv_ * z_ugv_);
-		if (D_ugv_ > min_distance_add_new_point){
-			n_ugv_ = floor(D_ugv_ / min_distance_add_new_point);
-			double xp = x_ugv_/((double)n_ugv_+1.0);
-			double yp = y_ugv_/((double)n_ugv_+1.0);
-			double zp = z_ugv_/((double)n_ugv_+1.0);
+        // D_ugv_ = sqrt(x_ugv_ * x_ugv_ + y_ugv_ * y_ugv_ + z_ugv_ * z_ugv_);
+		// Get position and rotation vector for UAV
+		x_uav_ = _path.points.at(i+1).transforms[1].translation.x - _path.points.at(i).transforms[1].translation.x;
+		y_uav_ = _path.points.at(i+1).transforms[1].translation.y - _path.points.at(i).transforms[1].translation.y;
+		z_uav_ = _path.points.at(i+1).transforms[1].translation.z - _path.points.at(i).transforms[1].translation.z;
+        D_uav_ = sqrt(x_uav_ * x_uav_ + y_uav_ * y_uav_ + z_uav_ * z_uav_);
+		//First analize if distance between points in bigger that the maximum distance to create a new point
+		if (D_uav_ > min_distance_add_new_point){
+			// Get position and rotation vector for UGV
+			n_uav_ = floor(D_uav_ / min_distance_add_new_point);
+			double xp_ugv_ = x_ugv_/((double)n_uav_+1.0);
+			double yp_ugv_ = y_ugv_/((double)n_uav_+1.0);
+			double zp_ugv_ = z_ugv_/((double)n_uav_+1.0);
 			p_ugv_.x() = _path.points.at(i).transforms[0].translation.x;
 			p_ugv_.y() = _path.points.at(i).transforms[0].translation.y;
 			p_ugv_.z() = _path.points.at(i).transforms[0].translation.z;
@@ -712,23 +736,51 @@ void OptimizerLocalPlanner::getPointsFromGlobalPath(trajectory_msgs::MultiDOFJoi
 			qt_.w = _path.points.at(i).transforms[0].rotation.w;
 			vec_rot_ugv.push_back(qt_);
 			// printf("point =[%i] getPointsFromGlobalPathUGV = [%f %f %f] \n",count_,p_ugv_.x(),p_ugv_.y(),p_ugv_.z());
+			// Get position and rotation vector for UAV
+			double xp_uav_ = x_uav_/((double)n_uav_+1.0);
+			double yp_uav_ = y_uav_/((double)n_uav_+1.0);
+			double zp_uav_ = z_uav_/((double)n_uav_+1.0);
+			p_uav_.x() = _path.points.at(i).transforms[1].translation.x;
+			p_uav_.y() = _path.points.at(i).transforms[1].translation.y;
+			p_uav_.z() = _path.points.at(i).transforms[1].translation.z;
+			v_uav_.push_back(p_uav_);
+			qt_.x = _path.points.at(i).transforms[1].rotation.x;
+			qt_.y = _path.points.at(i).transforms[1].rotation.y;
+			qt_.z = _path.points.at(i).transforms[1].rotation.z;
+			qt_.w = _path.points.at(i).transforms[1].rotation.w;
+			vec_rot_uav.push_back(qt_);
+			// printf("point =[%i] getPointsFromGlobalPathUAV = [%f %f %f]\n",count_,p_uav_.x(),p_uav_.y(),p_uav_.z());
 			count_++;
-			for (int j=0; j< n_ugv_ ; j++){
-				p_ugv_ = Eigen::Vector3d(0.0,0.0,0.0);
-				p_ugv_.x() = _path.points.at(i).transforms[0].translation.x + xp*(1.0+(double)j);
-				p_ugv_.y() = _path.points.at(i).transforms[0].translation.y + yp*(1.0+(double)j);
-				p_ugv_.z() = _path.points.at(i).transforms[0].translation.z + zp*(1.0+(double)j);
-				v_ugv_.push_back(p_ugv_);
-				qt_.x = _path.points.at(i).transforms[0].rotation.x;
-				qt_.y = _path.points.at(i).transforms[0].rotation.y;
-				qt_.z = _path.points.at(i).transforms[0].rotation.z;
-				qt_.w = _path.points.at(i).transforms[0].rotation.w;
-				vec_rot_ugv.push_back(qt_);
-				// printf("point =[%i] getPointsFromGlobalPathUGV = [%f %f %f]\n",count_,p_ugv_.x(),p_ugv_.y(),p_ugv_.z());
-				count_++;
-			}
+			// for (int j=0; j< n_uav_ ; j++){
+			// 	// Create new position and rotation vector for UGV
+			// 	p_ugv_ = Eigen::Vector3d(0.0,0.0,0.0);
+			// 	p_ugv_.x() = _path.points.at(i).transforms[0].translation.x + xp_ugv_*(1.0+(double)j);
+			// 	p_ugv_.y() = _path.points.at(i).transforms[0].translation.y + yp_ugv_*(1.0+(double)j);
+			// 	p_ugv_.z() = _path.points.at(i).transforms[0].translation.z + zp_ugv_*(1.0+(double)j);
+			// 	v_ugv_.push_back(p_ugv_);
+			// 	qt_.x = _path.points.at(i).transforms[0].rotation.x;
+			// 	qt_.y = _path.points.at(i).transforms[0].rotation.y;
+			// 	qt_.z = _path.points.at(i).transforms[0].rotation.z;
+			// 	qt_.w = _path.points.at(i).transforms[0].rotation.w;
+			// 	vec_rot_ugv.push_back(qt_);
+			// 	printf("point =[%i] getPointsFromGlobalPathUGV = [%f %f %f]\n",count_,p_ugv_.x(),p_ugv_.y(),p_ugv_.z());
+			// 	// Create new position and rotation vector for UAV
+			// 	p_uav_ = Eigen::Vector3d(0.0,0.0,0.0);
+			// 	p_uav_.x() = _path.points.at(i).transforms[1].translation.x + xp_uav_*(1.0+(double)j);
+			// 	p_uav_.y() = _path.points.at(i).transforms[1].translation.y + yp_uav_*(1.0+(double)j);
+			// 	p_uav_.z() = _path.points.at(i).transforms[1].translation.z + zp_uav_*(1.0+(double)j);
+			// 	v_uav_.push_back(p_uav_);
+			// 	qt_.x = _path.points.at(i).transforms[1].rotation.x;
+			// 	qt_.y = _path.points.at(i).transforms[1].rotation.y;
+			// 	qt_.z = _path.points.at(i).transforms[1].rotation.z;
+			// 	qt_.w = _path.points.at(i).transforms[1].rotation.w;
+			// 	vec_rot_uav.push_back(qt_);
+			// 	printf("point =[%i] getPointsFromGlobalPathUAV = [%f %f %f]\n",count_,p_uav_.x(),p_uav_.y(),p_uav_.z());
+			// 	count_++;
+			// }
 		}
 		else{
+			// Get position and rotation vector for UGV
 			p_ugv_.x() = _path.points.at(i).transforms[0].translation.x;
 			p_ugv_.y() = _path.points.at(i).transforms[0].translation.y;
 			p_ugv_.z() = _path.points.at(i).transforms[0].translation.z;
@@ -739,9 +791,21 @@ void OptimizerLocalPlanner::getPointsFromGlobalPath(trajectory_msgs::MultiDOFJoi
 			qt_.w = _path.points.at(i).transforms[0].rotation.w;
 			vec_rot_ugv.push_back(qt_);
 			// printf("point =[%i] getPointsFromGlobalPathUGV = [%f %f %f]\n",count_,p_ugv_.x(),p_ugv_.y(),p_ugv_.z());
+			// Get position and rotation vector for UAV
+			p_uav_.x() = _path.points.at(i).transforms[1].translation.x;
+			p_uav_.y() = _path.points.at(i).transforms[1].translation.y;
+			p_uav_.z() = _path.points.at(i).transforms[1].translation.z;
+			v_uav_.push_back(p_uav_);
+			qt_.x = _path.points.at(i).transforms[1].rotation.x;
+			qt_.y = _path.points.at(i).transforms[1].rotation.y;
+			qt_.z = _path.points.at(i).transforms[1].rotation.z;
+			qt_.w = _path.points.at(i).transforms[1].rotation.w;
+			vec_rot_uav.push_back(qt_);
+			// printf("point =[%i] getPointsFromGlobalPathUAV = [%f %f %f]\n",count_,p_uav_.x(),p_uav_.y(),p_uav_.z());
 			count_++;
 		}
     }
+	// Get position and rotation vector for UGV
 	p_ugv_.x() = _path.points.at(_path.points.size()-1).transforms[0].translation.x;
 	p_ugv_.y() = _path.points.at(_path.points.size()-1).transforms[0].translation.y;
 	p_ugv_.z() = _path.points.at(_path.points.size()-1).transforms[0].translation.z;
@@ -752,65 +816,7 @@ void OptimizerLocalPlanner::getPointsFromGlobalPath(trajectory_msgs::MultiDOFJoi
 	qt_.w = _path.points.at(_path.points.size()-1).transforms[0].rotation.w;
 	vec_rot_ugv.push_back(qt_);
 	// printf("point =[%i] getPointsFromGlobalPathUGV = [%f %f %f]\n",count_,p_ugv_.x(),p_ugv_.y(),p_ugv_.z());
-	count_++;
-
-	for (size_t i = 0 ; i <  v_ugv_.size() ; i++){
-		vec_pose_init_ugv.push_back(v_ugv_[i]);
-	}
-
 	// Get position and rotation vector for UAV
-	count_ = 1; 
-	for (size_t i = 0; i < _path.points.size()-1; i++)
-    {
-		x_uav_ = _path.points.at(i+1).transforms[1].translation.x - _path.points.at(i).transforms[1].translation.x;
-		y_uav_ = _path.points.at(i+1).transforms[1].translation.y - _path.points.at(i).transforms[1].translation.y;
-		z_uav_ = _path.points.at(i+1).transforms[1].translation.z - _path.points.at(i).transforms[1].translation.z;
-        D_uav_ = sqrt(x_uav_ * x_uav_ + y_uav_ * y_uav_ + z_uav_ * z_uav_);
-		if (D_uav_ > min_distance_add_new_point){
-			n_uav_ = floor(D_uav_ / min_distance_add_new_point);
-			double xp = x_uav_/((double)n_uav_+1.0);
-			double yp = y_uav_/((double)n_uav_+1.0);
-			double zp = z_uav_/((double)n_uav_+1.0);
-			p_uav_.x() = _path.points.at(i).transforms[1].translation.x;
-			p_uav_.y() = _path.points.at(i).transforms[1].translation.y;
-			p_uav_.z() = _path.points.at(i).transforms[1].translation.z;
-			v_uav_.push_back(p_uav_);
-			qt_.x = _path.points.at(i).transforms[1].rotation.x;
-			qt_.y = _path.points.at(i).transforms[1].rotation.y;
-			qt_.z = _path.points.at(i).transforms[1].rotation.z;
-			qt_.w = _path.points.at(i).transforms[1].rotation.w;
-			vec_rot_uav.push_back(qt_);
-			// printf("point =[%i] getPointsFromGlobalPathUAV = [%f %f %f]\n",count_,p_uav_.x(),p_uav_.y(),p_uav_.z());
-			count_++;
-			for (int j=0; j< n_uav_ ; j++){
-				p_uav_ = Eigen::Vector3d(0.0,0.0,0.0);
-				p_uav_.x() = _path.points.at(i).transforms[1].translation.x + xp*(1.0+(double)j);
-				p_uav_.y() = _path.points.at(i).transforms[1].translation.y + yp*(1.0+(double)j);
-				p_uav_.z() = _path.points.at(i).transforms[1].translation.z + zp*(1.0+(double)j);
-				v_uav_.push_back(p_uav_);
-				qt_.x = _path.points.at(i).transforms[1].rotation.x;
-				qt_.y = _path.points.at(i).transforms[1].rotation.y;
-				qt_.z = _path.points.at(i).transforms[1].rotation.z;
-				qt_.w = _path.points.at(i).transforms[1].rotation.w;
-				vec_rot_uav.push_back(qt_);
-				// printf("point =[%i] getPointsFromGlobalPathUAV = [%f %f %f]\n",count_,p_uav_.x(),p_uav_.y(),p_uav_.z());
-				count_++;
-			}
-		}
-		else{
-			p_uav_.x() = _path.points.at(i).transforms[1].translation.x;
-			p_uav_.y() = _path.points.at(i).transforms[1].translation.y;
-			p_uav_.z() = _path.points.at(i).transforms[1].translation.z;
-			v_uav_.push_back(p_uav_);
-			qt_.x = _path.points.at(i).transforms[1].rotation.x;
-			qt_.y = _path.points.at(i).transforms[1].rotation.y;
-			qt_.z = _path.points.at(i).transforms[1].rotation.z;
-			qt_.w = _path.points.at(i).transforms[1].rotation.w;
-			vec_rot_uav.push_back(qt_);
-			// printf("point =[%i] getPointsFromGlobalPathUAV = [%f %f %f]\n",count_,p_uav_.x(),p_uav_.y(),p_uav_.z());
-			count_++;
-		}
-    }
 	p_uav_.x() = _path.points.at(_path.points.size()-1).transforms[1].translation.x;
 	p_uav_.y() = _path.points.at(_path.points.size()-1).transforms[1].translation.y;
 	p_uav_.z() = _path.points.at(_path.points.size()-1).transforms[1].translation.z;
@@ -823,9 +829,13 @@ void OptimizerLocalPlanner::getPointsFromGlobalPath(trajectory_msgs::MultiDOFJoi
 	// printf("point =[%i] getPointsFromGlobalPathUAV = [%f %f %f]\n",count_,p_uav_.x(),p_uav_.y(),p_uav_.z());
 	count_++;
 
+	for (size_t i = 0 ; i <  v_ugv_.size() ; i++){
+		vec_pose_init_ugv.push_back(v_ugv_[i]);
+	}
 	for (size_t i = 0 ; i <  v_uav_.size() ; i++){
 		vec_pose_init_uav.push_back(v_uav_[i]);
 	}
+
 
 	for(size_t i= 0; i < l_cat_.size() ; i++){
 		structLengthCatenary l_;

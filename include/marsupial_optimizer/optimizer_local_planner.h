@@ -25,7 +25,8 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 
 #include "marsupial_optimizer/ceres_contrain_equidistance.hpp"
 #include "marsupial_optimizer/ceres_contrain_obstacles.hpp"
-#include "marsupial_optimizer/ceres_contrain_kinematics.hpp"
+#include "marsupial_optimizer/ceres_contrain_kinematics_ugv.hpp"
+#include "marsupial_optimizer/ceres_contrain_kinematics_uav.hpp"
 #include "marsupial_optimizer/ceres_contrain_time.hpp"
 #include "marsupial_optimizer/ceres_contrain_velocity.hpp"
 #include "marsupial_optimizer/ceres_contrain_acceleration.hpp"
@@ -190,13 +191,13 @@ public:
     trajectory_msgs::MultiDOFJointTrajectory globalTrajectory, localTrajectory;
     ros::Time start_time;
 
-	visualization_msgs::MarkerArray points_marker, lines_marker;
+	visualization_msgs::MarkerArray points_uav_marker, lines_uav_marker, points_ugv_marker, lines_ugv_marker;
 	typedef visualization_msgs::Marker RVizMarker;
 
 	std::string action_name_;
 
 	ros::Subscriber octomap_sub_,local_map_sub;
-	ros::Publisher traj_marker_pub_;
+	ros::Publisher traj_marker_ugv_pub_, traj_marker_uav_pub_;
 
 	ros::Publisher catenary_marker_pub_;
 	visualization_msgs::MarkerArray catenary_marker;

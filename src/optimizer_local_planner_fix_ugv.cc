@@ -330,8 +330,8 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		points_catenary_final.clear();
 	}
 
-	mp_.getMarkerPoints(points_marker,vec_pose_opt,"points_lines");
-	mp_.getMarkerLines(lines_marker,vec_pose_opt,"points_lines");
+	mp_.getMarkerPoints(points_marker,vec_pose_opt,"points_lines",1);
+	mp_.getMarkerLines(lines_marker,vec_pose_opt,"points_lines",1);
 	traj_marker_pub_.publish(points_marker);
 	traj_marker_pub_.publish(lines_marker);
 

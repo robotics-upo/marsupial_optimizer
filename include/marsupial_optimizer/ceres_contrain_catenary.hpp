@@ -45,7 +45,6 @@ struct CatenaryFunctor {
 
         double d_[1];
         double d_min[1] = {100.0};
-
 		
    		int id_marker_;		// Related with Marker frame.id
         int n_points_cat_dis;
@@ -55,9 +54,7 @@ struct CatenaryFunctor {
         visualization_msgs::MarkerArray catenary_marker_;
 	    std::vector<geometry_msgs::Point> points_catenary;
 
-		double dist_ = sqrt((statePos[4]-statePos[1])*(statePos[4]-statePos[1]) + (statePos[5]-statePos[2])*(statePos[5]-statePos[2]) + (statePos[6]-statePos[3])*(statePos[6]-statePos[3])); 
-		double safety_length = 1.001 * dist_;
-
+		//Get UV Reel position
 		double roll_, pitch_, yaw_, lengt_vec_;
 		tf::Quaternion q_(stateRot[1],stateRot[2],stateRot[3],stateRot[4]);
 		tf::Matrix3x3 M_(q_);	
@@ -68,17 +65,23 @@ struct CatenaryFunctor {
 		pos_init_cat_[1] = statePos[2] + lengt_vec_ *sin(yaw_);
 		pos_init_cat_[2] = statePos[3] + pr_ugv_[2] ;
 
+		double dist_ = sqrt((statePos[4]-pos_init_cat_[0])*(statePos[4]-pos_init_cat_[0]) + 
+							(statePos[5]-pos_init_cat_[1])*(statePos[5]-pos_init_cat_[1]) + 
+							(statePos[6]-pos_init_cat_[2])*(statePos[6]-pos_init_cat_[2])); 
+		double safety_length = 1.001 * dist_;
+
 		points_catenary.clear();
 		cS.setMaxNumIterations(100);
-		cS.solve(pos_init_cat_[0], pos_init_cat_[1], pos_init_cat_[2], statePos[1], statePos[2], statePos[3], stateCat[1], points_catenary);
+		cS.solve(pos_init_cat_[0], pos_init_cat_[1], pos_init_cat_[2], statePos[4], statePos[5], statePos[6], stateCat[1], points_catenary);
 
 		if (points_catenary.size()<1.0)
 			ROS_ERROR ("Not posible to get Catenary for state[%f] = [%f %f %f / %f %f %f]", statePos[0],statePos[1], statePos[2], statePos[3], statePos[4], statePos[5], statePos[6]);
 
 		id_marker_ = statePos[0];
 				
-		if (safety_length>= stateCat[1])
-			ROS_ERROR ("state[%f] ,  Length_Catenary < dist_  ( [%f] < [%f] )",statePos[0], stateCat[1], safety_length);
+		if (safety_length>= stateCat[1]){
+			// ROS_ERROR ("state[%f] ,  Length_Catenary < dist_  ( [%f] < [%f] )",statePos[0], stateCat[1], safety_length);
+		}
 		else
 			mP_.markerPoints(catenary_marker_, points_catenary, id_marker_, s_, catenary_marker_pub_);
 
