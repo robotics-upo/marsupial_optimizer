@@ -23,7 +23,8 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "glog/logging.h"
 #include "Eigen/Core"
 
-#include "marsupial_optimizer/ceres_contrain_equidistance.hpp"
+#include "marsupial_optimizer/ceres_contrain_equidistance_ugv.hpp"
+#include "marsupial_optimizer/ceres_contrain_equidistance_uav.hpp"
 #include "marsupial_optimizer/ceres_contrain_obstacles.hpp"
 #include "marsupial_optimizer/ceres_contrain_kinematics_ugv.hpp"
 #include "marsupial_optimizer/ceres_contrain_kinematics_uav.hpp"
@@ -104,7 +105,7 @@ struct structLengthCatenary
 // };
 
 struct parameterBlockPos{
-	double parameter[7];
+	double parameter[4];
 };
 
 struct parameterBlockRot{
@@ -215,7 +216,8 @@ public:
 	typedef vector<structLengthCatenary> LengthCatenarySequence;
 
 	vector<Eigen::Vector3d> new_path_ugv, new_path_uav;
-	vector<parameterBlockPos> statesPos;
+	vector<parameterBlockPos> statesPosUGV;
+	vector<parameterBlockPos> statesPosUAV;
 	vector<parameterBlockRot> statesRot;
 	vector<parameterBlockTime> statesTime;
 	vector<parameterBlockLength> statesLength;
@@ -245,6 +247,7 @@ public:
 	int scenario_number, num_pos_initial, num_goal;
 	bool write_data_for_analysis;
 	geometry_msgs::Point pos_reel_ugv;
+	double length_tether_max;
 
 
 private:

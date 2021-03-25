@@ -51,6 +51,8 @@ find_package(catkin REQUIRED COMPONENTS
   dynamic_reconfigure
 )
 
+find_package(PCL 1.8 REQUIRED)
+
 message(STATUS "System: ${CMAKE_SYSTEM}")
 ## System dependencies are found with CMake's conventions
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake_modules)
@@ -72,6 +74,10 @@ catkin_package(
   message_generation 
   message_runtime
   upo_actions
+  pcl_conversions 
+  pcl_ros
+  # sensor_msgs 
+  DEPENDS system_lib
 )
 
 include_directories(  ${catkin_INCLUDE_DIRS}  ${PCL_INCLUDE_DIRS} )
@@ -106,6 +112,9 @@ target_link_libraries(marsupial_optimizer
 add_executable(optimizer_local_planner_fix_ugv_node src/optimizer_local_planner_fix_ugv_node.cpp src/optimizer_local_planner_fix_ugv.cc )
 # add_dependencies(optimizer_local_planner_fix_ugv_node ${PROJECT_NAME}_gencfg)
 target_link_libraries(optimizer_local_planner_fix_ugv_node marsupial_optimizer  Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES})
+
+add_executable(region_growing_segmentation_node src/region_growing_segmentation_node.cpp)
+target_link_libraries (region_growing_segmentation_node   ${PCL_LIBRARIES} ${catkin_LIBRARIES})
 
 add_executable(optimizer_local_planner_node src/optimizer_local_planner_node.cpp src/optimizer_local_planner.cc )
 # add_dependencies(optimizer_local_planner_node ${PROJECT_NAME}_gencfg)

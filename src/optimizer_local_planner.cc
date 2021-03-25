@@ -45,6 +45,7 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(tf2_ros::Buffer *tfBuffer_)
     nh->param<double>("pos_reel_z", pos_reel_z, 0.22);
 
 	nh->param<double>("z_constraint", z_constraint,0.0);
+	nh->param<double>("length_tether_max", length_tether_max,20.0);
 
 	nh->param<double>("td_", td_, 0.5);
 		
@@ -212,24 +213,27 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
   	Problem problem;
 
 	//Set Parameter Blocks from path global information
-	statesPos.clear();
+	statesPosUGV.clear();
+	statesPosUAV.clear();
 	statesRot.clear();
 	statesTime.clear();
 	statesLength.clear();
 	printf("[_]states.parameter=[pos_x  pos_y  pos_z  rot_x  rot_y  rot_z  rot_w  time  length_]\n");
 	for (size_t i = 0 ; i < new_path_uav.size(); i ++){
-		parameterBlockPos parameter_block_pos;
+		parameterBlockPos parameter_block_pos_ugv;
+		parameterBlockPos parameter_block_pos_uav;
 		parameterBlockRot parameter_block_rot;
 		parameterBlockTime parameter_block_time;
 		parameterBlockLength parameter_block_length;
 		
-		parameter_block_pos.parameter[0] = i;
-		parameter_block_pos.parameter[1] = vec_pose_init_ugv[i].x();
-		parameter_block_pos.parameter[2] = vec_pose_init_ugv[i].y(); 
-		parameter_block_pos.parameter[3] = vec_pose_init_ugv[i].z(); 
-		parameter_block_pos.parameter[4] = vec_pose_init_uav[i].x();
-		parameter_block_pos.parameter[5] = vec_pose_init_uav[i].y(); 
-		parameter_block_pos.parameter[6] = vec_pose_init_uav[i].z(); 
+		parameter_block_pos_ugv.parameter[0] = i;
+		parameter_block_pos_ugv.parameter[1] = vec_pose_init_ugv[i].x();
+		parameter_block_pos_ugv.parameter[2] = vec_pose_init_ugv[i].y(); 
+		parameter_block_pos_ugv.parameter[3] = vec_pose_init_ugv[i].z(); 
+		parameter_block_pos_uav.parameter[0] = i;
+		parameter_block_pos_uav.parameter[1] = vec_pose_init_uav[i].x();
+		parameter_block_pos_uav.parameter[2] = vec_pose_init_uav[i].y(); 
+		parameter_block_pos_uav.parameter[3] = vec_pose_init_uav[i].z(); 
 		
 		parameter_block_rot.parameter[0] = i;
 		parameter_block_rot.parameter[1] = vec_rot_ugv[i].x;
@@ -248,49 +252,58 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		parameter_block_length.parameter[0] = i;
 		parameter_block_length.parameter[1] = vec_len_cat_init[i].length;
 
-		statesPos.push_back(parameter_block_pos);
+		statesPosUGV.push_back(parameter_block_pos_ugv);
+		statesPosUAV.push_back(parameter_block_pos_uav);
 		statesRot.push_back(parameter_block_rot);
 		statesTime.push_back(parameter_block_time);
 		statesLength.push_back(parameter_block_length);
-		printf("[%lu]states.parameterUGV=[%f %f %f / %f %f %f %f/ %f / %f]\n",i,parameter_block_pos.parameter[1],parameter_block_pos.parameter[2],parameter_block_pos.parameter[3],
+		printf("[%lu]states.parameterUGV=[%f %f %f / %f %f %f %f/ %f / %f]\n",i,parameter_block_pos_ugv.parameter[1],parameter_block_pos_ugv.parameter[2],parameter_block_pos_ugv.parameter[3],
 															parameter_block_rot.parameter[1],parameter_block_rot.parameter[2],parameter_block_rot.parameter[3],parameter_block_rot.parameter[4],
 															parameter_block_time.parameter[1],parameter_block_length.parameter[1]);
-		printf("[%lu]states.parameterUAV=[%f %f %f / %f %f %f %f/ %f / %f]\n",i,parameter_block_pos.parameter[4],parameter_block_pos.parameter[5],parameter_block_pos.parameter[6],
+		printf("[%lu]states.parameterUAV=[%f %f %f / %f %f %f %f/ %f / %f]\n",i,parameter_block_pos_uav.parameter[1],parameter_block_pos_uav.parameter[2],parameter_block_pos_uav.parameter[3],
 															parameter_block_rot.parameter[5],parameter_block_rot.parameter[6],parameter_block_rot.parameter[7],parameter_block_rot.parameter[8],
 															parameter_block_time.parameter[2],parameter_block_length.parameter[1]);
 	}
     
-	/*** Cost Function I : Equidistance constrain ***/
-	for (int i = 0; i <  statesPos.size() - 1 ; ++i) {
-		CostFunction* cost_function1  = new AutoDiffCostFunction<EquiDistanceFunctor, 2, 7, 7>(new EquiDistanceFunctor(w_alpha*10.0, initial_distance_states_ugv, initial_distance_states_uav)); 
-		problem.AddResidualBlock(cost_function1, NULL, statesPos[i].parameter, statesPos[i+1].parameter);
+	/*** Cost Function I-i : UAV Equidistance constrain ***/
+	for (int i = 0; i <  statesPosUAV.size() - 1 ; ++i) {
+		CostFunction* cost_function1_1  = new AutoDiffCostFunction<EquiDistanceFunctorUAV, 1, 4, 4>(new EquiDistanceFunctorUAV(w_alpha*10.0, initial_distance_states_ugv, initial_distance_states_uav)); 
+		problem.AddResidualBlock(cost_function1_1, NULL, statesPosUAV[i].parameter, statesPosUAV[i+1].parameter);
 		if (i == 0)
-			problem.SetParameterBlockConstant(statesPos[i].parameter);
-		if (i == (statesPos.size() - 2))
-			problem.SetParameterBlockConstant(statesPos[i+1].parameter);
-		problem.SetParameterLowerBound(statesPos[i].parameter, 3, 0.0);
-		problem.SetParameterUpperBound(statesPos[i].parameter, 3, 1.0);
-		problem.SetParameterLowerBound(statesPos[i].parameter, 6, 0.0);
-		problem.SetParameterUpperBound(statesPos[i].parameter, 6, 20.0);
+			problem.SetParameterBlockConstant(statesPosUAV[i].parameter);
+		if (i == (statesPosUAV.size() - 2))
+			problem.SetParameterBlockConstant(statesPosUAV[i+1].parameter);
+		problem.SetParameterLowerBound(statesPosUAV[i].parameter, 3, 0.0);
+		problem.SetParameterUpperBound(statesPosUAV[i].parameter, 3, 20.0);
+	}
+
+	/*** Cost Function I-ii : UGV Equidistance constrain ***/
+	for (int i = 0; i <  statesPosUGV.size() - 1 ; ++i) {
+		CostFunction* cost_function1_2  = new AutoDiffCostFunction<EquiDistanceFunctorUGV, 1, 4, 4>(new EquiDistanceFunctorUGV(w_alpha*10.0, initial_distance_states_ugv, initial_distance_states_uav)); 
+		problem.AddResidualBlock(cost_function1_2, NULL, statesPosUGV[i].parameter, statesPosUGV[i+1].parameter);
+		if (i == 0)
+			problem.SetParameterBlockConstant(statesPosUGV[i].parameter);
+		problem.SetParameterLowerBound(statesPosUGV[i].parameter, 3, 0.0);
+		problem.SetParameterUpperBound(statesPosUGV[i].parameter, 3, 1.0);
 	}
 
 	/*** Cost Function II : Obstacles constrain ***/
-	for (int i = 0; i < statesPos.size(); ++i) {
-    	CostFunction* cost_function2  = new AutoDiffCostFunction<ObstacleDistanceFunctor::ObstaclesFunctor, 1, 7>
-											(new ObstacleDistanceFunctor::ObstaclesFunctor(w_beta*10.0, distance_obstacle, nn_.kdtree, nn_.obs_points)); 
-    	problem.AddResidualBlock(cost_function2, NULL, statesPos[i].parameter);
+	for (int i = 0; i < statesPosUAV.size(); ++i) {
+    	CostFunction* cost_function2  = new AutoDiffCostFunction<ObstacleDistanceFunctorUAV::ObstaclesFunctor, 1, 4>
+											(new ObstacleDistanceFunctorUAV::ObstaclesFunctor(w_beta*10.0, distance_obstacle, nn_.kdtree, nn_.obs_points)); 
+    	problem.AddResidualBlock(cost_function2, NULL, statesPosUAV[i].parameter);
   	}
 
 	/*** Cost Function III-i : UAV Kinematic constrain ***/
-	for (int i = 0; i < statesPos.size() - 2; ++i) {
-		CostFunction* cost_function3_1  = new AutoDiffCostFunction<KinematicsFunctorUAV, 1, 7, 7, 7>(new KinematicsFunctorUAV(w_gamma, angle_min_traj)); 
-		problem.AddResidualBlock(cost_function3_1, NULL, statesPos[i].parameter, statesPos[i+1].parameter, statesPos[i+2].parameter);
+	for (int i = 0; i < statesPosUAV.size() - 2; ++i) {
+		CostFunction* cost_function3_1  = new AutoDiffCostFunction<KinematicsFunctorUAV, 1, 4, 4, 4>(new KinematicsFunctorUAV(w_gamma, angle_min_traj)); 
+		problem.AddResidualBlock(cost_function3_1, NULL, statesPosUAV[i].parameter, statesPosUAV[i+1].parameter, statesPosUAV[i+2].parameter);
 	}
 
 	/*** Cost Function III-ii : UGV Kinematic constrain ***/
-	for (int i = 0; i < statesPos.size() - 2; ++i) {
-		CostFunction* cost_function3_2  = new AutoDiffCostFunction<KinematicsFunctorUGV, 1, 7, 7, 7>(new KinematicsFunctorUGV(w_gamma, angle_min_traj)); 
-		problem.AddResidualBlock(cost_function3_2, NULL, statesPos[i].parameter, statesPos[i+1].parameter, statesPos[i+2].parameter);
+	for (int i = 0; i < statesPosUGV.size() - 2; ++i) {
+		CostFunction* cost_function3_2  = new AutoDiffCostFunction<KinematicsFunctorUGV, 1, 4, 4, 4>(new KinematicsFunctorUGV(w_gamma, angle_min_traj)); 
+		problem.AddResidualBlock(cost_function3_2, NULL, statesPosUGV[i].parameter, statesPosUGV[i+1].parameter, statesPosUGV[i+2].parameter);
 	}
 
 	/*** Cost Function IV : Time constrain ***/
@@ -304,25 +317,31 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 
 	/*** Cost Function V : Velocity constrain ***/
 	for (int i = 0; i < statesTime.size() - 1; ++i) {
-		CostFunction* cost_function5  = new AutoDiffCostFunction<VelocityFunctor, 2, 7, 7, 3>(new VelocityFunctor(w_epsilon, initial_velocity_ugv, initial_velocity_uav)); 
-		problem.AddResidualBlock(cost_function5, NULL, statesPos[i].parameter, statesPos[i+1].parameter, statesTime[i+1].parameter);
+		CostFunction* cost_function5  = new AutoDiffCostFunction<VelocityFunctor, 2, 4, 4, 4, 4, 3>(new VelocityFunctor(w_epsilon, initial_velocity_ugv, initial_velocity_uav)); 
+		problem.AddResidualBlock(cost_function5, NULL, 
+								statesPosUAV[i].parameter, statesPosUAV[i+1].parameter, 
+								statesPosUGV[i].parameter, statesPosUGV[i+1].parameter, 
+								statesTime[i+1].parameter);
 	}
 
 	/*** Cost Function VI : Acceleration constrain ***/
 	for (int i = 0; i < statesTime.size() - 2; ++i) {
-		CostFunction* cost_function6  = new AutoDiffCostFunction<AccelerationFunctor, 2, 7, 7, 7, 3, 3>(new AccelerationFunctor(w_zeta, initial_acceleration_ugv, initial_acceleration_uav)); 
-		problem.AddResidualBlock(cost_function6, NULL, statesPos[i].parameter, statesPos[i+1].parameter, statesPos[i+2].parameter, statesTime[i+1].parameter, statesTime[i+2].parameter);
+		CostFunction* cost_function6  = new AutoDiffCostFunction<AccelerationFunctor, 2, 4, 4, 4, 4, 4, 4, 3, 3>(new AccelerationFunctor(w_zeta, initial_acceleration_ugv, initial_acceleration_uav)); 
+		problem.AddResidualBlock(cost_function6, NULL, 
+								statesPosUAV[i].parameter, statesPosUAV[i+1].parameter, statesPosUAV[i+2].parameter,
+								statesPosUGV[i].parameter, statesPosUGV[i+1].parameter, statesPosUGV[i+2].parameter,  
+								statesTime[i+1].parameter, statesTime[i+2].parameter);
 	}
 
 	/*** Cost Function VII : Catenary constrain  ***/
 	for (int i = 0; i < statesLength.size(); ++i) {
-		CostFunction* cost_function7  = new NumericDiffCostFunction<CatenaryFunctor, CENTRAL, 2, 7, 9, 2>
+		CostFunction* cost_function7  = new NumericDiffCostFunction<CatenaryFunctor, CENTRAL, 2, 4, 4, 9, 2>
 										(new CatenaryFunctor(w_eta * 10.0, distance_catenary_obstacle, vec_len_cat_init[i].length, nn_.kdtree, nn_.obs_points, pos_reel_ugv, size, nh)); 
-		problem.AddResidualBlock(cost_function7, NULL, statesPos[i].parameter, statesRot[i].parameter, statesLength[i].parameter);
+		problem.AddResidualBlock(cost_function7, NULL, statesPosUAV[i].parameter, statesPosUGV[i].parameter, statesRot[i].parameter, statesLength[i].parameter);
 		if (i == 0)
 			problem.SetParameterBlockConstant(statesLength[i].parameter);
 		problem.SetParameterLowerBound(statesLength[i].parameter, 1, 0.0);
-		problem.SetParameterUpperBound(statesLength[i].parameter, 1, 40.0);
+		problem.SetParameterUpperBound(statesLength[i].parameter, 1, length_tether_max);
 	}
 
 	/*** Cost Function VIII : Dynamic Catenary constrain  ***/
@@ -356,9 +375,9 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	
 
   	for (size_t i = 0; i < size; i++){
-		Eigen::Vector3d position_ugv_ = Eigen::Vector3d(statesPos[i].parameter[1],statesPos[i].parameter[2],statesPos[i].parameter[3]);
+		Eigen::Vector3d position_ugv_ = Eigen::Vector3d(statesPosUGV[i].parameter[1],statesPosUGV[i].parameter[2],statesPosUGV[i].parameter[3]);
 		vec_pose_ugv_opt.push_back(position_ugv_);
-		Eigen::Vector3d position_uav_ = Eigen::Vector3d(statesPos[i].parameter[4],statesPos[i].parameter[5],statesPos[i].parameter[6]);
+		Eigen::Vector3d position_uav_ = Eigen::Vector3d(statesPosUAV[i].parameter[1],statesPosUAV[i].parameter[2],statesPosUAV[i].parameter[3]);
 		vec_pose_uav_opt.push_back(position_uav_);
 		structLengthCatenary vLC;
 		vLC.length = statesLength[i].parameter[1];
@@ -369,20 +388,20 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	}
 
 	// mp_.clearMarkers(catenary_marker, 100, catenary_marker_pub_);
-	for(size_t i = 0; i < statesPos.size(); i++){
+	for(size_t i = 0; i < statesPosUAV.size(); i++){
 		std::vector<geometry_msgs::Point> points_catenary_final;
 		points_catenary_final.clear();
 
-		geometry_msgs::Point p_reel_=getReelPoint(statesPos[i].parameter[1],statesPos[i].parameter[2],statesPos[i].parameter[3],statesRot[i].parameter[1],statesRot[i].parameter[2],statesRot[i].parameter[3], statesRot[i].parameter[4],pos_reel_ugv);
+		geometry_msgs::Point p_reel_=getReelPoint(statesPosUGV[i].parameter[1],statesPosUGV[i].parameter[2],statesPosUGV[i].parameter[3],statesRot[i].parameter[1],statesRot[i].parameter[2],statesRot[i].parameter[3], statesRot[i].parameter[4],pos_reel_ugv);
 		CatenarySolver cSX_;
 		cSX_.setMaxNumIterations(100);
-	  	cSX_.solve(p_reel_.x, p_reel_.y, p_reel_.z, statesPos[i].parameter[4], statesPos[i].parameter[5], statesPos[i].parameter[6], statesLength[i].parameter[1], points_catenary_final);
+	  	cSX_.solve(p_reel_.x, p_reel_.y, p_reel_.z, statesPosUAV[i].parameter[1], statesPosUAV[i].parameter[2], statesPosUAV[i].parameter[3], statesLength[i].parameter[1], points_catenary_final);
 		mp_.markerPoints(catenary_marker, points_catenary_final, i, size, catenary_marker_pub_);
-		double _d_ = sqrt(pow(p_reel_.x -statesPos[i].parameter[4],2) + pow(p_reel_.y - statesPos[i].parameter[5],2) + pow(p_reel_.z-statesPos[i].parameter[6],2));
+		double _d_ = sqrt(pow(p_reel_.x -statesPosUAV[i].parameter[1],2) + pow(p_reel_.y - statesPosUAV[i].parameter[2],2) + pow(p_reel_.z-statesPosUAV[i].parameter[3],2));
 		printf("points_catenary_final.size()=[%lu] ugv_pos[%lu] = [%f %f %f] , uav_pos[%lu]=[%f %f %f] , l=[%f] d=[%f]\n",points_catenary_final.size(),
-																												i,statesPos[i].parameter[1], statesPos[i].parameter[2], statesPos[i].parameter[3],
-																												i,statesPos[i].parameter[4], statesPos[i].parameter[5], statesPos[i].parameter[6],
-																												statesLength[i].parameter[1],_d_);
+																								i,statesPosUGV[i].parameter[1], statesPosUGV[i].parameter[2], statesPosUGV[i].parameter[3],
+																								i,statesPosUAV[i].parameter[1], statesPosUAV[i].parameter[2], statesPosUAV[i].parameter[3],
+																								statesLength[i].parameter[1],_d_);
 	}
 
 	mp_.getMarkerPoints(points_ugv_marker, vec_pose_ugv_opt, "points_ugv_m",1);

@@ -20,13 +20,13 @@ public:
   VelocityFunctor(double weight_factor, double init_vel_ugv, double init_vel_uav): wf_(weight_factor), iv_ugv(init_vel_ugv), iv_uav(init_vel_uav) {}
 
   template <typename T>
-  bool operator()(const T* const statePos1, const T* const statePos2, const T* const stateT, T* residual) const {
+  bool operator()(const T* const statePosUAV1, const T* const statePosUAV2, const T* const statePosUGV1, const T* const statePosUGV2, const T* const stateT, T* residual) const {
 
-	T d_ugv_ = sqrt(pow(statePos2[1]-statePos1[1],2) + pow(statePos2[2]-statePos1[2],2)) ;
+	T d_ugv_ = sqrt(pow(statePosUGV2[1]-statePosUGV1[1],2) + pow(statePosUGV2[2]-statePosUGV1[2],2)) ;
   T dt_ugv_ = stateT[1];
 	T v_ugv_ = d_ugv_ / dt_ugv_;
 
-  T d_uav_ = sqrt(pow(statePos2[4]-statePos1[4],2) + pow(statePos2[5]-statePos1[5],2) + pow(statePos2[6]-statePos1[6],2)) ;
+  T d_uav_ = sqrt(pow(statePosUAV2[1]-statePosUAV1[1],2) + pow(statePosUAV2[2]-statePosUAV1[2],2) + pow(statePosUAV2[3]-statePosUAV1[3],2)) ;
   T dt_uav_ = stateT[2];
 	T v_uav_ = d_uav_ / dt_uav_;
 

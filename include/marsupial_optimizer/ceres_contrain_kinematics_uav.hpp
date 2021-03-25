@@ -22,8 +22,8 @@ public:
   bool operator()(const T* const statePos1, const T* const statePos2, const T* const statePos3, T* residual) const 
   {
 	//Kinematics for uav
-	T vector1_uav[3] = {statePos2[4]-statePos1[4],statePos2[5]-statePos1[5],statePos2[6]-statePos1[6]};
-	T vector2_uav[3] = {statePos2[4]-statePos3[4],statePos2[5]-statePos3[5],statePos2[6]-statePos3[6]};
+	T vector1_uav[3] = {statePos2[1]-statePos1[1],statePos2[2]-statePos1[2],statePos2[3]-statePos1[3]};
+	T vector2_uav[3] = {statePos2[1]-statePos3[1],statePos2[2]-statePos3[2],statePos2[3]-statePos3[3]};
 
 	T dot_product_uav = (vector2_uav[0] * vector1_uav[0]) + (vector2_uav[1] * vector1_uav[1]) + (vector2_uav[2] * vector1_uav[2]);
 	T norm_vector1_uav = sqrt((vector1_uav[0] * vector1_uav[0]) + (vector1_uav[1] * vector1_uav[1]) + (vector1_uav[2] * vector1_uav[2]));

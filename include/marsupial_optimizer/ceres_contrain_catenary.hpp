@@ -37,7 +37,7 @@ struct CatenaryFunctor {
 		pr_ugv_[2] = pos_reel_ugv_.z;
     }
 
-    bool operator()(const double* statePos, const double* stateRot, const double* stateCat, double* residual) const 
+    bool operator()(const double* statePosUAV, const double* statePosUGV, const double* stateRot, const double* stateCat, double* residual) const 
     {
 		CatenarySolver cS;
         MarkerPublisher mP_;
@@ -61,26 +61,28 @@ struct CatenaryFunctor {
 		M_.getRPY(roll_, pitch_, yaw_);
 		lengt_vec_ =  sqrt(pr_ugv_[0]*pr_ugv_[0] + pr_ugv_[1]*pr_ugv_[1]);
 		double pos_init_cat_[3];
-		pos_init_cat_[0] = statePos[1] + lengt_vec_ *cos(yaw_); 
-		pos_init_cat_[1] = statePos[2] + lengt_vec_ *sin(yaw_);
-		pos_init_cat_[2] = statePos[3] + pr_ugv_[2] ;
+		pos_init_cat_[0] = statePosUGV[1] + lengt_vec_ *cos(yaw_); 
+		pos_init_cat_[1] = statePosUGV[2] + lengt_vec_ *sin(yaw_);
+		pos_init_cat_[2] = statePosUGV[3] + pr_ugv_[2] ;
 
-		double dist_ = sqrt((statePos[4]-pos_init_cat_[0])*(statePos[4]-pos_init_cat_[0]) + 
-							(statePos[5]-pos_init_cat_[1])*(statePos[5]-pos_init_cat_[1]) + 
-							(statePos[6]-pos_init_cat_[2])*(statePos[6]-pos_init_cat_[2])); 
+		double dist_ = sqrt((statePosUAV[1]-pos_init_cat_[0])*(statePosUAV[1]-pos_init_cat_[0]) + 
+							(statePosUAV[2]-pos_init_cat_[1])*(statePosUAV[2]-pos_init_cat_[1]) + 
+							(statePosUAV[3]-pos_init_cat_[2])*(statePosUAV[3]-pos_init_cat_[2])); 
 		double safety_length = 1.001 * dist_;
 
 		points_catenary.clear();
 		cS.setMaxNumIterations(100);
-		cS.solve(pos_init_cat_[0], pos_init_cat_[1], pos_init_cat_[2], statePos[4], statePos[5], statePos[6], stateCat[1], points_catenary);
+		cS.solve(pos_init_cat_[0], pos_init_cat_[1], pos_init_cat_[2], statePosUAV[1], statePosUAV[2], statePosUAV[3], stateCat[1], points_catenary);
 
 		if (points_catenary.size()<1.0)
-			ROS_ERROR ("Not posible to get Catenary for state[%f] = [%f %f %f / %f %f %f]", statePos[0],statePos[1], statePos[2], statePos[3], statePos[4], statePos[5], statePos[6]);
+			ROS_ERROR ("Not posible to get Catenary for state[%f] = [%f %f %f / %f %f %f]", statePosUAV[0], 
+																							statePosUGV[1], statePosUGV[2], statePosUGV[3], 
+																							statePosUAV[1], statePosUAV[2], statePosUAV[3]);
 
-		id_marker_ = statePos[0];
+		id_marker_ = statePosUAV[0];
 				
 		if (safety_length>= stateCat[1]){
-			// ROS_ERROR ("state[%f] ,  Length_Catenary < dist_  ( [%f] < [%f] )",statePos[0], stateCat[1], safety_length);
+			// ROS_ERROR ("state[%f] ,  Length_Catenary < dist_  ( [%f] < [%f] )",statePosUAV[0], stateCat[1], safety_length);
 		}
 		else
 			mP_.markerPoints(catenary_marker_, points_catenary, id_marker_, s_, catenary_marker_pub_);
@@ -107,7 +109,6 @@ struct CatenaryFunctor {
 			}
 		}
 
-		
 		residual[0] = wf_ * 4.0 /(1.0 + exp(40.0*(d_min[0]-sb_)));
 		residual[1] = wf_ * 4.0 /(1.0 + exp(40.0*(stateCat[1]- safety_length)));
 

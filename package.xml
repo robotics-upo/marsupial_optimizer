@@ -67,6 +67,18 @@
   <exec_depend>message_runtime</exec_depend>
   <exec_depend>std_msgs</exec_depend> 
   <exec_depend>upo_actions</exec_depend>
+  <build_depend>pcl_conversions</build_depend>
+  <build_export_depend>pcl_conversions</build_export_depend>
+  <exec_depend>pcl_conversions</exec_depend>
+  <build_depend>pcl_ros</build_depend>
+  <build_export_depend>pcl_ros</build_export_depend>
+  <exec_depend>pcl_ros</exec_depend>
+
+
+
+  
+
+
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
