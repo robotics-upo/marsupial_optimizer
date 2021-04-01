@@ -29,7 +29,7 @@
 
 std::string world_frame, ugv_base_frame;
 
-ros::Publisher segmented_pc_pub;
+ros::Publisher segmented_traversable_pc_pub, segmented_obstacles_pc_pub;
 ros::Subscriber new_octomap_sub;
 sensor_msgs::PointCloud2 data_in;
 std::shared_ptr<tf2_ros::Buffer> tfBuffer;
@@ -110,7 +110,8 @@ void startRegionGrowing(sensor_msgs::PointCloud2 in_cloud_)
     std::cout << "These are the indices of the points of the initial" <<
     std::endl << "cloud that belong to the first cluster:" << std::endl;
 
-	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_new_ (new pcl::PointCloud<pcl::PointXYZ>);
+	pcl::PointCloud<pcl::PointXYZ>::Ptr segmented_cloud_traversable (new pcl::PointCloud<pcl::PointXYZ>);
+	pcl::PointCloud<pcl::PointXYZ>::Ptr segmented_cloud_obstacles (new pcl::PointCloud<pcl::PointXYZ>);
     std::vector<Eigen::Vector3f> mean_normals(clusters.size(), Eigen::Vector3f({ 0.,0.,0. }));
     int cluster_idx_key = 0;
 
@@ -122,7 +123,7 @@ void startRegionGrowing(sensor_msgs::PointCloud2 in_cloud_)
             int index_ = clusters[cluster_idx].indices[counter];
             if (cloud->points[index_].x == init_point_.x() && cloud->points[index_].y == init_point_.y() && cloud->points[index_].z == init_point_.z()){
                 cluster_idx_key = cluster_idx;
-                // ROS_ERROR("INSIDE !!!!!!!!!!!!!!!!!!!!!!!!!!!!! cluster_idx_key=[%i] ", cluster_idx_key);
+                std::cout << "Number cluster for traversability = " << cluster_idx_key <<std::endl;
             }
             // std::cout << index_ << ", ";
             mean_normals[cluster_idx] += normals->points[counter].getNormalVector3fMap();
@@ -134,27 +135,54 @@ void startRegionGrowing(sensor_msgs::PointCloud2 in_cloud_)
         // std::cout << std::endl << "mean_normals[cluster_idx].normalize(): "<< std::endl << mean_normals[cluster_idx] << std:: endl;
     }
 
-     // Fill in the cloud data
-     cloud_new_->width = clusters[cluster_idx_key].indices.size();
-     cloud_new_->height = 1;
-     cloud_new_->is_dense = false;
-     cloud_new_->header.frame_id = cloud->header.frame_id;
-     int count = 0;
-     while (count < clusters[cluster_idx_key].indices.size())
-     {
-         int index_ = clusters[cluster_idx_key].indices[count];
-         cloud_new_->push_back (cloud->points[index_]);             
-         // mean_normals[cluster_idx] += normals->points[count].getNormalVector3fMap();
-         count++;
-     }
-     // std::cout << "mean_normals[cluster_idx].normalize(): " << mean_normals[cluster_idx].normalize() << std:: endl;
-
+    // Fill in the cloud data
+    segmented_cloud_traversable->width = clusters[cluster_idx_key].indices.size();
+    segmented_cloud_traversable->height = 1;
+    segmented_cloud_traversable->is_dense = false;
+    segmented_cloud_traversable->header.frame_id = cloud->header.frame_id;
+    int count = 0;
+    while (count < clusters[cluster_idx_key].indices.size())
+    {
+        int index_ = clusters[cluster_idx_key].indices[count];
+        segmented_cloud_traversable->push_back (cloud->points[index_]);             
+        // mean_normals[cluster_idx] += normals->points[count].getNormalVector3fMap();
+        count++;
+    }
+    // std::cout << "mean_normals[cluster_idx].normalize(): " << mean_normals[cluster_idx].normalize() << std:: endl;
     // std::cout << std::endl;
 
-    ROS_INFO(PRINTF_CYAN"startRegionGrowing() :  cloud_new_->size() = %lu", cloud_new_->size());
-	sensor_msgs::PointCloud2 pc_out;
-	pcl::toROSMsg(*cloud_new_, pc_out);
-    segmented_pc_pub.publish(pc_out);
+
+    // std::cout << "Preparing obtacles point cloud: cloud->size()= " << cloud->size() << " , clusters[cluster_idx_key].indices.size()= " << clusters[cluster_idx_key].indices.size() << std::endl;
+    // std::cout << "Preparing obtacles point cloud: size()= " << cloud->size() - clusters[cluster_idx_key].indices.size() << std::endl;
+
+
+    segmented_cloud_obstacles->width = (cloud->size() - clusters[cluster_idx_key].indices.size());
+    segmented_cloud_obstacles->height = 1;
+    segmented_cloud_obstacles->is_dense = false;
+    segmented_cloud_obstacles->header.frame_id = cloud->header.frame_id;
+    for (size_t cluster_idx = 0 ; cluster_idx< clusters.size() ; cluster_idx ++)
+    {
+        if(cluster_idx_key != cluster_idx){
+            int counter2 = 0;
+            while (counter2 < clusters[cluster_idx].indices.size()){  
+                int index_ = clusters[cluster_idx].indices[counter2];
+                segmented_cloud_obstacles->push_back (cloud->points[index_]);    
+                counter2++;
+            }
+        // std::cout << "Number of cluster= [" << cluster_idx << "/" <<clusters.size() <<"]" <<std::endl;
+        }
+    }
+
+    ROS_INFO(PRINTF_CYAN"startRegionGrowing() :  segmented_cloud_obstacles->size() = %lu", segmented_cloud_obstacles->size());
+	sensor_msgs::PointCloud2 pc_obstacles_out;
+	pcl::toROSMsg(*segmented_cloud_obstacles, pc_obstacles_out);
+    segmented_obstacles_pc_pub.publish(pc_obstacles_out);
+
+
+    ROS_INFO(PRINTF_CYAN"startRegionGrowing() :  segmented_cloud_traversable->size() = %lu", segmented_cloud_traversable->size());
+	sensor_msgs::PointCloud2 pc_traversable_out;
+	pcl::toROSMsg(*segmented_cloud_traversable, pc_traversable_out);
+    segmented_traversable_pc_pub.publish(pc_traversable_out);
 }
 
 
@@ -194,14 +222,15 @@ int main(int argc, char **argv)
 	tf2_list.reset(new tf2_ros::TransformListener(*tfBuffer));
 	tf_list_ptr.reset(new tf::TransformListener(ros::Duration(5)));
 
-	segmented_pc_pub = n.advertise<sensor_msgs::PointCloud2>("region_growing_segmentation_pc_map", 10);
+	segmented_traversable_pc_pub = n.advertise<sensor_msgs::PointCloud2>("region_growing_traversability_pc_map", 10);
+	segmented_obstacles_pc_pub = n.advertise<sensor_msgs::PointCloud2>("region_growing_obstacles_pc_map", 10);
     new_octomap_sub = n.subscribe<sensor_msgs::PointCloud2>("/octomap_point_cloud_centers", 1000, pcCallback);
     
-	// while (ros::ok()) {
+	while (ros::ok()) {
         // ros::spinOnce();
         // r.sleep();
     ros::spin();
-    // }	
+    }	
 	
 	return 0;
 }

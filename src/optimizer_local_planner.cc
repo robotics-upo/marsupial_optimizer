@@ -76,8 +76,8 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(tf2_ros::Buffer *tfBuffer_)
 	initializePublishers();
 	setupOptimizer();
 	cleanVectors();
-	ROS_INFO("alpha=[%f] beta=[%f] gamma=[%f] delta=[%f] epsilon=[%f] zeta=[%f] eta=[%f] lambda=[%f]",w_alpha,w_beta,w_gamma,w_delta,w_epsilon,w_zeta,w_eta,w_lambda);
-	ROS_INFO("Optimizer_Local_Planner: Parameters loaded, ready for Optimization Process. Waiting for Action!!");
+	// ROS_INFO(PRINTF_YELLOW"alpha=[%f] beta=[%f] gamma=[%f] delta=[%f] epsilon=[%f] zeta=[%f] eta=[%f] lambda=[%f]",w_alpha,w_beta,w_gamma,w_delta,w_epsilon,w_zeta,w_eta,w_lambda);
+	ROS_INFO(PRINTF_YELLOW"Optimizer_Local_Planner: Parameters loaded, ready for Optimization Process. Waiting for Action!!");
 	// traj_marker_uav_pub_.publish(points_uav_marker);
 	// traj_marker_uav_pub_.publish(lines_uav_marker);
 	configServices();
@@ -95,8 +95,9 @@ void OptimizerLocalPlanner::initializeSubscribers()
     {
         // local_map_sub = nh->subscribe<PointCloud>("/points", 1, &OptimizerLocalPlanner::pointsSub, this);
     }
-    octomap_sub_ = nh->subscribe( "/octomap_point_cloud_centers", 1,  &OptimizerLocalPlanner::readOctomapCallback, this);
-    ROS_INFO("Optimizer_Local_Planner: Subscribers Initialized");
+    octomap_ws_sub_ = nh->subscribe( "/octomap_point_cloud_centers", 1,  &OptimizerLocalPlanner::readOctomapCallback, this);
+    poin_cloud_segmented_sub_ = nh->subscribe( "/region_growing_traversability_pc_map", 1,  &OptimizerLocalPlanner::readPointCloudMapCallback, this);
+    ROS_INFO(PRINTF_YELLOW"Optimizer_Local_Planner: Subscribers Initialized");
 }
 
 void OptimizerLocalPlanner::initializePublishers()
@@ -105,7 +106,7 @@ void OptimizerLocalPlanner::initializePublishers()
   	traj_marker_uav_pub_ = nh->advertise<visualization_msgs::MarkerArray>("opt_trajectory_uav_marker", 2);
 	catenary_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("catenary_marker", 100);
 
-  	ROS_INFO("Optimizer_Local_Planner: Publishers Initialized");
+  	ROS_INFO(PRINTF_YELLOW"Optimizer_Local_Planner: Publishers Initialized");
 }
 
 void OptimizerLocalPlanner::resetFlags()
@@ -156,8 +157,17 @@ void OptimizerLocalPlanner::dynRecCb(marsupial_optimizer::OptimizationParamsConf
 
 void OptimizerLocalPlanner::readOctomapCallback(const sensor_msgs::PointCloud2::ConstPtr& msg)
 {
-	  nn_.setInput(*msg);
+	nn_uav.setInput(*msg);
+  	ROS_INFO_COND(debug, PRINTF_YELLOW "Received Point Cloud for KDTree UAV");
+
 }
+
+void OptimizerLocalPlanner::readPointCloudMapCallback(const sensor_msgs::PointCloud2::ConstPtr& msg)
+{
+	nn_ugv.setInput(*msg);
+  	ROS_INFO_COND(debug, PRINTF_YELLOW "Received Point Cloud for KDTree UGV");
+}
+
 
 void OptimizerLocalPlanner::collisionMapCallBack(const octomap_msgs::OctomapConstPtr &msg)
 {
@@ -287,11 +297,18 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		problem.SetParameterUpperBound(statesPosUGV[i].parameter, 3, 1.0);
 	}
 
-	/*** Cost Function II : Obstacles constrain ***/
+	/*** Cost Function II-i : Obstacles constrain UAV***/
 	for (int i = 0; i < statesPosUAV.size(); ++i) {
-    	CostFunction* cost_function2  = new AutoDiffCostFunction<ObstacleDistanceFunctorUAV::ObstaclesFunctor, 1, 4>
-											(new ObstacleDistanceFunctorUAV::ObstaclesFunctor(w_beta*10.0, distance_obstacle, nn_.kdtree, nn_.obs_points)); 
-    	problem.AddResidualBlock(cost_function2, NULL, statesPosUAV[i].parameter);
+    	CostFunction* cost_function2_1  = new AutoDiffCostFunction<ObstacleDistanceFunctorUAV::ObstaclesFunctor, 1, 4>
+											(new ObstacleDistanceFunctorUAV::ObstaclesFunctor(w_beta*10.0, distance_obstacle, nn_uav.kdtree, nn_uav.obs_points)); 
+    	problem.AddResidualBlock(cost_function2_1, NULL, statesPosUAV[i].parameter);
+  	}
+
+	/*** Cost Function II-ii : Obstacles constrain UGV***/
+	for (int i = 0; i < statesPosUAV.size(); ++i) {
+    	CostFunction* cost_function2_2  = new AutoDiffCostFunction<ObstacleDistanceFunctorUGV::ObstaclesFunctor, 1, 4>
+											(new ObstacleDistanceFunctorUGV::ObstaclesFunctor(w_beta*10.0, distance_obstacle, nn_ugv.kdtree, nn_ugv.obs_points)); 
+    	problem.AddResidualBlock(cost_function2_2, NULL, statesPosUAV[i].parameter);
   	}
 
 	/*** Cost Function III-i : UAV Kinematic constrain ***/
@@ -336,7 +353,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	/*** Cost Function VII : Catenary constrain  ***/
 	for (int i = 0; i < statesLength.size(); ++i) {
 		CostFunction* cost_function7  = new NumericDiffCostFunction<CatenaryFunctor, CENTRAL, 2, 4, 4, 9, 2>
-										(new CatenaryFunctor(w_eta * 10.0, distance_catenary_obstacle, vec_len_cat_init[i].length, nn_.kdtree, nn_.obs_points, pos_reel_ugv, size, nh)); 
+										(new CatenaryFunctor(w_eta * 10.0, distance_catenary_obstacle, vec_len_cat_init[i].length, nn_uav.kdtree, nn_uav.obs_points, pos_reel_ugv, size, nh)); 
 		problem.AddResidualBlock(cost_function7, NULL, statesPosUAV[i].parameter, statesPosUGV[i].parameter, statesRot[i].parameter, statesLength[i].parameter);
 		if (i == 0)
 			problem.SetParameterBlockConstant(statesLength[i].parameter);
@@ -473,7 +490,7 @@ void OptimizerLocalPlanner::getDataForOptimizerAnalysis()
 	distance_obs_init_min_ = 1000.0;
 	for(size_t i = 0 ; i < vec_pose_init_uav.size(); i ++){
 		Eigen::Vector3d p_init_ = vec_pose_init_uav[i];
-		Eigen::Vector3d nearest_obs_p_ = nn_.nearestObstacleVertex(nn_.kdtree, p_init_ , nn_.obs_points);
+		Eigen::Vector3d nearest_obs_p_ = nn_uav.nearestObstacleVertex(nn_uav.kdtree, p_init_ , nn_uav.obs_points);
 		distance_obs_init_ = (p_init_- nearest_obs_p_).norm() + distance_obs_init_;
 		if(distance_obs_init_min_ > (p_init_- nearest_obs_p_).norm() )
 			distance_obs_init_min_ = (p_init_- nearest_obs_p_).norm();
@@ -500,7 +517,7 @@ void OptimizerLocalPlanner::getDataForOptimizerAnalysis()
 				p_cat_init_.x()= v_points_catenary_init_[j].x;
 				p_cat_init_.y()= v_points_catenary_init_[j].y;
 				p_cat_init_.z()= v_points_catenary_init_[j].z;
-				Eigen::Vector3d nearest_obs_p = nn_.nearestObstacleVertex(nn_.kdtree, p_cat_init_ , nn_.obs_points);
+				Eigen::Vector3d nearest_obs_p = nn_uav.nearestObstacleVertex(nn_uav.kdtree, p_cat_init_ , nn_uav.obs_points);
 				distance_obs_cat_init_ = (p_cat_init_- nearest_obs_p).norm() + distance_obs_cat_init_;
 				if(distance_obs_cat_init_min_ > (p_cat_init_- nearest_obs_p).norm() )
 					distance_obs_cat_init_min_ = (p_cat_init_- nearest_obs_p).norm();
@@ -541,7 +558,7 @@ void OptimizerLocalPlanner::getDataForOptimizerAnalysis()
 	distance_obs_opt_min_ = 1000.0;
 	for(size_t i = 0 ; i < vec_pose_uav_opt.size(); i ++){
 		Eigen::Vector3d p_opt_ = vec_pose_uav_opt[i];
-		Eigen::Vector3d nearest_obs_p_ = nn_.nearestObstacleVertex(nn_.kdtree, p_opt_ , nn_.obs_points);
+		Eigen::Vector3d nearest_obs_p_ = nn_uav.nearestObstacleVertex(nn_uav.kdtree, p_opt_ , nn_uav.obs_points);
 		distance_obs_opt_ = (p_opt_- nearest_obs_p_).norm() + distance_obs_opt_;
 		if(distance_obs_opt_min_ > (p_opt_- nearest_obs_p_).norm() )
 			distance_obs_opt_min_ = (p_opt_- nearest_obs_p_).norm();
@@ -569,7 +586,7 @@ void OptimizerLocalPlanner::getDataForOptimizerAnalysis()
 				p_cat_opt_.x()= v_points_catenary_opt_[j].x;
 				p_cat_opt_.y()= v_points_catenary_opt_[j].y;
 				p_cat_opt_.z()= v_points_catenary_opt_[j].z;
-				Eigen::Vector3d nearest_obs_p = nn_.nearestObstacleVertex(nn_.kdtree, p_cat_opt_ , nn_.obs_points);
+				Eigen::Vector3d nearest_obs_p = nn_uav.nearestObstacleVertex(nn_uav.kdtree, p_cat_opt_ , nn_uav.obs_points);
 				distance_obs_cat_opt_ = (p_cat_opt_- nearest_obs_p).norm() + distance_obs_cat_opt_;
 				// if ((p_cat_opt_- nearest_obs_p).norm() > 100.0)
 				// 	printf ( "state[%lu]=[%f %f %f] point_cat[%lu]=[%f %f %f]\n",i,vec_pose_uav_opt[i].x(), vec_pose_uav_opt[i].y(), vec_pose_uav_opt[i].z(),j,p_cat_opt_.x(),p_cat_opt_.y(),p_cat_opt_.z());

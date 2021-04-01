@@ -25,7 +25,8 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 
 #include "marsupial_optimizer/ceres_contrain_equidistance_ugv.hpp"
 #include "marsupial_optimizer/ceres_contrain_equidistance_uav.hpp"
-#include "marsupial_optimizer/ceres_contrain_obstacles.hpp"
+#include "marsupial_optimizer/ceres_contrain_obstacles_ugv.hpp"
+#include "marsupial_optimizer/ceres_contrain_obstacles_uav.hpp"
 #include "marsupial_optimizer/ceres_contrain_kinematics_ugv.hpp"
 #include "marsupial_optimizer/ceres_contrain_kinematics_uav.hpp"
 #include "marsupial_optimizer/ceres_contrain_time.hpp"
@@ -137,6 +138,7 @@ public:
 	void initializeSubscribers();
 	void initializePublishers();
 	void readOctomapCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
+	void readPointCloudMapCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
 	// void tfListener(void);
 	void configServices();
 	void executeOptimizerPathPreemptCB();
@@ -173,7 +175,8 @@ public:
 	double distance_catenary_obstacle,min_distance_add_new_point,dynamic_catenary, initial_distance_states_ugv, initial_distance_states_uav;
 	double w_alpha, w_beta, w_gamma, w_delta, w_epsilon, w_zeta, w_eta, w_lambda;
 
-	NearNeighbor nn_;
+	NearNeighbor nn_uav;
+	NearNeighbor nn_ugv;
 	MarkerPublisher mp_;
 
 	//! Manage Data Vertices and Edges
@@ -197,7 +200,7 @@ public:
 
 	std::string action_name_;
 
-	ros::Subscriber octomap_sub_,local_map_sub;
+	ros::Subscriber octomap_ws_sub_,poin_cloud_segmented_sub_, local_map_sub;
 	ros::Publisher traj_marker_ugv_pub_, traj_marker_uav_pub_;
 
 	ros::Publisher catenary_marker_pub_;

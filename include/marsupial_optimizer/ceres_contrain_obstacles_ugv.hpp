@@ -1,5 +1,5 @@
-#ifndef CERES_CONTRAIN_OBSTACLES_HPP
-#define CERES_CONTRAIN_OBSTACLES_HPP
+#ifndef CERES_CONTRAIN_OBSTACLES_UGV_HPP
+#define CERES_CONTRAIN_OBSTACLES_UGV_HPP
 
 #include "ceres/ceres.h"
 #include "glog/logging.h"
@@ -19,10 +19,10 @@ using ceres::Solve;
 using ceres::Solver;
 
 
-class ObstacleDistanceFunctorUAV {
+class ObstacleDistanceFunctorUGV {
 
 public:
-    ObstacleDistanceFunctorUAV(){}
+    ObstacleDistanceFunctorUGV(){}
     
     struct ComputeDistanceObstacles 
     {
