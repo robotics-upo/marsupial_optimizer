@@ -36,6 +36,7 @@ std::shared_ptr<tf2_ros::Buffer> tfBuffer;
 std::unique_ptr<tf2_ros::TransformListener> tf2_list;
 std::unique_ptr<tf::TransformListener> tf_list_ptr;
 
+bool debug_rgs;
 
 pcl::RegionGrowing<pcl::PointXYZ, pcl::Normal> reg;
 pcl::PointXYZ searchPoint;
@@ -44,10 +45,14 @@ void startRegionGrowing(sensor_msgs::PointCloud2 in_cloud_);
 void pcCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
 void getPositionUGV();
 
+sensor_msgs::PointCloud2 pc_obstacles_out;
+sensor_msgs::PointCloud2 pc_traversable_out;
+
+
 void pcCallback(const sensor_msgs::PointCloud2::ConstPtr& msg)
 {
     data_in = *msg;
-    ROS_INFO(PRINTF_CYAN"pcCallback() :  data_in.size() = %i [%i / %i]",data_in.height *data_in.width, data_in.height , data_in.width);
+    ROS_INFO_COND(debug_rgs,PRINTF_CYAN"  pcCallback() :  data_in.size() = %i [%i / %i]",data_in.height *data_in.width, data_in.height , data_in.width);
 	startRegionGrowing(data_in);
 }
 
@@ -60,11 +65,11 @@ void startRegionGrowing(sensor_msgs::PointCloud2 in_cloud_)
 	Eigen::Vector3d init_point_;
     kdtree.setInputCloud (cloud);
 
-    ROS_INFO(PRINTF_CYAN"startRegionGrowing() :  world_frame= %s  ,  ugv_base_frame= %s",world_frame.c_str() ,ugv_base_frame.c_str());
+    ROS_INFO_COND(debug_rgs,PRINTF_CYAN"  startRegionGrowing() :  world_frame= %s  ,  ugv_base_frame= %s",world_frame.c_str() ,ugv_base_frame.c_str());
 
     getPositionUGV();   
 
-	ROS_INFO(PRINTF_CYAN"startRegionGrowing() :  Initial Pos: searchPoint=[%f %f %f]",searchPoint.x , searchPoint.y, searchPoint.z);
+	ROS_INFO_COND(debug_rgs,PRINTF_CYAN"  startRegionGrowing() :  Initial Pos: searchPoint=[%f %f %f]",searchPoint.x , searchPoint.y, searchPoint.z);
 
     // K nearest neighbor from initial point search 
     int K = 1;
@@ -74,7 +79,7 @@ void startRegionGrowing(sensor_msgs::PointCloud2 in_cloud_)
     init_point_.x() = cloud->points[pointIdxNKNSearch[0]].x;
 	init_point_.y() = cloud->points[pointIdxNKNSearch[0]].y;
 	init_point_.z() = cloud->points[pointIdxNKNSearch[0]].z;
-	ROS_INFO(PRINTF_CYAN"startRegionGrowing() :  Nearest Pos: init_point= [%f %f %f]",init_point_.x(), init_point_.y(), init_point_.z());
+	ROS_INFO_COND(debug_rgs,PRINTF_CYAN"  startRegionGrowing() :  Nearest Pos: init_point= [%f %f %f]",init_point_.x(), init_point_.y(), init_point_.z());
 
     
     pcl::search::Search<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);
@@ -105,10 +110,10 @@ void startRegionGrowing(sensor_msgs::PointCloud2 in_cloud_)
     std::vector <pcl::PointIndices> clusters;
     reg.extract (clusters);
 
-    std::cout << "Number of clusters is equal to " << clusters.size () << std::endl;
-    std::cout << "First cluster has " << clusters[0].indices.size () << " points." << std::endl;
-    std::cout << "These are the indices of the points of the initial" <<
-    std::endl << "cloud that belong to the first cluster:" << std::endl;
+    std::cout << "\t\t\t\t\t Number of clusters is equal to " << clusters.size () << std::endl;
+    std::cout << "\t\t\t\t\t First cluster has " << clusters[0].indices.size () << " points." << std::endl;
+    std::cout << "\t\t\t\t\t These are the indices of the points of the initial" <<
+    std::endl << "\t\t\t\t\t Cloud that belong to the first cluster:" << std::endl;
 
 	pcl::PointCloud<pcl::PointXYZ>::Ptr segmented_cloud_traversable (new pcl::PointCloud<pcl::PointXYZ>);
 	pcl::PointCloud<pcl::PointXYZ>::Ptr segmented_cloud_obstacles (new pcl::PointCloud<pcl::PointXYZ>);
@@ -123,7 +128,7 @@ void startRegionGrowing(sensor_msgs::PointCloud2 in_cloud_)
             int index_ = clusters[cluster_idx].indices[counter];
             if (cloud->points[index_].x == init_point_.x() && cloud->points[index_].y == init_point_.y() && cloud->points[index_].z == init_point_.z()){
                 cluster_idx_key = cluster_idx;
-                std::cout << "Number cluster for traversability = " << cluster_idx_key <<std::endl;
+                std::cout << "\t\t\t\t\t Number of traversability cluster = " << cluster_idx_key <<std::endl;
             }
             // std::cout << index_ << ", ";
             mean_normals[cluster_idx] += normals->points[counter].getNormalVector3fMap();
@@ -173,14 +178,12 @@ void startRegionGrowing(sensor_msgs::PointCloud2 in_cloud_)
         }
     }
 
-    ROS_INFO(PRINTF_CYAN"startRegionGrowing() :  segmented_cloud_obstacles->size() = %lu", segmented_cloud_obstacles->size());
-	sensor_msgs::PointCloud2 pc_obstacles_out;
+    ROS_INFO_COND(debug_rgs,PRINTF_CYAN"  startRegionGrowing() :  segmented_cloud_obstacles->size() = %lu", segmented_cloud_obstacles->size());
 	pcl::toROSMsg(*segmented_cloud_obstacles, pc_obstacles_out);
     segmented_obstacles_pc_pub.publish(pc_obstacles_out);
 
 
-    ROS_INFO(PRINTF_CYAN"startRegionGrowing() :  segmented_cloud_traversable->size() = %lu", segmented_cloud_traversable->size());
-	sensor_msgs::PointCloud2 pc_traversable_out;
+    ROS_INFO_COND(debug_rgs,PRINTF_CYAN"  startRegionGrowing() :  segmented_cloud_traversable->size() = %lu", segmented_cloud_traversable->size());
 	pcl::toROSMsg(*segmented_cloud_traversable, pc_traversable_out);
     segmented_traversable_pc_pub.publish(pc_traversable_out);
 }
@@ -193,7 +196,7 @@ void getPositionUGV()
 	try
 	{
 		ret = tfBuffer->lookupTransform(world_frame, ugv_base_frame, ros::Time(0));
-		ROS_INFO(PRINTF_CYAN"getPositionUGV() :  Got lookupTransform ");
+		ROS_INFO_COND(debug_rgs,PRINTF_CYAN"  getPositionUGV() :  Got lookupTransform ");
 	}
 	catch (tf2::TransformException &ex)
 	{
@@ -203,7 +206,7 @@ void getPositionUGV()
 	searchPoint.x = ret.transform.translation.x;
 	searchPoint.y = ret.transform.translation.y;
 	searchPoint.z = ret.transform.translation.z;
-	ROS_INFO(PRINTF_CYAN"getPositionUGV() :  Initial Pos ret.transform.translation=[%f %f %f]",ret.transform.translation.x, ret.transform.translation.y, ret.transform.translation.z);
+	ROS_INFO_COND(debug_rgs,PRINTF_CYAN"  getPositionUGV() :  Initial Pos ret.transform.translation=[%f %f %f]",ret.transform.translation.x, ret.transform.translation.y, ret.transform.translation.z);
 }
 
 
@@ -213,10 +216,11 @@ int main(int argc, char **argv)
 	ros::NodeHandle n;
 	ros::NodeHandle pn("~");
 
-    ROS_INFO(PRINTF_CYAN"Initialazing region_growing_segmentation node !!");
+    ROS_INFO(PRINTF_CYAN"Region Growing Segmentation: Node Initialed!!");
   
 	pn.param<std::string>("world_frame",  world_frame, "map");
   	pn.param<std::string>("ugv_base_frame", ugv_base_frame, "ugv_base_link");
+  	pn.param<bool>("debug_rgs", debug_rgs, true);
 	
     tfBuffer.reset(new tf2_ros::Buffer);
 	tf2_list.reset(new tf2_ros::TransformListener(*tfBuffer));
@@ -229,7 +233,9 @@ int main(int argc, char **argv)
 	while (ros::ok()) {
         // ros::spinOnce();
         // r.sleep();
-    ros::spin();
+        segmented_obstacles_pc_pub.publish(pc_obstacles_out);
+        segmented_traversable_pc_pub.publish(pc_traversable_out);
+        ros::spin();
     }	
 	
 	return 0;

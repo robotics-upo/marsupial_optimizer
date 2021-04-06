@@ -1,5 +1,5 @@
-#ifndef CERES_CONTRAIN_OBSTACLES_UGV_HPP
-#define CERES_CONTRAIN_OBSTACLES_UGV_HPP
+#ifndef CERES_CONTRAIN_TRAVERSABILITY_UGV_HPP
+#define CERES_CONTRAIN_TRAVERSABILITY_UGV_HPP
 
 #include "ceres/ceres.h"
 #include "glog/logging.h"
@@ -19,14 +19,14 @@ using ceres::Solve;
 using ceres::Solver;
 
 
-class ObstacleDistanceFunctorUGV {
+class TraversabilityDistanceFunctorUGV {
 
 public:
-    ObstacleDistanceFunctorUGV(){}
+    TraversabilityDistanceFunctorUGV(){}
     
-    struct ComputeDistanceObstacles 
+    struct ComputeDistanceTraversability 
     {
-        ComputeDistanceObstacles (pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points)
+        ComputeDistanceTraversability (pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points)
         : kdT_(kdT_From_NN), o_p_(obstacles_Points)
         {
     
@@ -41,23 +41,23 @@ public:
             return true;
         }
 
-        double f_, sb_;
+        double f_;
         pcl::KdTreeFLANN <pcl::PointXYZ> kdT_;
         pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_;
     };
 
 
-    struct ObstaclesFunctor 
+    struct TraversabilityFunctor 
     {
-        ObstaclesFunctor(double weight_factor, double safty_bound, pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points)
-            : wf_(weight_factor), sb_(safty_bound), kdT_(kdT_From_NN), o_p_(obstacles_Points)
+        TraversabilityFunctor(double weight_factor, pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points)
+            : wf_(weight_factor), kdT_(kdT_From_NN), o_p_(obstacles_Points)
         {
             compute_nearest_distance.reset(new ceres::CostFunctionToFunctor<4,4>(
-                                    new ceres::NumericDiffCostFunction<ComputeDistanceObstacles,
+                                    new ceres::NumericDiffCostFunction<ComputeDistanceTraversability,
                                                                         ceres::CENTRAL, 
                                                                         4,
                                                                         4>( 
-                                    new ComputeDistanceObstacles(kdT_, o_p_))));
+                                    new ComputeDistanceTraversability(kdT_, o_p_))));
         }
 
         template <typename T>
@@ -67,15 +67,15 @@ public:
             T n_[4];
             (*compute_nearest_distance)(statePos, n_);
 
-            d_ugv_ = ((statePos[1]-n_[0])*(statePos[1]-n_[0]) + (statePos[2]-n_[1])*(statePos[2]-n_[1]) + (statePos[3]-n_[2])*(statePos[3]-n_[2]));
+            d_ugv_ = (statePos[3]-n_[2])*(statePos[3]-n_[2]);
 
-            residual[0] =  wf_ * exp(sb_*sb_ - 2.0*d_ugv_);
+            residual[0] =  wf_ * exp(100.0*d_ugv_);
 
             return true;
         }
 
         std::unique_ptr<ceres::CostFunctionToFunctor<4,4> > compute_nearest_distance;
-        double wf_, sb_;
+        double wf_;
         pcl::KdTreeFLANN <pcl::PointXYZ> kdT_;
         pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_;
     };

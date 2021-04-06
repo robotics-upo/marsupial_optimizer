@@ -12,9 +12,7 @@
 #include <ros/ros.h>
 #include <sensor_msgs/PointCloud2.h>
 
-// #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl-1.8/pcl/point_cloud.h>
-
 #include <pcl/search/impl/kdtree.hpp>
 #include <pcl/kdtree/impl/kdtree_flann.hpp>
 #include <pcl/point_types.h>
@@ -23,6 +21,14 @@
 #include <pcl/conversions.h>
 #include <pcl_ros/transforms.h>
 
+#define PRINTF_REGULAR "\x1B[0m"
+#define PRINTF_RED "\x1B[31m"
+#define PRINTF_GREEN "\x1B[32m"
+#define PRINTF_YELLOW "\x1B[33m"
+#define PRINTF_BLUE "\x1B[34m"
+#define PRINTF_MAGENTA "\x1B[35m"
+#define PRINTF_CYAN "\x1B[36m"
+#define PRINTF_WHITE "\x1B[37m"
 
 class NearNeighbor
 {
@@ -76,11 +82,11 @@ inline void NearNeighbor::setKDTree(const std::vector<Eigen::Vector3d> &obs_)
 
 inline void NearNeighbor::setKDTree(const sensor_msgs::PointCloud2 &pc2_)
 {
-	ROS_INFO("Executed SetKDTree PointCloud2");
+	ROS_INFO(PRINTF_MAGENTA "KDTree : Executed SetKDTree PointCloud2");
 	obs_points.reset(new pcl::PointCloud <pcl::PointXYZ>);
 	pcl::fromROSMsg(pc2_,*obs_points);
 
-	ROS_INFO("size obs_points = [%lu]",obs_points->size());
+	ROS_INFO(PRINTF_MAGENTA "KDTree : Size obs_points = [%lu]",obs_points->size());
 
 	kdtree.setInputCloud(obs_points);
 }

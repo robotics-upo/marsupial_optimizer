@@ -12,7 +12,6 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include <stdint.h>
 
 #include <iostream>
-#include <fstream>
 #include <vector>
 #include <iterator>
 #include <string>
@@ -27,6 +26,7 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "marsupial_optimizer/ceres_contrain_equidistance_uav.hpp"
 #include "marsupial_optimizer/ceres_contrain_obstacles_ugv.hpp"
 #include "marsupial_optimizer/ceres_contrain_obstacles_uav.hpp"
+#include "marsupial_optimizer/ceres_contrain_traversability_ugv.hpp"
 #include "marsupial_optimizer/ceres_contrain_kinematics_ugv.hpp"
 #include "marsupial_optimizer/ceres_contrain_kinematics_uav.hpp"
 #include "marsupial_optimizer/ceres_contrain_time.hpp"
@@ -37,6 +37,7 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 
 #include "misc/catenary_solver_ceres.hpp"
 #include "misc/near_neighbor.hpp"
+#include "misc/data_management.hpp"
 // #include "misc/bisection_catenary_3D.h"
 // #include "misc/marker_publisher.hpp"
 
@@ -82,29 +83,6 @@ using ceres::Solve;
 using ceres::Solver;
 
 
-struct structTime
-{
-	int id;
-	double time;
-};
-
-struct structDistance
-{
-	int id_from;
-	int id_to;
-	double dist;
-};
-
-struct structLengthCatenary
-{
-	int id;
-	double length;
-};
-
-// struct parameterBlock{
-// 	double parameter[6];
-// };
-
 struct parameterBlockPos{
 	double parameter[4];
 };
@@ -133,25 +111,19 @@ public:
 	OptimizerLocalPlanner(tf2_ros::Buffer *tfBuffer_);
 	// ~OptimizerLocalPlanner();
 	void setupOptimizer();
-	// void executeOptimization(const marsupial_actions::OptimizationTrajectoryGoalConstPtr &goal);
-
 	void initializeSubscribers();
 	void initializePublishers();
 	void readOctomapCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
-	void readPointCloudMapCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
-	// void tfListener(void);
+	void readPointCloudTraversabilityUGVCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
+	void readPointCloudObstaclesUGVCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
 	void configServices();
 	void executeOptimizerPathPreemptCB();
 	void executeOptimizerPathGoalCB();
 	void dynRecCb(marsupial_optimizer::OptimizationParamsConfig &config, uint32_t level);
 	void collisionMapCallBack(const octomap_msgs::OctomapConstPtr &msg);
-	void calculateDistanceVertices(vector<structDistance> &_v_D_ugv,vector<structDistance> &_v_D_uav);
-	void getTemporalState(vector<structTime> &_time_ugv, vector<structTime> &_time_uav);
-	void writeTemporalDataBeforeOptimization(void);
-	void writeTemporalDataAfterOptimization(auto _s);
-	// void setInitialLengthCatenaryAndPosUGV(std::vector <double> &_vector, auto _s);
-	void getPointsFromGlobalPath(trajectory_msgs::MultiDOFJointTrajectory _path, vector<float> l_cat_, vector<Eigen::Vector3d> &v_ugv_, vector<Eigen::Vector3d> &v_uav_);
-	// void straightTrajectoryVertices(double x1, double y1, double z1, double x2, double y2, double z2, int _n_v_u, std::vector<Eigen::Vector3d> &_v);
+	void calculateDistanceVertices(vector<double> &_v_D_ugv,vector<double> &_v_D_uav);
+	void getTemporalState(vector<double> &_time_ugv, vector<double> &_time_uav);
+	void getPointsFromGlobalPath(trajectory_msgs::MultiDOFJointTrajectory _path, vector<Eigen::Vector3d> &v_ugv_, vector<Eigen::Vector3d> &v_uav_);
 	void getDataForOptimizerAnalysis();
 	geometry_msgs::Point getReelPoint(const float px_, const float py_, const float pz_,const float qx_, const float qy_, const float qz_, const float qw_, geometry_msgs::Point p_reel_);
 
@@ -167,22 +139,18 @@ public:
 	
 	tf::TransformListener listener;
 
-	ofstream file_in_pos,file_in_time ,file_in_velocity, file_in_difftime, file_in_acceleration;
-	ofstream file_out_pos, file_out_time, file_out_velocity, file_out_difftime, file_out_acceleration;
-	std::string path;
+	std::string path, name_output_file;
 	int n_iter_opt;	//Iterations Numbers of Optimizer
 	double initial_multiplicative_factor_length_catenary;
 	double distance_catenary_obstacle,min_distance_add_new_point,dynamic_catenary, initial_distance_states_ugv, initial_distance_states_uav;
 	double w_alpha, w_beta, w_gamma, w_delta, w_epsilon, w_zeta, w_eta, w_lambda;
 
 	NearNeighbor nn_uav;
-	NearNeighbor nn_ugv;
+	NearNeighbor nn_ugv_tra, nn_ugv_obs;
 	MarkerPublisher mp_;
+	DataManagement dm_;
 
 	//! Manage Data Vertices and Edges
-	vector<float> v_mXYZ_;
-
-
     std::unique_ptr<ExecutePathServer> execute_path_srv_ptr;
     std::unique_ptr<Navigate3DClient> navigation3DClient;
     std::unique_ptr<tf::TransformListener> tf_list;
@@ -200,23 +168,17 @@ public:
 
 	std::string action_name_;
 
-	ros::Subscriber octomap_ws_sub_,poin_cloud_segmented_sub_, local_map_sub;
+	ros::Subscriber octomap_ws_sub_,point_cloud_ugv_traversability_sub_, point_cloud_ugv_obstacles_sub_, local_map_sub;
 	ros::Publisher traj_marker_ugv_pub_, traj_marker_uav_pub_;
 
 	ros::Publisher catenary_marker_pub_;
 	visualization_msgs::MarkerArray catenary_marker;
-	// void markerPoints(visualization_msgs::MarkerArray _marker, std::vector<geometry_msgs::Point> _vector, int _suffix, int _n_v);
-	// void clearMarkers(visualization_msgs::MarkerArray _marker,auto _s);
 
 	geometry_msgs::Point obs_oct;
 
-	double td_;
 	bool verbose_optimizer;
 
 	void setStraightTrajectory(double x1, double y1, double z1, double x2, double y2, double z2, int n_v_u_);	//Function to create a straight line from point A to B
-	typedef vector<structTime> TimeSequence;
-	typedef vector<structDistance> DistanceSequence;
-	typedef vector<structLengthCatenary> LengthCatenarySequence;
 
 	vector<Eigen::Vector3d> new_path_ugv, new_path_uav;
 	vector<parameterBlockPos> statesPosUGV;
@@ -226,27 +188,16 @@ public:
 	vector<parameterBlockLength> statesLength;
 	vector<geometry_msgs::Quaternion> vec_rot_ugv, vec_rot_uav;
 
-	DistanceSequence vec_dist_init_ugv, vec_dist_init_uav; 
-	TimeSequence vec_time_init_ugv, vec_time_init_uav;
-	LengthCatenarySequence vec_len_cat_opt;
-
+	vector<double> vec_dist_init_ugv, vec_dist_init_uav;
+	vector<double> vec_time_init_ugv, vec_time_init_uav;
+	vector<float> vec_len_cat_init, vec_len_cat_opt;
 	vector<Eigen::Vector3d> vec_pose_ugv_opt, vec_pose_uav_opt; 
-	std::vector<double> vec_time_ugv_opt, vec_time_uav_opt, vec_dist_ugv_opt, vec_dist_uav_opt, vec_vel_ugv_opt, vec_vel_uav_opt, vec_acc_ugv_opt, vec_acc_uav_opt;
-	LengthCatenarySequence vec_len_cat_init;
-	float d3D_;
-	float n_points; 
-	vector<double> v_pre_initial_length_catenary;
-	vector<double> v_opt_length_catenary;
-
+	vector<Eigen::Vector3d> vec_pose_init_ugv, vec_pose_init_uav;
+	vector<double> vec_time_ugv_opt, vec_time_uav_opt;
+	
 	double z_constraint;
-
-	int count_edges, n_total_edges, n_edges_before_catenary;
-
-	std::ofstream ofs;
     double pos_reel_x, pos_reel_y, pos_reel_z;
-	std::string output_file, name_output_file;
-	std::vector<Eigen::Vector3d> vec_pose_init_ugv, vec_pose_init_uav;
-	ros::Time start_time_opt_, final_time_opt_;
+	ros::Time start_time_opt, final_time_opt;
 	int scenario_number, num_pos_initial, num_goal;
 	bool write_data_for_analysis;
 	geometry_msgs::Point pos_reel_ugv;
