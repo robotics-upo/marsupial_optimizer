@@ -61,7 +61,7 @@ inline void MarkerPublisher::markerPoints(visualization_msgs::MarkerArray _marke
             _marker.markers[i].type = visualization_msgs::Marker::CUBE;
         else
             _marker.markers[i].type = visualization_msgs::Marker::SPHERE;
-        _marker.markers[i].lifetime = ros::Duration(400);
+        _marker.markers[i].lifetime = ros::Duration(0);
         _marker.markers[i].pose.position.x = _vector[i].x; 
         _marker.markers[i].pose.position.y = _vector[i].y; 
         _marker.markers[i].pose.position.z = _vector[i].z;
@@ -105,7 +105,7 @@ inline void MarkerPublisher::getMarkerPoints(visualization_msgs::MarkerArray &ma
 			marker_.markers[i].type = visualization_msgs::Marker::CUBE;
 		else
 			marker_.markers[i].type = visualization_msgs::Marker::SPHERE;
-		marker_.markers[i].lifetime = ros::Duration(400);
+		marker_.markers[i].lifetime = ros::Duration(0);
 		marker_.markers[i].pose.position.x = vector_[i].x();
 		marker_.markers[i].pose.position.y = vector_[i].y();
 		marker_.markers[i].pose.position.z = vector_[i].z();
@@ -156,7 +156,7 @@ inline void MarkerPublisher::getMarkerLines(visualization_msgs::MarkerArray &mar
 		marker_.markers[i].id = i + _vector.size()+2;
 		marker_.markers[i].action = visualization_msgs::Marker::ADD;
 		marker_.markers[i].type = visualization_msgs::Marker::LINE_STRIP;
-		marker_.markers[i].lifetime = ros::Duration(400);
+		marker_.markers[i].lifetime = ros::Duration(0);
 		_p1.x = _vector[i].x();
 		_p1.y = _vector[i].y();
 		_p1.z = _vector[i].z();

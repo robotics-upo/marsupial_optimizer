@@ -22,7 +22,8 @@ class LengthCostFunctor
       _yB = yB; 
       _l = length;
       _k = (sqrt(fabs(_l*_l - _yB*_yB)) )/ (_xB);
-      // printf("value _k = [%f]\n",_k);
+      if (_xB < 0.0000001)  
+        printf("value _k = [%f]\n",_k);
     }
 
     ~LengthCostFunctor(void) 
@@ -241,6 +242,8 @@ class CatenarySolver
         //variables to compute optimization
         double _xB = sqrt(pow(x2 - x1,2)+pow(y2 - y1,2));
         double _yB = z2 - z1;
+        std::cout <<"Solving Catenary : _xB= " << _xB << " , [x2,x1]=[" << x2 <<","<< x1 <<"] , [y2,y1]=[" <<y2<<","<<y1<<"]" << " ,  _yB= "<< _yB <<" , [z2,z1]=[" <<z2<<","<<z1<<"]"<<  std::endl;
+
 
         //variables to save values from optimization
         double a , x0, y0; 
@@ -271,7 +274,9 @@ class CatenarySolver
 
         // Get the solution
         double _a = _xB/(2.0 * phi[0]);  
-        // std::cout << std::endl <<" _a: " << _a << std::endl;
+        if (a < 0.000000001)
+          std::cout <<"Solving Catenary (a < 0.000000001): _a= " << _a << " ,  phi[0]= "<< phi[0]<<" ,  _xB=" << _xB << std::endl;
+          // printf("Solving Catenary: a < 0.000000001 (a = %f)\n",a);
 
 
         /***Second Part: Get x0 and y0 values from Points equations***/

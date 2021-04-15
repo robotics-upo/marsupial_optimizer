@@ -44,7 +44,6 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(tf2_ros::Buffer *tfBuffer_)
     nh->param<double>("pos_reel_y", pos_reel_y, 0.0);
     nh->param<double>("pos_reel_z", pos_reel_z, 0.22);
 
-	nh->param<double>("z_constraint", z_constraint,0.0);
 	nh->param<double>("length_tether_max", length_tether_max,20.0);
 
 	nh->param<bool>("verbose_optimizer",verbose_optimizer, true);
@@ -74,6 +73,8 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(tf2_ros::Buffer *tfBuffer_)
 	initializePublishers();
 	setupOptimizer();
 	cleanVectors();
+	mp_.clearMarkersPointLines(points_ugv_marker, lines_ugv_marker,traj_marker_ugv_pub_,20);
+  	mp_.clearMarkersPointLines(points_uav_marker, lines_uav_marker,traj_marker_uav_pub_,20);
 	// ROS_INFO(PRINTF_BLUE"alpha=[%f] beta=[%f] gamma=[%f] delta=[%f] epsilon=[%f] zeta=[%f] eta=[%f] lambda=[%f]",w_alpha,w_beta,w_gamma,w_delta,w_epsilon,w_zeta,w_eta,w_lambda);
 	ROS_INFO(PRINTF_BLUE"Optimizer_Local_Planner: Parameters loaded, ready for Optimization Process. Waiting for Action!!");
 	// traj_marker_uav_pub_.publish(points_uav_marker);
@@ -194,7 +195,8 @@ void OptimizerLocalPlanner::executeOptimizerPathPreemptCB()
 void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 {
   	ROS_INFO_COND(debug, PRINTF_GREEN "Optimizer Local Planner Goal received in action server mode");
-  	auto path_shared_ptr = execute_path_srv_ptr->acceptNewGoal();
+	ros::Duration(0.5).sleep();
+	auto path_shared_ptr = execute_path_srv_ptr->acceptNewGoal();
   	globalTrajectory = path_shared_ptr->path;
 	vec_len_cat_init = path_shared_ptr->length_catenary; 
 	printf("vec_len_cat_init.size=[%lu]\n",vec_len_cat_init.size());
@@ -212,7 +214,6 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 
 	printf("ugv_pos_reel_catenary=[%f %f %f]\n",ugv_pos_catenary.x,ugv_pos_catenary.y,ugv_pos_catenary.z);
 	mp_.clearMarkers(catenary_marker, 150, catenary_marker_pub_);
-	// ros::Duration(2.0).sleep();
 
   	mp_.clearMarkersPointLines(points_ugv_marker, lines_ugv_marker,traj_marker_ugv_pub_,size);
   	mp_.clearMarkersPointLines(points_uav_marker, lines_uav_marker,traj_marker_uav_pub_,size);
@@ -233,7 +234,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	statesRot.clear();
 	statesTime.clear();
 	statesLength.clear();
-	printf("[_]states.parameter=[pos_x  pos_y  pos_z  rot_x  rot_y  rot_z  rot_w  time  length_]\n");
+	printf("[_] states.parameter = [  pos_x_\tpos_y_\tpos_z_\trot_x_\trot_y_\trot_z_\trot_w_\ttime_\tlength_]\n");
 	for (size_t i = 0 ; i < new_path_uav.size(); i ++){
 		parameterBlockPos parameter_block_pos_ugv;
 		parameterBlockPos parameter_block_pos_uav;
@@ -333,34 +334,34 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		problem.AddResidualBlock(cost_function3_2, NULL, statesPosUGV[i].parameter, statesPosUGV[i+1].parameter, statesPosUGV[i+2].parameter);
 	}
 
-	/*** Cost Function IV : Time constrain ***/
-	for (int i = 0; i < statesTime.size(); ++i) {
-		CostFunction* cost_function4  = new AutoDiffCostFunction<TimeFunctor, 2, 3>(new TimeFunctor(w_delta, vec_time_init_ugv[i], vec_time_init_uav[i])); 
-		problem.AddResidualBlock(cost_function4, NULL, statesTime[i].parameter);
-		if (i == 0)
-			problem.SetParameterBlockConstant(statesTime[i].parameter);
-		problem.SetParameterLowerBound(statesTime[i].parameter, 1, 0.0);
-	}
+	// /*** Cost Function IV : Time constrain ***/
+	// for (int i = 0; i < statesTime.size(); ++i) {
+	// 	CostFunction* cost_function4  = new AutoDiffCostFunction<TimeFunctor, 2, 3>(new TimeFunctor(w_delta, vec_time_init_ugv[i], vec_time_init_uav[i])); 
+	// 	problem.AddResidualBlock(cost_function4, NULL, statesTime[i].parameter);
+	// 	if (i == 0)
+	// 		problem.SetParameterBlockConstant(statesTime[i].parameter);
+	// 	problem.SetParameterLowerBound(statesTime[i].parameter, 1, 0.0);
+	// }
 
-	/*** Cost Function V : Velocity constrain ***/
-	for (int i = 0; i < statesTime.size() - 1; ++i) {
-		CostFunction* cost_function5  = new AutoDiffCostFunction<VelocityFunctor, 2, 4, 4, 4, 4, 3>(new VelocityFunctor(w_epsilon, initial_velocity_ugv, initial_velocity_uav)); 
-		problem.AddResidualBlock(cost_function5, NULL, 
-								statesPosUAV[i].parameter, statesPosUAV[i+1].parameter, 
-								statesPosUGV[i].parameter, statesPosUGV[i+1].parameter, 
-								statesTime[i+1].parameter);
-	}
+	// /*** Cost Function V : Velocity constrain ***/
+	// for (int i = 0; i < statesTime.size() - 1; ++i) {
+	// 	CostFunction* cost_function5  = new AutoDiffCostFunction<VelocityFunctor, 2, 4, 4, 4, 4, 3>(new VelocityFunctor(w_epsilon, initial_velocity_ugv, initial_velocity_uav)); 
+	// 	problem.AddResidualBlock(cost_function5, NULL, 
+	// 							statesPosUAV[i].parameter, statesPosUAV[i+1].parameter, 
+	// 							statesPosUGV[i].parameter, statesPosUGV[i+1].parameter, 
+	// 							statesTime[i+1].parameter);
+	// }
 
-	/*** Cost Function VI : Acceleration constrain ***/
-	for (int i = 0; i < statesTime.size() - 2; ++i) {
-		CostFunction* cost_function6  = new AutoDiffCostFunction<AccelerationFunctor, 2, 4, 4, 4, 4, 4, 4, 3, 3>(new AccelerationFunctor(w_zeta, initial_acceleration_ugv, initial_acceleration_uav)); 
-		problem.AddResidualBlock(cost_function6, NULL, 
-								statesPosUAV[i].parameter, statesPosUAV[i+1].parameter, statesPosUAV[i+2].parameter,
-								statesPosUGV[i].parameter, statesPosUGV[i+1].parameter, statesPosUGV[i+2].parameter,  
-								statesTime[i+1].parameter, statesTime[i+2].parameter);
-	}
+	// /*** Cost Function VI : Acceleration constrain ***/
+	// for (int i = 0; i < statesTime.size() - 2; ++i) {
+	// 	CostFunction* cost_function6  = new AutoDiffCostFunction<AccelerationFunctor, 2, 4, 4, 4, 4, 4, 4, 3, 3>(new AccelerationFunctor(w_zeta, initial_acceleration_ugv, initial_acceleration_uav)); 
+	// 	problem.AddResidualBlock(cost_function6, NULL, 
+	// 							statesPosUAV[i].parameter, statesPosUAV[i+1].parameter, statesPosUAV[i+2].parameter,
+	// 							statesPosUGV[i].parameter, statesPosUGV[i+1].parameter, statesPosUGV[i+2].parameter,  
+	// 							statesTime[i+1].parameter, statesTime[i+2].parameter);
+	// }
 
-	/*** Cost Function VII : Catenary constrain  ***/
+	// /*** Cost Function VII : Catenary constrain  ***/
 	for (int i = 0; i < statesLength.size(); ++i) {
 		CostFunction* cost_function7  = new NumericDiffCostFunction<CatenaryFunctor, CENTRAL, 2, 4, 4, 9, 2>
 										(new CatenaryFunctor(w_eta * 10.0, distance_catenary_obstacle, vec_len_cat_init[i], nn_uav.kdtree, nn_uav.obs_points, pos_reel_ugv, size, nh)); 

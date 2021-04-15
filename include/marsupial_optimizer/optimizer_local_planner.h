@@ -195,7 +195,6 @@ public:
 	vector<Eigen::Vector3d> vec_pose_init_ugv, vec_pose_init_uav;
 	vector<double> vec_time_ugv_opt, vec_time_uav_opt;
 	
-	double z_constraint;
     double pos_reel_x, pos_reel_y, pos_reel_z;
 	ros::Time start_time_opt, final_time_opt;
 	int scenario_number, num_pos_initial, num_goal;

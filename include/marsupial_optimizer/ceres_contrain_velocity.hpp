@@ -23,7 +23,11 @@ public:
   bool operator()(const T* const statePosUAV1, const T* const statePosUAV2, const T* const statePosUGV1, const T* const statePosUGV2, const T* const stateT, T* residual) const {
 
 	T d_ugv_ = sqrt(pow(statePosUGV2[1]-statePosUGV1[1],2) + pow(statePosUGV2[2]-statePosUGV1[2],2)) ;
-  T dt_ugv_ = stateT[1];
+  T dt_ugv_;
+  if(stateT[1] < 0.00001)
+		T dt_ugv_ = 0.0;
+	else
+    dt_ugv_ = stateT[1];
 	T v_ugv_ = d_ugv_ / dt_ugv_;
 
   T d_uav_ = sqrt(pow(statePosUAV2[1]-statePosUAV1[1],2) + pow(statePosUAV2[2]-statePosUAV1[2],2) + pow(statePosUAV2[3]-statePosUAV1[3],2)) ;

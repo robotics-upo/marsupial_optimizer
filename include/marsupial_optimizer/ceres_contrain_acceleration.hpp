@@ -26,7 +26,12 @@ public:
 {
 	T d1_ugv_ = sqrt( pow(statePosUGV1[1]-statePosUGV2[1],2) + pow(statePosUGV1[2]-statePosUGV2[2],2) );
 	T d2_ugv_ = sqrt( pow(statePosUGV2[1]-statePosUGV3[1],2) + pow(statePosUGV2[2]-statePosUGV3[2],2) );
-	T v1_ugv_ = d1_ugv_ / (stateT1[1]);
+	T v1_ugv_;
+	if(stateT1[1] < 0.00001)
+		v1_ugv_ = 0.0;
+	else
+		v1_ugv_ = d1_ugv_ / (stateT1[1]);
+	
 	T v2_ugv_ = d2_ugv_ / (stateT2[1]);
   	T a_ugv_ = (v2_ugv_ - v1_ugv_)/(stateT1[1] + stateT2[1]);
 
