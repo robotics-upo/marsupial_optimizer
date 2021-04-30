@@ -24,16 +24,15 @@ class ObstacleDistanceFunctorUAV {
 public:
     ObstacleDistanceFunctorUAV(){}
     
-    struct ComputeDistanceObstacles 
+    struct ComputeDistanceObstaclesUAV 
     {
-        ComputeDistanceObstacles (pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points)
+        ComputeDistanceObstaclesUAV (pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points)
         : kdT_(kdT_From_NN), o_p_(obstacles_Points)
         {
     
         }
 
-        bool operator()(const double *state1, 
-                        double *near_) const 
+        bool operator()(const double *state1, double *near_) const 
         {
             NearNeighbor nn;
 
@@ -53,11 +52,11 @@ public:
             : wf_(weight_factor), sb_(safty_bound), kdT_(kdT_From_NN), o_p_(obstacles_Points)
         {
             compute_nearest_distance.reset(new ceres::CostFunctionToFunctor<4,4>(
-                                    new ceres::NumericDiffCostFunction<ComputeDistanceObstacles,
+                                    new ceres::NumericDiffCostFunction<ComputeDistanceObstaclesUAV,
                                                                         ceres::CENTRAL, 
                                                                         4,
                                                                         4>( 
-                                    new ComputeDistanceObstacles(kdT_, o_p_))));
+                                    new ComputeDistanceObstaclesUAV(kdT_, o_p_))));
         }
 
         template <typename T>
@@ -68,9 +67,10 @@ public:
             T n_[4];
             (*compute_nearest_distance)(statePos, n_);
 
-            d_uav_ = ((statePos[1]-n_[0])*(statePos[1]-n_[0]) + (statePos[2]-n_[1])*(statePos[2]-n_[1]) + (statePos[3]-n_[2])*(statePos[3]-n_[2]));
+            d_uav_ = sqrt((statePos[1]-n_[0])*(statePos[1]-n_[0]) + (statePos[2]-n_[1])*(statePos[2]-n_[1]) + (statePos[3]-n_[2])*(statePos[3]-n_[2]));
+            // std::cout <<"ObstaclesFunctorUAV d_uav_=" << d_uav_ << " , statePos[0] =" << statePos[0] << std::endl;
 
-            residual[0] =  wf_ * exp(sb_*sb_ - 2.0*d_uav_);
+            residual[0] =  wf_ * exp(2.0* sb_ - d_uav_);
 
             return true;
         }

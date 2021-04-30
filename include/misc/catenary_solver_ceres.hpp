@@ -22,8 +22,8 @@ class LengthCostFunctor
       _yB = yB; 
       _l = length;
       _k = (sqrt(fabs(_l*_l - _yB*_yB)) )/ (_xB);
-      if (_xB < 0.0000001)  
-        printf("value _k = [%f]\n",_k);
+      // if (_xB < 0.0000001)  
+        // printf("value _k = [%f]\n",_k);
     }
 
     ~LengthCostFunctor(void) 
@@ -236,14 +236,12 @@ class CatenarySolver
       }
     }
 
-    bool solve(double x1, double y1, double z1, double x2, double y2, double z2, double length,
-               std::vector<geometry_msgs::Point> &_vector3D)
+    bool solve(double x1, double y1, double z1, double x2, double y2, double z2, double length, std::vector<geometry_msgs::Point> &_vector3D)
     {
         //variables to compute optimization
         double _xB = sqrt(pow(x2 - x1,2)+pow(y2 - y1,2));
         double _yB = z2 - z1;
-        std::cout <<"Solving Catenary : _xB= " << _xB << " , [x2,x1]=[" << x2 <<","<< x1 <<"] , [y2,y1]=[" <<y2<<","<<y1<<"]" << " ,  _yB= "<< _yB <<" , [z2,z1]=[" <<z2<<","<<z1<<"]"<<  std::endl;
-
+        // std::cout <<"Solving Catenary : _xB= " << _xB << " , [x2,x1]=[" << x2 <<","<< x1 <<"] , [y2,y1]=[" <<y2<<","<<y1<<"]" << " ,  _yB= "<< _yB <<" , [z2,z1]=[" <<z2<<","<<z1<<"]"<<  std::endl;
 
         //variables to save values from optimization
         double a , x0, y0; 
@@ -251,13 +249,13 @@ class CatenarySolver
         _vector3D.clear();
         x_const = y_const = z_const = 0;
 
-
         /***First Part: Get phi value from Length equation***/
         double phi[1];
-        phi[0] = 4.0;
+        phi[0] = 8.0;
         
         // Build the problem.
         Problem prob1;
+        // std::cout <<"Solving Catenary : length= " << length <<  std::endl;
         CostFunction* cf = new ceres::AutoDiffCostFunction<LengthCostFunctor, 1, 1>( new LengthCostFunctor(_xB, _yB, length) );
         prob1.AddResidualBlock(cf, NULL, phi);
 
@@ -274,10 +272,7 @@ class CatenarySolver
 
         // Get the solution
         double _a = _xB/(2.0 * phi[0]);  
-        if (a < 0.000000001)
-          std::cout <<"Solving Catenary (a < 0.000000001): _a= " << _a << " ,  phi[0]= "<< phi[0]<<" ,  _xB=" << _xB << std::endl;
-          // printf("Solving Catenary: a < 0.000000001 (a = %f)\n",a);
-
+        // std::cout <<"Solving Catenary (a < 0.000000001): _a= " << _a << " ,  phi[0]= "<< phi[0]<<" ,  _xB=" << _xB << std::endl;
 
         /***Second Part: Get x0 and y0 values from Points equations***/
          // Initial solution

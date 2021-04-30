@@ -22,21 +22,26 @@ public:
   template <typename T>
   bool operator()(const T* const statePosUAV1, const T* const statePosUAV2, const T* const statePosUGV1, const T* const statePosUGV2, const T* const stateT, T* residual) const {
 
-	T d_ugv_ = sqrt(pow(statePosUGV2[1]-statePosUGV1[1],2) + pow(statePosUGV2[2]-statePosUGV1[2],2)) ;
+	T d_ugv_ = sqrt(pow(statePosUGV2[1]-statePosUGV1[1],2) + pow(statePosUGV2[2]-statePosUGV1[2],2) + pow(statePosUGV2[3]-statePosUGV1[3],2)) ;
   T dt_ugv_;
-  if(stateT[1] < 0.00001)
-		T dt_ugv_ = 0.0;
-	else
+  T v_ugv_;
+  if(stateT[1] < 0.0001){
+	  dt_ugv_ = T{0.0};
+	  v_ugv_ = T{0.0};
+	  residual[0] =  v_ugv_;
+  }
+	else{
     dt_ugv_ = stateT[1];
-	T v_ugv_ = d_ugv_ / dt_ugv_;
+  	v_ugv_ = d_ugv_ / dt_ugv_;
+	  residual[0] =  wf_ * (v_ugv_ - iv_ugv);
+  }
 
   T d_uav_ = sqrt(pow(statePosUAV2[1]-statePosUAV1[1],2) + pow(statePosUAV2[2]-statePosUAV1[2],2) + pow(statePosUAV2[3]-statePosUAV1[3],2)) ;
-  T dt_uav_ = stateT[2];
+  T dt_uav_ = stateT[2]; 
 	T v_uav_ = d_uav_ / dt_uav_;
 
-	residual[0] =  wf_ * (v_ugv_ - iv_ugv);
-	residual[1] =  wf_ * (v_uav_ - iv_uav);
-
+  residual[1] =  wf_ * (v_uav_ - iv_uav);
+  
   return true;
   }
 

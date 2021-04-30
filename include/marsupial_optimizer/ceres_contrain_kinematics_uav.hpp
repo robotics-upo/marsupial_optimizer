@@ -21,7 +21,7 @@ public:
   template <typename T>
   bool operator()(const T* const statePos1, const T* const statePos2, const T* const statePos3, T* residual) const 
   {
-	//Kinematics for uav
+	// Kinematics for uav
 	T vector1_uav[3] = {statePos2[1]-statePos1[1],statePos2[2]-statePos1[2],statePos2[3]-statePos1[3]};
 	T vector2_uav[3] = {statePos2[1]-statePos3[1],statePos2[2]-statePos3[2],statePos2[3]-statePos3[3]};
 

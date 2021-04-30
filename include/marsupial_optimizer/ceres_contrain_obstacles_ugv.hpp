@@ -24,9 +24,9 @@ class ObstacleDistanceFunctorUGV {
 public:
     ObstacleDistanceFunctorUGV(){}
     
-    struct ComputeDistanceObstacles 
+    struct ComputeDistanceObstaclesUGV 
     {
-        ComputeDistanceObstacles (pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points)
+        ComputeDistanceObstaclesUGV (pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points)
         : kdT_(kdT_From_NN), o_p_(obstacles_Points)
         {
     
@@ -38,6 +38,7 @@ public:
             NearNeighbor nn;
 
             nn.nearestObstacleStateCeres(kdT_ , state1[1],state1[2], state1[3], o_p_, near_[0], near_[1], near_[2]);
+            // std::cout <<"NearestObstaclesFunctorUGV: state1["<<state1[0]<<"]=[" << state1[1] <<","<<state1[2]<<","<<state1[3] << "] , near=["<<near_[0]<<","<<near_[1]<<","<<near_[2]<<"]"<< std::endl;
             return true;
         }
 
@@ -47,17 +48,17 @@ public:
     };
 
 
-    struct ObstaclesFunctor 
+    struct ObstaclesFunctorUGV 
     {
-        ObstaclesFunctor(double weight_factor, double safty_bound, pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points)
+        ObstaclesFunctorUGV(double weight_factor, double safty_bound, pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points)
             : wf_(weight_factor), sb_(safty_bound), kdT_(kdT_From_NN), o_p_(obstacles_Points)
         {
             compute_nearest_distance.reset(new ceres::CostFunctionToFunctor<4,4>(
-                                    new ceres::NumericDiffCostFunction<ComputeDistanceObstacles,
+                                    new ceres::NumericDiffCostFunction<ComputeDistanceObstaclesUGV,
                                                                         ceres::CENTRAL, 
                                                                         4,
                                                                         4>( 
-                                    new ComputeDistanceObstacles(kdT_, o_p_))));
+                                    new ComputeDistanceObstaclesUGV(kdT_, o_p_))));
         }
 
         template <typename T>
@@ -67,9 +68,10 @@ public:
             T n_[4];
             (*compute_nearest_distance)(statePos, n_);
 
-            d_ugv_ = ((statePos[1]-n_[0])*(statePos[1]-n_[0]) + (statePos[2]-n_[1])*(statePos[2]-n_[1]) + (statePos[3]-n_[2])*(statePos[3]-n_[2]));
+            d_ugv_ = sqrt( (statePos[1]-n_[0])*(statePos[1]-n_[0]) + (statePos[2]-n_[1])*(statePos[2]-n_[1]) + (statePos[3]-n_[2])*(statePos[3]-n_[2]));
+            // std::cout <<"ObstaclesFunctorUGV d_ugv_=" << d_ugv_ << " , statePos[0] =" << statePos[0] << std::endl;
 
-            residual[0] =  wf_ * exp(sb_*sb_ - 2.0*d_ugv_);
+            residual[0] =  wf_ * 10.0 * exp(sb_ - d_ugv_);
 
             return true;
         }

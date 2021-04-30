@@ -18,19 +18,23 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(tf2_ros::Buffer *tfBuffer_)
 	nh.reset(new ros::NodeHandle("~"));
     tf_list.reset(new tf::TransformListener);
 
-	nh->param<double>("w_alpha", w_alpha,0.1);
-	nh->param<double>("w_beta",	w_beta,0.1);
-	nh->param<double>("w_gamma", w_gamma,0.1);
+	nh->param<double>("w_alpha_uav", w_alpha_uav,0.1);
+	nh->param<double>("w_alpha_ugv", w_alpha_ugv,0.1);
+	nh->param<double>("w_beta_uav",	w_beta_uav,0.1);
+	nh->param<double>("w_iota_uav",	w_iota_uav,0.1);
+	nh->param<double>("w_beta_ugv",	w_beta_ugv,0.1);
+	nh->param<double>("w_theta_ugv",	w_theta_ugv,0.1);
+	nh->param<double>("w_gamma_uav", w_gamma_uav,0.1);
+	nh->param<double>("w_gamma_ugv", w_gamma_ugv,0.1);
 	nh->param<double>("w_delta", w_delta,0.1);
 	nh->param<double>("w_epsilon", w_epsilon,0.1);
 	nh->param<double>("w_zeta", w_zeta,0.1);
 	nh->param<double>("w_eta", w_eta,0.1);
 	nh->param<double>("w_lambda", w_lambda,0.1);
 
-  	nh->param<double>("initial_multiplicative_factor_length_catenary", initial_multiplicative_factor_length_catenary,1.0); //Can't be lower than 1.0 or "catenary < distance between UGV and state" 	
-
 	nh->param<int>("n_iter_opt", n_iter_opt,200);
-	nh->param<double>("distance_obstacle", distance_obstacle,2.0);
+	nh->param<double>("distance_obstacle_ugv", distance_obstacle_ugv,0.5);
+	nh->param<double>("distance_obstacle_uav", distance_obstacle_uav,1.0);
 	nh->param<double>("initial_velocity_ugv", initial_velocity_ugv,1.0);
 	nh->param<double>("initial_velocity_uav", initial_velocity_uav,1.0);
 	nh->param<double>("initial_acceleration_ugv", initial_acceleration_ugv,0.0);
@@ -58,9 +62,8 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(tf2_ros::Buffer *tfBuffer_)
 	nh->param("debug", debug, (bool)0);
  	 nh->param("show_config", showConfig, (bool)0);
 
-	ROS_INFO_COND(showConfig, PRINTF_GREEN "Optimizer Local Planner 3D Node Configuration:\n");
+	ROS_INFO_COND(showConfig, PRINTF_BLUE "Optimizer Local Planner 3D Node Configuration:\n");
 	// ROS_INFO_COND(showConfig, PRINTF_GREEN "\t Trajectory Position Increments = [%.2f], Tolerance: [%.2f]", traj_dxy_max, traj_pos_tol);
-	// ROS_INFO_COND(showConfig, PRINTF_GREEN "\t Robot base frame: %s, World frame: %s", uav_base_frame.c_str(), world_frame.c_str());
 	// ROS_INFO_COND(showConfig, PRINTF_GREEN "\t Workspace:\t X:[%.2f, %.2f]\t Y:[%.2f, %.2f]\t Z: [%.2f, %.2f]", ws_x_max, ws_x_min, ws_y_max, ws_y_min, ws_z_max, ws_z_min);
 	// ROS_INFO_COND(showConfig, PRINTF_GREEN "\t Map Resolution: %.2f\t Map H inflaction: %.2f\t Map V Inflaction: %.2f", map_resolution, map_h_inflaction, map_v_inflaction);
 	// ROS_INFO_COND(showConfig, PRINTF_GREEN "\t Z weight cost: %.2f\t Z not inflate: %.2f", z_weight_cost, z_not_inflate);
@@ -75,7 +78,7 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(tf2_ros::Buffer *tfBuffer_)
 	cleanVectors();
 	mp_.clearMarkersPointLines(points_ugv_marker, lines_ugv_marker,traj_marker_ugv_pub_,20);
   	mp_.clearMarkersPointLines(points_uav_marker, lines_uav_marker,traj_marker_uav_pub_,20);
-	// ROS_INFO(PRINTF_BLUE"alpha=[%f] beta=[%f] gamma=[%f] delta=[%f] epsilon=[%f] zeta=[%f] eta=[%f] lambda=[%f]",w_alpha,w_beta,w_gamma,w_delta,w_epsilon,w_zeta,w_eta,w_lambda);
+	ROS_INFO(PRINTF_BLUE"alpha_uav=[%f] alpha_ugv=[%f] beta_uav=[%f] beta_ugv=[%f] iota_uav=[%f] theta_ugv=[%f] gamma_uav=[%f] gamma_ugv=[%f] delta=[%f] epsilon=[%f] zeta=[%f] eta=[%f] lambda=[%f]",w_alpha_uav, w_alpha_ugv, w_beta_uav, w_beta_ugv, w_iota_uav, w_theta_ugv,w_gamma_uav, w_gamma_ugv,w_delta,w_epsilon,w_zeta,w_eta,w_lambda);
 	ROS_INFO(PRINTF_BLUE"Optimizer_Local_Planner: Parameters loaded, ready for Optimization Process. Waiting for Action!!");
 	// traj_marker_uav_pub_.publish(points_uav_marker);
 	// traj_marker_uav_pub_.publish(lines_uav_marker);
@@ -98,6 +101,11 @@ void OptimizerLocalPlanner::initializeSubscribers()
 	octomap_ws_sub_ = nh->subscribe( "/octomap_point_cloud_centers", 1,  &OptimizerLocalPlanner::readOctomapCallback, this);
     point_cloud_ugv_traversability_sub_ = nh->subscribe( "/region_growing_traversability_pc_map", 1,  &OptimizerLocalPlanner::readPointCloudTraversabilityUGVCallback, this);
     point_cloud_ugv_obstacles_sub_ = nh->subscribe( "/region_growing_obstacles_pc_map", 1,  &OptimizerLocalPlanner::readPointCloudObstaclesUGVCallback, this);
+
+    clean_markers_sub_ = nh->subscribe( "/clean_marker_optimizer", 1,  &OptimizerLocalPlanner::deleteMarkersCallBack, this);
+
+    trajPub = nh->advertise<trajectory_msgs::MultiDOFJointTrajectory>("local_path", 1);
+
     
 	ROS_INFO(PRINTF_BLUE"Optimizer_Local_Planner: Subscribers Initialized");
 }
@@ -159,6 +167,7 @@ void OptimizerLocalPlanner::dynRecCb(marsupial_optimizer::OptimizationParamsConf
 
 void OptimizerLocalPlanner::readOctomapCallback(const sensor_msgs::PointCloud2::ConstPtr& msg)
 {
+	ROS_INFO(PRINTF_MAGENTA "KDTree : Preparing KDTree UAV");
 	nn_uav.setInput(*msg);
   	ROS_INFO_COND(debug, PRINTF_BLUE "Local Planner: Received Point Cloud for KDTree UAV");
 
@@ -166,12 +175,14 @@ void OptimizerLocalPlanner::readOctomapCallback(const sensor_msgs::PointCloud2::
 
 void OptimizerLocalPlanner::readPointCloudTraversabilityUGVCallback(const sensor_msgs::PointCloud2::ConstPtr& msg)
 {
-	nn_ugv_tra.setInput(*msg);
+	ROS_INFO(PRINTF_MAGENTA "KDTree : Preparing KDTree UGV Traversability");
+	nn_trav.setInput(*msg);
   	ROS_INFO_COND(debug, PRINTF_BLUE "Local Planner: Received Point Cloud for KDTree traversability UGV");
 }
 
 void OptimizerLocalPlanner::readPointCloudObstaclesUGVCallback(const sensor_msgs::PointCloud2::ConstPtr& msg)
 {
+	ROS_INFO(PRINTF_MAGENTA "KDTree : Preparing KDTree UGV Obstacles");
 	nn_ugv_obs.setInput(*msg);
   	ROS_INFO_COND(debug, PRINTF_BLUE "Local Planner: Received Point Cloud for KDTree obstacles UGV");
 }
@@ -179,6 +190,15 @@ void OptimizerLocalPlanner::readPointCloudObstaclesUGVCallback(const sensor_msgs
 void OptimizerLocalPlanner::collisionMapCallBack(const octomap_msgs::OctomapConstPtr &msg)
 {
     mapReceived = true;
+}
+
+void OptimizerLocalPlanner::deleteMarkersCallBack(const std_msgs::BoolConstPtr &msg)
+{
+	if (msg->data == true){
+		mp_.clearMarkers(catenary_marker, 150, catenary_marker_pub_);
+		mp_.clearMarkersPointLines(points_ugv_marker, lines_ugv_marker,traj_marker_ugv_pub_,30);
+  		mp_.clearMarkersPointLines(points_uav_marker, lines_uav_marker,traj_marker_uav_pub_,30);
+	}
 }
 
 void OptimizerLocalPlanner::executeOptimizerPathPreemptCB()
@@ -190,7 +210,6 @@ void OptimizerLocalPlanner::executeOptimizerPathPreemptCB()
     mp_.clearMarkersPointLines(points_ugv_marker, lines_ugv_marker, traj_marker_ugv_pub_, 0);
     mp_.clearMarkersPointLines(points_uav_marker, lines_uav_marker, traj_marker_uav_pub_, 0);
 }
-
 
 void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 {
@@ -273,17 +292,17 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		statesRot.push_back(parameter_block_rot);
 		statesTime.push_back(parameter_block_time);
 		statesLength.push_back(parameter_block_length);
-		printf("[%lu]states.parameterUGV=[%f %f %f / %f %f %f %f/ %f / %f]\n",i,parameter_block_pos_ugv.parameter[1],parameter_block_pos_ugv.parameter[2],parameter_block_pos_ugv.parameter[3],
-															parameter_block_rot.parameter[1],parameter_block_rot.parameter[2],parameter_block_rot.parameter[3],parameter_block_rot.parameter[4],
-															parameter_block_time.parameter[1],parameter_block_length.parameter[1]);
-		printf("[%lu]states.parameterUAV=[%f %f %f / %f %f %f %f/ %f / %f]\n",i,parameter_block_pos_uav.parameter[1],parameter_block_pos_uav.parameter[2],parameter_block_pos_uav.parameter[3],
+		printf("[%lu]states.parameter: UGV=[%f %f %f / %f %f %f %f]",i+1,parameter_block_pos_ugv.parameter[1],parameter_block_pos_ugv.parameter[2],parameter_block_pos_ugv.parameter[3],
+															parameter_block_rot.parameter[1],parameter_block_rot.parameter[2],parameter_block_rot.parameter[3],parameter_block_rot.parameter[4]);
+		printf(" UAV=[%f %f %f / %f %f %f %f] / [%f %f] / %f]\n", parameter_block_pos_uav.parameter[1],parameter_block_pos_uav.parameter[2],parameter_block_pos_uav.parameter[3],
 															parameter_block_rot.parameter[5],parameter_block_rot.parameter[6],parameter_block_rot.parameter[7],parameter_block_rot.parameter[8],
-															parameter_block_time.parameter[2],parameter_block_length.parameter[1]);
+															parameter_block_time.parameter[1],parameter_block_time.parameter[2],parameter_block_length.parameter[1]);
 	}
     
-	/*** Cost Function I-i : UAV Equidistance constrain ***/
+	/*** Cost Function I-i : Equidistance constrain UAV ***/
+	// printf("initial_distance_states_uav = %f \n",initial_distance_states_uav);
 	for (int i = 0; i <  statesPosUAV.size() - 1 ; ++i) {
-		CostFunction* cost_function1_1  = new AutoDiffCostFunction<EquiDistanceFunctorUAV, 1, 4, 4>(new EquiDistanceFunctorUAV(w_alpha*10.0, initial_distance_states_ugv, initial_distance_states_uav)); 
+		CostFunction* cost_function1_1  = new AutoDiffCostFunction<EquiDistanceFunctorUAV, 1, 4, 4>(new EquiDistanceFunctorUAV(w_alpha_uav*10.0, initial_distance_states_uav)); 
 		problem.AddResidualBlock(cost_function1_1, NULL, statesPosUAV[i].parameter, statesPosUAV[i+1].parameter);
 		if (i == 0)
 			problem.SetParameterBlockConstant(statesPosUAV[i].parameter);
@@ -293,55 +312,71 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		problem.SetParameterUpperBound(statesPosUAV[i].parameter, 3, 20.0);
 	}
 
-	/*** Cost Function I-ii : UGV Equidistance constrain ***/
-	for (int i = 0; i <  statesPosUGV.size() - 1 ; ++i) {
-		CostFunction* cost_function1_2  = new AutoDiffCostFunction<EquiDistanceFunctorUGV, 1, 4, 4>(new EquiDistanceFunctorUGV(w_alpha*10.0, initial_distance_states_ugv, initial_distance_states_uav)); 
-		problem.AddResidualBlock(cost_function1_2, NULL, statesPosUGV[i].parameter, statesPosUGV[i+1].parameter);
-		if (i == 0)
-			problem.SetParameterBlockConstant(statesPosUGV[i].parameter);
-	}
+	/*** Cost Function I-ii : Equidistance constrain UGV ***/
+	// printf("initial_distance_states_ugv = %f \n",initial_distance_states_ugv);
+	// for (int i = 0; i <  statesPosUGV.size() - 1 ; ++i) {
+	// 	CostFunction* cost_function1_2  = new AutoDiffCostFunction<EquiDistanceFunctorUGV, 1, 4, 4>(new EquiDistanceFunctorUGV(w_alpha_ugv*1.0, initial_distance_states_ugv)); 
+	// 	problem.AddResidualBlock(cost_function1_2, NULL, statesPosUGV[i].parameter, statesPosUGV[i+1].parameter);
+	// 	if (i == 0)
+	// 		problem.SetParameterBlockConstant(statesPosUGV[i].parameter);
+	// 	problem.SetParameterLowerBound(statesPosUGV[i].parameter, 3, 0.0);
+	// }
 
 	/*** Cost Function II-i : Obstacles constrain UAV***/
 	for (int i = 0; i < statesPosUAV.size(); ++i) {
     	CostFunction* cost_function2_1  = new AutoDiffCostFunction<ObstacleDistanceFunctorUAV::ObstaclesFunctor, 1, 4>
-											(new ObstacleDistanceFunctorUAV::ObstaclesFunctor(w_beta*10.0, distance_obstacle, nn_uav.kdtree, nn_uav.obs_points)); 
+											(new ObstacleDistanceFunctorUAV::ObstaclesFunctor(w_beta_uav*10.0, distance_obstacle_uav, nn_uav.kdtree, nn_uav.obs_points)); 
     	problem.AddResidualBlock(cost_function2_1, NULL, statesPosUAV[i].parameter);
   	}
 
-	/*** Cost Function II-ii : Obstacles constrain UGV***/
-	for (int i = 0; i < statesPosUGV.size(); ++i) {
-    	CostFunction* cost_function2_2  = new AutoDiffCostFunction<ObstacleDistanceFunctorUGV::ObstaclesFunctor, 1, 4>
-											(new ObstacleDistanceFunctorUGV::ObstaclesFunctor(w_beta*10.0, distance_obstacle, nn_ugv_obs.kdtree, nn_ugv_obs.obs_points)); 
-    	problem.AddResidualBlock(cost_function2_2, NULL, statesPosUGV[i].parameter);
+	/*** Cost Function II-i : Obstacles Through constrain UAV***/
+	for (int i = 0; i < statesPosUAV.size()-1; ++i) {
+    	CostFunction* cost_function2_2  = new AutoDiffCostFunction<ObstacleDistanceThroughFunctorUAV::ObstaclesThroughFunctor, 1, 4, 4>
+											(new ObstacleDistanceThroughFunctorUAV::ObstaclesThroughFunctor(w_iota_uav*10.0, nn_uav.kdtree, nn_uav.obs_points)); 
+    	problem.AddResidualBlock(cost_function2_2, NULL, statesPosUAV[i].parameter, statesPosUAV[i+1].parameter);
   	}
+
+	/*** Cost Function II-ii : Obstacles constrain UGV***/
+	// for (int i = 0; i < statesPosUGV.size(); ++i) {
+    // 	CostFunction* cost_function2_3  = new AutoDiffCostFunction<ObstacleDistanceFunctorUGV::ObstaclesFunctorUGV, 1, 4>
+	// 										(new ObstacleDistanceFunctorUGV::ObstaclesFunctorUGV(w_beta_ugv*10.0, distance_obstacle_ugv, nn_ugv_obs.kdtree, nn_ugv_obs.obs_points)); 
+    // 	problem.AddResidualBlock(cost_function2_3, NULL, statesPosUGV[i].parameter);
+  	// }
 	
-	// /*** Cost Function II-iii : Traversability constrain UGV***/
+	/*** Cost Function II-iii : Traversability constrain UGV***/
 	for (int i = 0; i < statesPosUGV.size(); ++i) {
     	CostFunction* cost_function2_3  = new AutoDiffCostFunction<TraversabilityDistanceFunctorUGV::TraversabilityFunctor, 1, 4>
-											(new TraversabilityDistanceFunctorUGV::TraversabilityFunctor(w_beta*10.0, nn_ugv_tra.kdtree, nn_ugv_tra.obs_points)); 
+											(new TraversabilityDistanceFunctorUGV::TraversabilityFunctor(w_theta_ugv*10.0, nn_trav.kdtree, nn_trav.obs_points)); 
     	problem.AddResidualBlock(cost_function2_3, NULL, statesPosUGV[i].parameter);
   	}
 
-	/*** Cost Function III-i : UAV Kinematic constrain ***/
+	/*** Cost Function III-i : Kinematic constrain UAV ***/
 	for (int i = 0; i < statesPosUAV.size() - 2; ++i) {
-		CostFunction* cost_function3_1  = new AutoDiffCostFunction<KinematicsFunctorUAV, 1, 4, 4, 4>(new KinematicsFunctorUAV(w_gamma, angle_min_traj)); 
+		CostFunction* cost_function3_1  = new AutoDiffCostFunction<KinematicsFunctorUAV, 1, 4, 4, 4>(new KinematicsFunctorUAV(w_gamma_uav*10.0, angle_min_traj)); 
 		problem.AddResidualBlock(cost_function3_1, NULL, statesPosUAV[i].parameter, statesPosUAV[i+1].parameter, statesPosUAV[i+2].parameter);
 	}
 
-	/*** Cost Function III-ii : UGV Kinematic constrain ***/
+	/*** Cost Function III-ii : Kinematic constrain UGV ***/
 	for (int i = 0; i < statesPosUGV.size() - 2; ++i) {
-		CostFunction* cost_function3_2  = new AutoDiffCostFunction<KinematicsFunctorUGV, 1, 4, 4, 4>(new KinematicsFunctorUGV(w_gamma, angle_min_traj)); 
+		CostFunction* cost_function3_2  = new AutoDiffCostFunction<KinematicsFunctorUGV, 1, 4, 4, 4>(new KinematicsFunctorUGV(w_gamma_ugv, angle_min_traj)); 
 		problem.AddResidualBlock(cost_function3_2, NULL, statesPosUGV[i].parameter, statesPosUGV[i+1].parameter, statesPosUGV[i+2].parameter);
 	}
 
-	// /*** Cost Function IV : Time constrain ***/
-	// for (int i = 0; i < statesTime.size(); ++i) {
-	// 	CostFunction* cost_function4  = new AutoDiffCostFunction<TimeFunctor, 2, 3>(new TimeFunctor(w_delta, vec_time_init_ugv[i], vec_time_init_uav[i])); 
-	// 	problem.AddResidualBlock(cost_function4, NULL, statesTime[i].parameter);
-	// 	if (i == 0)
-	// 		problem.SetParameterBlockConstant(statesTime[i].parameter);
-	// 	problem.SetParameterLowerBound(statesTime[i].parameter, 1, 0.0);
-	// }
+	/*** Cost Function III-ii : Rotation constrain UGV ***/
+	for (int i = 0; i < statesRot.size() - 1; ++i) {
+		CostFunction* cost_function3_3  = new NumericDiffCostFunction<RotationFunctorUGV, CENTRAL, 1, 9, 9>(new RotationFunctorUGV(w_gamma_ugv, angle_min_traj)); 
+		problem.AddResidualBlock(cost_function3_3, NULL, statesRot[i].parameter, statesRot[i+1].parameter);
+	}
+
+	/*** Cost Function IV : Time constrain ***/
+	for (int i = 0; i < statesTime.size(); ++i) {
+		CostFunction* cost_function4  = new AutoDiffCostFunction<TimeFunctor, 2, 3>(new TimeFunctor(w_delta, vec_time_init_ugv[i], vec_time_init_uav[i])); 
+		problem.AddResidualBlock(cost_function4, NULL, statesTime[i].parameter);
+		if (i == 0)
+			problem.SetParameterBlockConstant(statesTime[i].parameter);
+		problem.SetParameterLowerBound(statesTime[i].parameter, 1, 0.0);
+		problem.SetParameterLowerBound(statesTime[i].parameter, 2, 0.0);
+	}
 
 	// /*** Cost Function V : Velocity constrain ***/
 	// for (int i = 0; i < statesTime.size() - 1; ++i) {
@@ -361,16 +396,16 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	// 							statesTime[i+1].parameter, statesTime[i+2].parameter);
 	// }
 
-	// /*** Cost Function VII : Catenary constrain  ***/
-	for (int i = 0; i < statesLength.size(); ++i) {
-		CostFunction* cost_function7  = new NumericDiffCostFunction<CatenaryFunctor, CENTRAL, 2, 4, 4, 9, 2>
-										(new CatenaryFunctor(w_eta * 10.0, distance_catenary_obstacle, vec_len_cat_init[i], nn_uav.kdtree, nn_uav.obs_points, pos_reel_ugv, size, nh)); 
-		problem.AddResidualBlock(cost_function7, NULL, statesPosUAV[i].parameter, statesPosUGV[i].parameter, statesRot[i].parameter, statesLength[i].parameter);
-		if (i == 0)
-			problem.SetParameterBlockConstant(statesLength[i].parameter);
-		problem.SetParameterLowerBound(statesLength[i].parameter, 1, 0.0);
-		problem.SetParameterUpperBound(statesLength[i].parameter, 1, length_tether_max);
-	}
+	/*** Cost Function VII : Catenary constrain  ***/
+	// for (int i = 0; i < statesLength.size(); ++i) {
+	// 	CostFunction* cost_function7  = new NumericDiffCostFunction<CatenaryFunctor, CENTRAL, 3, 4, 4, 9, 2>
+	// 									(new CatenaryFunctor(w_eta*10, distance_catenary_obstacle, nn_uav.kdtree, nn_uav.obs_points,nn_trav.kdtree, nn_trav.obs_points, pos_reel_ugv, size, nh)); 
+	// 	problem.AddResidualBlock(cost_function7, NULL, statesPosUAV[i].parameter, statesPosUGV[i].parameter, statesRot[i].parameter, statesLength[i].parameter);
+	// 	if (i == 0)
+	// 		problem.SetParameterBlockConstant(statesLength[i].parameter);
+	// 	problem.SetParameterLowerBound(statesLength[i].parameter, 1, 0.5);
+	// 	problem.SetParameterUpperBound(statesLength[i].parameter, 1, length_tether_max);
+	// }
 
 	/*** Cost Function VIII : Dynamic Catenary constrain  ***/
 	// for (int i = 0; i < statesLength.size() - 1; ++i) {
@@ -418,10 +453,13 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	  	cSX_.solve(p_reel_.x, p_reel_.y, p_reel_.z, statesPosUAV[i].parameter[1], statesPosUAV[i].parameter[2], statesPosUAV[i].parameter[3], statesLength[i].parameter[1], points_catenary_final);
 		mp_.markerPoints(catenary_marker, points_catenary_final, i, size, catenary_marker_pub_);
 		double _d_ = sqrt(pow(p_reel_.x -statesPosUAV[i].parameter[1],2) + pow(p_reel_.y - statesPosUAV[i].parameter[2],2) + pow(p_reel_.z-statesPosUAV[i].parameter[3],2));
-		printf("points_catenary_final.size()=[%lu] ugv_pos[%lu] = [%f %f %f] , uav_pos[%lu]=[%f %f %f] , l=[%f] d=[%f]\n",points_catenary_final.size(),
-																								i,statesPosUGV[i].parameter[1], statesPosUGV[i].parameter[2], statesPosUGV[i].parameter[3],
-																								i,statesPosUAV[i].parameter[1], statesPosUAV[i].parameter[2], statesPosUAV[i].parameter[3],
-																								statesLength[i].parameter[1],_d_);
+		printf("[%lu]states.parameter: UGV=[%f %f %f / %f %f %f %f] UAV=[%f %f %f / %f %f %f %f] , t=[%f/%f], l=[%f/points=%lu] d=[%f]\n",i,
+																							statesPosUGV[i].parameter[1], statesPosUGV[i].parameter[2], statesPosUGV[i].parameter[3],
+																							statesRot[i].parameter[1],statesRot[i].parameter[2],statesRot[i].parameter[3],statesRot[i].parameter[4],
+																							statesPosUAV[i].parameter[1], statesPosUAV[i].parameter[2], statesPosUAV[i].parameter[3],
+																							statesRot[i].parameter[5],statesRot[i].parameter[6],statesRot[i].parameter[7],statesRot[i].parameter[8],
+																							statesTime[i].parameter[1],statesTime[i].parameter[2],
+																							statesLength[i].parameter[1],points_catenary_final.size(),_d_);
 	}
 
 	mp_.getMarkerPoints(points_ugv_marker, vec_pose_ugv_opt, "points_ugv_m",3);	// RED: colour_ = 0 ; GREEN : colour_ = 1 ; BLUE: colour_ = 2 ; YELLOW = 3 ; PURPLE = 4;
@@ -455,6 +493,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	for (size_t j = 0; j < vec_len_cat_opt.size(); j++){
 		printf("Optimized length_catenary=[%f] for state=[%lu]\n",vec_len_cat_opt[j],j);
 	}
+
 
   std::cout << "==================================================="<< std::endl << std::endl;
 }
@@ -655,3 +694,84 @@ geometry_msgs::Point OptimizerLocalPlanner::getReelPoint(const float px_, const 
 	return ret;
 }
 
+void OptimizerLocalPlanner::publishOptimizedTraj(vector<Eigen::Vector3d> pos_ugv_opt_, vector<Eigen::Vector3d> pos_uav_opt_)
+{
+    ROS_INFO_COND(debug, "Publishing Trajectories");
+
+	trajectory_msgs::MultiDOFJointTrajectoryPoint trajectory_point_;
+	trajectory_msgs::MultiDOFJointTrajectory trajectory_;
+
+    trajectory_.points.clear();
+
+	trajectory_point_.transforms.resize(2);
+	trajectory_point_.velocities.resize(2);
+	trajectory_point_.accelerations.resize(2);
+
+	for (size_t i = 0; i < pos_ugv_opt_.size() ; i++){
+		trajectory_point_.transforms[0].translation.x = pos_ugv_opt_[i].x();
+		trajectory_point_.transforms[0].translation.y = pos_ugv_opt_[i].y();
+		trajectory_point_.transforms[0].translation.z = pos_ugv_opt_[i].z();
+		trajectory_point_.transforms[0].rotation.x = statesRot[i].parameter[1];
+		trajectory_point_.transforms[0].rotation.y = statesRot[i].parameter[2];
+		trajectory_point_.transforms[0].rotation.z = statesRot[i].parameter[3];
+		trajectory_point_.transforms[0].rotation.w = statesRot[i].parameter[4];
+		if ( (i==0) || (vec_time_ugv_opt[i] < 0.0001) ){
+			trajectory_point_.velocities[0].linear.x = 0.0;
+			trajectory_point_.velocities[0].linear.y = 0.0;
+			trajectory_point_.velocities[0].linear.z = 0.0;
+		}
+		else{ 
+			trajectory_point_.velocities[0].linear.x = (pos_ugv_opt_[i+1].x() - pos_ugv_opt_[i].x())/vec_time_ugv_opt[i];
+			trajectory_point_.velocities[0].linear.y = (pos_ugv_opt_[i+1].y() - pos_ugv_opt_[i].y())/vec_time_ugv_opt[i];
+			trajectory_point_.velocities[0].linear.z = (pos_ugv_opt_[i+1].z() - pos_ugv_opt_[i].z())/vec_time_ugv_opt[i];
+		}
+
+		if ( (i==0) || (i==pos_ugv_opt_.size()-1) || (vec_time_ugv_opt[i] < 0.0001) ){
+			trajectory_point_.accelerations[0].linear.x = 0.0;
+			trajectory_point_.accelerations[0].linear.y = 0.0;
+			trajectory_point_.accelerations[0].linear.z = 0.0;
+		}
+		else{
+			trajectory_point_.accelerations[0].linear.x = 0.0;
+			trajectory_point_.accelerations[0].linear.y = 0.0;
+			trajectory_point_.accelerations[0].linear.z = 0.0;
+		}
+		
+
+		trajectory_point_.transforms[1].translation.x = pos_uav_opt_[i].x();
+		trajectory_point_.transforms[1].translation.y = pos_uav_opt_[i].y();
+		trajectory_point_.transforms[1].translation.z = pos_uav_opt_[i].z();
+		trajectory_point_.transforms[1].rotation.x = statesRot[i].parameter[5];
+		trajectory_point_.transforms[1].rotation.y = statesRot[i].parameter[6];
+		trajectory_point_.transforms[1].rotation.z = statesRot[i].parameter[7];
+		trajectory_point_.transforms[1].rotation.w = statesRot[i].parameter[8];
+		if ( (i==0) || (vec_time_uav_opt[i] < 0.0001) ){
+			trajectory_point_.velocities[1].linear.x = 0.0;
+			trajectory_point_.velocities[1].linear.y = 0.0;
+			trajectory_point_.velocities[1].linear.z = 0.0;
+		}
+		else{ 
+			trajectory_point_.velocities[1].linear.x = (pos_uav_opt_[i+1].x() - pos_uav_opt_[i].x())/vec_time_uav_opt[i];
+			trajectory_point_.velocities[1].linear.y = (pos_uav_opt_[i+1].y() - pos_uav_opt_[i].y())/vec_time_uav_opt[i];
+			trajectory_point_.velocities[1].linear.z = (pos_uav_opt_[i+1].z() - pos_uav_opt_[i].z())/vec_time_uav_opt[i];
+		}
+
+		if ( (i==0) || (i==pos_ugv_opt_.size()-1) || (vec_time_ugv_opt[i] < 0.0001) ){
+			trajectory_point_.accelerations[1].linear.x = 0.0;
+			trajectory_point_.accelerations[1].linear.y = 0.0;
+			trajectory_point_.accelerations[1].linear.z = 0.0;
+		}
+		else{
+			trajectory_point_.accelerations[1].linear.x = 0.0;
+			trajectory_point_.accelerations[1].linear.y = 0.0;
+			trajectory_point_.accelerations[1].linear.z = 0.0;
+		}
+
+		trajectory_.header.stamp = ros::Time::now();
+	
+		trajectory_.points.push_back(trajectory_point_);
+
+	}
+
+    trajPub.publish(trajectory_);
+}
