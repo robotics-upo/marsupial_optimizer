@@ -49,6 +49,8 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include <actionlib/server/simple_action_server.h>
 #include <actionlib/client/simple_action_client.h>
 #include <octomap_msgs/Octomap.h>
+#include <octomap/OcTree.h>
+#include <octomap_msgs/conversions.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <visualization_msgs/Marker.h>
 #include <geometry_msgs/Point.h>
@@ -91,7 +93,7 @@ struct parameterBlockPos{
 };
 
 struct parameterBlockRot{
-	double parameter[9];
+	double parameter[5];
 };
 
 struct parameterBlockTime{
@@ -147,7 +149,7 @@ public:
 	std::string path, name_output_file;
 	int n_iter_opt;	//Iterations Numbers of Optimizer
 	double distance_catenary_obstacle,min_distance_add_new_point,dynamic_catenary, initial_distance_states_ugv, initial_distance_states_uav;
-	double w_alpha_uav, w_alpha_ugv, w_beta_uav, w_beta_ugv, w_iota_uav, w_theta_ugv, w_gamma_uav, w_gamma_ugv, w_delta, w_epsilon, w_zeta, w_eta, w_lambda;
+	double w_alpha_uav, w_alpha_ugv, w_beta_uav, w_beta_ugv, w_iota_uav, w_theta_ugv, w_gamma_uav, w_gamma_ugv, w_kappa_ugv, w_kappa_uav, w_delta, w_epsilon, w_zeta, w_eta, w_lambda;
 
 	NearNeighbor nn_uav; // Kdtree used for Catenary and UAV
 	NearNeighbor nn_trav, nn_ugv_obs;
@@ -163,6 +165,11 @@ public:
     bool mapReceived;
     bool debug;
     bool showConfig;
+	bool use_octomap_local;
+
+    octomap_msgs::OctomapConstPtr map;
+	octomap::OcTree *map_msg;
+
 
     trajectory_msgs::MultiDOFJointTrajectory globalTrajectory, localTrajectory;
     ros::Time start_time;
@@ -187,7 +194,8 @@ public:
 	vector<Eigen::Vector3d> new_path_ugv, new_path_uav;
 	vector<parameterBlockPos> statesPosUGV;
 	vector<parameterBlockPos> statesPosUAV;
-	vector<parameterBlockRot> statesRot;
+	vector<parameterBlockRot> statesRotUGV;
+	vector<parameterBlockRot> statesRotUAV;
 	vector<parameterBlockTime> statesTime;
 	vector<parameterBlockLength> statesLength;
 	vector<geometry_msgs::Quaternion> vec_rot_ugv, vec_rot_uav;
@@ -205,6 +213,8 @@ public:
 	bool write_data_for_analysis;
 	geometry_msgs::Point pos_reel_ugv;
 	double length_tether_max;
+	int count_fix_points_ugv;
+
 
 
 private:
@@ -212,7 +222,7 @@ private:
 	void cleanVectors();
 	double global_path_length;
 	double distance_obstacle_uav,distance_obstacle_ugv, initial_velocity_ugv, initial_velocity_uav, angle_min_traj, initial_acceleration_ugv, initial_acceleration_uav;
-	geometry_msgs::Point ugv_pos_catenary;
+	// geometry_msgs::Point ugv_pos_catenary;
 };
 
 #endif

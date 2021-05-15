@@ -62,16 +62,21 @@ public:
         }
 
         template <typename T>
-        bool operator()(const T* const statePos,  T* residual) const 
+        bool operator()(const T* const statePos1, const T* const statePos2, T* residual) const 
         {
-            T d_ugv_;
-            T n_[4];
-            (*compute_nearest_distance)(statePos, n_);
+            T d_ugv_1, d_ugv_2;
+            T n1_[4];
+            T n2_[4];
+            (*compute_nearest_distance)(statePos1, n1_);
+            (*compute_nearest_distance)(statePos2, n2_);
 
-            d_ugv_ = sqrt( (statePos[1]-n_[0])*(statePos[1]-n_[0]) + (statePos[2]-n_[1])*(statePos[2]-n_[1]) + (statePos[3]-n_[2])*(statePos[3]-n_[2]));
+            d_ugv_1 = sqrt( (statePos1[1]-n1_[0])*(statePos1[1]-n1_[0]) + (statePos1[2]-n1_[1])*(statePos1[2]-n1_[1]) + (statePos1[3]-n1_[2])*(statePos1[3]-n1_[2]));
+            d_ugv_2 = sqrt( (statePos2[1]-n2_[0])*(statePos2[1]-n2_[0]) + (statePos2[2]-n2_[1])*(statePos2[2]-n2_[1]) + (statePos2[3]-n2_[2])*(statePos2[3]-n2_[2]));
             // std::cout <<"ObstaclesFunctorUGV d_ugv_=" << d_ugv_ << " , statePos[0] =" << statePos[0] << std::endl;
 
-            residual[0] =  wf_ * 10.0 * exp(sb_ - d_ugv_);
+            // residual[0] =  wf_ * 10.0 * exp(sb_ - d_ugv_);
+            residual[0] = wf_ *( exp(4.0*(sb_ - d_ugv_1)) + exp(4.0*(sb_ - d_ugv_2)) + exp(0.5*(d_ugv_1-3.0)) + exp(0.5*(d_ugv_2-3.0)));
+
 
             return true;
         }

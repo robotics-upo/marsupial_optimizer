@@ -29,17 +29,17 @@ public:
 	T v1_ugv_;
 	T v2_ugv_;
 	T a_ugv_;
-	if(stateT1[1] < 0.00001)
+	if(stateT1[1] < 0.0001)
 		v1_ugv_ = T{0.0};
 	else
 		v1_ugv_ = d1_ugv_ / (stateT1[1]);
 	
-	if(stateT2[1] < 0.00001)
+	if(stateT2[1] < 0.0001)
 		v2_ugv_ = T{0.0};
 	else
 		v2_ugv_ = d2_ugv_ / (stateT2[1]);
 	
-	if(stateT1[1] < 0.00001 && stateT2[1]< 0.00001){
+	if(stateT1[1] < 0.0001 && stateT2[1]< 0.0001){
   		a_ugv_ = T{0.0};
 		residual[0] =  a_ugv_;
 	}

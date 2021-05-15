@@ -35,8 +35,10 @@ public:
 	T bound2_uav = T(M_PI) + T(ang_);
 	T bound_uav = (bound1_uav + bound2_uav)/2.0;	
 
+	T value_ = sqrt((angle_uav - bound_uav)*(angle_uav - bound_uav));
+
 	if ( (angle_uav < bound1_uav) || (angle_uav > bound2_uav) ) 
-		 residual[0] =  wf_ * exp( sqrt((angle_uav - bound_uav)*(angle_uav - bound_uav)));
+		 residual[0] =  wf_ * exp(value_);
 	else
 		 residual[0] = T(0.0);
 

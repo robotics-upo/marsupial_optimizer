@@ -17,7 +17,7 @@ class RotationFunctorUGV
 {
 
 public:
-	RotationFunctorUGV(double weight_factor, double angle_bound): wf_(weight_factor), ang_(angle_bound) {}
+	RotationFunctorUGV(double weight_factor): wf_(weight_factor){}
 
 	template <typename T>
 	bool operator()(const T* const stateRot1, const T* const stateRot2, T* residual) const 
@@ -35,15 +35,12 @@ public:
 
 		T diff_angle_ = T(yaw1_) - T(yaw2_);	
 
-		if ( (ang_ < diff_angle_) || (diff_angle_ < -1.0 * ang_) ) 
-			 residual[0] =  wf_ * exp( sqrt(diff_angle_*diff_angle_));
-		else
-			 residual[0] = T(0.0);
+		 residual[0] =  wf_ * exp( diff_angle_);
 
 		return true;
 	}
 
-	double wf_, ang_;
+	double wf_;
 
 private:
 

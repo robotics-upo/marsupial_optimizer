@@ -49,6 +49,8 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   upo_actions
   dynamic_reconfigure
+  octomap_msgs
+  octomap_ros
 )
 
 find_package(PCL 1.8 REQUIRED)
@@ -76,8 +78,10 @@ catkin_package(
   upo_actions
   pcl_conversions 
   pcl_ros
+  octomap_msgs 
+  octomap_ros
   # sensor_msgs 
-  DEPENDS system_lib
+  DEPENDS system_lib octomap_msgs octomap_ros
 )
 
 include_directories(  ${catkin_INCLUDE_DIRS}  ${PCL_INCLUDE_DIRS} )

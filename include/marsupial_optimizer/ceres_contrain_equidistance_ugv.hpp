@@ -1,5 +1,5 @@
-#ifndef CERES_CONTRAIN__EQUIDISTANCE__UGV_HPP_
-#define CERES_CONTRAIN__EQUIDISTANCE__UGV_HPP_
+#ifndef CERES_CONTRAIN_EQUIDISTANCE__UGV_HPP_
+#define CERES_CONTRAIN_EQUIDISTANCE__UGV_HPP_
 
 #include "ceres/ceres.h"
 #include "glog/logging.h"
@@ -20,9 +20,13 @@ class EquiDistanceFunctorUGV
     template <typename T>
     bool operator()(const T* const statePos1, const T* const statePos2, T* residual) const 
     {  
-      T d_pos_ugv = sqrt( (pow(statePos1[1]-statePos2[1],2)) + pow(statePos1[2]-statePos2[2],2) );
+      T d_pos_ugv = sqrt((pow(statePos1[1]-statePos2[1],2)) + pow(statePos1[2]-statePos2[2],2) + pow(statePos1[3]-statePos2[3],2));
       
-      residual[0] = wf_ * ( exp(d_pos_ugv - int_d_ugv) - 1.0 );
+      if (d_pos_ugv < 0.01)
+        residual[0] = T{0.0};
+      else
+        residual[0] = wf_ * ( exp(2.0*(d_pos_ugv - int_d_ugv)) );
+
       return true;
 
     }
