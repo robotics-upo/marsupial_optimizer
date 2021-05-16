@@ -22,20 +22,22 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "glog/logging.h"
 #include "Eigen/Core"
 
-#include "marsupial_optimizer/ceres_contrain_equidistance_ugv.hpp"
-#include "marsupial_optimizer/ceres_contrain_equidistance_uav.hpp"
-#include "marsupial_optimizer/ceres_contrain_obstacles_ugv.hpp"
-#include "marsupial_optimizer/ceres_contrain_obstacles_uav.hpp"
-#include "marsupial_optimizer/ceres_contrain_obstacles_through_uav.hpp"
-#include "marsupial_optimizer/ceres_contrain_traversability_ugv.hpp"
-#include "marsupial_optimizer/ceres_contrain_kinematics_ugv.hpp"
-#include "marsupial_optimizer/ceres_contrain_rotation_ugv.hpp"
-#include "marsupial_optimizer/ceres_contrain_kinematics_uav.hpp"
-#include "marsupial_optimizer/ceres_contrain_time.hpp"
-#include "marsupial_optimizer/ceres_contrain_velocity.hpp"
-#include "marsupial_optimizer/ceres_contrain_acceleration.hpp"
-#include "marsupial_optimizer/ceres_contrain_catenary.hpp"
-#include "marsupial_optimizer/ceres_contrain_dynamic_catenary.hpp"
+#include "marsupial_optimizer/ceres_constrains_equidistance_ugv.hpp"
+#include "marsupial_optimizer/ceres_constrains_equidistance_uav.hpp"
+#include "marsupial_optimizer/ceres_constrains_obstacles_ugv.hpp"
+#include "marsupial_optimizer/ceres_constrains_obstacles_uav.hpp"
+#include "marsupial_optimizer/ceres_constrains_obstacles_through_uav.hpp"
+#include "marsupial_optimizer/ceres_constrains_traversability_ugv.hpp"
+#include "marsupial_optimizer/ceres_constrains_kinematics_ugv.hpp"
+#include "marsupial_optimizer/ceres_constrains_rotation_ugv.hpp"
+#include "marsupial_optimizer/ceres_constrains_kinematics_uav.hpp"
+#include "marsupial_optimizer/ceres_constrains_time.hpp"
+#include "marsupial_optimizer/ceres_constrains_velocity_ugv.hpp"
+#include "marsupial_optimizer/ceres_constrains_velocity_uav.hpp"
+#include "marsupial_optimizer/ceres_constrains_acceleration_ugv.hpp"
+#include "marsupial_optimizer/ceres_constrains_acceleration_uav.hpp"
+#include "marsupial_optimizer/ceres_constrains_catenary.hpp"
+#include "marsupial_optimizer/ceres_constrains_dynamic_catenary.hpp"
 
 #include "misc/catenary_solver_ceres.hpp"
 #include "misc/near_neighbor.hpp"
@@ -97,7 +99,7 @@ struct parameterBlockRot{
 };
 
 struct parameterBlockTime{
-	double parameter[3];
+	double parameter[2];
 };
 
 struct parameterBlockLength{
@@ -149,7 +151,7 @@ public:
 	std::string path, name_output_file;
 	int n_iter_opt;	//Iterations Numbers of Optimizer
 	double distance_catenary_obstacle,min_distance_add_new_point,dynamic_catenary, initial_distance_states_ugv, initial_distance_states_uav;
-	double w_alpha_uav, w_alpha_ugv, w_beta_uav, w_beta_ugv, w_iota_uav, w_theta_ugv, w_gamma_uav, w_gamma_ugv, w_kappa_ugv, w_kappa_uav, w_delta, w_epsilon, w_zeta, w_eta, w_lambda;
+	double w_alpha_uav, w_alpha_ugv, w_beta_uav, w_beta_ugv, w_iota_uav, w_theta_ugv, w_gamma_uav, w_gamma_ugv, w_kappa_ugv, w_kappa_uav, w_delta, w_epsilon, w_zeta , w_zeta_ugv , w_eta, w_lambda;
 
 	NearNeighbor nn_uav; // Kdtree used for Catenary and UAV
 	NearNeighbor nn_trav, nn_ugv_obs;
@@ -196,7 +198,8 @@ public:
 	vector<parameterBlockPos> statesPosUAV;
 	vector<parameterBlockRot> statesRotUGV;
 	vector<parameterBlockRot> statesRotUAV;
-	vector<parameterBlockTime> statesTime;
+	vector<parameterBlockTime> statesTimeUGV;
+	vector<parameterBlockTime> statesTimeUAV;
 	vector<parameterBlockLength> statesLength;
 	vector<geometry_msgs::Quaternion> vec_rot_ugv, vec_rot_uav;
 
