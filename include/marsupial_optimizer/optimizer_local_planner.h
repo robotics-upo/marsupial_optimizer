@@ -134,6 +134,7 @@ public:
 	void getPointsFromGlobalPath(trajectory_msgs::MultiDOFJointTrajectory _path, vector<Eigen::Vector3d> &v_ugv_, vector<Eigen::Vector3d> &v_uav_);
 	void getDataForOptimizerAnalysis();
 	void publishOptimizedTraj(vector<Eigen::Vector3d> pos_ugv_opt_, vector<Eigen::Vector3d> pos_uav_opt_);
+	void getKinematicTrajectory(vector<Eigen::Vector3d> v_kinematic_ , vector<double> &v_angles_kin_);
 	geometry_msgs::Point getReelPoint(const float px_, const float py_, const float pz_,const float qx_, const float qy_, const float qz_, const float qw_, geometry_msgs::Point p_reel_);
 
 	upo_actions::ExecutePathResult action_result;
@@ -151,7 +152,8 @@ public:
 	std::string path, name_output_file;
 	int n_iter_opt;	//Iterations Numbers of Optimizer
 	double distance_catenary_obstacle,min_distance_add_new_point,dynamic_catenary, initial_distance_states_ugv, initial_distance_states_uav;
-	double w_alpha_uav, w_alpha_ugv, w_beta_uav, w_beta_ugv, w_iota_uav, w_theta_ugv, w_gamma_uav, w_gamma_ugv, w_kappa_ugv, w_kappa_uav, w_delta, w_epsilon, w_zeta , w_zeta_ugv , w_eta, w_lambda;
+	double w_alpha_uav, w_alpha_ugv, w_beta_uav, w_beta_ugv, w_iota_uav, w_theta_ugv, w_gamma_uav, w_gamma_ugv, w_kappa_ugv, w_kappa_uav, w_delta, w_delta_ugv; 
+	double w_epsilon, w_epsilon_ugv, w_zeta , w_zeta_ugv , w_eta, w_lambda;
 
 	NearNeighbor nn_uav; // Kdtree used for Catenary and UAV
 	NearNeighbor nn_trav, nn_ugv_obs;
@@ -187,7 +189,7 @@ public:
 	ros::Publisher catenary_marker_pub_;
 	visualization_msgs::MarkerArray catenary_marker;
 
-	geometry_msgs::Point obs_oct;
+	// geometry_msgs::Point obs_oct;
 
 	bool verbose_optimizer;
 
@@ -201,10 +203,11 @@ public:
 	vector<parameterBlockTime> statesTimeUGV;
 	vector<parameterBlockTime> statesTimeUAV;
 	vector<parameterBlockLength> statesLength;
-	vector<geometry_msgs::Quaternion> vec_rot_ugv, vec_rot_uav;
+	vector<geometry_msgs::Quaternion> vec_init_rot_ugv, vec_init_rot_uav, vec_opt_rot_ugv, vec_opt_rot_uav;
 
 	vector<double> vec_dist_init_ugv, vec_dist_init_uav;
 	vector<double> vec_time_init_ugv, vec_time_init_uav;
+	vector<double> v_init_angles_kinematic, v_opt_angles_kinematic;
 	vector<float> vec_len_cat_init, vec_len_cat_opt;
 	vector<Eigen::Vector3d> vec_pose_ugv_opt, vec_pose_uav_opt; 
 	vector<Eigen::Vector3d> vec_pose_init_ugv, vec_pose_init_uav;

@@ -38,15 +38,14 @@ public:
 	else
 		v2_ugv_ = d2_ugv_ / (stateT2[1]);
 	
-	std::cout << "stateT1[1]= " << stateT1[1] << " , stateT2[1]= " << stateT2[1] << std::endl;
 
-	if(stateT1[1] < 0.0001 || stateT2[1]< 0.0001){
+	if(stateT1[1] < 0.0001 && stateT2[1]< 0.0001){
   		a_ugv_ = T{0.0};
 		residual[0] =  a_ugv_;
 	}	
 	else{	  
 	  	a_ugv_ = (v2_ugv_ - v1_ugv_)/(stateT1[1] + stateT2[1]);
-		residual[0] =  wf_ * (a_ugv_ - ia_ugv_);
+		residual[0] =  wf_ * exp(a_ugv_ - ia_ugv_);
 	}
 
 	return true;

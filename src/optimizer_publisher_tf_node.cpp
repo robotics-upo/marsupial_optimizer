@@ -10,7 +10,8 @@ public:
 	ManagerTf(ros::NodeHandle _nh, ros::NodeHandle _pnh);
 	std::string uav_base_frame, ugv_base_frame;
 	int num_pos_initial;
-	double initial_pos_ugv_x, initial_pos_ugv_y, initial_pos_ugv_z, initial_pos_ugv_yaw, initial_pos_ugv_pitch, initial_pos_ugv_roll, pos_uav_above_ugv;
+	double initial_pos_ugv_x, initial_pos_ugv_y, initial_pos_ugv_z, initial_pos_ugv_yaw, initial_pos_ugv_pitch, initial_pos_ugv_roll;
+	double pos_uav_x_ugv, pos_uav_y_ugv, pos_uav_above_ugv;
 	void initializationTf();
 	void tfBroadcaster(const double _x,const double _y,const double _z,const double _R,const double _P,const double _Y, std::string _from, std::string _to);
 
@@ -36,6 +37,8 @@ ManagerTf::ManagerTf(ros::NodeHandle _nh, ros::NodeHandle _pnh)
 	_nh.param<double>(n_test+"initial_pos_ugv_roll", initial_pos_ugv_roll, 0.0);
 
 	_pnh.param<double>("pos_uav_above_ugv",pos_uav_above_ugv, 1.0);  
+	_pnh.param<double>("pos_uav_x_ugv",pos_uav_x_ugv, .0);  
+	_pnh.param<double>("pos_uav_y_ugv",pos_uav_y_ugv, .0);  
 
 	_pnh.param("uav_base_frame", uav_base_frame, (std::string)"uav_base_link");
   	_pnh.param("ugv_base_frame", ugv_base_frame, (std::string)"ugv_base_link");
@@ -47,7 +50,7 @@ ManagerTf::ManagerTf(ros::NodeHandle _nh, ros::NodeHandle _pnh)
 void ManagerTf::initializationTf()
 {
 	tfBroadcaster(initial_pos_ugv_x, initial_pos_ugv_y, initial_pos_ugv_z, initial_pos_ugv_roll, initial_pos_ugv_pitch, initial_pos_ugv_yaw, "/map", ugv_base_frame);
-	tfBroadcaster(initial_pos_ugv_x, initial_pos_ugv_y, initial_pos_ugv_z+pos_uav_above_ugv, initial_pos_ugv_roll, initial_pos_ugv_pitch, initial_pos_ugv_yaw, "/map", uav_base_frame);
+	tfBroadcaster(initial_pos_ugv_x+pos_uav_x_ugv, initial_pos_ugv_y+pos_uav_y_ugv, initial_pos_ugv_z+pos_uav_above_ugv, initial_pos_ugv_roll, initial_pos_ugv_pitch, initial_pos_ugv_yaw, "/map", uav_base_frame);
 }
 
 void ManagerTf::tfBroadcaster(const double _x,const double _y,const double _z,const double _R,const double _P,const double _Y, std::string _from, std::string _to)

@@ -22,9 +22,7 @@ public:
   template <typename T>
   bool operator()(const T* const stateT, T* residual) const 
   {
-    residual[0] =  wf_ * (stateT[1] - it_);
-
-    std::cout << "TimeFunctor:  residual[0]= " << residual[0] << ", stateT[1]= " << stateT[1] << ", it_= " << it_ << std::endl;
+    residual[0] =  wf_ * exp(stateT[1] - it_);
 
     return true;
   }

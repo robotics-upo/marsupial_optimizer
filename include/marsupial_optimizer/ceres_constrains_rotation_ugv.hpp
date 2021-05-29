@@ -20,22 +20,27 @@ public:
 	RotationFunctorUGV(double weight_factor): wf_(weight_factor){}
 
 	template <typename T>
-	bool operator()(const T* const stateRot1, const T* const stateRot2, T* residual) const 
+	bool operator()(const T* const statePos1, const T* const statePos2, const T* const stateRot1, T* residual) const 
   	{
-		double roll1_, pitch1_, yaw1_, roll2_, pitch2_, yaw2_;
-		T sRot1[4] = {stateRot1[1],stateRot1[2],stateRot1[3],stateRot1[4]};
-		tf::Quaternion q1_(sRot1[0],sRot1[1],sRot1[2],sRot1[3]);
+		T d_ugv_;
+		d_ugv_ = sqrt((statePos2[1]-statePos1[1])*(statePos2[1]-statePos1[1]) + 
+					  (statePos2[2]-statePos1[2])*(statePos2[2]-statePos1[2]) + 
+					  (statePos2[3]-statePos1[3])*(statePos2[3]-statePos1[3]));
+
+		double roll1_, pitch1_, yaw1_;
+		tf::Quaternion q1_(stateRot1[1],stateRot1[2],stateRot1[3],stateRot1[4]);
 		tf::Matrix3x3 M1_(q1_);	
 		M1_.getRPY(roll1_, pitch1_, yaw1_);
 
-		T sRot2[4] = {stateRot2[1],stateRot2[2],stateRot2[3],stateRot2[4]};
-		tf::Quaternion q2_(sRot2[0],sRot2[1],sRot2[2],sRot2[3]);
-		tf::Matrix3x3 M2_(q2_);	
-		M1_.getRPY(roll2_, pitch2_, yaw2_);
+		T yaw_;
+		if (d_ugv_ < 0.0001)
+			yaw_ = T{0.0};
+		else
+			yaw_ = atan2(statePos2[2] - statePos1[2], statePos2[1] - statePos1[1]);
 
-		T diff_angle_ = T(yaw1_) - T(yaw2_);	
+		T diff_angle1_ = yaw1_ - yaw_;	
 
-		 residual[0] =  wf_ * exp( diff_angle_);
+		residual[0] =  wf_ * ( diff_angle1_);
 
 		return true;
 	}
