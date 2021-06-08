@@ -20,7 +20,13 @@ class EquiDistanceFunctorUAV
     template <typename T>
     bool operator()(const T* const statePos1, const T* const statePos2, T* residual) const 
     {
-      T d_pos_uav = sqrt((pow(statePos1[1]-statePos2[1],2)) + pow(statePos1[2]-statePos2[2],2) + pow(statePos1[3]-statePos2[3],2));
+      T diff_pos = pow(statePos1[1]-statePos2[1],2) + pow(statePos1[2]-statePos2[2],2) + pow(statePos1[3]-statePos2[3],2);
+      T d_pos_uav;
+
+      if (diff_pos < 0.0001 && diff_pos > -0.0001)
+        d_pos_uav = T{0.0};
+      else  
+        d_pos_uav = sqrt(diff_pos);
 
       residual[0] = wf_ * ( exp(d_pos_uav - int_d_uav));
 

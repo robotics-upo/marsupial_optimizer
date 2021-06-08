@@ -98,6 +98,8 @@ public:
         {
             // To avoid obstacles
             T d_ugv_, d_uav_1, d_uav_2;
+            T arg_d_uav_1, arg_d_uav_2;
+            T arg_dw12_, arg_do1_, arg_do2_; 
             T n1_[4];
             T n2_[4];
             // To avoid obstacle between two waypoints
@@ -107,33 +109,54 @@ public:
             
             (*compute_nearest_distance)(statePos1, n1_);
             (*compute_nearest_distance)(statePos2, n2_);
-            d_uav_1 = sqrt((statePos1[1]-n1_[0])*(statePos1[1]-n1_[0]) + (statePos1[2]-n1_[1])*(statePos1[2]-n1_[1]) + (statePos1[3]-n1_[2])*(statePos1[3]-n1_[2]));
-            d_uav_2 = sqrt((statePos2[1]-n2_[0])*(statePos2[1]-n2_[0]) + (statePos2[2]-n2_[1])*(statePos2[2]-n2_[1]) + (statePos2[3]-n2_[2])*(statePos2[3]-n2_[2]));
+            arg_d_uav_1 = (statePos1[1]-n1_[0])*(statePos1[1]-n1_[0]) + (statePos1[2]-n1_[1])*(statePos1[2]-n1_[1]) + (statePos1[3]-n1_[2])*(statePos1[3]-n1_[2]);
+            arg_d_uav_2 = (statePos2[1]-n2_[0])*(statePos2[1]-n2_[0]) + (statePos2[2]-n2_[1])*(statePos2[2]-n2_[1]) + (statePos2[3]-n2_[2])*(statePos2[3]-n2_[2]);
+            
+            if (arg_d_uav_1 < 0.0001 && arg_d_uav_1 > -0.0001)
+                d_uav_1 = T{0.0};
+            else
+                d_uav_1 = sqrt(arg_d_uav_1);
+            if (arg_d_uav_2 < 0.0001 && arg_d_uav_2 > -0.0001)
+                d_uav_2 = T{0.0};
+            else
+                d_uav_2 = sqrt(arg_d_uav_2);
 
             (*ray_casting)(statePos1, statePos2, end_ray_1_obs);
             (*ray_casting)(statePos2, statePos1, end_ray_2_obs);
-            dw12_ = sqrt((statePos1[1]-statePos2[1])*(statePos1[1]-statePos2[1])+
-                         (statePos1[2]-statePos2[2])*(statePos1[2]-statePos2[2])+
-                         (statePos1[3]-statePos2[3])*(statePos1[3]-statePos2[3]));
-            do1_ = sqrt((statePos1[1]-end_ray_1_obs[0])*(statePos1[1]-end_ray_1_obs[0])+
-                        (statePos1[2]-end_ray_1_obs[1])*(statePos1[2]-end_ray_1_obs[1])+
-                        (statePos1[3]-end_ray_1_obs[2])*(statePos1[3]-end_ray_1_obs[2]));
-            do2_ = sqrt((statePos2[1]-end_ray_2_obs[0])*(statePos2[1]-end_ray_2_obs[0])+
-                        (statePos2[2]-end_ray_2_obs[1])*(statePos2[2]-end_ray_2_obs[1])+
-                        (statePos2[3]-end_ray_2_obs[2])*(statePos2[3]-end_ray_2_obs[2]));
             
-            // T u_v[3];
-            // u_v[0] = statePos1[1]-end_ray_1_obs[0];
-            // u_v[1] = statePos1[2]-end_ray_1_obs[1];
-            // u_v[2] = statePos1[3]-end_ray_1_obs[2];
-            // T unit_vector[3];
-            // T dist_unit_v = sqrt(u_v[0]*u_v[0] + u_v[1]*u_v[1] + u_v[2]*u_v[2]); 
-            // unit_vector[0] = u_v[0] / dist_unit_v;
-            // unit_vector[1] = u_v[1] / dist_unit_v;
-            // unit_vector[2] = u_v[2] / dist_unit_v;
-            // T vect_mean_obs[3];            
+            
+            
+            arg_dw12_ = (statePos1[1]-statePos2[1])*(statePos1[1]-statePos2[1])+
+                        (statePos1[2]-statePos2[2])*(statePos1[2]-statePos2[2])+
+                        (statePos1[3]-statePos2[3])*(statePos1[3]-statePos2[3]);
+            if (arg_dw12_ < 0.0001 && arg_dw12_ > -0.0001)
+                dw12_ = T{0.0};
+            else
+                dw12_ = sqrt(arg_dw12_);
 
-            T diffZ =  sqrt((statePos2[3]-statePos1[3])*(statePos2[3]-statePos1[3]));
+            arg_do1_ =  (statePos1[1]-end_ray_1_obs[0])*(statePos1[1]-end_ray_1_obs[0])+
+                        (statePos1[2]-end_ray_1_obs[1])*(statePos1[2]-end_ray_1_obs[1])+
+                        (statePos1[3]-end_ray_1_obs[2])*(statePos1[3]-end_ray_1_obs[2]);
+            if (arg_do1_ < 0.0001 && arg_do1_ > -0.0001)
+                do1_ = T{0.0};
+            else
+                do1_ = sqrt(arg_do1_);
+            
+            arg_do2_ =  (statePos2[1]-end_ray_2_obs[0])*(statePos2[1]-end_ray_2_obs[0])+
+                        (statePos2[2]-end_ray_2_obs[1])*(statePos2[2]-end_ray_2_obs[1])+
+                        (statePos2[3]-end_ray_2_obs[2])*(statePos2[3]-end_ray_2_obs[2]);
+            if (arg_do2_ < 0.0001 && arg_do2_ > -0.0001)
+                do2_ = T{0.0};
+            else
+                do2_ = sqrt(arg_do2_);
+
+
+            T arg_diffZ = (statePos2[3]-statePos1[3])*(statePos2[3]-statePos1[3]);
+            T diffZ;
+            if (arg_diffZ < 0.0001 && arg_diffZ > -0.0001)
+                diffZ = T{0.0};
+            else
+                diffZ =  sqrt(arg_diffZ);
 
             if ( (dw12_ >= do1_) && (end_ray_1_obs[3] == -1.0) && diffZ < 0.01){  
                 d12_ = (dw12_ - do1_);
@@ -143,19 +166,9 @@ public:
                 do1_ = T{0.0};
                 do2_ = T{0.0};
             }
-
 				
-            // residual[0] = wf_ *( exp(4.0*(sb_ - d_uav_1)) + exp(4.0*(sb_ - d_uav_2)));
             residual[0] = wf_ *( exp(4.0*(sb_ - d_uav_1)) + exp(4.0*(sb_ - d_uav_2)) + exp(0.5*(d_uav_1-3.0)) + exp(0.5*(d_uav_2-3.0)));
-            // residual[1] = wf_ *(((exp(do1_))/2.0 + (exp(do2_))/2.0 ) );
-            residual[1] = wf_ *(log(1.0+exp(do1_-2.0))+ log(1.0+exp(do2_-2.0)) );
-            // residual[1] = T{0.0};
-            // residual[1] = wf_ * 10.0*(1.0/(1.0+exp(-1.0*(d12_))));
-            residual[2] = T{0.0};
-            residual[3] = T{0.0};
-            // residual[1] = wf_ * ( exp(4.0*(d12_) -1.0)) ;
-            // residual[2] = wf_ * ( exp(do1_) -1.0) ;
-            // residual[3] = wf_ * ( exp(do2_) -1.0) ;
+            residual[1] = wf_ *( log(1.0+exp(do1_-2.0))+ log(1.0+exp(do2_-2.0)) );
 
             return true;
         }

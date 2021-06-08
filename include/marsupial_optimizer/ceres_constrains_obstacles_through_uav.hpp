@@ -69,23 +69,34 @@ public:
         {
             T end_ray_12[4];
 			T dw12_, do12_, d12_; 
+            T arg_dw12_, arg_do12_;
 
             (*ray_casting)(statePos1, statePos2, end_ray_12);
            
-            dw12_ = sqrt((statePos1[1]-statePos2[1])*(statePos1[1]-statePos2[1])+
-                         (statePos1[2]-statePos2[2])*(statePos1[2]-statePos2[2])+
-                         (statePos1[3]-statePos2[3])*(statePos1[3]-statePos2[3]));
+            arg_dw12_ = (statePos1[1]-statePos2[1])*(statePos1[1]-statePos2[1])+
+                        (statePos1[2]-statePos2[2])*(statePos1[2]-statePos2[2])+
+                        (statePos1[3]-statePos2[3])*(statePos1[3]-statePos2[3]);
+            if (arg_dw12_ < 0.0001 && arg_dw12_ > -0.0001)
+                dw12_ = T{0.0};
+            else
+                dw12_ = sqrt(arg_dw12_);
 
-            do12_ = sqrt((statePos1[1]-end_ray_12[0])*(statePos1[1]-end_ray_12[0])+
-                         (statePos1[2]-end_ray_12[1])*(statePos1[2]-end_ray_12[1])+
-                         (statePos1[3]-end_ray_12[2])*(statePos1[3]-end_ray_12[2]));
+            arg_do12_ = (statePos1[1]-end_ray_12[0])*(statePos1[1]-end_ray_12[0])+
+                        (statePos1[2]-end_ray_12[1])*(statePos1[2]-end_ray_12[1])+
+                        (statePos1[3]-end_ray_12[2])*(statePos1[3]-end_ray_12[2]);
+            if (arg_do12_ < 0.0001 && arg_do12_ > -0.0001)
+                do12_ = T{0.0};
+            else
+                do12_ = sqrt(arg_do12_);
+
+            
 
             if ( (dw12_<= do12_) && (end_ray_12[3]==1.0) )
                 d12_ = T{0.0};
 			else
                 d12_ = (dw12_ - do12_);
 				
-            residual[0] = wf_ * d12_ ;
+            residual[0] = wf_ * exp(d12_) ;
 
             return true;
         }
