@@ -65,13 +65,24 @@ public:
         bool operator()(const T* const statePos1, const T* const statePos2, T* residual) const 
         {
             T d_ugv_1, d_ugv_2;
+            T arg_d_ugv_1, arg_d_ugv_2;
             T n1_[4];
             T n2_[4];
             (*compute_nearest_distance)(statePos1, n1_);
             (*compute_nearest_distance)(statePos2, n2_);
 
-            d_ugv_1 = sqrt( (statePos1[1]-n1_[0])*(statePos1[1]-n1_[0]) + (statePos1[2]-n1_[1])*(statePos1[2]-n1_[1]) + (statePos1[3]-n1_[2])*(statePos1[3]-n1_[2]));
-            d_ugv_2 = sqrt( (statePos2[1]-n2_[0])*(statePos2[1]-n2_[0]) + (statePos2[2]-n2_[1])*(statePos2[2]-n2_[1]) + (statePos2[3]-n2_[2])*(statePos2[3]-n2_[2]));
+            arg_d_ugv_1 = (statePos1[1]-n1_[0])*(statePos1[1]-n1_[0]) + (statePos1[2]-n1_[1])*(statePos1[2]-n1_[1]) + (statePos1[3]-n1_[2])*(statePos1[3]-n1_[2]);
+            if(arg_d_ugv_1< 0.0001 && arg_d_ugv_1 > -0.0001)
+                d_ugv_1 = T{0.0};
+            else
+                d_ugv_1 = sqrt(arg_d_ugv_1);
+            
+            arg_d_ugv_2 = (statePos2[1]-n2_[0])*(statePos2[1]-n2_[0]) + (statePos2[2]-n2_[1])*(statePos2[2]-n2_[1]) + (statePos2[3]-n2_[2])*(statePos2[3]-n2_[2]);
+            if(arg_d_ugv_2< 0.0001 && arg_d_ugv_2 > -0.0001)
+                d_ugv_2 = T{0.0};
+            else
+                d_ugv_2 = sqrt(arg_d_ugv_2);
+                
             // std::cout <<"ObstaclesFunctorUGV d_ugv_=" << d_ugv_ << " , statePos[0] =" << statePos[0] << std::endl;
 
             // residual[0] =  wf_ * 10.0 * exp(sb_ - d_ugv_);

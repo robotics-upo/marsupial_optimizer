@@ -20,7 +20,13 @@ class EquiDistanceFunctorUGV
     template <typename T>
     bool operator()(const T* const statePos1, const T* const statePos2, T* residual) const 
     {  
-      T d_pos_ugv = sqrt((pow(statePos1[1]-statePos2[1],2)) + pow(statePos1[2]-statePos2[2],2) + pow(statePos1[3]-statePos2[3],2));
+      T arg_d_pos_ugv ,d_pos_ugv ;
+      
+      arg_d_pos_ugv= (pow(statePos1[1]-statePos2[1],2)) + pow(statePos1[2]-statePos2[2],2) + pow(statePos1[3]-statePos2[3],2);
+      if(arg_d_pos_ugv< 0.0001 && arg_d_pos_ugv > -0.0001)
+        d_pos_ugv = T{0.0};
+      else
+        d_pos_ugv = sqrt(arg_d_pos_ugv);
       
       if (d_pos_ugv < 0.01)
         residual[0] = T{0.0};

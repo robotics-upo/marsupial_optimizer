@@ -1,5 +1,5 @@
-#ifndef CERES_CONSTRAINS_TIME_HPP
-#define CERES_CONSTRAINS_TIME_HPP
+#ifndef CERES_CONSTRAINS_TIME_UAV_HPP
+#define CERES_CONSTRAINS_TIME_UAV_HPP
 
 
 #include "ceres/ceres.h"
@@ -14,10 +14,10 @@ using ceres::Solver;
 
 
 
-class TimeFunctor {
+class TimeFunctorUAV {
 
 public:
-  TimeFunctor(double weight_factor, double init_time_): wf_(weight_factor), it_(init_time_) {}
+  TimeFunctorUAV(double weight_factor, double init_time_): wf_(weight_factor), it_(init_time_) {}
 
   template <typename T>
   bool operator()(const T* const stateT, T* residual) const 
