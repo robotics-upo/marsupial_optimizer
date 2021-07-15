@@ -238,21 +238,24 @@ class CatenarySolver
 
     bool solve(double x1, double y1, double z1, double x2, double y2, double z2, double length, std::vector<geometry_msgs::Point> &_vector3D)
     {
-        //variables to compute optimization
-        double _xB = sqrt(pow(x2 - x1,2)+pow(y2 - y1,2));
-        double _yB = z2 - z1;
-        // std::cout <<"Solving Catenary : _xB= " << _xB << " , [x2,x1]=[" << x2 <<","<< x1 <<"] , [y2,y1]=[" <<y2<<","<<y1<<"]" << " ,  _yB= "<< _yB <<" , [z2,z1]=[" <<z2<<","<<z1<<"]"<<  std::endl;
+      //variables to compute optimization
+      double _xB = sqrt(pow(x2 - x1,2)+pow(y2 - y1,2));
+      double _yB = z2 - z1;
+      // std::cout <<"Solving Catenary : _xB= " << _xB << " , [x2,x1]=[" << x2 <<","<< x1 <<"] , [y2,y1]=[" <<y2<<","<<y1<<"]" << " ,  _yB= "<< _yB <<" , [z2,z1]=[" <<z2<<","<<z1<<"]"<<  std::endl;
+       x_const = y_const = z_const = false;
+      checkStateCatenary(x1, y1, z1, x2, y2, z2);
 
+      if (!x_const || !y_const){
         //variables to save values from optimization
         double a , x0, y0; 
 
         _vector3D.clear();
-        x_const = y_const = z_const = 0;
+       
 
         /***First Part: Get phi value from Length equation***/
         double phi[1];
         phi[0] = 8.0;
-        
+          
         // Build the problem.
         Problem prob1;
         // std::cout <<"Solving Catenary : length= " << length <<  std::endl;
@@ -275,14 +278,14 @@ class CatenarySolver
         // std::cout <<"Solving Catenary (a < 0.000000001): _a= " << _a << " ,  phi[0]= "<< phi[0]<<" ,  _xB=" << _xB << std::endl;
 
         /***Second Part: Get x0 and y0 values from Points equations***/
-         // Initial solution
+        // Initial solution
         double x[2];
         x[0] = (x2-x1);  
         if (y2 >= y1)
           x[1] = y1;
         else
           x[1] = y2;
-        
+          
         // Build the problem.
         Problem prob2;
 
@@ -310,16 +313,19 @@ class CatenarySolver
         double _yc = z1 - _h;  
         // std::cout <<"h: " << _h << " , xc: " << _xc << " , yc: "<< _yc << std::endl;
 
-
         /***Thirs Part: Get points Catenary***/
-
         getNumberPointsCatenary(length);
-        checkStateCatenary(x1, y1, z1, x2, y2, z2);
         integrateCatenaryChain(x1, y1, x2, y2,_xc, _yc, a);
-        convert2DTo3D(x1, y1, z1, x2, y2, z2, _vector3D);
-
-
-        return true; 
+        convert2DTo3D(x1, y1, z1, x2, y2, z2, _vector3D);   
+      }
+      else{
+        getNumberPointsCatenary(length);
+        double _dist_3d = sqrt(pow(x2-x1,2)+pow(y2-y1,2)+pow(z2-z1,2)); 
+        _vector3D.clear();
+        getPointCatenaryStraight(x1, y1, z1, _dist_3d, _vector3D);
+      }
+      
+      return true; 
     }
 };
 

@@ -22,31 +22,30 @@ public:
 	template <typename T>
 	bool operator()(const T* const statePos1, const T* const statePos2, const T* const stateRot1, T* residual) const 
   	{
-		T d_ugv_;
-		d_ugv_ = sqrt((statePos2[1]-statePos1[1])*(statePos2[1]-statePos1[1]) + 
-					  (statePos2[2]-statePos1[2])*(statePos2[2]-statePos1[2]) + 
-					  (statePos2[3]-statePos1[3])*(statePos2[3]-statePos1[3]));
+		T arg_d_ugv_, d_ugv_;
+		arg_d_ugv_ = (statePos2[1]-statePos1[1])*(statePos2[1]-statePos1[1]) + 
+					 (statePos2[2]-statePos1[2])*(statePos2[2]-statePos1[2]) + 
+					 (statePos2[3]-statePos1[3])*(statePos2[3]-statePos1[3]);
+		if (arg_d_ugv_ < 0.0001 && arg_d_ugv_ > -0.0001)
+			d_ugv_ = T{0.0};
+		else
+			d_ugv_ = sqrt(arg_d_ugv_);
 
 		double roll1_, pitch1_, yaw1_;
 		tf::Quaternion q1_(stateRot1[1],stateRot1[2],stateRot1[3],stateRot1[4]);
 		tf::Matrix3x3 M1_(q1_);	
 		M1_.getRPY(roll1_, pitch1_, yaw1_);
 
-		// std::cout << "stateRot1[0] = " << stateRot1[0] << std::endl;	
 		T yaw_;
-		if (d_ugv_ < 0.0001){
+		if (d_ugv_ < 0.001)
 			yaw_ = y_;
-			// std::cout << "yaw (d_ugv_ < 0.0001)= " << yaw_ << std::endl;
-		}
-		else{
+		else
 			yaw_ = atan2(statePos2[2] - statePos1[2], statePos2[1] - statePos1[1]);
-			// std::cout << "yaw (atan2)= " << yaw_ << std::endl;
-		}
-		T diff_angle1_ = sqrt( (yaw1_ - yaw_)*(yaw1_ - yaw_) );	
-		// std::cout << "yaw1_= "  << yaw1_ << " , diff_angle1_= " << diff_angle1_ << std::endl;
+		
+		T arg_diff_angle_ = (yaw1_ - yaw_)*(yaw1_ - yaw_);	
 	
 
-		residual[0] =  wf_ * exp( diff_angle1_);
+		residual[0] =  wf_ * exp( arg_diff_angle_);
 
 		return true;
 	}

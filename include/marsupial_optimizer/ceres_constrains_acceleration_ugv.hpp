@@ -28,14 +28,14 @@ public:
 
 	//Get value distance between pos 1 and pos 2
 	arg_d1_ugv_ = pow(statePosUGV1[1]-statePosUGV2[1],2) + pow(statePosUGV1[2]-statePosUGV2[2],2) + pow(statePosUGV1[3]-statePosUGV2[3],2);
-	if (arg_d1_ugv_ < 0.0001 && arg_d1_ugv_ > -0.001)
+	if (arg_d1_ugv_ < 0.001 && arg_d1_ugv_ > -0.001)
 		d1_ugv_ = T{0.0};
 	else
 		d1_ugv_ = sqrt(arg_d1_ugv_);
 	
 	//Get value distance between pos 2 and pos 3
 	arg_d2_ugv_ = pow(statePosUGV2[1]-statePosUGV3[1],2) + pow(statePosUGV2[2]-statePosUGV3[2],2) + pow(statePosUGV2[3]-statePosUGV3[3],2);
-	if (arg_d2_ugv_ < 0.0001 && arg_d2_ugv_ > -0.001)
+	if (arg_d2_ugv_ < 0.001 && arg_d2_ugv_ > -0.001)
 		d2_ugv_ = T{0.0};
 	else
 		d2_ugv_ = sqrt(arg_d2_ugv_);
@@ -57,7 +57,8 @@ public:
 	}	
 	else{	  
 	  	a_ugv_ = (v2_ugv_ - v1_ugv_)/(stateT1[1] + stateT2[1]);
-		residual[0] =  wf_ * exp(a_ugv_ - ia_ugv_);
+		residual[0] =  wf_ * (a_ugv_ - ia_ugv_);
+		// residual[0] =  wf_ * exp(a_ugv_ - ia_ugv_);
 	}
 
 	// std::cout <<"statePosUGV1[0]= " << statePosUGV1[0] <<" , statePosUGV2[0] " << statePosUGV2[0]<<" , statePosUGV3[0] " << statePosUGV3[0]<< std::endl ; 

@@ -1,5 +1,5 @@
-#ifndef CERES_CONSTRAINS_OBSTACLES_THROUGH_UAV_HPP
-#define CERES_CONSTRAINS_OBSTACLES_THROUGH_UAV_HPP
+#ifndef CERES_CONSTRAINS_OBSTACLES_THROUGH_UGV_HPP
+#define CERES_CONSTRAINS_OBSTACLES_THROUGH_UGV_HPP
 
 #include "ceres/ceres.h"
 #include "glog/logging.h"
@@ -22,14 +22,14 @@ using ceres::Solve;
 using ceres::Solver;
 
 
-class ObstacleDistanceThroughFunctorUAV {
+class ObstacleDistanceThroughFunctorUGV {
 
 public:
-    ObstacleDistanceThroughFunctorUAV(){}
+    ObstacleDistanceThroughFunctorUGV(){}
     
-    struct RayCastingThroughUAV 
+    struct RayCastingThroughUGV 
     {
-        RayCastingThroughUAV (octomap::OcTree* o_tree_): o_t_(o_tree_)
+        RayCastingThroughUGV (octomap::OcTree* o_tree_): o_t_(o_tree_)
         {
     
         }
@@ -37,8 +37,8 @@ public:
         bool operator()(const double *state1, const double *state2, double *end_) const 
         {
 	        octomap::point3d r_;
-			octomap::point3d s_(state1[1] , state1[2] , state1[3] ); //direction for rayCast
-			octomap::point3d d_(state2[1]-state1[1] , state2[2]-state1[2] , state2[3]-state1[3] ); //direction for rayCast
+			octomap::point3d s_(state1[1] , state1[2] , 0.4+state1[3] ); //direction for rayCast
+			octomap::point3d d_(state2[1]-state1[1] , state2[2]-state1[2] , 0.4+(state2[3]-state1[3]) ); //direction for rayCast
             bool r_cast_coll = o_t_->castRay(s_, d_, r_);
             end_[0]= r_.x();
             end_[1]= r_.y();
@@ -55,13 +55,13 @@ public:
         octomap::OcTree *o_t_;
     };
 
-    struct ObstaclesThroughFunctor 
+    struct ObstaclesThroughFunctorUGV 
     {
-        ObstaclesThroughFunctor(double weight_factor, octomap::OcTree* octotree_): wf_(weight_factor), oc_tree_(octotree_)
+        ObstaclesThroughFunctorUGV(double weight_factor, octomap::OcTree* octotree_): wf_(weight_factor), oc_tree_(octotree_)
         {         
             ray_casting.reset(new ceres::CostFunctionToFunctor<4,4,4>(
-                                    new ceres::NumericDiffCostFunction<RayCastingThroughUAV, ceres::CENTRAL,4,4,4>( 
-                                    new RayCastingThroughUAV(oc_tree_))));
+                                    new ceres::NumericDiffCostFunction<RayCastingThroughUGV, ceres::CENTRAL,4,4,4>( 
+                                    new RayCastingThroughUGV(oc_tree_))));
         }
 
         template <typename T>
@@ -81,11 +81,14 @@ public:
 
             if (dw12_ < 0.001){
                 residual[0] = T{0.0} ;
+                // printf("ObstaclesThroughFunctorUGV , ");
+                // std::cout << "IF residual[0]= " << residual[0] << std::endl;
+			    // std::cout << "statePos1[0]= " << statePos1[0] << " , statePos2[0]= " << statePos2[0] << std::endl;
                 return true;
             }
             else{
                 (*ray_casting)(statePos1, statePos2, end_ray_12);
-
+                
                 arg_do12_ = (statePos1[1]-end_ray_12[0])*(statePos1[1]-end_ray_12[0])+
                             (statePos1[2]-end_ray_12[1])*(statePos1[2]-end_ray_12[1])+
                             (statePos1[3]-end_ray_12[2])*(statePos1[3]-end_ray_12[2]);
@@ -94,14 +97,17 @@ public:
                 else
                     do12_ = sqrt(arg_do12_);
 
-                if ( (dw12_<= do12_) )
-                    d12_ = T{0.0};
-			    else
-                    d12_ = (dw12_ - do12_);
-    
-                residual[0] = wf_ * 100.0 * (exp(2.0 * d12_) -1.0);
 
-                // printf("ObstaclesThroughFunctorUAV , ");
+                if ( (dw12_<= do12_) ){
+                    residual[0] = T{0.0} ;
+                }
+                else{
+                    d12_ = (dw12_ - do12_);
+                
+                residual[0] = wf_ * 100.0 * (exp(2.0*d12_)-1.0) ;
+                }
+
+                // printf("ObstaclesThroughFunctorUGV , ");
                 // std::cout << "dw12_= " << dw12_ << " , do12_=" << do12_ << std::endl;
                 // std::cout << "end_ray_12[3]= " << end_ray_12[3] << std::endl;
                 // std::cout << "ELSE residual[0]= " << residual[0] << std::endl;

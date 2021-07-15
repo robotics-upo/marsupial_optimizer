@@ -94,7 +94,7 @@ inline void MarkerPublisher::clearMarkers(visualization_msgs::MarkerArray _marke
 
 inline void MarkerPublisher::getMarkerPoints(visualization_msgs::MarkerArray &marker_, std::vector<Eigen::Vector3d> vector_, std::string ns_, int colour_)
 {
-	// RED: colour_ = 0 ; GREEN : colour_ = 1 ; BLUE: colour_ = 2 ; YELLOW = 3 ; PURPLE = 4;
+	// RED: colour_ = 0 ; GREEN : colour_ = 1 ; BLUE: colour_ = 2 ; YELLOW = 3 ; PURPLE = 4; ; BLACK = 5 ; WHITE = 6
 	for (size_t i = 0; i < vector_.size(); i++){
 		marker_.markers[i].header.frame_id = "/map";
 		marker_.markers[i].header.stamp = ros::Time::now();
@@ -141,6 +141,16 @@ inline void MarkerPublisher::getMarkerPoints(visualization_msgs::MarkerArray &ma
 			marker_.markers[i].color.r = 0.9;
 			marker_.markers[i].color.g = 0.0;
 			marker_.markers[i].color.b = 0.9;
+		}
+		if (colour_ == 5){
+			marker_.markers[i].color.r = 0.0;
+			marker_.markers[i].color.g = 0.0;
+			marker_.markers[i].color.b = 0.0;
+		}
+		if (colour_ == 6){
+			marker_.markers[i].color.r = 1.0;
+			marker_.markers[i].color.g = 1.0;
+			marker_.markers[i].color.b = 1.0;
 		}
 	}	
 }

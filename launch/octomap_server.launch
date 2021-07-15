@@ -4,9 +4,17 @@
 	
     <arg name="static_map_file" default="$(find marsupial_optimizer)/maps/$(arg map_file).bt"/>
 
-	<node pkg="octomap_server" type="octomap_server_node" name="octomap_server_node" output="screen" args="$(arg static_map_file)">
+	<node pkg="octomap_server" type="octomap_server_node" name="octomap_server_full_node" output="screen" args="$(arg static_map_file)">
 		<param name="base_frame_id" value="base_link"/>
 		<param name="frame_id" value="map"/>
 	</node>
 
+	<group ns="oct_trav">
+		<node pkg="octomap_server" type="octomap_server_node" name="octomap_server_trav_node" output="screen">
+			<param name="base_frame_id" value="ugv_base_link"/>
+			<param name="frame_id" value="map"/>
+			<param name="resolution" value="0.1"/>
+			<remap from="cloud_in" to="/region_growing_obstacles_pc_map"/>
+		</node>
+	</group>
 </launch>

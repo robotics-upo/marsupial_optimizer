@@ -22,95 +22,40 @@ public:
  	bool operator()(const T* const statePos1, const T* const statePos2, const T* const statePos3, T* residual) const 
   	{
 		// Kinematics for ugv XY Axes
-		T vector1_uav_xy[2] = {statePos2[1]-statePos1[1],statePos2[2]-statePos1[2]};
-		T vector2_uav_xy[2] = {statePos3[1]-statePos2[1],statePos3[2]-statePos2[2]};
-		T vector1_uav_xz[2] = {statePos2[1]-statePos1[1],statePos2[3]-statePos1[3]};
-		T vector2_uav_xz[2] = {statePos3[1]-statePos2[1],statePos3[3]-statePos2[3]};
-		// std::cout << "\nvector1_xy[0]= " << vector1_uav_xy[0] << " , vector1_xy[1]= " << vector1_uav_xy[1] << " , vector2_xy[0]="<< vector2_uav_xy[0] << ", vector2_xy[1]="<< vector2_uav_xy[1] << std::endl;
-		// std::cout << "vector1_xz[0]= " << vector1_uav_xz[0] << " , vector1_xz[1]= " << vector1_uav_xz[1] << " , vector2_xz[0]="<< vector2_uav_xz[0] << ", vector2_xz[1]="<< vector2_uav_xz[1] << std::endl;
-		T dot_product_uav_xy = (vector2_uav_xy[0] * vector1_uav_xy[0]) + (vector2_uav_xy[1] * vector1_uav_xy[1]);
-		T dot_product_uav_xz = (vector2_uav_xy[0] * vector1_uav_xz[0]) + (vector2_uav_xy[2] * vector1_uav_xz[2]);
-		T arg1_uav_xy = (vector1_uav_xy[0] * vector1_uav_xy[0]) + (vector1_uav_xy[1] * vector1_uav_xy[1]);
-		T arg2_uav_xy = (vector2_uav_xy[0] * vector2_uav_xy[0]) + (vector2_uav_xy[1] * vector2_uav_xy[1]);
-		T arg1_uav_xz = (vector1_uav_xz[0] * vector1_uav_xz[0]) + (vector1_uav_xz[1] * vector1_uav_xz[1]);
-		T arg2_uav_xz = (vector2_uav_xz[0] * vector2_uav_xz[0]) + (vector2_uav_xz[1] * vector2_uav_xz[1]);
-		T norm_vector1_uav_xy;
-		T norm_vector2_uav_xy;
-		T norm_vector1_uav_xz;
-		T norm_vector2_uav_xz;
-		if (arg1_uav_xy < 0.0001 && arg1_uav_xy > -0.0001)
-			norm_vector1_uav_xy = T{0.0};
+		T vector1[3] = {statePos2[1]-statePos1[1],statePos2[2]-statePos1[2],statePos2[3]-statePos1[3]};
+		T vector2[3] = {statePos3[1]-statePos2[1],statePos3[2]-statePos2[2],statePos3[3]-statePos2[3]};
+		T dot_product = (vector2[0] * vector1[0]) + (vector2[1] * vector1[1]) + (vector2[2] * vector1[2]);
+	
+		//Compute norm of vectors
+		T arg1 = (vector1[0] * vector1[0]) + (vector1[1] * vector1[1]) + (vector1[2] * vector1[2]);
+		T arg2 = (vector2[0] * vector2[0]) + (vector2[1] * vector2[1]) + (vector2[2] * vector2[2]);
+		T norm_vector1;
+		T norm_vector2;
+		if (arg1 < 0.0001 && arg1 > -0.0001)
+			norm_vector1 = T{0.0};
 		else
-			norm_vector1_uav_xy = sqrt(arg1_uav_xy);
-		
-		if (arg2_uav_xy < 0.0001 && arg2_uav_xy > -0.0001)
-			norm_vector1_uav_xy = T{0.0};
+			norm_vector1 = sqrt(arg1);
+		if (arg2 < 0.0001 && arg2 > -0.0001)
+			norm_vector2 = T{0.0};
 		else
-			norm_vector2_uav_xy = sqrt(arg2_uav_xy);
-		
-		if (arg1_uav_xz < 0.0001 && arg1_uav_xz > -0.0001)
-			norm_vector1_uav_xz = T{0.0};
-		else
-			norm_vector1_uav_xz = sqrt(arg1_uav_xz);
-		
-		if (arg2_uav_xz < 0.0001 && arg2_uav_xz > -0.0001)
-			norm_vector2_uav_xz = T{0.0};
-		else
-			norm_vector2_uav_xz = sqrt(arg2_uav_xz);
+			norm_vector2 = sqrt(arg2);
+			
+		// Compute cos(angle)	
+		T cos_angle = dot_product/(norm_vector1 * norm_vector2);
+		double bound = cos(ang_);
 
-		T angle_uav_xy;
-		T angle_uav_xz;
-		T bound1_uav = T(-ang_);
-		T bound2_uav = T(ang_);
-
-		if (norm_vector1_uav_xy < 0.0001 || norm_vector2_uav_xy < 0.0001 || (dot_product_uav_xy / (norm_vector1_uav_xy*norm_vector2_uav_xy)) >= 1.0000 || (dot_product_uav_xy / (norm_vector1_uav_xy*norm_vector2_uav_xy)) < -1.0000)
-			angle_uav_xy = T{0.0};
-		else
-			angle_uav_xy = acos(dot_product_uav_xy / (norm_vector1_uav_xy*norm_vector2_uav_xy));
-		
-		if (norm_vector1_uav_xz < 0.0001 || norm_vector2_uav_xz < 0.0001 || (dot_product_uav_xz / (norm_vector1_uav_xz*norm_vector2_uav_xz)) >= 1.0000 || (dot_product_uav_xz / (norm_vector1_uav_xz*norm_vector2_uav_xz)) < -1.0000)
-			angle_uav_xz = T{0.0};
-		else
-			angle_uav_xz = acos(dot_product_uav_xz / (norm_vector1_uav_xz*norm_vector2_uav_xz));
-
-		T value_xy;
-		T value_xz;
-		if(angle_uav_xy < 0.0001 && angle_uav_xy > -0.0001)
-			value_xy = T{0.0};
-		else
-			value_xy = sqrt(angle_uav_xy*angle_uav_xy);
-		
-		if(angle_uav_xz < 0.0001 && angle_uav_xz > -0.0001)
-			value_xz = T{0.0};
-		else
-			value_xz = sqrt(angle_uav_xz*angle_uav_xz);
-
-		if ( (angle_uav_xy < bound1_uav) || (angle_uav_xy > bound2_uav) ) 
-			residual[0] =  wf_ * exp(2.0*(value_xy-bound2_uav));
-		else
+		//Compute Residual
+		if ( cos_angle > bound) 
 			residual[0] = T(0.0);
-		
-		if ( (angle_uav_xz < bound1_uav) || (angle_uav_xz > bound2_uav) ) 
-			residual[1] =  wf_ * exp(2.0*(value_xz-bound2_uav));
 		else
-			residual[1] = T(0.0);
-
-		// std::cout << "vector1_uav_xy[0] = " << vector1_uav_xy[0] << " , vector1_uav_xy[1]= " << vector1_uav_xy[1] << " , vector2_uav_xy[0]= " << vector2_uav_xy[0] << " , vector2_uav_xy[1]= " << vector2_uav_xy[1] << std::endl;
-		// std::cout << "vector1_uav_xz[0] = " << vector1_uav_xz[0] << " , vector1_uav_xz[1]= " << vector1_uav_xz[1] << " , vector2_uav_xz[0]= " << vector2_uav_xz[0] << " , vector2_uav_xz[1]= " << vector2_uav_xz[1] << std::endl;
-		// std::cout << "dot_product_uav_xy = " << dot_product_uav_xy <<  std::endl;
-		// std::cout << "arg1_uav_xy= " <<arg1_uav_xy << " , arg2_uav_xy= " << arg2_uav_xy << std::endl;
-		// std::cout << "norm_vector1_uav_xy= " <<norm_vector1_uav_xy << " , norm_vector2_uav_xy= " << norm_vector2_uav_xy << std::endl;
-		// std::cout << "dot_product_uav_xz = " << dot_product_uav_xz <<  std::endl;
-		// std::cout << "arg1_uav_xz= " <<arg1_uav_xz << " , arg2_uav_xz= " << arg2_uav_xz << std::endl;
-		// std::cout << "norm_vector1_uav_xz= " <<norm_vector1_uav_xz << " , norm_vector2_uav_xz= " << norm_vector2_uav_xz << std::endl;
-		// std::cout << "\nangle_uav_xy = " << angle_uav_xy << " , angle_uav_xz = " << angle_uav_xz << std::endl; 
-		// std::cout << "bound1_uav= " << bound1_uav << " , bound2_uav= " << bound2_uav << std::endl;
-		// std::cout << "value_xy= " << value_xy << " , value_xz= " << value_xz << std::endl;
-		// std::cout << "residual[0]= " << residual[0] << " , residual[1]= " << residual[1] << std::endl;
+			residual[0] =  wf_ * 100.0 * (cos_angle - 1.0);
 		
+		// std::cout<< "KinematicsFunctorUAV" << std::endl;
+		// std::cout<< "cos_angle= " << cos_angle <<" , bound= " << bound << std::endl;
+		// std::cout<< "residual[0]= " << residual[0] << std::endl;
 
 		return true;
-  }
+  	}
 
  double wf_, ang_;
 

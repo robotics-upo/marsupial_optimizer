@@ -28,10 +28,8 @@ using ceres::Solver;
 
 struct CatenaryFunctor {
   CatenaryFunctor(double weight_factor, double safty_bound, pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points, 
-                pcl::KdTreeFLANN <pcl::PointXYZ> trav_kdT, pcl::PointCloud <pcl::PointXYZ>::Ptr trav_pc, geometry_msgs::Point pos_reel_ugv, int size, 
-				double pos_reel_z, ros::NodeHandlePtr nhP)
-                : wf_(weight_factor), sb_(safty_bound), kdT_(kdT_From_NN), o_p_(obstacles_Points), kdT_trav_(trav_kdT), pc_trav_(trav_pc),
-				  pos_reel_ugv_(pos_reel_ugv),s_(size), pr_z_(pos_reel_z)
+                 pcl::KdTreeFLANN <pcl::PointXYZ> trav_kdT, pcl::PointCloud <pcl::PointXYZ>::Ptr trav_pc, geometry_msgs::Point pos_reel_ugv, int size, ros::NodeHandlePtr nhP)
+                : wf_(weight_factor), sb_(safty_bound), kdT_(kdT_From_NN), o_p_(obstacles_Points), kdT_trav_(trav_kdT), pc_trav_(trav_pc),pos_reel_ugv_(pos_reel_ugv),s_(size)
     {
 		catenary_marker_pub_ = nhP->advertise<visualization_msgs::MarkerArray>("catenary_marker", 1);
 		pr_ugv_[0] = pos_reel_ugv_.x;
@@ -39,7 +37,7 @@ struct CatenaryFunctor {
 		pr_ugv_[2] = pos_reel_ugv_.z;
     }
 
-    bool operator()(const double* statePosUAV, const double* statePosUGV, const double* stateCat, double* residual) const 
+    bool operator()(const double* statePosUAV, const double* statePosUGV, const double* stateRot, const double* stateCat, double* residual) const 
     {
 		CatenarySolver cS;
         MarkerPublisher mP_;
@@ -56,22 +54,25 @@ struct CatenaryFunctor {
         visualization_msgs::MarkerArray catenary_marker_;
 	    std::vector<geometry_msgs::Point> points_catenary;
 
+		//Get UV Reel position
+		double roll_, pitch_, yaw_, lengt_vec_;
+		tf::Quaternion q_(stateRot[1],stateRot[2],stateRot[3],stateRot[4]);
+		tf::Matrix3x3 M_(q_);	
+		M_.getRPY(roll_, pitch_, yaw_);
+		lengt_vec_ =  sqrt(pr_ugv_[0]*pr_ugv_[0] + pr_ugv_[1]*pr_ugv_[1]);
 		double pos_init_cat_[3];
-		pos_init_cat_[0] = statePosUGV[1]; 
-		pos_init_cat_[1] = statePosUGV[2];
-		pos_init_cat_[2] = statePosUGV[3] + pr_z_;
+		pos_init_cat_[0] = statePosUGV[1] + lengt_vec_ *cos(yaw_); 
+		pos_init_cat_[1] = statePosUGV[2] + lengt_vec_ *sin(yaw_);
+		pos_init_cat_[2] = statePosUGV[3] + pr_ugv_[2] ;
 
 		double dist_ = sqrt((statePosUAV[1]-pos_init_cat_[0])*(statePosUAV[1]-pos_init_cat_[0]) + 
 							(statePosUAV[2]-pos_init_cat_[1])*(statePosUAV[2]-pos_init_cat_[1]) + 
 							(statePosUAV[3]-pos_init_cat_[2])*(statePosUAV[3]-pos_init_cat_[2])); 
-		double safety_length = 1.02 * dist_;
+		double safety_length = 1.01 * dist_;
 
 		points_catenary.clear();
 		cS.setMaxNumIterations(100);
-		cS.solve(pos_init_cat_[0], pos_init_cat_[1], pos_init_cat_[2], 
-				 statePosUAV[1], statePosUAV[2], statePosUAV[3], 
-				 stateCat[1], 
-				 points_catenary);
+		cS.solve(pos_init_cat_[0], pos_init_cat_[1], pos_init_cat_[2], statePosUAV[1], statePosUAV[2], statePosUAV[3], stateCat[1], points_catenary);
 
 		if (points_catenary.size()<1.0)
 			ROS_ERROR ("Not posible to get Catenary for state[%f] = [%f %f %f / %f %f %f]", statePosUAV[0], 
@@ -84,7 +85,7 @@ struct CatenaryFunctor {
 			// ROS_ERROR ("state[%f] ,  Length_Catenary < dist_  ( [%f] < [%f] )",statePosUAV[0], stateCat[1], safety_length);
 		}
 		else
-			mP_.markerPoints(catenary_marker_, points_catenary, id_marker_, s_, catenary_marker_pub_);
+			// mP_.markerPoints(catenary_marker_, points_catenary, id_marker_, s_, catenary_marker_pub_);
 
 		n_points_cat_dis = ceil(1.5*ceil(stateCat[1])); // parameter to ignore collsion points in the begining and in the end of catenary
 		if (n_points_cat_dis < 5)
@@ -94,8 +95,7 @@ struct CatenaryFunctor {
 		    double near_[3];
 			if (i >= n_points_cat_dis && (i < points_catenary.size() - n_points_cat_dis/2.0) ){
 				nn.nearestObstacleStateCeres(kdT_ , points_catenary[i].x, points_catenary[i].y, points_catenary[i].z, o_p_, near_[0], near_[1], near_[2]);
-				d_obs_[0] = sqrt((points_catenary[i].x-near_[0])*(points_catenary[i].x-near_[0])+
-								 (points_catenary[i].y-near_[1])*(points_catenary[i].y-near_[1])+(points_catenary[i].z-near_[2])*(points_catenary[i].z-near_[2]));
+				d_obs_[0] = sqrt((points_catenary[i].x-near_[0])*(points_catenary[i].x-near_[0])+(points_catenary[i].y-near_[1])*(points_catenary[i].y- near_[1])+(points_catenary[i].z-near_[2])*(points_catenary[i].z-near_[2]));
 				if (d_obs_[0] < d_min[0]){
 					d_min[0] = d_obs_[0];
 				}
@@ -114,18 +114,17 @@ struct CatenaryFunctor {
 			residual[0] = 0.0;
 		else	
 			residual[0] = wf_ * (exp(10.0*(d_min[0]-sb_) ) - 1.0);
-		// Constraint to make length Cable longer than 
 		if (stateCat[1] > safety_length)
 			residual[1] = 0.0;
 		else
-			residual[1] = wf_ *100.0 * (exp(10.0*(safety_length - stateCat[1])) - 1.0);
+			residual[1] = wf_ * (exp(10.0*(safety_length - stateCat[1])) - 1.0);
 
-		residual[2] = wf_ * 100.0 * exp(1.0* d_max_below_z[0]);
+		residual[2] = wf_ * exp(1.0* d_max_below_z[0]);
 
 		return true;
     }
 
-    double wf_, sb_, pr_z_;
+    double wf_, sb_;
 	int s_;
 	geometry_msgs::Point pos_reel_ugv_;
     double pr_ugv_[3];

@@ -69,7 +69,10 @@ public:
 
             d_ugv_ = (statePos[3]-n_[2])*(statePos[3]-n_[2]); // To the closest point to traversavility PC is only consider distance in Z axe
 
-            residual[0] =  wf_ * exp(6.0*d_ugv_);
+            double bound_dist = 0.01;
+            double bound = exp(bound_dist); // To make 0.0 residual 
+            
+            residual[0] =  wf_ * (exp(20.0*d_ugv_) - bound);
 
             return true;
         }

@@ -26,16 +26,19 @@ public:
       
       arg_d_ugv_ = pow(statePos2[1]-statePos1[1],2) + pow(statePos2[2]-statePos1[2],2) + pow(statePos2[3]-statePos1[3],2);
       
-      if (arg_d_ugv_ < 0.0001 && arg_d_ugv_ > -0.0001)
+      if (arg_d_ugv_ < 0.001 && arg_d_ugv_ > -0.001)
         d_ugv_ = T{0.0};
       else               
         d_ugv_ = sqrt(arg_d_ugv_);
       
-      if(stateT1[1] < 0.0001)
+      if(stateT1[1] < 0.001)
         residual[0] = T{0.0};
       else
-        residual[0] =  wf_ * ((d_ugv_/stateT1[1]) -iv_);  //To avoid division that make underterminated residual: v*t=d
-        // residual[0] =  wf_ * ((stateT1[1])*iv_ - d_ugv_);  //To avoid division that make underterminated residual: v*t=d
+        residual[0] =  wf_ * ((d_ugv_ / stateT1[1]) - iv_);  //To avoid division that make underterminated residual: v*t=d
+
+      // printf("VelocityFunctorUGV , ");
+      // std::cout << "d_ugv_= " << d_ugv_ << " , stateT1[1]= " << stateT1[1] <<std::endl;
+      // std::cout << "residual[0]= " << residual[0] << std::endl;
 
       return true;
   }

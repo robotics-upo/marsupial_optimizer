@@ -7,6 +7,12 @@
 #include <tf/transform_listener.h>
 #include <tf2_ros/transform_listener.h>
 #include <sensor_msgs/PointCloud2.h>
+#include <octomap_msgs/Octomap.h>
+#include <pcl_ros/point_cloud.h>
+#include <pcl_ros/transforms.h>
+#include <octomap/OcTree.h>
+#include <octomap_msgs/conversions.h>
+
 
 //PCL
 #include <pcl/point_types.h>
@@ -17,6 +23,9 @@
 #include <pcl/filters/passthrough.h>
 #include <pcl/segmentation/region_growing.h>
 #include <pcl_conversions/pcl_conversions.h>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+
 
 #define PRINTF_REGULAR "\x1B[0m"
 #define PRINTF_RED "\x1B[31m"
@@ -29,7 +38,7 @@
 
 std::string world_frame, ugv_base_frame;
 
-ros::Publisher segmented_traversable_pc_pub, segmented_obstacles_pc_pub;
+ros::Publisher segmented_traversable_pc_pub, segmented_obstacles_pc_pub, reduced_map_pub;
 ros::Subscriber new_octomap_sub;
 sensor_msgs::PointCloud2 data_in;
 std::shared_ptr<tf2_ros::Buffer> tfBuffer;
@@ -45,12 +54,14 @@ void startRegionGrowing(sensor_msgs::PointCloud2 in_cloud_);
 void pcCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
 void getPositionUGV();
 void publishTopicsPointCloud();
+void pointCloudToOctomap(sensor_msgs::PointCloud2 msg);
 
 sensor_msgs::PointCloud2 pc_obstacles_out;
 sensor_msgs::PointCloud2 pc_traversable_out;
 pcl::PointCloud<pcl::PointXYZ>::Ptr segmented_cloud_traversable (new pcl::PointCloud<pcl::PointXYZ>);
 pcl::PointCloud<pcl::PointXYZ>::Ptr segmented_cloud_obstacles (new pcl::PointCloud<pcl::PointXYZ>);
 
+const double res = 0.1;
 
 void pcCallback(const sensor_msgs::PointCloud2::ConstPtr& msg)
 {
@@ -103,12 +114,12 @@ void startRegionGrowing(sensor_msgs::PointCloud2 in_cloud_)
     reg.setMinClusterSize (50);
     reg.setMaxClusterSize (1000000);
     reg.setSearchMethod (tree);
-    reg.setNumberOfNeighbours (30);
+    reg.setNumberOfNeighbours (60);
     reg.setInputCloud (cloud);
     //reg.setIndices (indices);
     reg.setInputNormals (normals);
-    reg.setSmoothnessThreshold (5.0 / 180.0 * M_PI);
-    reg.setCurvatureThreshold (1.0);
+    reg.setSmoothnessThreshold (6.0 / 180.0 * M_PI);
+    reg.setCurvatureThreshold (2.0);
 
     std::vector <pcl::PointIndices> clusters;
     reg.extract (clusters);
@@ -182,7 +193,7 @@ void startRegionGrowing(sensor_msgs::PointCloud2 in_cloud_)
     }
 
     publishTopicsPointCloud();
-    
+    // pointCloudToOctomap(pc_obstacles_out);
 }
 
 void publishTopicsPointCloud()
@@ -195,6 +206,57 @@ void publishTopicsPointCloud()
     ROS_INFO_COND(debug_rgs,PRINTF_CYAN"  RegionGrowing:  segmented_cloud_traversable->size() = %lu", segmented_cloud_traversable->size());
     pcl::toROSMsg(*segmented_cloud_traversable, pc_traversable_out);
     segmented_traversable_pc_pub.publish(pc_traversable_out);
+
+}
+
+void pointCloudToOctomap(sensor_msgs::PointCloud2 msg)
+{
+	//********* Retirive and process raw pointcloud************
+	std::cout<<"Recieved cloud"<<std::endl;
+	std::cout<<"Create Octomap"<<std::endl;
+	octomap::OcTree tree(res);
+	std::cout<<"Load points "<<std::endl;
+	pcl::PCLPointCloud2 cloud;
+	pcl_conversions::toPCL(msg,cloud);
+	pcl::PointCloud<pcl::PointXYZ> pcl_pc;
+    pcl::fromPCLPointCloud2(cloud, pcl_pc);
+    std::cout<<"Filter point clouds for NAN"<<std::endl;
+	std::vector<int> nan_indices;
+	pcl::removeNaNFromPointCloud(pcl_pc,pcl_pc,nan_indices);
+	octomap::Pointcloud oct_pc;
+	octomap::point3d origin(0.0f,0.0f,0.0f);
+	std::cout<<"Adding point cloud to octomap"<<std::endl;
+	//octomap::point3d origin(0.0f,0.0f,0.0f);
+	for(int i = 0;i<pcl_pc.points.size();i++){
+		oct_pc.push_back((float) pcl_pc.points[i].x,(float) pcl_pc.points[i].y,(float) pcl_pc.points[i].z);
+    }
+	tree.insertPointCloud(oct_pc,origin,-1,false,false);
+	
+	/*
+	//******************Traverse the tree ********************
+	for(octomap::OcTree::tree_iterator it =tree.begin_tree(), end = tree.end_tree();it!= end;it++){
+		 //manipulate node, e.g.:
+		std::cout << "_____________________________________"<<std::endl;
+		std::cout << "Node center: " << it.getCoordinate() << std::endl;
+		std::cout << "Node size: " << it.getSize() << std::endl;
+		std::cout << "Node depth: "<<it.getDepth() << std::endl;
+		std::cout << "Is Leaf : "<< it.isLeaf()<< std::endl;
+		std::cout << "_____________________________________"<<std::endl;
+		}
+	//**********************************************************	
+	*/
+	std::cout<<"finished"<<std::endl;
+	std::cout<<std::endl;
+
+    octomap_msgs::Octomap octomap_reduced;
+    octomap_reduced.binary = false;
+    octomap_reduced.id = 1 ;
+    octomap_reduced.resolution =0.1;
+    octomap_reduced.header.frame_id = "/map";
+    octomap_reduced.header.stamp = ros::Time::now();
+    octomap_msgs::fullMapToMsg(tree, octomap_reduced);
+    reduced_map_pub.publish(octomap_reduced);
+
 }
 
 void getPositionUGV()
@@ -239,6 +301,8 @@ int main(int argc, char **argv)
 
 	segmented_traversable_pc_pub = n.advertise<sensor_msgs::PointCloud2>("region_growing_traversability_pc_map", 10,latch_topic);
 	segmented_obstacles_pc_pub = n.advertise<sensor_msgs::PointCloud2>("region_growing_obstacles_pc_map", 10,latch_topic);
+    reduced_map_pub = n.advertise<octomap_msgs::Octomap>("region_growing_octomap_reduced", 100, latch_topic);
+
     
 	while (ros::ok()) {
         // ros::spinOnce();
