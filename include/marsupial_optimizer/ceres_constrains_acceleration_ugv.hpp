@@ -17,12 +17,13 @@ using ceres::Solver;
 class AccelerationFunctorUGV {
 
 public:
-  AccelerationFunctorUGV(double weight_factor, double init_acc_ugv): wf_(weight_factor), ia_ugv_(init_acc_ugv) {}
+  AccelerationFunctorUGV(double weight_factor, double init_acc_ugv, double count_fix_points_ugv): wf_(weight_factor), ia_ugv_(init_acc_ugv), cfp_ugv(count_fix_points_ugv) {}
 
   template <typename T>
   bool operator()(const T* const statePosUGV1, const T* const statePosUGV2, const T* const statePosUGV3,
 				  const T* const stateT1, const T* const stateT2, T* residual) const 
 {
+	
 	T d1_ugv_, d2_ugv_, arg_d1_ugv_, arg_d2_ugv_;
 	T v1_ugv_, v2_ugv_, a_ugv_;
 
@@ -60,7 +61,6 @@ public:
 		residual[0] =  wf_ * (a_ugv_ - ia_ugv_);
 		// residual[0] =  wf_ * exp(a_ugv_ - ia_ugv_);
 	}
-
 	// std::cout <<"statePosUGV1[0]= " << statePosUGV1[0] <<" , statePosUGV2[0] " << statePosUGV2[0]<<" , statePosUGV3[0] " << statePosUGV3[0]<< std::endl ; 
 	// std::cout <<"d1_ugv_= " << d1_ugv_ <<" , d2_ugv_= " << d2_ugv_<< std::endl ; 
 	// std::cout <<"stateT1[1]= " << stateT1[1] <<" , stateT2[1]= " << stateT2[1]<< std::endl ; 
@@ -68,14 +68,12 @@ public:
     // std::cout << "a_ugv_= " << a_ugv_ << std::endl; 
     // std::cout <<"residual[0]= " << residual[0] << std::endl;
 
-
 	return true;
 }
 
- double wf_, ia_ugv_, ia_uav_;
+ double wf_, ia_ugv_, ia_uav_ , cfp_ugv;
 
  private:
 };
-
 
 #endif

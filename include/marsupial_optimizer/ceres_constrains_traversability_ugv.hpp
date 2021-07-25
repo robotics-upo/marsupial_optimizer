@@ -72,7 +72,7 @@ public:
             double bound_dist = 0.01;
             double bound = exp(bound_dist); // To make 0.0 residual 
             
-            residual[0] =  wf_ * (exp(20.0*d_ugv_) - bound);
+            residual[0] =  wf_ * 1000.0 * (exp(4.0*d_ugv_) - bound);
 
             return true;
         }

@@ -1,0 +1,7 @@
+ws_x_max: 17
+ws_y_max: 10
+ws_z_max: 14
+
+ws_x_min: -16
+ws_y_min: -20
+ws_z_min: 0

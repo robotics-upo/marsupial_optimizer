@@ -160,7 +160,7 @@ public:
 	int n_iter_opt;	//Iterations Numbers of Optimizer
 	double distance_catenary_obstacle,min_distance_add_new_point,dynamic_catenary, initial_distance_states_ugv, initial_distance_states_uav;
 	double w_alpha_uav, w_alpha_ugv, w_beta_uav, w_beta_ugv, w_iota_ugv, w_iota_uav, w_theta_ugv, w_gamma_uav, w_gamma_ugv, w_kappa_ugv, w_kappa_uav, w_delta, w_delta_ugv; 
-	double w_epsilon, w_epsilon_ugv, w_zeta_uav , w_zeta_ugv , w_eta, w_lambda, w_mu_uav, w_nu_ugv;
+	double w_epsilon, w_epsilon_ugv, w_zeta_uav , w_zeta_ugv, w_eta_1, w_eta_2, w_eta_3, w_lambda, w_mu_uav, w_nu_ugv;
 
 	NearNeighbor nn_uav; // Kdtree used for Catenary and UAV
 	NearNeighbor nn_trav, nn_ugv_obs;
@@ -226,7 +226,7 @@ public:
 	bool write_data_for_analysis;
 	geometry_msgs::Point pos_reel_ugv;
 	double length_tether_max;
-	int count_fix_points_ugv;
+	int count_fix_points_ugv, count_not_fix_points_ugv;
 
 
 

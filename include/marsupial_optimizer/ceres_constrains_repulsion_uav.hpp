@@ -48,7 +48,8 @@ public:
 
     struct RepulsionFunctor 
     {
-        RepulsionFunctor(double weight_factor, double safty_bound, pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points, Eigen::Vector3d fix_pos_ref)
+        RepulsionFunctor(double weight_factor, double safty_bound, pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, 
+                         pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points, Eigen::Vector3d fix_pos_ref)
             : wf_(weight_factor), sb_(safty_bound), kdT_(kdT_From_NN), o_p_(obstacles_Points), f_p_r_(fix_pos_ref)
         {
             compute_nearest_distance.reset(new ceres::CostFunctionToFunctor<4,4>(

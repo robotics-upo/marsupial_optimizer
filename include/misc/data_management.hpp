@@ -29,7 +29,8 @@ class DataManagement
 		virtual void initDataManagement(std::string path_, std::string name_output_file_, int scenario_number_, int num_pos_initial_, int num_goal_, double initial_velocity_ugv_,
 								double initial_velocity_uav_, double initial_acceleration_ugv_, double initial_acceleration_uav_, geometry_msgs::Point pos_reel_ugv_,
 								std::vector<Eigen::Vector3d> vec_pose_init_ugv_, std::vector<Eigen::Vector3d> vec_pose_init_uav_,	std::vector<float> vec_len_cat_init_,
-								std::vector<geometry_msgs::Quaternion> vec_rot_ugv_, std::vector<geometry_msgs::Quaternion> vec_rot_uav_, octomap::OcTree* octotree_);
+								std::vector<geometry_msgs::Quaternion> vec_rot_ugv_, std::vector<geometry_msgs::Quaternion> vec_rot_uav_, octomap::OcTree* octotree_full_,
+								octomap::OcTree* octotree_ugv_);
 		virtual void writeTemporalDataBeforeOptimization(std::vector<double> vec_dist_init_ugv_, std::vector<double> vec_dist_init_uav_, 
 														std::vector<double> vec_time_init_ugv_, std::vector<double> vec_time_init_uav_, 
 														std::vector<double> v_angles_kinematic_ugv, std::vector<double> v_angles_kinematic_uav_);
@@ -39,10 +40,10 @@ class DataManagement
 												std::vector<double> v_angles_kinematic_ugv_, std::vector<double> v_angles_kinematic_uav_);
 		virtual void getDataForOptimizerAnalysis(pcl::KdTreeFLANN <pcl::PointXYZ> kdt_, pcl::KdTreeFLANN <pcl::PointXYZ> kdt_all_, 
 												 pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_points_ , pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_points_all_, 
-												 double opt_compute_time_ , std::string mode_);
+												 double opt_compute_time_ , std::string mode_, int &n_coll_init_path_, int &n_coll_opt_traj_);
  		virtual geometry_msgs::Point getReelPos(const float px_, const float py_, const float pz_,const float qx_, const float qy_, const float qz_, const float qw_, geometry_msgs::Point p_reel_);
 		virtual geometry_msgs::Vector3 getEulerAngles(const float qx_, const float qy_, const float qz_, const float qw_);
-		virtual bool isObstacleBetweenTwoPoints(Eigen::Vector3d pose_uav_opt_1, Eigen::Vector3d pose_uav_opt_2);
+		virtual bool isObstacleBetweenTwoPoints(Eigen::Vector3d pose_opt_1, Eigen::Vector3d pose_opt_2, bool oct_full_);
 		virtual void writeCatenaryFailData(int num_cat_fail_, double pos_node_, double old_length_, double dist_, double new_length_);
 		virtual void openWriteCatenaryFailData();
 		virtual void closeWriteCatenaryFailData();
@@ -72,7 +73,8 @@ class DataManagement
 		geometry_msgs::Point ugv_pos_catenary;
 		geometry_msgs::Point pos_reel_ugv;
 
-		octomap::OcTree* octotree;
+		octomap::OcTree* octotree_full;
+		octomap::OcTree* octotree_ugv;
 
 	protected:
 
@@ -85,7 +87,8 @@ inline DataManagement::DataManagement(){}
 inline void DataManagement::initDataManagement(std::string path_, std::string name_output_file_, int scenario_number_, int num_pos_initial_, int num_goal_, double initial_velocity_ugv_,
 					double initial_velocity_uav_, double initial_acceleration_ugv_, double initial_acceleration_uav_, geometry_msgs::Point pos_reel_ugv_,
 					std::vector<Eigen::Vector3d> vec_pose_init_ugv_, std::vector<Eigen::Vector3d> vec_pose_init_uav_, std::vector<float> vec_len_cat_init_,
-					std::vector<geometry_msgs::Quaternion> vec_rot_ugv_, std::vector<geometry_msgs::Quaternion> vec_rot_uav_, octomap::OcTree* octotree_)
+					std::vector<geometry_msgs::Quaternion> vec_rot_ugv_, std::vector<geometry_msgs::Quaternion> vec_rot_uav_, octomap::OcTree* octotree_full_, 
+					octomap::OcTree* octotree_ugv_)
 {
 	path = path_;
 	name_output_file = name_output_file_;
@@ -109,7 +112,8 @@ inline void DataManagement::initDataManagement(std::string path_, std::string na
 	
 	pos_reel_ugv = pos_reel_ugv_;
 
-	octotree = octotree_;
+	octotree_full = octotree_full_;
+	octotree_ugv = octotree_ugv_;
 
 	output_file = path+name_output_file+"_stage_"+std::to_string(scenario_number)+"_InitPos_"+std::to_string(num_pos_initial)+"_goal_"+std::to_string(num_goal)+"_";
 }
@@ -353,7 +357,7 @@ inline void DataManagement::writeTemporalDataAfterOptimization(auto _s, std::vec
 
 inline void DataManagement::getDataForOptimizerAnalysis(pcl::KdTreeFLANN <pcl::PointXYZ> kdt_, pcl::KdTreeFLANN <pcl::PointXYZ> kdt_all_, 
 														pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_points_, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_points_all_, 
-														double opt_compute_time_ , std::string mode_)
+														double opt_compute_time_ , std::string mode_, int &n_coll_init_path_, int &n_coll_opt_traj_)
 {
 	//mode = 1 , UGV  - mode = 2 , UAV
 	std::vector<geometry_msgs::Point> v_points_catenary_opt_,v_points_catenary_init_;
@@ -363,6 +367,7 @@ inline void DataManagement::getDataForOptimizerAnalysis(pcl::KdTreeFLANN <pcl::P
 	std::vector<double> vec_acc_opt_;
 	std::vector<Eigen::Vector3d> vec_pose_init_;
 	std::vector<Eigen::Vector3d> vec_pose_opt_;
+	bool use_oct_full = true;
 
 	if (mode_ == "UGV"){
 		vec_time_init_ =  vec_time_init_ugv; 
@@ -373,6 +378,7 @@ inline void DataManagement::getDataForOptimizerAnalysis(pcl::KdTreeFLANN <pcl::P
 		vec_acc_opt_ = vec_acc_ugv_opt;
 		vec_pose_opt_ = vec_pose_ugv_opt;
 		vec_dist_opt_ = vec_dist_ugv_opt;
+		use_oct_full = false;
 	}
 	else if (mode_ == "UAV"){
 		vec_time_init_ =  vec_time_init_uav; 
@@ -383,6 +389,7 @@ inline void DataManagement::getDataForOptimizerAnalysis(pcl::KdTreeFLANN <pcl::P
 		vec_acc_opt_ = vec_acc_uav_opt;
 		vec_pose_opt_ = vec_pose_uav_opt;
 		vec_dist_opt_ = vec_dist_uav_opt;
+		use_oct_full = true;
 	}
 
 	// Writing general data for initial analysis
@@ -484,7 +491,7 @@ inline void DataManagement::getDataForOptimizerAnalysis(pcl::KdTreeFLANN <pcl::P
 					distance_obs_cat_init_min_ = (p_cat_init_- nearest_obs_p).norm();
 			}
 		}
-		if ( (i < vec_pose_init_.size()-1) && (isObstacleBetweenTwoPoints(vec_pose_init_[i], vec_pose_init_[i+1])) ){
+		if ( (i < vec_pose_init_.size()-1) && (isObstacleBetweenTwoPoints(vec_pose_init_[i], vec_pose_init_[i+1], use_oct_full)) ){
 			count_coll_between_init_++;
 			pos_coll_between_init_ = pos_coll_between_init_+"["+std::to_string(i)+"-"+std::to_string(i+1)+"]";
 		}
@@ -568,7 +575,7 @@ inline void DataManagement::getDataForOptimizerAnalysis(pcl::KdTreeFLANN <pcl::P
 		// printf("Obstacles Optimized: state=[%lu/%lu] vec_pose_opt_.size=[%lu] v_points_catenary_opt_.size=[%lu] count_cat_p_opt = [%i]\n",i, vec_pose_opt_.size(),vec_pose_opt_.size(),v_points_catenary_opt_.size(),count_cat_p_opt_);
 		}
 	
-		if ( (i < vec_pose_opt_.size()-1) && (isObstacleBetweenTwoPoints(vec_pose_opt_[i], vec_pose_opt_[i+1])) ){
+		if ( (i < vec_pose_opt_.size()-1) && (isObstacleBetweenTwoPoints(vec_pose_opt_[i], vec_pose_opt_[i+1], use_oct_full)) ){
 			count_coll_between_opt_++;
 			pos_coll_between_opt_ = pos_coll_between_opt_+"["+std::to_string(i)+"-"+std::to_string(i+1)+"]";
 		}
@@ -610,6 +617,8 @@ inline void DataManagement::getDataForOptimizerAnalysis(pcl::KdTreeFLANN <pcl::P
 	else {
 		std::cout << "Couldn't be open the output data file for " << mode_ << std::endl;
 	}
+	n_coll_init_path_ = count_coll_between_init_;
+	n_coll_opt_traj_ =  count_coll_between_opt_;
 	ofs.close();
 }
 
@@ -648,20 +657,31 @@ inline geometry_msgs::Vector3 DataManagement::getEulerAngles(const float qx_, co
 	return ret;
 }
 
-inline bool DataManagement::isObstacleBetweenTwoPoints(Eigen::Vector3d pose_uav_opt_1, Eigen::Vector3d pose_uav_opt_2)
+inline bool DataManagement::isObstacleBetweenTwoPoints(Eigen::Vector3d pose_opt_1, Eigen::Vector3d pose_opt_2, bool oct_full_)
 {
 	octomap::point3d r_;
-	octomap::point3d s_(pose_uav_opt_1.x() , pose_uav_opt_1.y() , pose_uav_opt_1.z() ); //start for rayCast
-	octomap::point3d d_(pose_uav_opt_2.x()-pose_uav_opt_1.x() , pose_uav_opt_2.y()-pose_uav_opt_1.y() , pose_uav_opt_2.z()-pose_uav_opt_1.z() ); //direction for rayCast
-    bool r_cast_coll = octotree->castRay(s_, d_, r_);
+	double z_pos_;
+	if(oct_full_)
+		z_pos_ = pose_opt_1.z();
+	else
+		z_pos_ = pose_opt_1.z() + 0.3;
 
-	double dist12_ = sqrt ( (pose_uav_opt_2.x()-pose_uav_opt_1.x())*(pose_uav_opt_2.x()-pose_uav_opt_1.x())+
-					   		(pose_uav_opt_2.y()-pose_uav_opt_1.y())*(pose_uav_opt_2.y()-pose_uav_opt_1.y())+ 
-					   		(pose_uav_opt_2.z()-pose_uav_opt_1.z())*(pose_uav_opt_2.z()-pose_uav_opt_1.z()) );
+	octomap::point3d s_(pose_opt_1.x() , pose_opt_1.y() , pose_opt_1.z() ); //start for rayCast
+	octomap::point3d d_(pose_opt_2.x()-pose_opt_1.x() , pose_opt_2.y()-pose_opt_1.y() , pose_opt_2.z()-pose_opt_1.z() ); //direction for rayCast
+    bool r_cast_coll; 
+    
+	if(oct_full_)
+		r_cast_coll = octotree_full->castRay(s_, d_, r_);
+	else
+		r_cast_coll = octotree_ugv->castRay(s_, d_, r_);
+
+	double dist12_ = sqrt ( (pose_opt_2.x()-pose_opt_1.x())*(pose_opt_2.x()-pose_opt_1.x())+
+					   		(pose_opt_2.y()-pose_opt_1.y())*(pose_opt_2.y()-pose_opt_1.y())+ 
+					   		(pose_opt_2.z()-pose_opt_1.z())*(pose_opt_2.z()-pose_opt_1.z()) );
 	
-	double distObs_ = sqrt ((pose_uav_opt_1.x()-r_.x())*(pose_uav_opt_1.x()-r_.x())+
-					   		(pose_uav_opt_1.y()-r_.y())*(pose_uav_opt_1.y()-r_.y())+ 
-					   		(pose_uav_opt_1.z()-r_.z())*(pose_uav_opt_1.z()-r_.z()) );
+	double distObs_ = sqrt ((pose_opt_1.x()-r_.x())*(pose_opt_1.x()-r_.x())+
+					   		(pose_opt_1.y()-r_.y())*(pose_opt_1.y()-r_.y())+ 
+					   		(pose_opt_1.z()-r_.z())*(pose_opt_1.z()-r_.z()) );
 	
 	if (r_cast_coll && distObs_ <= dist12_)
 		return true;
@@ -674,7 +694,7 @@ inline void DataManagement::writeCatenaryFailData(int num_cat_fail_, double pos_
 }
 
 inline void DataManagement::openWriteCatenaryFailData(){
-	catenary_data_out.open (path+"optimized_data_cateary.txt");
+	catenary_data_out.open (path+"cateary_optimized_data.txt");
 	catenary_data_out << "n_cat_fail/n_node/old_length/dist/ new_length" << std::endl;
 }
 
@@ -682,7 +702,5 @@ inline void DataManagement::closeWriteCatenaryFailData()
 {
 	catenary_data_out.close();
 }
-
-
 
 #endif

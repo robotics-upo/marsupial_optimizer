@@ -28,7 +28,7 @@ class EquiDistanceFunctorUAV
       else  
         d_pos_uav = sqrt(arg_d_pos_uav);
 
-      residual[0] = wf_ * 10.0 * ( exp(2.0*(d_pos_uav - int_d_uav)));
+      residual[0] = wf_ * 100.0 * ( exp(2.0*(d_pos_uav - int_d_uav)));
 
       // std::cout<< "Equi-Distance UAV" << std::endl;
       // std::cout<< "d_pos_uav= " << d_pos_uav <<" , int_d_uav= " << int_d_uav << std::endl;

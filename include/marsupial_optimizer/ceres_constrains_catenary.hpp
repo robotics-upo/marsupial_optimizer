@@ -27,11 +27,11 @@ using ceres::Solver;
 
 
 struct CatenaryFunctor {
-  CatenaryFunctor(double weight_factor, double safty_bound, pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points, 
+  CatenaryFunctor(double weight_factor_1, double weight_factor_2, double weight_factor_3, double safty_bound, pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points, 
                 pcl::KdTreeFLANN <pcl::PointXYZ> trav_kdT, pcl::PointCloud <pcl::PointXYZ>::Ptr trav_pc, geometry_msgs::Point pos_reel_ugv, int size, 
-				double pos_reel_z, ros::NodeHandlePtr nhP)
-                : wf_(weight_factor), sb_(safty_bound), kdT_(kdT_From_NN), o_p_(obstacles_Points), kdT_trav_(trav_kdT), pc_trav_(trav_pc),
-				  pos_reel_ugv_(pos_reel_ugv),s_(size), pr_z_(pos_reel_z)
+				double pos_reel_z, Eigen::Vector3d fix_pos_ref, ros::NodeHandlePtr nhP)
+                : wf_1(weight_factor_1), wf_2(weight_factor_2), wf_3(weight_factor_3),sb_(safty_bound), kdT_(kdT_From_NN), o_p_(obstacles_Points), 
+				kdT_trav_(trav_kdT), pc_trav_(trav_pc), pos_reel_ugv_(pos_reel_ugv),s_(size), pr_z_(pos_reel_z), fp_ref_(fix_pos_ref)
     {
 		catenary_marker_pub_ = nhP->advertise<visualization_msgs::MarkerArray>("catenary_marker", 1);
 		pr_ugv_[0] = pos_reel_ugv_.x;
@@ -90,6 +90,7 @@ struct CatenaryFunctor {
 		if (n_points_cat_dis < 5)
 			n_points_cat_dis = 5;
 
+		// int num_point_cat_nearest_coll_= points_catenary.size()-1;
 		for (size_t i = 0 ; i < points_catenary.size() ; i++){
 		    double near_[3];
 			if (i >= n_points_cat_dis && (i < points_catenary.size() - n_points_cat_dis/2.0) ){
@@ -98,6 +99,7 @@ struct CatenaryFunctor {
 								 (points_catenary[i].y-near_[1])*(points_catenary[i].y-near_[1])+(points_catenary[i].z-near_[2])*(points_catenary[i].z-near_[2]));
 				if (d_obs_[0] < d_min[0]){
 					d_min[0] = d_obs_[0];
+					// num_point_cat_nearest_coll_ = i;
 				}
 			}
 		    double below_z[3];
@@ -109,23 +111,31 @@ struct CatenaryFunctor {
 					d_max_below_z[0] = d_below_z[0]; 
 			}
 		}
-		;
+		double dist_uav_ref = sqrt( pow(fp_ref_.x()-statePosUAV[1],2) + pow(fp_ref_.y()-statePosUAV[2],2) + pow(fp_ref_.z()-statePosUAV[3],2));
+		// double num_points_cat_above_obs_  = ((double)points_catenary.size() - (double)num_point_cat_nearest_coll_);
+
 		if (d_min[0] > sb_)
 			residual[0] = 0.0;
 		else	
-			residual[0] = wf_ * (exp(10.0*(d_min[0]-sb_) ) - 1.0);
+			residual[0] = wf_1 * 100.0 * (10.0*dist_uav_ref) * (exp(10.0*(sb_-d_min[0]) ) - 1.0);
+			// residual[0] = wf_ * 10.0 * num_points_cat_above_obs_ * (exp(10.0*(d_min[0]-sb_) ) - 1.0);
 		// Constraint to make length Cable longer than 
 		if (stateCat[1] > safety_length)
 			residual[1] = 0.0;
 		else
-			residual[1] = wf_ *100.0 * (exp(10.0*(safety_length - stateCat[1])) - 1.0);
+			residual[1] = wf_2 *100.0 * (exp(10.0*(safety_length - stateCat[1])) - 1.0);
 
-		residual[2] = wf_ * 100.0 * exp(1.0* d_max_below_z[0]);
+		residual[2] = wf_3 * 1000.0 * (exp(10.0* d_max_below_z[0]) - 1.0);
+
+
+		std::cout << "residual[0] = " <<residual[0] << " , dist_uav_ref= " << dist_uav_ref << " , d_min[0]= " << d_min[0] << " , sb_= " << sb_ << std::endl;
+		std::cout << "residual[1] = " <<residual[1] << " , ["<< stateCat[0] << "]stateCat[1]= " << stateCat[1] << " , safety_length= " << safety_length << std::endl;
+		std::cout << "residual[2] = " <<residual[2] << " , d_max_below_z[0]= " << d_max_below_z[0] << std::endl;
 
 		return true;
     }
 
-    double wf_, sb_, pr_z_;
+    double wf_1, wf_2, wf_3, sb_, pr_z_;
 	int s_;
 	geometry_msgs::Point pos_reel_ugv_;
     double pr_ugv_[3];
@@ -134,6 +144,7 @@ struct CatenaryFunctor {
 
 	pcl::KdTreeFLANN <pcl::PointXYZ> kdT_trav_;
     pcl::PointCloud <pcl::PointXYZ>::Ptr pc_trav_;
+	Eigen::Vector3d fp_ref_;
 
 	ros::Publisher catenary_marker_pub_;
 };

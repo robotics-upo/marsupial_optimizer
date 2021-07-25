@@ -62,7 +62,7 @@ public:
         }
 
         template <typename T>
-        bool operator()(const T* const statePos1, const T* const statePos2, T* residual) const 
+        bool operator()(const T* const statePos1, T* residual) const 
         {
             // To avoid obstacles
             T d_ugv_1;
@@ -78,7 +78,7 @@ public:
                 d_ugv_1 = sqrt(arg_d_ugv_1);
 
             T Diff_ = (sb_ - d_ugv_1);
-            residual[0] = wf_ * 100.0 * log(1.0 + exp(4.0*Diff_) ) ;
+            residual[0] = wf_ * 1000.0 * log(1.0 + exp(4.0*Diff_) ) ;
 
 
             return true;
