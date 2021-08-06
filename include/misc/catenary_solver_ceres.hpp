@@ -95,7 +95,8 @@ class CatenarySolver
   private:
 
     // Optimizer parameters
-    int _max_num_iterations, _num_point_per_unit_length;
+    int _max_num_iterations, _num_point_per_unit_length, _div_res;
+    double _resolution;
 
   public:
 
@@ -104,6 +105,8 @@ class CatenarySolver
       // google::InitGoogleLogging("CatenaryCeresSolver"); // uncomment only if doesn't  exist other InitGoogleLogging 
       _max_num_iterations = 50;
       _num_point_per_unit_length = 10;
+      _resolution = 0.05;
+      _div_res = 1.0/_resolution;
     }
 
     ~CatenarySolver(void)
@@ -135,6 +138,12 @@ class CatenarySolver
         } 
         else
             return false;
+    }
+
+    void setResolution(int res_)
+    {
+      _resolution = res_;
+      _div_res = 1.0/_resolution;
     }
 
     inline void getNumberPointsCatenary(double _length){num_point_catenary = ceil( (double)_num_point_per_unit_length * _length);}  
@@ -192,9 +201,9 @@ class CatenarySolver
 
         for(int i=0; i < v_points_catenary_2D.size(); i++)
         {
-            point_cat3D.z = v_points_catenary_2D[i].y;
-            point_cat3D.x = _x1 + _direc_x* cos(tetha) * v_points_catenary_2D[i].x;
-            point_cat3D.y = _y1 + _direc_y* sin(tetha) * v_points_catenary_2D[i].x;
+            point_cat3D.z = _resolution * ( round((v_points_catenary_2D[i].y) *_div_res) );
+            point_cat3D.x = _resolution * ( round((_x1 + _direc_x* cos(tetha) * v_points_catenary_2D[i].x) *_div_res) );
+            point_cat3D.y = _resolution * ( round((_y1 + _direc_y* sin(tetha) * v_points_catenary_2D[i].x) *_div_res) );
             _vector3D.push_back(point_cat3D);
             if (Zmin > point_cat3D.z)
             {
@@ -216,9 +225,9 @@ class CatenarySolver
       {
           geometry_msgs::Point _p;
 
-          _p.x = _x1;
-          _p.y = _y1;
-          _p.z = _z1 + _step* (double)i;    
+          _p.x = _resolution * ( round(_x1*_div_res ));
+          _p.y = _resolution * ( round(_y1*_div_res ));
+          _p.z = _resolution * ( round((_z1 + _step* (double)i)*_div_res) );    
           _v_p.push_back(_p);
       }
     }

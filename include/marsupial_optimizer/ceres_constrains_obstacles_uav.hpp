@@ -11,6 +11,7 @@
 #include <pcl/point_types.h>
 
 #include "misc/near_neighbor.hpp"
+#include "misc/grid3d.hpp"
 #include <octomap_msgs/Octomap.h> 
 #include <octomap/OcTree.h>
 
@@ -28,36 +29,38 @@ public:
     
     struct ComputeDistanceObstaclesUAV 
     {
-        ComputeDistanceObstaclesUAV (pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points)
-        : kdT_(kdT_From_NN), o_p_(obstacles_Points)
+        ComputeDistanceObstaclesUAV (Grid3d *_grid_3D): _g_3D(_grid_3D)
         {
-    
         }
-
         bool operator()(const double *state1, double *near_) const 
         {
-            NearNeighbor nn;
 
-            nn.nearestObstacleStateCeres(kdT_ , state1[1],state1[2], state1[3], o_p_, near_[0], near_[1], near_[2]);
+            bool is_into_ = _g_3D->isIntoMap(state1[1], state1[2], state1[3]);
+			double d_[1];
+            if (is_into_)
+				d_[0] = _g_3D->getPointDist((double)state1[1], (double)state1[2], (double)state1[3]);
+			else
+				d_[0] = -1.0;
+
+            near_[0] = d_[0];
+
             return true;
         }
 
         double f_, sb_;
-        pcl::KdTreeFLANN <pcl::PointXYZ> kdT_;
-        pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_;
+        Grid3d *_g_3D;
     };
 
     struct ObstaclesFunctor 
     {
-        ObstaclesFunctor(double weight_factor, double safty_bound, pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points)
-            : wf_(weight_factor), sb_(safty_bound), kdT_(kdT_From_NN), o_p_(obstacles_Points)
+        ObstaclesFunctor(double weight_factor, double safty_bound, Grid3d *grid_3D_): wf_(weight_factor), sb_(safty_bound), g_3D_(grid_3D_)
         {
-            compute_nearest_distance.reset(new ceres::CostFunctionToFunctor<4,4>(
+            compute_nearest_distance.reset(new ceres::CostFunctionToFunctor<4,1>(
                                     new ceres::NumericDiffCostFunction<ComputeDistanceObstaclesUAV,
                                                                         ceres::CENTRAL, 
                                                                         4,
-                                                                        4>( 
-                                    new ComputeDistanceObstaclesUAV(kdT_, o_p_))));
+                                                                        1>( 
+                                    new ComputeDistanceObstaclesUAV(g_3D_))));
         }
 
         template <typename T>
@@ -66,7 +69,7 @@ public:
             // To avoid obstacles
             T d_uav_1;
             T arg_d_uav_1;
-            T n1_[4];
+            T n1_[1];
 
             (*compute_nearest_distance)(statePos1, n1_);
             arg_d_uav_1 = (statePos1[1]-n1_[0])*(statePos1[1]-n1_[0]) + (statePos1[2]-n1_[1])*(statePos1[2]-n1_[1]) + (statePos1[3]-n1_[2])*(statePos1[3]-n1_[2]);
@@ -79,27 +82,13 @@ public:
             T Diff_ = (sb_ - d_uav_1);
             residual[0] = wf_ * 100.0 * log(1.0 + exp(4.0*Diff_) ) ;
 
-            // if (Diff_ >= 0.0){
-                // // residual[0] = wf_ *10.0* (exp(10.0*Diff_) - 1.0) ;
-                // residual[0] = wf_ * log(1.0 + exp(4.0*Diff_) ) ;
-            // }
-            // else
-                // residual[0] = T{0.0};
-
-            // printf("ComputeDistanceObstaclesUAV \n");
-            // std::cout << "statePos1: " << statePos1[0] << std::endl;
-            // std::cout << "d_uav_1: " << d_uav_1 << " , sb_: " << sb_ << std::endl;
-            // std::cout << "residual[0]: " << residual[0] << std::endl;
 
             return true;
         }
 
         double wf_, sb_;
-        std::unique_ptr<ceres::CostFunctionToFunctor<4,4> > compute_nearest_distance;
-        pcl::KdTreeFLANN <pcl::PointXYZ> kdT_;
-        pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_;
-
-        std::unique_ptr<ceres::CostFunctionToFunctor<4,4,4> > ray_casting;
+        Grid3d *g_3D_;
+        std::unique_ptr<ceres::CostFunctionToFunctor<4,1> > compute_nearest_distance;
     };
 
 

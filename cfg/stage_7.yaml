@@ -6,5 +6,26 @@ test_1:
   initial_pos_ugv_pitch: 0.0
   initial_pos_ugv_roll: 0.0
 
+test_2:
+  initial_pos_ugv_x: -10.0
+  initial_pos_ugv_y: 6.5
+  initial_pos_ugv_z: 2.12
+  initial_pos_ugv_yaw:  0
+  initial_pos_ugv_pitch: 0.0
+  initial_pos_ugv_roll: 0.0
 
+test_3:
+  initial_pos_ugv_x: -6.0
+  initial_pos_ugv_y: -1.2
+  initial_pos_ugv_z: 2.12
+  initial_pos_ugv_yaw:  0
+  initial_pos_ugv_pitch: 0.0
+  initial_pos_ugv_roll: 0.0
 
+test_4:
+  initial_pos_ugv_x: -3.8
+  initial_pos_ugv_y: -5.0
+  initial_pos_ugv_z: 2.12
+  initial_pos_ugv_yaw:  0
+  initial_pos_ugv_pitch: 0.0
+  initial_pos_ugv_roll: 0.0

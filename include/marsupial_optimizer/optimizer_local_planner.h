@@ -46,6 +46,7 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "misc/catenary_solver_ceres.hpp"
 #include "misc/near_neighbor.hpp"
 #include "misc/data_management.hpp"
+#include "misc/grid3d.hpp"
 // #include "misc/bisection_catenary_3D.h"
 // #include "misc/marker_publisher.hpp"
 
@@ -88,6 +89,7 @@ using namespace std;
 using ceres::AutoDiffCostFunction;
 using ceres::NumericDiffCostFunction;
 using ceres::CENTRAL;
+using ceres::FORWARD;
 using ceres::CostFunction;
 using ceres::Problem;
 using ceres::Solve;
@@ -162,6 +164,7 @@ public:
 	double w_alpha_uav, w_alpha_ugv, w_beta_uav, w_beta_ugv, w_iota_ugv, w_iota_uav, w_theta_ugv, w_gamma_uav, w_gamma_ugv, w_kappa_ugv, w_kappa_uav, w_delta, w_delta_ugv; 
 	double w_epsilon, w_epsilon_ugv, w_zeta_uav , w_zeta_ugv, w_eta_1, w_eta_2, w_eta_3, w_lambda, w_mu_uav, w_nu_ugv;
 
+	Grid3d *grid_3D;
 	NearNeighbor nn_uav; // Kdtree used for Catenary and UAV
 	NearNeighbor nn_trav, nn_ugv_obs;
 	MarkerPublisher mp_;

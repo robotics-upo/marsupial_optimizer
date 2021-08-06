@@ -80,11 +80,11 @@ struct CatenaryFunctor {
 
 		id_marker_ = statePosUAV[0];
 				
-		if (safety_length>= stateCat[1]){
-			// ROS_ERROR ("state[%f] ,  Length_Catenary < dist_  ( [%f] < [%f] )",statePosUAV[0], stateCat[1], safety_length);
-		}
-		else
-			mP_.markerPoints(catenary_marker_, points_catenary, id_marker_, s_, catenary_marker_pub_);
+		// if (safety_length>= stateCat[1]){
+		// 	// ROS_ERROR ("state[%f] ,  Length_Catenary < dist_  ( [%f] < [%f] )",statePosUAV[0], stateCat[1], safety_length);
+		// }
+		// else
+		// 	mP_.markerPoints(catenary_marker_, points_catenary, id_marker_, s_, catenary_marker_pub_);
 
 		n_points_cat_dis = ceil(1.5*ceil(stateCat[1])); // parameter to ignore collsion points in the begining and in the end of catenary
 		if (n_points_cat_dis < 5)
@@ -114,23 +114,25 @@ struct CatenaryFunctor {
 		double dist_uav_ref = sqrt( pow(fp_ref_.x()-statePosUAV[1],2) + pow(fp_ref_.y()-statePosUAV[2],2) + pow(fp_ref_.z()-statePosUAV[3],2));
 		// double num_points_cat_above_obs_  = ((double)points_catenary.size() - (double)num_point_cat_nearest_coll_);
 
+		// I Constraint to make cable far away from obstacles
 		if (d_min[0] > sb_)
 			residual[0] = 0.0;
 		else	
 			residual[0] = wf_1 * 100.0 * (10.0*dist_uav_ref) * (exp(10.0*(sb_-d_min[0]) ) - 1.0);
 			// residual[0] = wf_ * 10.0 * num_points_cat_above_obs_ * (exp(10.0*(d_min[0]-sb_) ) - 1.0);
-		// Constraint to make length Cable longer than 
+		// II Constraint to make length Cable longer than 
 		if (stateCat[1] > safety_length)
 			residual[1] = 0.0;
 		else
 			residual[1] = wf_2 *100.0 * (exp(10.0*(safety_length - stateCat[1])) - 1.0);
 
+		// III Constraint to make cable not place below traversable map
 		residual[2] = wf_3 * 1000.0 * (exp(10.0* d_max_below_z[0]) - 1.0);
 
 
-		std::cout << "residual[0] = " <<residual[0] << " , dist_uav_ref= " << dist_uav_ref << " , d_min[0]= " << d_min[0] << " , sb_= " << sb_ << std::endl;
-		std::cout << "residual[1] = " <<residual[1] << " , ["<< stateCat[0] << "]stateCat[1]= " << stateCat[1] << " , safety_length= " << safety_length << std::endl;
-		std::cout << "residual[2] = " <<residual[2] << " , d_max_below_z[0]= " << d_max_below_z[0] << std::endl;
+		// std::cout << "residual[0] = " <<residual[0] << " , dist_uav_ref= " << dist_uav_ref << " , d_min[0]= " << d_min[0] << " , sb_= " << sb_ << std::endl;
+		// std::cout << "residual[1] = " <<residual[1] << " , ["<< stateCat[0] << "]stateCat[1]= " << stateCat[1] << " , safety_length= " << safety_length << std::endl;
+		// std::cout << "residual[2] = " <<residual[2] << " , d_max_below_z[0]= " << d_max_below_z[0] << std::endl;
 
 		return true;
     }

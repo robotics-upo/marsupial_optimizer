@@ -84,6 +84,9 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(tf2_ros::Buffer *tfBuffer_)
 	pos_reel_ugv.y = pos_reel_y;
 	pos_reel_ugv.z = pos_reel_z;
 
+	std::string node_name_ = "grid3D_to_optimizer_node";
+	grid_3D = new Grid3d(node_name_);
+
 	initializeSubscribers();
 	initializePublishers();
 	setupOptimizer();
@@ -473,9 +476,8 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	// printf("            distance_obstacle_uav = %f\n",distance_obstacle_uav);
 	/*** Cost Function II-iii : Obstacles constrain UAV***/
 	for (int i = 0; i < statesPosUAV.size(); ++i) {
-    	CostFunction* cost_function2_4  = new AutoDiffCostFunction<ObstacleDistanceFunctorUAV::ObstaclesFunctor, 1, 4>
-										 (new ObstacleDistanceFunctorUAV::ObstaclesFunctor(w_beta_uav, distance_obstacle_uav, nn_uav.kdtree, 
-										  nn_uav.obs_points)); 
+    	CostFunction* cost_function2_4  = new AutoDiffCostFunction<ObstacleDistanceFunctorUAV::ObstaclesFunctor , 1, 4>
+										 (new ObstacleDistanceFunctorUAV::ObstaclesFunctor (w_beta_uav, distance_obstacle_uav, grid_3D)); 
     	problem.AddResidualBlock(cost_function2_4, NULL, statesPosUAV[i].parameter);
   	}
 
@@ -528,22 +530,22 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 								statesTimeUAV[i+1].parameter, statesTimeUAV[i+2].parameter);
 	}
 
-
-	/*** Cost Function VII : Catenary constrain  ***/
+	// /*** Cost Function VII : Catenary constrain  ***/
 	// for (int i = 0; i < statesLength.size(); ++i) {
-	// 	CostFunction* cost_function7  = new NumericDiffCostFunction<CatenaryFunctor, CENTRAL, 3, 4, 4, 5, 2>
-	// 									(new CatenaryFunctor(w_eta*10, distance_catenary_obstacle, nn_uav.kdtree, nn_uav.obs_points, nn_trav.kdtree, nn_trav.obs_points, pos_reel_ugv, size, nh)); 
-	// 	problem.AddResidualBlock(cost_function7, NULL, statesPosUAV[i].parameter, statesPosUGV[i].parameter, statesRotUGV[i].parameter, statesLength[i].parameter);
+	// 	CostFunction* cost_function7  = new AutoDiffCostFunction<CatenaryFunctor::ComputeCatenary, 3, 4, 4, 2>
+	// 								   (new CatenaryFunctor::ComputeCatenary(w_eta_1, w_eta_2, w_eta_3, distance_catenary_obstacle, grid_3D, 
+	// 								   nn_trav.kdtree, nn_trav.obs_points, pos_reel_ugv, size, pos_reel_z, new_path_uav[i], nh)); 
+	// 	problem.AddResidualBlock(cost_function7, NULL, statesPosUAV[i].parameter, statesPosUGV[i].parameter, statesLength[i].parameter);
 	// 	if (i == 0)
 	// 		problem.SetParameterBlockConstant(statesLength[i].parameter);
 	// 	else{
 	// 		problem.SetParameterLowerBound(statesLength[i].parameter, 1, 0.1);
 	// 		problem.SetParameterUpperBound(statesLength[i].parameter, 1, length_tether_max);
-	// 	}	
-	// }
+	// 	}
+	// }	
 	/*** Cost Function VII : Catenary constrain  ***/
 	for (int i = 0; i < statesLength.size(); ++i) {
-		CostFunction* cost_function7  = new NumericDiffCostFunction<CatenaryFunctor, CENTRAL, 3, 4, 4, 2>
+		CostFunction* cost_function7  = new NumericDiffCostFunction<CatenaryFunctor, FORWARD, 3, 4, 4, 2>
 									   (new CatenaryFunctor(w_eta_1, w_eta_2, w_eta_3, distance_catenary_obstacle, nn_uav.kdtree, 
 									   	nn_uav.obs_points, nn_trav.kdtree, nn_trav.obs_points, pos_reel_ugv, size, pos_reel_z, 
 										new_path_uav[i], nh)); 
@@ -664,7 +666,6 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	}
 
 	cleanVectors();		//Clear vector after optimization and previus the next iteration
-	ros::Duration(10.0).sleep();
 
 	if (n_coll_opt_traj_ugv_ == 0 && n_coll_opt_traj_uav_ == 0){
 		ROS_INFO("		Optimizer Local Planner: Goal position successfully achieved through optimization trajectory\n");
@@ -685,7 +686,6 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	}
 
   	std::cout << "==================================================="<< std::endl << std::endl;
-
 }
 
 
@@ -1150,7 +1150,8 @@ void OptimizerLocalPlanner::getKinematicTrajectory(vector<Eigen::Vector3d> v_pos
 
 }
 
-void OptimizerLocalPlanner::postProcessingCatenary(){
+void OptimizerLocalPlanner::postProcessingCatenary()
+{
 	// Staff for fost-proccessing of catenary length
 	parameterBlockLength parameter_block_post_length;
 	statesPostLength.clear();

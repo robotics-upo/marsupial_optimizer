@@ -145,7 +145,8 @@ inline Eigen::Vector3d NearNeighbor::nearestTraversabilityMarsupial(const pcl::K
 	if ( kdT_.radiusSearch (searchPoint_, radius_, pointIdxRadiusSearch_, pointRadiusSquaredDistance_) > 0 )
   	{
   	  for (std::size_t i = 0; i < pointIdxRadiusSearch_.size (); ++i){
-		if (o_p_->points[ pointIdxRadiusSearch_[i] ].x == vert_.x() && o_p_->points[ pointIdxRadiusSearch_[i] ].y == vert_.y() && 
+		if (o_p_->points[ pointIdxRadiusSearch_[i] ].x < vert_.x() + 0.1 && o_p_->points[ pointIdxRadiusSearch_[i] ].x > vert_.x() - 0.1 && 
+		    o_p_->points[ pointIdxRadiusSearch_[i] ].y < vert_.y() + 0.1 && o_p_->points[ pointIdxRadiusSearch_[i] ].y > vert_.y() - 0.1 &&
 			o_p_->points[ pointIdxRadiusSearch_[i] ].z > z_aux_){
 
 			ret_.x() = o_p_->points[ pointIdxRadiusSearch_[i] ].x;
