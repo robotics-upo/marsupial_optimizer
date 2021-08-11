@@ -5,48 +5,79 @@
 #include "glog/logging.h"
 #include "Eigen/Core"
 
-using ceres::AutoDiffCostFunction;
+using ceres::SizedCostFunction;
 using ceres::CostFunction;
 using ceres::Problem;
 using ceres::Solve;
 using ceres::Solver;
+using ceres::HuberLoss;
 
-class EquiDistanceFunctorUGV 
+class EquiDistanceFunctorUGV : public SizedCostFunction<1, 4, 4> 
 {
-
   public:
-    EquiDistanceFunctorUGV(double weight_factor, double initial_distance_ugv): wf_(weight_factor), int_d_ugv(initial_distance_ugv) {}
+    EquiDistanceFunctorUGV(double weight_factor, double initial_distance_ugv)
+    :wf_(weight_factor), int_d_ugv(initial_distance_ugv)
+    {
 
-    template <typename T>
-    bool operator()(const T* const statePos1, const T* const statePos2, T* residual) const 
-    {  
-      T arg_d_pos_ugv, d_pos_ugv, arg_D, _D ;
+    }
+
+    virtual ~EquiDistanceFunctorUGV(void) 
+    {
+
+    }
+
+    virtual bool Evaluate(double const* const* parameters, double* residuals, double** jacobians) const {
+
+      double a0 = parameters[0][0];
+      double a1 = parameters[0][1];
+      double a2 = parameters[0][2];
+      double a3 = parameters[0][3];
+
+      double b0 = parameters[1][0];
+      double b1 = parameters[1][1];
+      double b2 = parameters[1][2];
+      double b3 = parameters[1][3];
+      
+      double arg_d_pos_ugv, d_pos_ugv;
+      double factor_ = 10.0;
       
       //Get distance between two consecutive poses
-      arg_d_pos_ugv= (pow(statePos1[1]-statePos2[1],2)) + pow(statePos1[2]-statePos2[2],2) + pow(statePos1[3]-statePos2[3],2);
+      arg_d_pos_ugv= (pow(a1-b1,2)) + pow(a2-b2,2) + pow(a3-b3,2);
       if(arg_d_pos_ugv< 0.0001 && arg_d_pos_ugv > -0.0001)
-        d_pos_ugv = T{0.0};
+        d_pos_ugv = 0.0;
       else
         d_pos_ugv = sqrt(arg_d_pos_ugv);
 
-      // arg_D = (d_pos_ugv - int_d_ugv) * (d_pos_ugv - int_d_ugv);
-      // if(arg_D< 0.0001 && arg_D > -0.0001)
-      //   _D = T{0.0};
-      // else
-      //   _D = sqrt(arg_D);
-      
       if (d_pos_ugv < 0.001)
-         residual[0] = T{0.0};
+         residuals[0] = 0.0;
       else
-         residual[0] = wf_ * 10.0 * ( exp(2.0*(d_pos_ugv - int_d_ugv)) );
+         residuals[0] = wf_ * factor_ * ( exp(2.0*(d_pos_ugv - int_d_ugv)) );
 
-        // residual[0] = wf_ * 10.0 * (d_pos_ugv - int_d_ugv);
-
-      // std::cout<< "Equi-Distance UGV" << std::endl;
-      // std::cout<< "d_pos_ugv= " << d_pos_ugv <<" , residual[0]= " << residual[0] << std::endl;
+       if (jacobians != NULL && jacobians[0] != NULL) 
+        {
+          if (d_pos_ugv < 0.001){
+            jacobians[0][0] = 0.0;
+            jacobians[0][1] = 0.0;
+            jacobians[0][2] = 0.0;
+            jacobians[0][3] = 0.0;
+            jacobians[1][0] = 0.0;
+            jacobians[1][1] = 0.0;
+            jacobians[1][2] = 0.0;
+            jacobians[1][3] = 0.0;
+          }
+          else{
+            jacobians[0][0] = 0.0;
+            jacobians[0][1] = (factor_*wf_*exp(2.0*sqrt((a1 - b1)*(a1 - b1) + (a2 - b2)*(a2 - b2) + (a3 - b3)*(a3 - b3)) - 2.0*int_d_ugv)*(2.0*a1 - 2.0*b1))/sqrt((a1 - b1)*(a1 - b1) + (a2 - b2)*(a2 - b2) + (a3 - b3)*(a3 - b3));
+            jacobians[0][2] = (factor_*wf_*exp(2.0*sqrt((a1 - b1)*(a1 - b1) + (a2 - b2)*(a2 - b2) + (a3 - b3)*(a3 - b3)) - 2.0*int_d_ugv)*(2.0*a2 - 2.0*b2))/sqrt((a1 - b1)*(a1 - b1) + (a2 - b2)*(a2 - b2) + (a3 - b3)*(a3 - b3));
+            jacobians[0][3] = (factor_*wf_*exp(2.0*sqrt((a1 - b1)*(a1 - b1) + (a2 - b2)*(a2 - b2) + (a3 - b3)*(a3 - b3)) - 2.0*int_d_ugv)*(2.0*a3 - 2.0*b3))/sqrt((a1 - b1)*(a1 - b1) + (a2 - b2)*(a2 - b2) + (a3 - b3)*(a3 - b3));
+            jacobians[1][0] = 0.0;
+            jacobians[1][1] = -(factor_*wf_*exp(2.0*sqrt((a1 - b1)*(a1 - b1) + (a2 - b2)*(a2 - b2) + (a3 - b3)*(a3 - b3)) - 2.0*int_d_ugv)*(2.0*a1 - 2.0*b1))/sqrt((a1 - b1)*(a1 - b1) + (a2 - b2)*(a2 - b2) + (a3 - b3)*(a3 - b3));
+            jacobians[1][2] = -(factor_*wf_*exp(2.0*sqrt((a1 - b1)*(a1 - b1) + (a2 - b2)*(a2 - b2) + (a3 - b3)*(a3 - b3)) - 2.0*int_d_ugv)*(2.0*a2 - 2.0*b2))/sqrt((a1 - b1)*(a1 - b1) + (a2 - b2)*(a2 - b2) + (a3 - b3)*(a3 - b3));
+            jacobians[1][3] = -(factor_*wf_*exp(2.0*sqrt((a1 - b1)*(a1 - b1) + (a2 - b2)*(a2 - b2) + (a3 - b3)*(a3 - b3)) - 2.0*int_d_ugv)*(2.0*a3 - 2.0*b3))/sqrt((a1 - b1)*(a1 - b1) + (a2 - b2)*(a2 - b2) + (a3 - b3)*(a3 - b3));
+          }
+        }
 
       return true;
-
     }
 
     double wf_, int_d_ugv;

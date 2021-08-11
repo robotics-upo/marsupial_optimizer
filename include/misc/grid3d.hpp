@@ -24,6 +24,7 @@
 #include <pcl/registration/ndt.h>
 #include <pcl/filters/approximate_voxel_grid.h>
 
+
 struct TrilinearParams
 {
 	float a0, a1, a2, a3, a4, a5, a6, a7;
@@ -276,7 +277,8 @@ public:
 	
 	bool isIntoMap(double x, double y, double z)
 	{
-		return (x >= min_X && y >= min_Y && z >= min_Z && x < max_X && y < max_Y && z < max_Z);
+		// printf("x=[%f / %f / %f]  y=[%f / %f / %f]  z=[%f / %f / %f]\n", min_X, x, max_X, min_Y, y, max_Y, min_Z, z, max_Z);
+		return (x >= min_X && y >= min_Y && z >= min_Z && x <= max_X && y <= max_Y && z <= max_Z);
 	}
 
 	double getPointDist(double x, double y, double z)
@@ -292,7 +294,7 @@ public:
 	TrilinearParams getPointDistInterpolation(double x, double y, double z)
 	{
 		TrilinearParams r;
-		if(x >= 0.0 && y >= 0.0 && z >= 0.0 && x < m_maxX && y < m_maxY && z < m_maxZ)
+		if(x >= min_X && y >= min_Y && z >= min_Z && x < max_X && y < max_Y && z < max_Z)
 			r = m_triGrid[point2grid(x, y, z)];
 		return r;
 	}
@@ -312,12 +314,12 @@ public:
 		double size = m_gridSizeX*m_gridSizeY*m_gridSizeZ;
 		double x0, y0, z0, x1, y1, z1;
 		double div = -1.0/(m_resolution*m_resolution*m_resolution);
-		for(iz=0, z0=0.0, z1=m_resolution; iz<m_gridSizeZ-1; iz++, z0+=m_resolution, z1+=m_resolution)
+		for(iz=0, z0=min_Z, z1=min_Z+m_resolution; iz<m_gridSizeZ-1; iz++, z0+=m_resolution, z1+=m_resolution)
 		{
 			printf("Computing trilinear interpolation map: : %3.2lf%%        \r", count/size * 100.0);
-			for(iy=0, y0=0.0, y1=m_resolution; iy<m_gridSizeY-1; iy++, y0+=m_resolution, y1+=m_resolution)
+			for(iy=0, y0=min_Y, y1=min_Y+m_resolution; iy<m_gridSizeY-1; iy++, y0+=m_resolution, y1+=m_resolution)
 			{
-				for(ix=0, x0=0.0, x1=m_resolution; ix<m_gridSizeX-1; ix++, x0+=m_resolution, x1+=m_resolution)
+				for(ix=0, x0=min_X, x1=min_X+m_resolution; ix<m_gridSizeX-1; ix++, x0+=m_resolution, x1+=m_resolution)
 				{
 					double c000, c001, c010, c011, c100, c101, c110, c111;
 					TrilinearParams p;
@@ -331,6 +333,15 @@ public:
 					c101 = m_grid[(ix+1) + (iy+0)*m_gridStepY + (iz+1)*m_gridStepZ].dist;
 					c110 = m_grid[(ix+1) + (iy+1)*m_gridStepY + (iz+0)*m_gridStepZ].dist;
 					c111 = m_grid[(ix+1) + (iy+1)*m_gridStepY + (iz+1)*m_gridStepZ].dist;
+
+					// printf("point[%i %i %i]  c:[%i %i %i %i %i %i %i %i]\n",ix, iy, iz,(ix+0) + (iy+0)*m_gridStepY + (iz+0)*m_gridStepZ,
+					// 																  (ix+0) + (iy+0)*m_gridStepY + (iz+1)*m_gridStepZ,
+					// 																  (ix+0) + (iy+1)*m_gridStepY + (iz+0)*m_gridStepZ,
+					// 																  (ix+0) + (iy+1)*m_gridStepY + (iz+1)*m_gridStepZ,
+					// 																  (ix+1) + (iy+0)*m_gridStepY + (iz+0)*m_gridStepZ,
+					// 																  (ix+1) + (iy+0)*m_gridStepY + (iz+1)*m_gridStepZ,
+					// 																  (ix+1) + (iy+1)*m_gridStepY + (iz+0)*m_gridStepZ,
+					// 																  (ix+1) + (iy+1)*m_gridStepY + (iz+1)*m_gridStepZ);
 					
 					p.a0 = (-c000*x1*y1*z1 + c001*x1*y1*z0 + c010*x1*y0*z1 - c011*x1*y0*z0 
 					+ c100*x0*y1*z1 - c101*x0*y1*z0 - c110*x0*y0*z1 + c111*x0*y0*z0)*div;
@@ -434,6 +445,8 @@ public:
 
 		return true;
 	}
+
+	std::ofstream ofs;
 
 protected:
 
@@ -607,6 +620,10 @@ protected:
 	void computeGrid(void)
 	{
 		printf("\n \tReady to Compute Grid 3D\n");
+		std::string name_output_file = "/home/simon/grid_stage_1.txt";
+		std::cout << "Saving data in output file for Grid3D : " << name_output_file << std::endl;
+
+		ofs.open(name_output_file.c_str(), std::ofstream::app);
 		//Publish percent variable
 		std_msgs::Float32 percent_msg;
 		percent_msg.data = 0;
@@ -647,25 +664,33 @@ protected:
 					percent = count/size *100.0;
 					ROS_INFO_THROTTLE(0.5,"Progress: %lf %%", percent);	
 
-					// printf("index=[%i] m_resolution=[%f] searchPoint=[%f %f %f] ",index, m_resolution, searchPoint.x, searchPoint.y, searchPoint.z);
+					printf("index=[%i] m_resolution=[%f] searchPoint=[%f %f %f] ",index, m_resolution, searchPoint.x, searchPoint.y, searchPoint.z);
 					
 					if(m_kdtree.nearestKSearch(searchPoint, 1, pointIdxNKNSearch, pointNKNSquaredDistance) > 0)
 					{
 						dist = pointNKNSquaredDistance[0];
 						m_grid[index].dist = sqrt(dist);
 						m_grid[index].prob = gaussConst1*exp(-dist*dist*gaussConst2);
-						// m_grid[index].prob = 0.0;
 					}
 					else
 					{
 						m_grid[index].dist = -1.0;
 						m_grid[index].prob =  0.0;
 					}
-					// printf(" , m_grid.dist= %f , m_grid.prob=%f\n", m_grid[index].dist, m_grid[index].prob);
+					printf(" , m_grid.dist= %f , m_grid.prob=%f\n", m_grid[index].dist, m_grid[index].prob);
 
+
+					if (ofs.is_open()) {
+						ofs << "index=["<< index << "] m_resolution=[" << m_resolution << "] searchPoint=[" << searchPoint.x << " " <<searchPoint.y<< " " 
+						<< searchPoint.z << "]  , m_grid.dist= "<< m_grid[index].dist << " , m_grid.prob= " << m_grid[index].prob << " ;" << std::endl;
+					} 
+					else 
+						std::cout << "Couldn't be open the output data file for Grid3D" << std::endl;
 				}
 			}
 		}
+		ofs.close();
+
 	}
 	
 	void buildGridSliceMsg(float z)
@@ -707,14 +732,12 @@ protected:
 	
 	inline int point2grid(const float &x, const float &y, const float &z)
 	{
-		int value_ = round((x-min_X)*m_oneDivRes) + round((y-min_Y)*m_oneDivRes*m_gridStepY) + round((z-min_Z)*m_oneDivRes*m_gridStepZ);
-		// printf("x= %f , min_X= %f\n",x,	min_X);
-		// printf("y= %f , min_Z= %f\n",y,	min_Y);
-		// printf("z= %f , min_Z= %f\n",z,	min_Z);
-		// printf("for X: %f\n",((x-min_X)*m_oneDivRes));
-		// printf("for Y: %f\n",((y-min_Y)*m_oneDivRes*m_gridStepY));
-		// printf("for Z: %f\n",round((z-min_Z)*m_oneDivRes*m_gridStepZ));
-		// printf("point2grid:  value_= %i , m_oneDivRes=%f , m_gridStepY=%i , m_gridStepZ=%i \n",value_, m_oneDivRes, m_gridStepY, m_gridStepZ);
+		int value_ = (round((x-min_X)*m_oneDivRes)) + round((y-min_Y)*m_oneDivRes)*m_gridStepY + round((z-min_Z)*m_oneDivRes)*m_gridStepZ;
+		// printf("x= %f , y= %f , z= %f / min_X= %f , min_Y= %f , min_Z= %f \n",x, y, z, min_X, min_Y, min_Z);
+		// printf("for X: %f",round((x-min_X)*m_oneDivRes));
+		// printf(" , for Y: %f ",round((y-min_Y)*m_oneDivRes)*m_gridStepY);
+		// printf(" , for Z: %f\n",round((z-min_Z)*m_oneDivRes)*m_gridStepZ);
+		// printf("point2grid:  index_= %i , m_oneDivRes=%f , m_gridStepY=%i , m_gridStepZ=%i \n",value_, m_oneDivRes, m_gridStepY, m_gridStepZ);
 		return value_;
 	}
 };

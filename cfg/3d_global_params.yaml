@@ -2,7 +2,7 @@
 show_config: true
 debug: true
 
-map_resolution: 0.1
+map_resolution: 0.05
 
 map_h_inflaction: 0.1
 map_v_inflaction: 0.1

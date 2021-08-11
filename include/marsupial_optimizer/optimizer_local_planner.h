@@ -121,7 +121,8 @@ class OptimizerLocalPlanner
 public:
 
 	// =========== Function declarations =============
-	OptimizerLocalPlanner(tf2_ros::Buffer *tfBuffer_);
+	OptimizerLocalPlanner();
+	// OptimizerLocalPlanner(tf2_ros::Buffer tfBuffer_);
 	// ~OptimizerLocalPlanner();
 	void setupOptimizer();
 	void initializeSubscribers();
@@ -151,7 +152,11 @@ public:
 	// ============= Global Variables ================
 
 	ros::NodeHandlePtr nh;
-	tf2_ros::Buffer *tfBuffer;
+	// tf2_ros::Buffer *tfBuffer;
+    std::shared_ptr<tf2_ros::Buffer> tfBuffer;
+    std::unique_ptr<tf2_ros::TransformListener> tf2_list;
+
+
 
 	Solver::Options options;
   	Solver::Summary summary;
@@ -159,16 +164,20 @@ public:
 	tf::TransformListener listener;
 
 	std::string path, name_output_file;
+
+    double map_resolution;
+	float step , step_inv;
+	
 	int n_iter_opt;	//Iterations Numbers of Optimizer
 	double distance_catenary_obstacle,min_distance_add_new_point,dynamic_catenary, initial_distance_states_ugv, initial_distance_states_uav;
 	double w_alpha_uav, w_alpha_ugv, w_beta_uav, w_beta_ugv, w_iota_ugv, w_iota_uav, w_theta_ugv, w_gamma_uav, w_gamma_ugv, w_kappa_ugv, w_kappa_uav, w_delta, w_delta_ugv; 
 	double w_epsilon, w_epsilon_ugv, w_zeta_uav , w_zeta_ugv, w_eta_1, w_eta_2, w_eta_3, w_lambda, w_mu_uav, w_nu_ugv;
 
-	Grid3d *grid_3D;
 	NearNeighbor nn_uav; // Kdtree used for Catenary and UAV
 	NearNeighbor nn_trav, nn_ugv_obs;
 	MarkerPublisher mp_;
 	DataManagement dm_;
+	Grid3d* grid_3D;
 
 	//! Manage Data Vertices and Edges
     std::unique_ptr<ExecutePathServer> execute_path_srv_ptr;

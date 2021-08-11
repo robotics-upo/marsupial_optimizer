@@ -6,7 +6,7 @@ ws_x_max: 3
 ws_y_max: 3
 ws_z_max: 0.8
 
-map_resolution: 0.1
+map_resolution: 0.05
 
 map_h_inflaction: 0.4
 map_v_inflaction: 0.4
