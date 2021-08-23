@@ -16,7 +16,9 @@ class KinematicsFunctorUAV
 {
 
 public:
-  KinematicsFunctorUAV(double weight_factor, double angle_bound): wf_(weight_factor), ang_(angle_bound) {}
+  KinematicsFunctorUAV(double weight_factor, double angle_bound)
+  : wf_(weight_factor), ang_(angle_bound) 
+  {}
 
   	template <typename T>
  	bool operator()(const T* const statePos1, const T* const statePos2, const T* const statePos3, T* residual) const 
@@ -29,8 +31,8 @@ public:
 		//Compute norm of vectors
 		T arg1 = (vector1[0] * vector1[0]) + (vector1[1] * vector1[1]) + (vector1[2] * vector1[2]);
 		T arg2 = (vector2[0] * vector2[0]) + (vector2[1] * vector2[1]) + (vector2[2] * vector2[2]);
-		T norm_vector1;
-		T norm_vector2;
+		T norm_vector1, norm_vector2, cos_angle;
+		
 		if (arg1 < 0.0001 && arg1 > -0.0001)
 			norm_vector1 = T{0.0};
 		else
@@ -41,19 +43,38 @@ public:
 			norm_vector2 = sqrt(arg2);
 			
 		// Compute cos(angle)	
-		T cos_angle = dot_product/(norm_vector1 * norm_vector2);
-		double bound = cos(ang_);
-
-		//Compute Residual
-		if ( cos_angle > bound) 
-			residual[0] = T(0.0);
+		if (norm_vector1 < 0.0001 || norm_vector2 < 0.0001)
+			cos_angle = T{0.0};
 		else
-			residual[0] =  wf_ * 100.0 * (cos_angle - 1.0);
-		
-		// std::cout<< "KinematicsFunctorUAV" << std::endl;
-		// std::cout<< "cos_angle= " << cos_angle <<" , bound= " << bound << std::endl;
-		// std::cout<< "residual[0]= " << residual[0] << std::endl;
+			cos_angle = dot_product/(norm_vector1 * norm_vector2);
 
+
+		// double bound = cos(ang_);
+		// double factor_ = 10.0;
+        // double f_slope_ = -4.0;
+		// if ( cos_angle > bound) 
+		// 	residual[0] = T(0.0);
+		// else{
+		// 	residual[0] =  wf_ * 100.0 * (cos_angle - 1.0);
+		// }	
+		T bound = T{cos(ang_)};
+		T b_;
+		T max_value_residual = T{100.0};
+        T min_value_residual = T{0.0};
+        T value_dependent2 = T{-1.0};
+        T value_dependent1 = T{bound};
+        T m ;
+        if ( cos_angle > bound){
+            m = T{0.0};
+			b_ = T{1.0};
+		} else{
+            m = (max_value_residual- min_value_residual)/(value_dependent2 - value_dependent1);
+			b_ = bound;
+		}	
+		residual[0] =  wf_ * m * (cos_angle - b_);
+        
+		// std::cout << "KinematicsFunctorUAV["<<statePos1[0] <<","<<statePos2[0]<<","<<statePos3[0]<<"] , residual[0]= "<< residual[0] << " , cos_angle= " << cos_angle << " , b_= " << b_ << std::endl;
+		
 		return true;
   	}
 

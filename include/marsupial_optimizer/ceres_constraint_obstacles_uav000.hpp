@@ -10,10 +10,7 @@
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/point_types.h>
 
-#include "misc/near_neighbor.hpp"
 #include "misc/grid3d.hpp"
-#include <octomap_msgs/Octomap.h> 
-#include <octomap/OcTree.h>
 
 using ceres::SizedCostFunction;
 using ceres::CostFunction;
@@ -26,9 +23,8 @@ using ceres::HuberLoss;
 class ObstacleDistanceFunctorUAV : public SizedCostFunction<1, 4>  
 {
 public:
-    ObstacleDistanceFunctorUAV(double weight_factor, double safty_bound, float step_, float step_inv_, Grid3d* grid_3D_, pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, 
-                     pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points)
-                     : wf_(weight_factor), sb_(safty_bound), s_(step_), s_i_(step_inv_), g_3D_(grid_3D_) , kdT_(kdT_From_NN), o_p_(obstacles_Points)
+    ObstacleDistanceFunctorUAV(double weight_factor, double safty_bound, Grid3d* grid_3D_)
+                     : wf_(weight_factor), sb_(safty_bound), g_3D_(grid_3D_) 
     {
     }
 
@@ -43,16 +39,8 @@ public:
         double y = parameters[0][2];
         double z = parameters[0][3];
         double factor_ = 100.0;
-        double f_slope_ = 4.0;
+        double f_slope_ = 5.0;
 
-
-        bool is_into_ = g_3D_->isIntoMap(x, y, z);
-        double d_;
-        if (is_into_ )
-		    d_ = g_3D_->getPointDist(x, y, z);
-        else
-            d_ = -1.0;
-		
         TrilinearParams d = g_3D_->getPointDistInterpolation(x, y, z);
 
         // Obtenemos parametros de interpolación del grid en X, y, Z
@@ -60,6 +48,7 @@ public:
         double value_sb_ = sb_*sb_;
         double value_exp_ =exp(-f_slope_*(- value_sb_ + value_));
         residuals[0] = wf_ * factor_ * log(1.0 + value_exp_ ) ;
+        printf("obstacleDistanceFunctorUAV[%f]:  residuals[0] =[%f] value_=%f value_sb_=%f\n",t,residuals[0],value_,value_sb_);
 
         if (jacobians != NULL && jacobians[0] != NULL) 
         {
@@ -67,16 +56,13 @@ public:
             jacobians[0][1] = -(f_slope_*factor_*wf_*value_exp_*(d.a1 + d.a4*y + d.a5*z + d.a7*y*z))/(value_exp_ + 1.0);
             jacobians[0][2] = -(f_slope_*factor_*wf_*value_exp_*(d.a2 + d.a4*x + d.a6*z + d.a7*x*z))/(value_exp_ + 1.0);
             jacobians[0][3] = -(f_slope_*factor_*wf_*value_exp_*(d.a3 + d.a5*x + d.a6*y + d.a7*x*y))/(value_exp_ + 1.0);
+            // printf("obstacleDistanceFunctorUAV: jacobians[0]=[%f,%f,%f,%f]\n",jacobians[0][0],jacobians[0][1],jacobians[0][2],jacobians[0][3]);
         }
-
         return true;
     }
 
     double wf_, sb_;
-    float s_, s_i_;
     Grid3d* g_3D_;
-    pcl::KdTreeFLANN <pcl::PointXYZ> kdT_;
-    pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_;
 
 private:
 

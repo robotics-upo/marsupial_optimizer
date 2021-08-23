@@ -283,6 +283,7 @@ public:
 
 	double getPointDist(double x, double y, double z)
 	{
+		// printf("getPointDist: point2grid(x, y, z)=%i\n",point2grid(x, y, z));
 		return m_grid[point2grid(x, y, z)].dist;
 	}
 
@@ -294,8 +295,10 @@ public:
 	TrilinearParams getPointDistInterpolation(double x, double y, double z)
 	{
 		TrilinearParams r;
-		if(x >= min_X && y >= min_Y && z >= min_Z && x < max_X && y < max_Y && z < max_Z)
+		if(x >= min_X && y >= min_Y && z >= min_Z && x < max_X && y < max_Y && z < max_Z){
+			// printf("getPointDistInterpolation: point2grid(x, y, z)=%i\n",point2grid(x, y, z));
 			r = m_triGrid[point2grid(x, y, z)];
+		}
 		return r;
 	}
 
@@ -620,7 +623,7 @@ protected:
 	void computeGrid(void)
 	{
 		printf("\n \tReady to Compute Grid 3D\n");
-		std::string name_output_file = "/home/simon/grid_stage_1.txt";
+		std::string name_output_file = "/home/simon/grid_stage.txt";
 		std::cout << "Saving data in output file for Grid3D : " << name_output_file << std::endl;
 
 		ofs.open(name_output_file.c_str(), std::ofstream::app);
@@ -664,7 +667,7 @@ protected:
 					percent = count/size *100.0;
 					ROS_INFO_THROTTLE(0.5,"Progress: %lf %%", percent);	
 
-					printf("index=[%i] m_resolution=[%f] searchPoint=[%f %f %f] ",index, m_resolution, searchPoint.x, searchPoint.y, searchPoint.z);
+					// printf("index=[%i] m_resolution=[%f] searchPoint=[%f %f %f] ",index, m_resolution, searchPoint.x, searchPoint.y, searchPoint.z);
 					
 					if(m_kdtree.nearestKSearch(searchPoint, 1, pointIdxNKNSearch, pointNKNSquaredDistance) > 0)
 					{
@@ -677,7 +680,7 @@ protected:
 						m_grid[index].dist = -1.0;
 						m_grid[index].prob =  0.0;
 					}
-					printf(" , m_grid.dist= %f , m_grid.prob=%f\n", m_grid[index].dist, m_grid[index].prob);
+					// printf(" , m_grid.dist= %f , m_grid.prob=%f\n", m_grid[index].dist, m_grid[index].prob);
 
 
 					if (ofs.is_open()) {

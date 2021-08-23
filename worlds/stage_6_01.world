@@ -1966,6 +1966,7 @@
       <allow_auto_disable>1</allow_auto_disable>
       <pose frame=''>0.713063 -0.589669 2.14 0 -1e-06 0.001953</pose>
     </model>
-  
+    <plugin name='gazebo_octomap' filename='librotors_gazebo_octomap_plugin.so'/>
+
   </world>
 </sdf>

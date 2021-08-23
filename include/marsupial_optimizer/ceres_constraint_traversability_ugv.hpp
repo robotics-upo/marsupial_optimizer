@@ -54,7 +54,7 @@ public:
         {
             compute_nearest_distance.reset(new ceres::CostFunctionToFunctor<4,4>(
                                     new ceres::NumericDiffCostFunction<ComputeDistanceTraversability,
-                                                                        ceres::CENTRAL, 
+                                                                        ceres::FORWARD, 
                                                                         4,
                                                                         4>( 
                                     new ComputeDistanceTraversability(kdT_, o_p_))));
@@ -63,16 +63,27 @@ public:
         template <typename T>
         bool operator()(const T* const statePos,  T* residual) const 
         {
-            T d_ugv_;
-            T n_[4];
+            T d_ugv_, n_[4], bound;
             (*compute_nearest_distance)(statePos, n_);
 
             d_ugv_ = (statePos[3]-n_[2])*(statePos[3]-n_[2]); // To the closest point to traversavility PC is only consider distance in Z axe
-
-            double bound_dist = 0.01;
-            double bound = exp(bound_dist); // To make 0.0 residual 
+            bound = T{0.001};  // Bound maximum distance above UGV traversability map
             
-            residual[0] =  wf_ * 1000.0 * (exp(4.0*d_ugv_) - bound);
+            // residual[0] =  wf_ * 1000.0 * (exp(4.0*d_ugv_) - bound);
+
+            T max_value_residual = T{50.0};
+            T min_value_residual = T{0.0};
+            T value_dependent2 = T{0.2};
+            T value_dependent1 = T{bound};
+            T m ;
+            if ( bound > d_ugv_ )
+                m = T{0.0};
+            else
+                m = (max_value_residual- min_value_residual)/(value_dependent2 - value_dependent1);
+
+            residual[0] =  wf_ * m * (d_ugv_ - bound);
+
+		    std::cout << "TraversabilityFunctor["<<statePos[0] <<"] , residual[0]= "<< residual[0] << " , d_ugv_= " << d_ugv_ << " , bound= " << bound << std::endl;
 
             return true;
         }

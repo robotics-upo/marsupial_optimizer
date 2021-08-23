@@ -97,14 +97,14 @@ public:
 
 			compute_nearest_distance.reset(new ceres::CostFunctionToFunctor<3,1>(
                                     new ceres::NumericDiffCostFunction<ComputeDistanceObstacles,
-                                                                        ceres::CENTRAL, 
+                                                                        ceres::FORWARD, 
                                                                         3,
                                                                         1>( 
                                     new ComputeDistanceObstacles(_g_3D))));
 
 			compute_catenary.reset(new ceres::CostFunctionToFunctor<7,1>(
                                     new ceres::NumericDiffCostFunction<SolveCatenary,
-                                                                        ceres::CENTRAL, 
+                                                                        ceres::FORWARD, 
                                                                         7,
                                                                         1>( 
                                     new SolveCatenary())));
@@ -142,9 +142,9 @@ public:
 			T all_status[7] = {pos_init_cat_[0], pos_init_cat_[1], pos_init_cat_[2], statePosUAV[1], statePosUAV[2], statePosUAV[3], stateCat[1]};
 			T ret_[1];
 		    (*compute_catenary)(all_status, ret_);
-			SolveCatenary S_cat;
-			S_cat.
-			S_cat.points_catenary;
+			// SolveCatenary S_cat;
+			// S_cat.
+			// S_cat.points_catenary;
 
 			//  bool operator()(const double *all_status_, double *ret_) const 
 			// {

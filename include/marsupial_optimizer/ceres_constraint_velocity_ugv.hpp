@@ -17,7 +17,9 @@ using ceres::Solver;
 class VelocityFunctorUGV {
 
 public:
-  VelocityFunctorUGV(double weight_factor, double init_vel_, double count_fix_points_ugv): wf_(weight_factor), iv_(init_vel_), cfp_ugv(count_fix_points_ugv) {}
+  VelocityFunctorUGV(double weight_factor, double init_vel_, double count_fix_points_ugv)
+                    : wf_(weight_factor), iv_(init_vel_), cfp_ugv(count_fix_points_ugv) 
+  {}
 
   template <typename T>
   bool operator()(const T* const statePos1, const T* const statePos2, const T* const stateT1, T* residual) const 

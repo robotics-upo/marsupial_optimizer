@@ -24,10 +24,6 @@ public:
   {
     residual[0] =  wf_ * (stateT[1] - it_);
 
-    // std::cout <<"\n it_ = " << it_ << std::endl << "stateT[0]= " << stateT[0] << std::endl; 
-    // std::cout << "stateT[1]= " << stateT[1] << std::endl; 
-    // std::cout <<"residual[0]= " << residual[0] << std::endl;
-
     return true;
   }
 
