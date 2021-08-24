@@ -29,6 +29,7 @@ OptimizerLocalPlanner::OptimizerLocalPlanner()
 	nh->param<bool>("optimize_ugv",optimize_ugv, true);
 	nh->param<bool>("optimize_uav",optimize_uav, true);
 	nh->param<bool>("optimize_cat",optimize_cat, true);
+	nh->param<bool>("fix_last_position_ugv",fix_last_position_ugv, false);
 
 	nh->param<int>("equidistance_ugv_constraint", equidistance_ugv_constraint, 1);
 	nh->param<int>("obstacles_ugv_constraint", obstacles_ugv_constraint, 1);
@@ -982,6 +983,9 @@ void OptimizerLocalPlanner::getPointsFromGlobalPath(trajectory_msgs::MultiDOFJoi
 	qt_.w = _path.points.at(_path.points.size()-1).transforms[1].rotation.w;
 	vec_init_rot_uav.push_back(qt_);
 	count_++;
+
+	if(!fix_last_position_ugv)
+		count_fix_points_final_ugv = 0;
 
 	for (size_t i = 0 ; i <  v_ugv_.size() ; i++){
 		vec_pose_init_ugv.push_back(v_ugv_[i]);

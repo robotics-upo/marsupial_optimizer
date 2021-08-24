@@ -78,7 +78,7 @@ public:
 		}	
 		residual[0] =  wf_ * m * (cos_angle - b_);
 		
-		std::cout << "KinematicsFunctorUGV["<<statePos1[0] <<","<<statePos2[0]<<","<<statePos3[0]<<"] , residual[0]= "<< residual[0] << " , cos_angle= " << cos_angle << " , b_= " << b_ << std::endl;
+		// std::cout << "KinematicsFunctorUGV["<<statePos1[0] <<","<<statePos2[0]<<","<<statePos3[0]<<"] , residual[0]= "<< residual[0] << " , cos_angle= " << cos_angle << " , b_= " << b_ << std::endl;
 		
 		return true;
 	}

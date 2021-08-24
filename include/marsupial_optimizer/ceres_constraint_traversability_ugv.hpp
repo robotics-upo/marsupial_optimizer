@@ -83,7 +83,7 @@ public:
 
             residual[0] =  wf_ * m * (d_ugv_ - bound);
 
-		    std::cout << "TraversabilityFunctor["<<statePos[0] <<"] , residual[0]= "<< residual[0] << " , d_ugv_= " << d_ugv_ << " , bound= " << bound << std::endl;
+		    // std::cout << "TraversabilityFunctor["<<statePos[0] <<"] , residual[0]= "<< residual[0] << " , d_ugv_= " << d_ugv_ << " , bound= " << bound << std::endl;
 
             return true;
         }
