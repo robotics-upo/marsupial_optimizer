@@ -150,11 +150,6 @@ class CatenarySolver
 
     inline double evaluteCatenaryChain(double _x, double _xc, double _yc, double _a){return (_a * cosh((_x- _xc)/_a)+ (_yc-_a)); }
 
-    void integrateCatenaryChain(double _x1, double _y1, double _x2, double _y2, double _xc, double _yc, double _a)
-    {
-
-    }
-
     void convert2DTo3D(double _x1, double _y1, double _z1, double _x2, double _y2, double _z2, std::vector<geometry_msgs::Point> &_vector3D, double _xc, double _yc, double _a)
     {
       if (x_const && y_const){
@@ -246,7 +241,6 @@ class CatenarySolver
         double a , x0, y0; 
 
         _vector3D.clear();
-       
 
         /***First Part: Get phi value from Length equation***/
         double phi[1];
@@ -311,7 +305,6 @@ class CatenarySolver
 
         /***Thirs Part: Get points Catenary***/
         getNumberPointsCatenary(length);
-        integrateCatenaryChain(x1, y1, x2, y2,_xc, _yc, a);
         convert2DTo3D(x1, y1, z1, x2, y2, z2, _vector3D, _xc, _yc, a);   
       }
       else{

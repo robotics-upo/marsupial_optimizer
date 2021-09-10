@@ -629,6 +629,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		}
 	}
 	/****************************   Catenary Constraints  ****************************/	
+	printf("pos_reel_z = %f \n",pos_reel_z);
 	if (optimize_cat){
 		ROS_INFO(PRINTF_ORANGE" PREPARING  CATENARY  PARAMETER  BLOCKS  TO  OPTIMIZE:");
 		/*** Cost Function Cable I : Catenary constrain  ***/
@@ -826,7 +827,7 @@ void OptimizerLocalPlanner::finishigOptimizationAndGetDataResult(int n_coll_opt_
 		tf::Quaternion q_ugv_(statesRotUGV[i].parameter[1],statesRotUGV[i].parameter[2],statesRotUGV[i].parameter[3],statesRotUGV[i].parameter[4]);
 		tf::Matrix3x3 M_(q_ugv_);	
 		M_.getRPY(roll_ugv_, pitch_ugv_, yaw_ugv_);
-		printf("[%lu]states.parameter: UGV=[%f %f %f / %f %f %f] UAV=[%f %f %f / %f %f %f %f] , t=[%f/%f], l=[%f/points=%lu] d=[%f]\n", i,
+		printf(PRINTF_REGULAR"[%lu]states.parameter: UGV=[%f %f %f / %f %f %f] UAV=[%f %f %f / %f %f %f %f] , t=[%f/%f], l=[%f/points=%lu] d=[%f]\n", i,
 																							statesPosUGV[i].parameter[1], statesPosUGV[i].parameter[2], statesPosUGV[i].parameter[3],
 																							roll_ugv_, pitch_ugv_, yaw_ugv_,
 																							statesPosUAV[i].parameter[1], statesPosUAV[i].parameter[2], statesPosUAV[i].parameter[3],
@@ -1356,10 +1357,13 @@ void OptimizerLocalPlanner::postProcessingCatenary()
 		double _d_ = sqrt(pow(statesPosUGV[i].parameter[1] - statesPosUAV[i].parameter[1],2) + 
 						  pow(statesPosUGV[i].parameter[2] - statesPosUAV[i].parameter[2],2) + 
 						  pow((statesPosUGV[i].parameter[3]+pos_reel_z) - statesPosUAV[i].parameter[3],2));
+		// printf(PRINTF_REGULAR"_d_ = %f , statesLength[i].parameter[1]= %f  statesPosUGV[i].parameter[3]+pos_reel_z=%f  statesPosUAV[i].parameter[3]=%f\n"
+								// ,_d_, statesLength[i].parameter[1],statesPosUGV[i].parameter[3]+pos_reel_z,statesPosUAV[i].parameter[3]);
 		if (_d_ > statesLength[i].parameter[1]){
 			parameter_block_post_length.parameter[1] = _d_ * 1.005;	// 1.02 in catenary constraint
 			count_cat_fail ++;
 			dm_.writeCatenaryFailData(count_cat_fail,statesPosUGV[i].parameter[0],statesLength[i].parameter[1],_d_, parameter_block_post_length.parameter[1]);
+		printf(PRINTF_RED"	Catenary number = %lu \n",i);
 		}
 		else
 			parameter_block_post_length.parameter[1] = statesLength[i].parameter[1];	

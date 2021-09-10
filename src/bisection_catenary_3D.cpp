@@ -78,419 +78,285 @@
 
 bisectionCatenary::bisectionCatenary()
 {
-    // ROS_INFO("INITIALIZE BISECTION METHOD TO CALCULATE CATENARY CHAIN !!");
-    // n_chain = 0.0;  //Number of points in catenary chain to get
+    num_point_per_unit_length = 10;
+    resolution = 0.05;
+    div_res = 1.0/resolution;
+    factor_bisection_a = 1000.0;
+    factor_bisection_b = 1000.0;
 } 
 
 // bisectionCatenary::~bisectionCatenary(){} 
 
-
-
-void bisectionCatenary::configBisection(double _l, double _x1, double _y1, double _z1, double _x2, double _y2, double _z2, int _id, string _vtx_name)
+void bisectionCatenary::configBisection(double _l, double _x1, double _y1, double _z1, double _x2, double _y2, double _z2)
 {
     resetVariables();
   
-    if (n_chain == 0.0)
-        ROS_ERROR("NOT SETING NUMBER OF POINTS TO CALCULATE IN CATENARY !!");
-    
     L =_l;
     X1 =_x1; Y1 = _y1; Z1= _z1;
     X2 = _x2; Y2 = _y2;  Z2= _z2;
-    id_vertex = _id;
-    vertex_name = _vtx_name;
     
+// printf("p1 = %f %f %f , p2 = %f %f %f , L= %f\n",X1,Y1,Z1,X2,Y2,Z2,L);
     distance_3d = sqrt(pow(X2-X1,2)+pow(Y2-Y1,2)+pow(Z2-Z1,2)); //Distance between lashing represent in 3D
-    // printf("\nL=[%f] distance_3d=[%f] P1=[%.9f %.9f %.9f] P2=[%.9f %.9f %.9f]\n",L,distance_3d,X1,Y1,Z1,X2,Y2,Z2);
-
-    if ( fabs(X1 - X2) < 0.000001){
-        x_const = true;
-    }
-    if ( fabs(Y1 - Y2) < 0.000001){
-        y_const = true;
-    }
-    if ( fabs(Z1 - Z2) < 0.000001)
-        z_const = true;
     
-    if (x_const && y_const){
-        // printf("Straight Catenary: Axes X and Y fix for start and goal point\n");
-    }
-    else{
-        XB = sqrt(pow(X2-X1,2)+pow(Y2-Y1,2));         //Distance between lashing represent in 2D plane
-        YB = Z2 - Z1;    //height difference between points
+    XB = sqrt(pow(X2-X1,2)+pow(Y2-Y1,2));         //Distance between lashing represent in 2D plane
+    YB = Z2 - Z1;    //height difference between points
 
+    checkStateCatenary(_x1, _y1, _z1, _x2, _y2, _z2);
+    getNumberPointsCatenary(_l);
+
+    if (!x_const || !y_const){ 
         //Value to accurete solution
-        straight_tolerance = 0.000001; //minimum difference between Sab and L to not consider the chain in a straight state
-        tolerance = 0.0001; //
-        n_points = 50;  // Number of interval to use in bisection method
-            
-        Ap =-10.0;    Bp = 10.0;
+        tolerance = 0.00001; //
+        n_interval = 50.0;  // Number of interval to use in bisection method
+        Ap =0.0;    Bp = 10.0;
         Ax =-100.0;      Bx = 100.0;
         Ay =-100.0;      By = 100.0;
-
-        //CALCULATE OF CATENARY POINTS
-        if (distance_3d > L)
-            ROS_ERROR("CATENARY LENGTH SHORTER THAN 3D DISTANCE BETWEEN POINTS. Vertex=[%i] L=[%f] d=[%f]. Try other points or change L value , [%s] !!!",_id,L,distance_3d,_vtx_name.c_str());
-
-        //Calculate K for Phi()
-        kConst = (sqrt(pow(L,2) - pow(YB,2)))/(XB); 
-        // printf("============   kConst = [%f]\n",kConst);
-        if ( fabs(kConst) < straight_tolerance)
-            ROS_WARN ("\nTHE CHAIN IS STRAIGHT!! NOT IN CATENARY STATE \n");
         
-        directionVectorAxes();
+        //Calculate K for Phi()
+        kConst = (sqrt( fabs(L*L - YB*YB) ))/(XB); 
+        
         //Look for the solutions c, x0, y0
         //Calculate of phi and c
+    // printf("\nSolving First Bisection  kConst=%f XB=%f\n",kConst,XB);
         bs_p = resolveBisection(Ap, Bp,0);
-        c_value = distanceC(XB, bs_p);
-        // ROS_ERROR("=============================== valor de bs_p=[%.9f] c_value =[%f]  YB =[%f] XB =[%f]  kConst=[%f]",bs_p,c_value,YB,XB, kConst );
-
+        c_value = XB/(2.0*bs_p); // Calculate distance from floor to point C
+    // printf("c_value= %f , XB= %f , bs_p= %f\n",c_value, XB, bs_p);
         //Calculate of x0
         // bs_X0 = resolveBisection(Ax,Bx,1);
-        // printf("Valor de factor_bisection = [%f]\n",factor_bisection);
-        bs_X0 = resolveBisection(-1.0*factor_bisection_a*fabs(XB),factor_bisection_a*fabs(XB),1);
+    // printf("\nSolving Second Bisection\n");
+        if (c_value > 1.0)
+            factor_bisection_a = floor(c_value);
+        else
+            factor_bisection_a = c_value;
+        bs_X0 = resolveBisection(-1.0*factor_bisection_a, factor_bisection_a,1);
+    // printf("bs_X0 = %f \n",bs_X0);
         //Calculate of y0
-        bs_Y0 = resolveBisection(-1.0*factor_bisection_b*fabs(YB)-10.0,factor_bisection_b*fabs(YB)+10.0,2);
+    // printf("\nSolving Third Bisection\n");
+        bs_Y0 = resolveBisection(-1.0*factor_bisection_a, factor_bisection_a,2);
         h_value = fabs(bs_Y0)-c_value;
 
         //Calculate lower point in catenary
-        Xc=bs_X0;
-        Yc=Z1-h_value;
-        // ROS_ERROR(" =============================== valor de bs_X0 = [%f] bs_Y0 =[%f]  Xc =[%f] Yc =[%f]",bs_X0,bs_Y0,Xc,Yc);
-
-        //Calculate points for Catenary chain
-        integrateCatenaryChain2D();
+        Xc = bs_X0;
+        Yc = Z1-h_value;
     }
 }
 
-void bisectionCatenary::directionVectorAxes()
+void bisectionCatenary::checkStateCatenary(double _x1, double _y1, double _z1, double _x2, double _y2, double _z2)
 {
-    if (X2 > X1)
-        direc_x = 1.0;
-    if (X2 < X1)
-        direc_x = -1.0;
-    if (X2 == X1)
-    {
-        direc_x = 0.0;    
-        // printf("\nChain perperdicular with Axes X\n");
+  if( fabs(_x1 - _x2) <  0.000001)
+        x_const = true;
+  if( fabs(_y1 - _y2) <  0.000001)
+        y_const = true;
+  if( fabs(_z1 - _z2) <  0.000001)
+        z_const = true;
+  if(x_const && y_const){
+  }
+
+  if(_x2 > _x1)
+        _direc_x = 1.0;
+  else if(_x2 < _x1)
+        _direc_x = -1.0;
+  else if(_x2 == _x1)
+        _direc_x = 0.0;    
+  
+  if(_y2 > _y1)
+        _direc_y = 1.0;
+  else if(_y2 < _y1)
+        _direc_y = -1.0;
+  else if(_y2 == _y1)
+        _direc_y = 0.0;    
+}
+
+void bisectionCatenary::getPointCatenary3D(vector<geometry_msgs::Point> &_v_p)
+{
+    double p_z_min = 1000.0;
+    if (!x_const || !y_const){ 
+        double x_value_, y_value_, x_step;
+        x_value_ = 0.0;
+
+        x_step = (XB)/num_point_catenary;
+        
+        double tetha = atan(fabs(Y2-Y1)/fabs(X2-X1));
+
+        _v_p.clear();
+
+    // printf("c_value= %f , x_value_= %f , Xc= %f , Yc= %f \n",c_value, x_value_, Xc, Yc);
+        for(size_t i=0; i < num_point_catenary +1; i++){
+            geometry_msgs::Point _p;
+            y_value_ = (c_value * cosh((x_value_ - Xc)/c_value)+ (Yc - c_value)); // evalute CatenaryChain
+            _p.x = X1 + _direc_x* cos(tetha) * x_value_;
+            _p.y = Y1 + _direc_y* sin(tetha) * x_value_;
+            _p.z = y_value_;
+            x_value_ = x_value_ + x_step;
+
+            _v_p.push_back(_p);
+            if (p_z_min > _p.z){
+                min_point_z_cat.x = _p.x; 
+                min_point_z_cat.y = _p.y; 
+                min_point_z_cat.z = _p.z; 
+                p_z_min = _p.z;
+            }
+
+        }
     }
-    if (Y2 > Y1)
-        direc_y = 1.0;
-    if (Y2 < Y1)
-        direc_y = -1.0;
-    if (Y2 == Y1)
-    {
-        direc_y = 0.0;    
-        // printf("\nChain perperdicular with Axes Y\n");
-    }
-    if (Z2 > Z1)
-        direc_z = 1.0;
-    if (Z2 < Z1)
-        direc_z = -1.0;
-    if (Z2 == Z1)
-    {
-        direc_z = 0.0;    
-        // printf("\nChain perperdicular with Axes Z\n");
-    }
-}
-
-double bisectionCatenary::phi(double x) 
-{
-    return (sinh(x)- kConst*x);
-}
-
-double bisectionCatenary::distanceC(double _xb, double p)
-{
-    return ( _xb/(2.0*p));
-}
-
-double bisectionCatenary::catenaryPointA(double x)
-{
-    return (c_value*cosh((XB-x)/c_value) - c_value*cosh(x/c_value) - YB);
-    // return (c_value*cosh(((XB)-x)/c_value) - c_value*cosh((X1-x)/c_value) - YB + Y1);
-}
-
-double bisectionCatenary::catenaryPointB(double y)
-{
-    return (c_value*cosh(((XB)-bs_X0)/c_value) - (YB) + y);
-}
-
-double bisectionCatenary::evaluteCatenaryChain(double x_)
-{
-    return (c_value * cosh((x_- Xc)/c_value)+ (Yc-c_value));
-}
-
-void bisectionCatenary::integrateCatenaryChain2D()
-{
-    double x_value, y_value, x_step;
-    points_catenary_2D point_cat;
-    catenary_chain_points_2D.clear();
-    x_value = 0.0;
-
-    x_step = (XB)/n_chain;
-
-    for (int i=0 ; i < n_chain +1 ; i ++)
-    {
-        y_value = evaluteCatenaryChain(x_value);
-        point_cat.x_ = x_value;
-        point_cat.y_ = y_value;
-        catenary_chain_points_2D.push_back(point_cat);
-        x_value = x_value + x_step;
+    else{
+        _v_p.clear();
+        getPointCatenaryStraight(_v_p);
     }
 }
 
-double bisectionCatenary::computeFunction(double xr_aux, int mode_)
-{
-    double yr_aux;
-    
-    if (mode_ == 0)
-    {
-        yr_aux = phi(xr_aux);
-    }
-    if (mode_ == 1)
-    {
-        yr_aux = catenaryPointA(xr_aux);
-    }
-    if (mode_ == 2)
-    {
-        yr_aux = catenaryPointB(xr_aux);  
-    }
-    return yr_aux;
-}
-
-double bisectionCatenary::resolveBisection(double a1, double b1,int mode_) 
+double bisectionCatenary::resolveBisection(double a1_, double b1_, int mode_) 
 {
     double xr, error;
     //Initialize error with a big value
     
-    double x_a , x_b;
+    double xa_ , xb_;
     points_interval it_points_interval;
 
     bool find_sign_change = false;
-    double add_sign = 0.0;
-    interval_finded = true;
-    while(!find_sign_change){
-        find_sign_change = signChange(a1-add_sign, b1+add_sign, mode_);  // To find smallers interval where can be find the solution, depend on the sign change
-        add_sign = add_sign + 5.0;
+    double bound_interval_1 = (a1_);
+    double bound_interval_2 = (b1_);
+    while(!find_sign_change){    
+        // std::cout << "lookingSignChanging : press y to continue , mode["<< mode_<<"] current_interval [" << bound_interval_1 << " - " << bound_interval_2 <<"]" << std::endl;
+        find_sign_change = lookingSignChanging(bound_interval_1, bound_interval_2, mode_);  // To find smallers interval where can be find the solution, depend on the sign change
+		bound_interval_1 = bound_interval_1 * 2.0;
+        bound_interval_2 = bound_interval_2 * 2.0;
+        // std::string y_ ;
+        // std::cin >> y_ ;
+		// std::cout << "lookingSignChanging : Continue DO-WHILE loop ?" << y_ << std::endl;
+		// printf("find_sign_change ? = %s\n",find_sign_change? "true" : "false");
     }
-
-    for (unsigned i = 0; i < vector_sign_change.size(); i++)
-    {
-        error = tolerance+1.0;
+    
+    for (unsigned i = 0; i < vector_sign_change.size(); i++){
+        error = tolerance + 1.0;
         it_points_interval = vector_sign_change[i];
-        x_a = it_points_interval.pa;
-        x_b = it_points_interval.pb;
+        xa_ = it_points_interval.pa;
+        xb_ = it_points_interval.pb;
         
-        while (error > tolerance) 
-        {
-            xr = (x_a + x_b) / 2.0;
-            if ((computeFunction(x_a,mode_) * computeFunction(xr,mode_) < 0.0) || 
-                (computeFunction(x_a,mode_) * computeFunction(xr,mode_) == 0.0))
-            {
-                x_b = xr;
-            }
-            else if ((computeFunction(xr,mode_) * computeFunction(x_b,mode_)< 0.0) ||
-                (computeFunction(x_b,mode_) * computeFunction(xr,mode_) == 0.0))
-            {
-                x_a = xr;
-            }
-            error = fabs(computeFunction(xr,mode_));
-            if (error < tolerance)
-            {
-                if (mode_ == 0){
-                    // printf("SOLUTION FOUNDED!!! for 'PHI(phi) = %f'  'phi = %f'\n",computeFunction(xr,mode_),xr);
-                }
-                if (mode_ == 1){
-                    // printf("SOLUTION FOUNDED!!! for 'CatenaryA(X0) = %f'  'X0 = %f'\n",computeFunction(xr,mode_),xr);
-                }
-                if (mode_ == 2){
-                    // printf("SOLUTION FOUNDED!!! for 'CatenaryB(Y0) = %f'  'Y0 = %f'\n",computeFunction(xr,mode_),xr);
-                }
-            }
+        while (error > tolerance) {
+            xr = (xa_ + xb_) / 2.0;
+            if ( (functionBisection(xa_,mode_) * functionBisection(xr,mode_) < 0.0) || (functionBisection(xa_,mode_) * functionBisection(xr,mode_) == 0.0) )
+                xb_ = xr;
+            else if ( (functionBisection(xr,mode_) * functionBisection(xb_,mode_)< 0.0) || (functionBisection(xb_,mode_) * functionBisection(xr,mode_) == 0.0) )
+                xa_ = xr;
+            
+            error = fabs(functionBisection(xr,mode_));
+            // if (error < tolerance){
+            //     if (mode_ == 0)
+            //         printf("SOLUTION FOUNDED!!! for 'PHI(phi) = %f'  'phi = %f'\n",functionBisection(xr,mode_),xr);
+            //     else if (mode_ == 1)
+            //         printf("SOLUTION FOUNDED!!! for 'CatenaryA(X0) = %f'  'X0 = %f'\n",functionBisection(xr,mode_),xr);
+            //     else if (mode_ == 2)
+            //         printf("SOLUTION FOUNDED!!! for 'CatenaryB(Y0) = %f'  'Y0 = %f'\n",functionBisection(xr,mode_),xr);
+            // }
         }
     }
     return xr;
 }
 
-bool bisectionCatenary::signChange(double a2, double b2, int mode_)
+double bisectionCatenary::functionBisection(double xr_aux, int mode_)
+{
+    double yr_aux;
+    
+    if (mode_ == 0)
+        yr_aux = sinh(xr_aux)- kConst * xr_aux; // To calculate phi()
+    if (mode_ == 1){
+        yr_aux = c_value*cosh((XB-xr_aux)/c_value) - c_value*cosh(xr_aux/c_value) - YB; // To calculate catenaryPointA
+        // printf("yr_aux=%f , c_value=%f , XB=%f , xr_aux=%f , YB=%f \n",yr_aux , c_value , XB , xr_aux , YB);
+    }
+    if (mode_ == 2){
+        yr_aux = c_value*cosh(((XB)-bs_X0)/c_value) - (YB) + xr_aux; // To calculate catenaryPointB
+        // printf("yr_aux=%f , c_value=%f , XB=%f , xr_aux=%f , YB=%f \n",yr_aux , c_value , XB , xr_aux , YB);
+    }
+    return yr_aux;
+}
+
+bool bisectionCatenary::lookingSignChanging (double a2, double b2, int mode_)
 {
     points_interval points_sign_change;
     vector_sign_change.clear();
     
     double y1 , y2;
-    double interval = fabs(b2 - a2) / n_points;
+    double interval = fabs(b2 - a2) / n_interval;
     double bound_a = a2 ;
     double bound_b;
     
-    for (int i = 0; i < n_points; i++) 
-    {
-        y1 = computeFunction(bound_a,mode_);
+    for (int i = 0; i < n_interval; i++) {
+        y1 = functionBisection(bound_a, mode_);
         bound_b = bound_a + interval;
-        y2 = computeFunction(bound_b,mode_);
-        
-        if ((y1*y2 < 0) || (y1*y2 == 0))
-        {
+        y2 = functionBisection(bound_b, mode_);
+        // if(mode_ == 2)
+        //     printf ("y1= %f  y2=%f  y1*y2=%f  n_interval=%f  i=%i\n" ,y1, y2, y1*y2, n_interval, i);
+
+        if ((y1*y2 < 0.0) || (y1*y2 == 0.0)){
             points_sign_change.pa = bound_a;
             points_sign_change.pb = bound_b;
             vector_sign_change.push_back(points_sign_change);
         }           
         bound_a = bound_b;
     }
-    // printf("vector size = %i\n",vector_sign_change.size());
 
-    // for (unsigned i = 0; i < vector_sign_change.size(); i++)
-    // {  
-    //     points_interval print_pts_;
-    //     print_pts_.pa = vector_sign_change[i].pa;
-    //     print_pts_.pb = vector_sign_change[i].pb;
-    //     if (mode_ == 0){
-    //         // ROS_INFO("Value point save for phi(x) xa = %g  xb= %g",print_pts_.pa,print_pts_.pb);
-    //     }
-    //     if (mode_ == 1){
-    //         // ROS_INFO("Value point save for catenary_A(x) xa = %g  xb= %g",print_pts_.pa,print_pts_.pb);
-    //     }
-    //     if (mode_ == 2){
-    //         // ROS_INFO("Value point save for Catenary_B(x) xa = %g  xb= %g",print_pts_.pa,print_pts_.pb);
-    //     }
-    // }
     if (vector_sign_change.size() < 1.0 )
-    {
-        if (mode_ == 0){
-            // ROS_ERROR("NOT SOLUTION FOR phi() !!! Interval [a2=%f , b2=%f] doesn't enclose a root Vertex[%i] ,Vertex-%s",a2,b2,id_vertex,vertex_name.c_str());
-            // ROS_ERROR("=== kConst = [%f] bs_p = [%f] c_value =[%f]  YB =[%f] XB =[%f]",kConst,bs_p,c_value,YB,XB );
-            // ROS_ERROR("=== vertex[%i] P_init=[%f %f %f] P_final=[%f %f %f]  L=[%f] ",id_vertex,X1,Y1,Z1,X2,Y2,Z2,L);
-            interval_finded = false;
-            return false;
-        }
-        if (mode_ == 1){
-            // ROS_ERROR("NOT SOLUTION FOR Catenary_A() !!! Interval [a2=%f , b2=%f] doesn't enclose a root Vertex[%i] ,Vertex-%s",a2,b2,id_vertex,vertex_name.c_str());
-            interval_finded = false;
-            return false;
-        }
-        if (mode_ == 2){
-            // ROS_ERROR("NOT SOLUTION FOR Catenary_B() !!! Interval [a2=%f , b2=%f] doesn't enclose a root Vertex[%i] ,Vertex-%s",a2,b2,id_vertex,vertex_name.c_str());
-            interval_finded = false;
-            return false;
-            // bound_a = a;
-            // for (int i = 0; i < n_points; i++) 
-            // {
-            //     y1 = computeFunction(bound_a,mode_);
-            //     bound_b = bound_a + interval;
-            //     y2 = computeFunction(bound_b,mode_);
-            //     ROS_ERROR("NO ENTRO: mode =[%i] a=[%f] b=[%f] y1=[%.9f] y2=[%.9f]  bound_a=[%f]  bound_b=[%f] interval=[%f]", mode_,a,b,y1,y2,bound_a,bound_b,interval);
-            //     bound_a = bound_b;
-            // }
-        }
-    }
-    else if (vector_sign_change.size() >= 1.0 && !interval_finded){
-        if (mode_ == 0){
-            // ROS_INFO("SOLUTION FINDED FOR phi() !!! Interval [a2=%f , b2=%f] enclose root for Vertex[%i] ,Vertex-%s",a2,b2,id_vertex,vertex_name.c_str());
-            return true;
-        }
-        if (mode_ == 1){
-            // ROS_INFO("SOLUTION FINDED FOR Catenary_A() !!! Interval [a2=%f , b2=%f] enclose root for Vertex[%i] ,Vertex-%s",a2,b2,id_vertex,vertex_name.c_str());
-            return true;
-        }
-        if (mode_ == 2){
-            // ROS_INFO("SOLUTION FINDED FOR Catenary_B() !!! Interval [a2=%f , b2=%f] enclose root for Vertex[%i] ,Vertex-%s",a2,b2,id_vertex,vertex_name.c_str());
-            return true;
-        }
-    }
-    else{
+        return false;
+    else
         return true;
-    }
 }
 
-void bisectionCatenary::getPointCatenary3D(vector<geometry_msgs::Point> &_v_p)
+void bisectionCatenary::getPointCatenaryStraight(std::vector<geometry_msgs::Point> &_v_p)
 {
-    if (x_const && y_const){
-        getPointCatenaryStraight(_v_p);
-    }
-    else{
-        double tetha = atan(fabs(Y2-Y1)/fabs(X2-X1));
-        double Zmin = Z1;
-        int pos_lower_point = 0;
-        
-        points_catenary_3D point_cat3D;
+    double _step = distance_3d / (double) num_point_catenary;
 
-        catenary_chain_points_3D.clear();
-        _v_p.clear();
-
-        for(size_t i=0; i < catenary_chain_points_2D.size(); i++)
-        {
-            geometry_msgs::Point _p;
-
-            point_cat3D.z_ = catenary_chain_points_2D[i].y_;
-            point_cat3D.x_ = X1 + direc_x* cos(tetha) * catenary_chain_points_2D[i].x_;
-            point_cat3D.y_ = Y1 + direc_y* sin(tetha) * catenary_chain_points_2D[i].x_;
-            catenary_chain_points_3D.push_back(point_cat3D);
-            if (Zmin > point_cat3D.z_)
-            {
-                Zmin = point_cat3D.z_;
-                pos_lower_point = i;
-            }
-            _p.x = point_cat3D.x_;
-            _p.y = point_cat3D.y_;
-            _p.z = point_cat3D.z_;    
-            _v_p.push_back(_p);
-            // printf("Points Catenary 3D : [%f, %f, %f]\n",
-            // catenary_chain_points_3D[i].x_,catenary_chain_points_3D[i].y_,catenary_chain_points_3D[i].z_);
-        }
-        lower_point_3d_catenary.x = catenary_chain_points_3D[pos_lower_point].x_;
-        lower_point_3d_catenary.y = catenary_chain_points_3D[pos_lower_point].y_;
-        lower_point_3d_catenary.z = catenary_chain_points_3D[pos_lower_point].z_;
-    }
-}
-
-void bisectionCatenary::getPointCatenaryStraight(vector<geometry_msgs::Point> &_v_p){
-
-    double _step = distance_3d / (double) n_chain;
-
-    for(int i=0; i < n_chain +1; i++)
-    {
+    for(int i=0; i < num_point_catenary +1; i++)
+    {       
         geometry_msgs::Point _p;
 
-        _p.x = X1;
-        _p.y = Y1;
-        _p.z = Z1 + _step* (double)i;    
+        _p.x = resolution * ( round(X1*div_res ));
+        _p.y = resolution * ( round(Y1*div_res ));
+        _p.z = resolution * ( round((Z1 + _step* (double)i)*div_res) );    
         _v_p.push_back(_p);
     }
 }
 
-void bisectionCatenary::resetVariables(){
+inline void bisectionCatenary::getNumberPointsCatenary(double _length){num_point_catenary = ceil( (double)num_point_per_unit_length * _length);}  
 
+bool bisectionCatenary::setNumPointsPerUnitLength(int n)
+{
+    if(n>0)
+    {
+        num_point_per_unit_length = n;
+        return true;
+    } 
+    else
+        return false;
+}
+
+void bisectionCatenary::setResolution(int res_)
+{
+  resolution = res_;
+  div_res = 1.0/resolution;
+}
+
+inline void bisectionCatenary::setFactorBisection(double _fa,double _fb){factor_bisection_a = _fa; factor_bisection_b = _fb;}
+
+void bisectionCatenary::resetVariables()
+{
     L = 0.0;
-
     X1 = 0.0; 
     Y1 = 0.0; 
     Z1 = 0.0;
     X2 = 0.0;
     Y2 = 0.0;  
     Z2 = 0.0;
-
     YB= 0.0;
     XB= 0.0;
-
     Xc= 0.0;
     Yc= 0.0;
-
     kConst = 0.0;
-
     bs_p = 0.0;
     c_value = 0.0;
     bs_X0 = 0.0;
     bs_Y0 = 0.0;
     h_value = 0.0;
-
     x_const = y_const = z_const = false;
-
 }
 
-inline void bisectionCatenary::setNumberPointsCatenary(double _n_p){
-    // printf("enter setNumberPointsCatenary\n");
-    n_chain = ceil(_n_p);
-}
-
-inline void bisectionCatenary::setFactorBisection(double _fa,double _fb){
-    factor_bisection_a = _fa;
-    factor_bisection_b = _fb;
-}

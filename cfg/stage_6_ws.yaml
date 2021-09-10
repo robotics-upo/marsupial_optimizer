@@ -1,6 +1,6 @@
 ws_x_max: 12
 ws_y_max: 10
-ws_z_max: 14
+ws_z_max: 10
 
 ws_x_min: -12
 ws_y_min: -10
