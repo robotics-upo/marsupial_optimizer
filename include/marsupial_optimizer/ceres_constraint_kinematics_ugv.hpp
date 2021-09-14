@@ -69,6 +69,16 @@ public:
         T value_dependent2 = T{-1.0};
         T value_dependent1 = T{bound};
         T m ;
+		
+		// T arg_d_pos= (pow(statePos1[1]-statePos2[1],2)) + pow(statePos1[2]-statePos2[2],2) + pow(statePos1[3]-statePos2[3],2);
+		// T d_pos;
+		// if(arg_d_pos< 0.0001 && arg_d_pos > -0.0001)
+        // 	d_pos = T{0.0};
+      	// else
+        // 	d_pos = sqrt(arg_d_pos);
+
+
+        // if ( cos_angle > bound || d_pos < 0.05){
         if ( cos_angle > bound){
             m = T{0.0};
 			b_ = T{1.0};

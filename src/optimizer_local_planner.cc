@@ -1363,7 +1363,7 @@ void OptimizerLocalPlanner::postProcessingCatenary()
 			parameter_block_post_length.parameter[1] = _d_ * 1.005;	// 1.02 in catenary constraint
 			count_cat_fail ++;
 			dm_.writeCatenaryFailData(count_cat_fail,statesPosUGV[i].parameter[0],statesLength[i].parameter[1],_d_, parameter_block_post_length.parameter[1]);
-		printf(PRINTF_RED"	Catenary number = %lu \n",i);
+		printf(PRINTF_RED"	Catenary number = %lu  [L=%f/d=%f]\n",i,statesLength[i].parameter[1],_d_);
 		}
 		else
 			parameter_block_post_length.parameter[1] = statesLength[i].parameter[1];	

@@ -49,6 +49,7 @@ class bisectionCatenary
         virtual void getNumberPointsCatenary(double _length);
         virtual bool setNumPointsPerUnitLength(int n);
         virtual void setResolution(int res_);
+        virtual void getMinPointZCat(geometry_msgs::Point &p_, int &n_);
 
         //Length Catenary Chain 
         double L; 
@@ -58,6 +59,7 @@ class bisectionCatenary
         double factor_bisection_a, factor_bisection_b;
 
         geometry_msgs::Point min_point_z_cat;
+        int pos_in_cat_z_min;
 
     protected:
         double kConst;

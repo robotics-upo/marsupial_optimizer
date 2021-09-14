@@ -194,6 +194,7 @@ void bisectionCatenary::getPointCatenary3D(vector<geometry_msgs::Point> &_v_p)
                 min_point_z_cat.x = _p.x; 
                 min_point_z_cat.y = _p.y; 
                 min_point_z_cat.z = _p.z; 
+                pos_in_cat_z_min = i;
                 p_z_min = _p.z;
             }
 
@@ -337,6 +338,14 @@ void bisectionCatenary::setResolution(int res_)
 }
 
 inline void bisectionCatenary::setFactorBisection(double _fa,double _fb){factor_bisection_a = _fa; factor_bisection_b = _fb;}
+
+void bisectionCatenary::getMinPointZCat(geometry_msgs::Point &p_, int &n_)
+{
+    p_.x = min_point_z_cat.x;
+    p_.y = min_point_z_cat.y;
+    p_.z = min_point_z_cat.z;
+    n_ = pos_in_cat_z_min;
+}
 
 void bisectionCatenary::resetVariables()
 {
