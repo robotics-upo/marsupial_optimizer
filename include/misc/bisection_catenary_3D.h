@@ -36,7 +36,7 @@ class bisectionCatenary
         bisectionCatenary();
         // ~bisectionCatenary();
 
-        virtual void configBisection(double _l, double _x1, double _y1, double _z1, double _x2, double _y2, double _z2);
+        virtual bool configBisection(double _l, double _x1, double _y1, double _z1, double _x2, double _y2, double _z2);
         virtual double resolveBisection(double a1_, double b1_, int mode_);// 0 = to find phi() , 1 = to find X0 , 2 = to find Y0
         //Find points with sign changes in interval a-b, times that function pass through the origin 
         virtual bool lookingSignChanging (double a, double b, int mode_);

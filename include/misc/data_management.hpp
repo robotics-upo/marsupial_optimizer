@@ -29,8 +29,8 @@ class DataManagement
 		virtual void initDataManagement(std::string path_, std::string name_output_file_, int scenario_number_, int num_pos_initial_, int num_goal_, double initial_velocity_ugv_,
 								double initial_velocity_uav_, double initial_acceleration_ugv_, double initial_acceleration_uav_, geometry_msgs::Point pos_reel_ugv_,
 								std::vector<Eigen::Vector3d> vec_pose_init_ugv_, std::vector<Eigen::Vector3d> vec_pose_init_uav_,	std::vector<float> vec_len_cat_init_,
-								std::vector<geometry_msgs::Quaternion> vec_rot_ugv_, std::vector<geometry_msgs::Quaternion> vec_rot_uav_, octomap::OcTree* octotree_full_,
-								octomap::OcTree* octotree_ugv_);
+								std::vector<geometry_msgs::Quaternion> vec_rot_ugv_, std::vector<geometry_msgs::Quaternion> vec_rot_uav_, octomap::OcTree* octree_full_,
+								octomap::OcTree* octree_ugv_);
 		virtual void writeTemporalDataBeforeOptimization(std::vector<double> vec_dist_init_ugv_, std::vector<double> vec_dist_init_uav_, 
 														std::vector<double> vec_time_init_ugv_, std::vector<double> vec_time_init_uav_, 
 														std::vector<double> v_angles_kinematic_ugv, std::vector<double> v_angles_kinematic_uav_);
@@ -73,8 +73,8 @@ class DataManagement
 		geometry_msgs::Point ugv_pos_catenary;
 		geometry_msgs::Point pos_reel_ugv;
 
-		octomap::OcTree* octotree_full;
-		octomap::OcTree* octotree_ugv;
+		octomap::OcTree* octree_full;
+		octomap::OcTree* octree_ugv;
 
 	protected:
 
@@ -87,8 +87,8 @@ inline DataManagement::DataManagement(){}
 inline void DataManagement::initDataManagement(std::string path_, std::string name_output_file_, int scenario_number_, int num_pos_initial_, int num_goal_, double initial_velocity_ugv_,
 					double initial_velocity_uav_, double initial_acceleration_ugv_, double initial_acceleration_uav_, geometry_msgs::Point pos_reel_ugv_,
 					std::vector<Eigen::Vector3d> vec_pose_init_ugv_, std::vector<Eigen::Vector3d> vec_pose_init_uav_, std::vector<float> vec_len_cat_init_,
-					std::vector<geometry_msgs::Quaternion> vec_rot_ugv_, std::vector<geometry_msgs::Quaternion> vec_rot_uav_, octomap::OcTree* octotree_full_, 
-					octomap::OcTree* octotree_ugv_)
+					std::vector<geometry_msgs::Quaternion> vec_rot_ugv_, std::vector<geometry_msgs::Quaternion> vec_rot_uav_, octomap::OcTree* octree_full_, 
+					octomap::OcTree* octree_ugv_)
 {
 	path = path_;
 	name_output_file = name_output_file_;
@@ -112,8 +112,8 @@ inline void DataManagement::initDataManagement(std::string path_, std::string na
 	
 	pos_reel_ugv = pos_reel_ugv_;
 
-	octotree_full = octotree_full_;
-	octotree_ugv = octotree_ugv_;
+	octree_full = octree_full_;
+	octree_ugv = octree_ugv_;
 
 	output_file = path+name_output_file+"_stage_"+std::to_string(scenario_number)+"_InitPos_"+std::to_string(num_pos_initial)+"_goal_"+std::to_string(num_goal)+"_";
 }
@@ -671,9 +671,9 @@ inline bool DataManagement::isObstacleBetweenTwoPoints(Eigen::Vector3d pose_opt_
     bool r_cast_coll; 
     
 	if(oct_full_)
-		r_cast_coll = octotree_full->castRay(s_, d_, r_);
+		r_cast_coll = octree_full->castRay(s_, d_, r_);
 	else
-		r_cast_coll = octotree_ugv->castRay(s_, d_, r_);
+		r_cast_coll = octree_ugv->castRay(s_, d_, r_);
 
 	double dist12_ = sqrt ( (pose_opt_2.x()-pose_opt_1.x())*(pose_opt_2.x()-pose_opt_1.x())+
 					   		(pose_opt_2.y()-pose_opt_1.y())*(pose_opt_2.y()-pose_opt_1.y())+ 

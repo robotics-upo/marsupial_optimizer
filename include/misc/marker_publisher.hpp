@@ -20,7 +20,7 @@ class MarkerPublisher
 	public:
 		MarkerPublisher(){};
 		~MarkerPublisher(){};
-		void markerPoints(visualization_msgs::MarkerArray _marker, std::vector<geometry_msgs::Point> _vector, int _suffix, int _n_v, ros::Publisher c_m_pub_);
+		void markerPoints(visualization_msgs::MarkerArray _marker, std::vector<geometry_msgs::Point> _vector, int _suffix, int _n_v, ros::Publisher c_m_pub_, int change_marker_= 0);
 		void clearMarkers(visualization_msgs::MarkerArray _marker, auto _s, ros::Publisher c_m_pub_);
 		void getMarkerPoints(visualization_msgs::MarkerArray &marker_, std::vector<Eigen::Vector3d> _vector, std::string ns, int colour_);
 		void getMarkerLines(visualization_msgs::MarkerArray &marker_, std::vector<Eigen::Vector3d> _vector, std::string ns, int colour_);
@@ -33,7 +33,7 @@ class MarkerPublisher
 };
 
 
-inline void MarkerPublisher::markerPoints(visualization_msgs::MarkerArray _marker, std::vector<geometry_msgs::Point> _vector, int _suffix, int _n_v, ros::Publisher c_m_pub_)
+inline void MarkerPublisher::markerPoints(visualization_msgs::MarkerArray _marker, std::vector<geometry_msgs::Point> _vector, int _suffix, int _n_v, ros::Publisher c_m_pub_, int change_marker_)
 {
     std::string string_marker;
     std::string ns_marker;
@@ -45,6 +45,21 @@ inline void MarkerPublisher::markerPoints(visualization_msgs::MarkerArray _marke
         c_color3 = 0.5;
     else
         c_color3 = 0.0;
+	
+	double _scale = 0.06;
+
+	if(change_marker_==1){
+		c_color1 = 0.0;
+		c_color2 = 1.0;
+		c_color3 = 1.0;
+		_scale = 0.045;
+	}
+	else if(change_marker_==2){
+		c_color1 = 0.0;
+		c_color2 = 0.0;
+		c_color3 = 0.0;
+		_scale = 0.045;
+	}
             
     string_marker = std::to_string(_suffix);
     ns_marker = "catenary_"+string_marker;
@@ -57,7 +72,7 @@ inline void MarkerPublisher::markerPoints(visualization_msgs::MarkerArray _marke
         _marker.markers[i].ns = ns_marker;
         _marker.markers[i].id = i+1;
         _marker.markers[i].action = visualization_msgs::Marker::ADD;
-        if (i % 5 == 0)
+        if (i % 5 == 0 || change_marker_!=0)
             _marker.markers[i].type = visualization_msgs::Marker::CUBE;
         else
             _marker.markers[i].type = visualization_msgs::Marker::SPHERE;
@@ -70,9 +85,9 @@ inline void MarkerPublisher::markerPoints(visualization_msgs::MarkerArray _marke
         _marker.markers[i].pose.orientation.y = 0.0;
         _marker.markers[i].pose.orientation.z = 0.0;
         _marker.markers[i].pose.orientation.w = 1.0;
-        _marker.markers[i].scale.x = 0.06;
-        _marker.markers[i].scale.y = 0.06;
-        _marker.markers[i].scale.z = 0.06;
+        _marker.markers[i].scale.x = _scale;
+        _marker.markers[i].scale.y = _scale;
+        _marker.markers[i].scale.z = _scale;
         _marker.markers[i].color.a = 1.0;
         _marker.markers[i].color.r = 1.0 - c_color1;
         _marker.markers[i].color.g = c_color2;

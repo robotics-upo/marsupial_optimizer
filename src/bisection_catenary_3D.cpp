@@ -87,7 +87,7 @@ bisectionCatenary::bisectionCatenary()
 
 // bisectionCatenary::~bisectionCatenary(){} 
 
-void bisectionCatenary::configBisection(double _l, double _x1, double _y1, double _z1, double _x2, double _y2, double _z2)
+bool bisectionCatenary::configBisection(double _l, double _x1, double _y1, double _z1, double _x2, double _y2, double _z2)
 {
     resetVariables();
   
@@ -117,28 +117,31 @@ void bisectionCatenary::configBisection(double _l, double _x1, double _y1, doubl
         
         //Look for the solutions c, x0, y0
         //Calculate of phi and c
-    // printf("\nSolving First Bisection  kConst=%f XB=%f\n",kConst,XB);
+        // printf("\nSolving First Bisection  kConst=%f XB=%f\n",kConst,XB);
         bs_p = resolveBisection(Ap, Bp,0);
         c_value = XB/(2.0*bs_p); // Calculate distance from floor to point C
-    // printf("c_value= %f , XB= %f , bs_p= %f\n",c_value, XB, bs_p);
+        // printf("c_value= %f , XB= %f , bs_p= %f\n",c_value, XB, bs_p);
         //Calculate of x0
         // bs_X0 = resolveBisection(Ax,Bx,1);
-    // printf("\nSolving Second Bisection\n");
+        // printf("\nSolving Second Bisection\n");
         if (c_value > 1.0)
             factor_bisection_a = floor(c_value);
         else
             factor_bisection_a = c_value;
         bs_X0 = resolveBisection(-1.0*factor_bisection_a, factor_bisection_a,1);
-    // printf("bs_X0 = %f \n",bs_X0);
+        // printf("bs_X0 = %f \n",bs_X0);
         //Calculate of y0
-    // printf("\nSolving Third Bisection\n");
+        // printf("\nSolving Third Bisection\n");
         bs_Y0 = resolveBisection(-1.0*factor_bisection_a, factor_bisection_a,2);
         h_value = fabs(bs_Y0)-c_value;
 
         //Calculate lower point in catenary
         Xc = bs_X0;
         Yc = Z1-h_value;
+        return false;
     }
+    else
+        return true;
 }
 
 void bisectionCatenary::checkStateCatenary(double _x1, double _y1, double _z1, double _x2, double _y2, double _z2)
@@ -180,7 +183,7 @@ void bisectionCatenary::getPointCatenary3D(vector<geometry_msgs::Point> &_v_p)
 
         _v_p.clear();
 
-    // printf("c_value= %f , x_value_= %f , Xc= %f , Yc= %f \n",c_value, x_value_, Xc, Yc);
+        // printf("c_value= %f , x_value_= %f , Xc= %f , Yc= %f \n",c_value, x_value_, Xc, Yc);
         for(size_t i=0; i < num_point_catenary +1; i++){
             geometry_msgs::Point _p;
             y_value_ = (c_value * cosh((x_value_ - Xc)/c_value)+ (Yc - c_value)); // evalute CatenaryChain

@@ -636,9 +636,9 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		ROS_INFO(PRINTF_ORANGE"		- Optimize Lentgh");
 		for (int i = 0; i < statesLength.size(); ++i) {
 			CostFunction* cost_function_cat_1  = new NumericDiffCostFunction<CatenaryFunctor, FORWARD, 3, 4, 4, 2>
-										(new CatenaryFunctor(w_eta_1, w_eta_2, w_eta_3, distance_catenary_obstacle, nn_uav.kdtree, 
+										(new CatenaryFunctor(w_eta_1, w_eta_2, w_eta_3, distance_catenary_obstacle, length_tether_max, nn_uav.kdtree, 
 											nn_uav.obs_points, grid_3D, nn_trav.kdtree, nn_trav.obs_points, pos_reel_ugv, size_path, pos_reel_z, 
-											new_path_uav[i], nh)); 
+											new_path_uav[i], nh, mapFull_msg)); 
 			problem.AddResidualBlock(cost_function_cat_1, NULL, statesPosUAV[i].parameter, statesPosUGV[i].parameter, statesLength[i].parameter);
 			if (i == 0)
 				problem.SetParameterBlockConstant(statesLength[i].parameter);
@@ -1360,7 +1360,7 @@ void OptimizerLocalPlanner::postProcessingCatenary()
 		// printf(PRINTF_REGULAR"_d_ = %f , statesLength[i].parameter[1]= %f  statesPosUGV[i].parameter[3]+pos_reel_z=%f  statesPosUAV[i].parameter[3]=%f\n"
 								// ,_d_, statesLength[i].parameter[1],statesPosUGV[i].parameter[3]+pos_reel_z,statesPosUAV[i].parameter[3]);
 		if (_d_ > statesLength[i].parameter[1]){
-			parameter_block_post_length.parameter[1] = _d_ * 1.005;	// 1.02 in catenary constraint
+			parameter_block_post_length.parameter[1] = _d_ * 1.01;	// 1.02 in catenary constraint
 			count_cat_fail ++;
 			dm_.writeCatenaryFailData(count_cat_fail,statesPosUGV[i].parameter[0],statesLength[i].parameter[1],_d_, parameter_block_post_length.parameter[1]);
 		printf(PRINTF_RED"	Catenary number = %lu  [L=%f/d=%f]\n",i,statesLength[i].parameter[1],_d_);
