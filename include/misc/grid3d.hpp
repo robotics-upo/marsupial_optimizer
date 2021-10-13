@@ -278,7 +278,7 @@ public:
 	bool isIntoMap(double x, double y, double z)
 	{
 		// printf("x=[%f / %f / %f]  y=[%f / %f / %f]  z=[%f / %f / %f]\n", min_X, x, max_X, min_Y, y, max_Y, min_Z, z, max_Z);
-		return (x >= min_X && y >= min_Y && z >= min_Z && x <= max_X && y <= max_Y && z <= max_Z);
+		return (x > min_X && y > min_Y && z > min_Z && x < max_X && y < max_Y && z < max_Z);
 	}
 
 	double getPointDist(double x, double y, double z)
@@ -509,8 +509,8 @@ protected:
 		double minX, minY, minZ, maxX, maxY, maxZ, res;
 		m_octomap->getMetricMin(minX, minY, minZ);
 		m_octomap->getMetricMax(maxX, maxY, maxZ);
-		min_X = minX; min_Y = minY; min_Z = minZ; 
-		max_X = maxX; max_Y = maxY; max_Z = maxZ;
+		min_X = round(minX); min_Y = round(minY); min_Z = round(minZ); 
+		max_X = round(maxX); max_Y = round(maxY); max_Z = round(maxZ);
 		res = m_octomap->getResolution();
 		m_maxX = (float)(maxX-minX);
 		m_maxY = (float)(maxY-minY);

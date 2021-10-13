@@ -83,26 +83,42 @@ bisectionCatenary::bisectionCatenary()
     div_res = 1.0/resolution;
     factor_bisection_a = 1000.0;
     factor_bisection_b = 1000.0;
+    first_coll = 0;
+    last_coll = 0;
+    received_grid = false;
+    get_distance_data = false;
+
 } 
 
 // bisectionCatenary::~bisectionCatenary(){} 
 
-bool bisectionCatenary::configBisection(double _l, double _x1, double _y1, double _z1, double _x2, double _y2, double _z2)
+bool bisectionCatenary::configBisection(double _l, double _x1, double _y1, double _z1, double _x2, double _y2, double _z2, bool get_distance_data_)
 {
     resetVariables();
   
+    get_distance_data = get_distance_data_;
+    if ( (get_distance_data && !received_grid) || (!get_distance_data && received_grid) ){ 
+        printf(PRINTF_RED" Warnning: you are traying to use Bisection Method using grid dintance, but grid object is still empty.");
+        printf(PRINTF_RED" Check that you are calling readDataForCollisionAnalisys() method before call configBisection() method, and in the latter defined get_distance_data_ argument as true. \n");
+        printf(PRINTF_REGULAR" \n");
+    }
+
     L =_l;
     X1 =_x1; Y1 = _y1; Z1= _z1;
     X2 = _x2; Y2 = _y2;  Z2= _z2;
     
-// printf("p1 = %f %f %f , p2 = %f %f %f , L= %f\n",X1,Y1,Z1,X2,Y2,Z2,L);
     distance_3d = sqrt(pow(X2-X1,2)+pow(Y2-Y1,2)+pow(Z2-Z1,2)); //Distance between lashing represent in 3D
     
     XB = sqrt(pow(X2-X1,2)+pow(Y2-Y1,2));         //Distance between lashing represent in 2D plane
     YB = Z2 - Z1;    //height difference between points
 
     checkStateCatenary(_x1, _y1, _z1, _x2, _y2, _z2);
-    getNumberPointsCatenary(_l);
+    if (L > distance_3d)
+        getNumberPointsCatenary(L);
+    else
+        getNumberPointsCatenary(distance_3d);
+
+    mid_p_cat = ceil(num_point_catenary/2.0);
 
     if (!x_const || !y_const){ 
         //Value to accurete solution
@@ -115,23 +131,16 @@ bool bisectionCatenary::configBisection(double _l, double _x1, double _y1, doubl
         //Calculate K for Phi()
         kConst = (sqrt( fabs(L*L - YB*YB) ))/(XB); 
         
-        //Look for the solutions c, x0, y0
         //Calculate of phi and c
-        // printf("\nSolving First Bisection  kConst=%f XB=%f\n",kConst,XB);
         bs_p = resolveBisection(Ap, Bp,0);
         c_value = XB/(2.0*bs_p); // Calculate distance from floor to point C
-        // printf("c_value= %f , XB= %f , bs_p= %f\n",c_value, XB, bs_p);
         //Calculate of x0
-        // bs_X0 = resolveBisection(Ax,Bx,1);
-        // printf("\nSolving Second Bisection\n");
         if (c_value > 1.0)
             factor_bisection_a = floor(c_value);
         else
             factor_bisection_a = c_value;
         bs_X0 = resolveBisection(-1.0*factor_bisection_a, factor_bisection_a,1);
-        // printf("bs_X0 = %f \n",bs_X0);
-        //Calculate of y0
-        // printf("\nSolving Third Bisection\n");
+        // Calculate of y0
         bs_Y0 = resolveBisection(-1.0*factor_bisection_a, factor_bisection_a,2);
         h_value = fabs(bs_Y0)-c_value;
 
@@ -170,72 +179,126 @@ void bisectionCatenary::checkStateCatenary(double _x1, double _y1, double _z1, d
         _direc_y = 0.0;    
 }
 
-void bisectionCatenary::getPointCatenary3D(vector<geometry_msgs::Point> &_v_p)
+void bisectionCatenary::getPointCatenary3D(vector<geometry_msgs::Point> &v_p_)
 {
     double p_z_min = 1000.0;
+    dist_obst_cat.clear(); pos_cat_in_coll.clear(); cat_between_obs.clear();
     if (!x_const || !y_const){ 
         double x_value_, y_value_, x_step;
-        x_value_ = 0.0;
-
         x_step = (XB)/num_point_catenary;
+        x_value_ = 0.0;
         
         double tetha = atan(fabs(Y2-Y1)/fabs(X2-X1));
 
-        _v_p.clear();
+        v_p_.clear();
 
-        // printf("c_value= %f , x_value_= %f , Xc= %f , Yc= %f \n",c_value, x_value_, Xc, Yc);
+        double dist_cat_obs;
+        geometry_msgs::Point p_;
+        float p_x_, p_y_, p_z_;
+        first_coll = last_coll = 0;
         for(size_t i=0; i < num_point_catenary +1; i++){
-            geometry_msgs::Point _p;
             y_value_ = (c_value * cosh((x_value_ - Xc)/c_value)+ (Yc - c_value)); // evalute CatenaryChain
-            _p.x = X1 + _direc_x* cos(tetha) * x_value_;
-            _p.y = Y1 + _direc_y* sin(tetha) * x_value_;
-            _p.z = y_value_;
+            p_x_ = resolution * round( (X1 + _direc_x* cos(tetha) * x_value_) * div_res);
+            p_y_ = resolution * round( (Y1 + _direc_y* sin(tetha) * x_value_) * div_res);
+            p_z_ = resolution * round( (y_value_)* div_res);
+            p_.x = X1 + _direc_x* cos(tetha) * x_value_;
+            p_.y = Y1 + _direc_y* sin(tetha) * x_value_;
+            p_.z = y_value_;
             x_value_ = x_value_ + x_step;
 
-            _v_p.push_back(_p);
-            if (p_z_min > _p.z){
-                min_point_z_cat.x = _p.x; 
-                min_point_z_cat.y = _p.y; 
-                min_point_z_cat.z = _p.z; 
-                pos_in_cat_z_min = i;
-                p_z_min = _p.z;
-            }
+            if(get_distance_data){
+                bool is_into_ = grid_3D->isIntoMap(p_x_,p_y_,p_z_);
+                if(is_into_){
+                    TrilinearParams d = grid_3D->getPointDistInterpolation((double)p_.x, (double)p_.y, (double)p_.z);
+                    double x = p_.x;
+                    double y = p_.y;
+                    double z = p_.z;
+                    dist_cat_obs= (d.a0 + d.a1*x + d.a2*y + d.a3*z + d.a4*x*y + d.a5*x*z + d.a6*y*z + d.a7*x*y*z); 
+                    // dist_cat_obs =  grid_3D->getPointDist(p_x_,p_y_,p_z_);
+                }
+                else
+                    dist_cat_obs = -1.0;
+                dist_obst_cat.push_back(dist_cat_obs);
+                if(dist_cat_obs < bound_obst ){
+                    pos_cat_in_coll.push_back(i);
+                    if(i>0){
+						octomap::point3d r_;
+						octomap::point3d s_(p_.x,p_.y,p_.z); //start for rayCast
+						octomap::point3d d_(v_p_[i-1].x - p_.x, v_p_[i-1].y - p_.y, v_p_[i-1].z - p_.z); //direction for rayCast
+                        bool r_cast_coll = false; 
+                        r_cast_coll = octotree_full->castRay(s_, d_, r_);
 
+                        double dist12_ = sqrt ( (v_p_[i-1].x-s_.x())*(v_p_[i-1].x-s_.x())+
+                                                (v_p_[i-1].y-s_.y())*(v_p_[i-1].y-s_.y())+ 
+					   		                    (v_p_[i-1].z-s_.z())*(v_p_[i-1].z-s_.z()) );
+	
+                        double distObs_ = sqrt ((s_.x()-r_.x())*(s_.x()-r_.x())+(s_.y()-r_.y())*(s_.y()-r_.y())+(s_.z()-r_.z())*(s_.z()-r_.z()) );
+                        // if (d_.x() != 0.0 && d_.y() != 0.0 && d_.z() != 0.0){
+                            if(r_cast_coll && distObs_ <= dist12_){
+                                cat_between_obs.push_back(i);	
+                                if (first_coll == 0)
+                                    first_coll  = i;
+                                last_coll = i;
+                            }
+                        // }
+                    }
+                }        
+            }
+            v_p_.push_back(p_);
+            if (p_z_min > p_.z){
+                min_point_z_cat.x = p_.x; 
+                min_point_z_cat.y = p_.y; 
+                min_point_z_cat.z = p_.z; 
+                pos_in_cat_z_min = i;
+                p_z_min = p_.z;
+            }
+            if (mid_p_cat == i){
+                mid_point_cat.x = p_.x;
+				mid_point_cat.y = p_.y;
+				mid_point_cat.z = p_.z;
+            }
+            // printf("point_cat = [%f %f %f]\n",p_.x, p_.y, p_.z);
         }
     }
     else{
-        _v_p.clear();
-        getPointCatenaryStraight(_v_p);
+        v_p_.clear();
+        getPointCatenaryStraight(v_p_);
+    }
+}
+
+void bisectionCatenary::getPointCatenaryStraight(std::vector<geometry_msgs::Point> &v_p_)
+{
+    double _step = distance_3d / (double) num_point_catenary;
+
+    for(int i=0; i < num_point_catenary +1; i++)
+    {       
+        geometry_msgs::Point p_;
+
+        p_.x = resolution * ( round(X1*div_res ));
+        p_.y = resolution * ( round(Y1*div_res ));
+        p_.z = resolution * ( round((Z1 + _step* (double)i)*div_res) );    
+        v_p_.push_back(p_);
+        // printf("point_cat = [%f %f %f]\n",p_.x, p_.y, p_.z);
     }
 }
 
 double bisectionCatenary::resolveBisection(double a1_, double b1_, int mode_) 
 {
-    double xr, error;
-    //Initialize error with a big value
+    double xr, error, xa_ , xb_;
     
-    double xa_ , xb_;
-    points_interval it_points_interval;
-
     bool find_sign_change = false;
     double bound_interval_1 = (a1_);
     double bound_interval_2 = (b1_);
     while(!find_sign_change){    
-        // std::cout << "lookingSignChanging : press y to continue , mode["<< mode_<<"] current_interval [" << bound_interval_1 << " - " << bound_interval_2 <<"]" << std::endl;
         find_sign_change = lookingSignChanging(bound_interval_1, bound_interval_2, mode_);  // To find smallers interval where can be find the solution, depend on the sign change
 		bound_interval_1 = bound_interval_1 * 2.0;
         bound_interval_2 = bound_interval_2 * 2.0;
-        // std::string y_ ;
-        // std::cin >> y_ ;
-		// std::cout << "lookingSignChanging : Continue DO-WHILE loop ?" << y_ << std::endl;
-		// printf("find_sign_change ? = %s\n",find_sign_change? "true" : "false");
     }
     
     for (unsigned i = 0; i < vector_sign_change.size(); i++){
         error = tolerance + 1.0;
-        it_points_interval = vector_sign_change[i];
-        xa_ = it_points_interval.pa;
-        xb_ = it_points_interval.pb;
+        xa_ =  vector_sign_change[i].pa;
+        xb_ =  vector_sign_change[i].pb;
         
         while (error > tolerance) {
             xr = (xa_ + xb_) / 2.0;
@@ -264,14 +327,10 @@ double bisectionCatenary::functionBisection(double xr_aux, int mode_)
     
     if (mode_ == 0)
         yr_aux = sinh(xr_aux)- kConst * xr_aux; // To calculate phi()
-    if (mode_ == 1){
+    if (mode_ == 1)
         yr_aux = c_value*cosh((XB-xr_aux)/c_value) - c_value*cosh(xr_aux/c_value) - YB; // To calculate catenaryPointA
-        // printf("yr_aux=%f , c_value=%f , XB=%f , xr_aux=%f , YB=%f \n",yr_aux , c_value , XB , xr_aux , YB);
-    }
-    if (mode_ == 2){
+    if (mode_ == 2)
         yr_aux = c_value*cosh(((XB)-bs_X0)/c_value) - (YB) + xr_aux; // To calculate catenaryPointB
-        // printf("yr_aux=%f , c_value=%f , XB=%f , xr_aux=%f , YB=%f \n",yr_aux , c_value , XB , xr_aux , YB);
-    }
     return yr_aux;
 }
 
@@ -289,8 +348,6 @@ bool bisectionCatenary::lookingSignChanging (double a2, double b2, int mode_)
         y1 = functionBisection(bound_a, mode_);
         bound_b = bound_a + interval;
         y2 = functionBisection(bound_b, mode_);
-        // if(mode_ == 2)
-        //     printf ("y1= %f  y2=%f  y1*y2=%f  n_interval=%f  i=%i\n" ,y1, y2, y1*y2, n_interval, i);
 
         if ((y1*y2 < 0.0) || (y1*y2 == 0.0)){
             points_sign_change.pa = bound_a;
@@ -304,21 +361,6 @@ bool bisectionCatenary::lookingSignChanging (double a2, double b2, int mode_)
         return false;
     else
         return true;
-}
-
-void bisectionCatenary::getPointCatenaryStraight(std::vector<geometry_msgs::Point> &_v_p)
-{
-    double _step = distance_3d / (double) num_point_catenary;
-
-    for(int i=0; i < num_point_catenary +1; i++)
-    {       
-        geometry_msgs::Point _p;
-
-        _p.x = resolution * ( round(X1*div_res ));
-        _p.y = resolution * ( round(Y1*div_res ));
-        _p.z = resolution * ( round((Z1 + _step* (double)i)*div_res) );    
-        _v_p.push_back(_p);
-    }
 }
 
 inline void bisectionCatenary::getNumberPointsCatenary(double _length){num_point_catenary = ceil( (double)num_point_per_unit_length * _length);}  
@@ -350,19 +392,19 @@ void bisectionCatenary::getMinPointZCat(geometry_msgs::Point &p_, int &n_)
     n_ = pos_in_cat_z_min;
 }
 
+void bisectionCatenary::getMidPointCat(geometry_msgs::Point &p_, int &n_)
+{
+    p_.x = mid_point_cat.x;
+    p_.y = mid_point_cat.y;
+    p_.z = mid_point_cat.z;
+    n_ = mid_p_cat;
+}
+
 void bisectionCatenary::resetVariables()
 {
     L = 0.0;
-    X1 = 0.0; 
-    Y1 = 0.0; 
-    Z1 = 0.0;
-    X2 = 0.0;
-    Y2 = 0.0;  
-    Z2 = 0.0;
-    YB= 0.0;
-    XB= 0.0;
-    Xc= 0.0;
-    Yc= 0.0;
+    X1 = 0.0; Y1 = 0.0; Z1 = 0.0;X2 = 0.0;Y2 = 0.0;  Z2 = 0.0;
+    YB= 0.0; XB= 0.0; Xc= 0.0; Yc= 0.0;
     kConst = 0.0;
     bs_p = 0.0;
     c_value = 0.0;
@@ -370,5 +412,27 @@ void bisectionCatenary::resetVariables()
     bs_Y0 = 0.0;
     h_value = 0.0;
     x_const = y_const = z_const = false;
+    dist_obst_cat.clear();
 }
 
+void bisectionCatenary::readDataForCollisionAnalisys(Grid3d* g_3D_ , double bound_obst_, octomap::OcTree* octotree_full_,
+                                                    pcl::KdTreeFLANN <pcl::PointXYZ> trav_kdT_, pcl::PointCloud <pcl::PointXYZ>::Ptr trav_pc_)
+{
+   grid_3D = g_3D_; 
+   received_grid = true;
+   bound_obst = bound_obst_;
+   octotree_full = octotree_full_;
+   kdt_trav = trav_kdT_; 
+   pc_trav = trav_pc_; 
+}
+
+void bisectionCatenary::getStatusCollisionCat(std::vector<double> &dist_obst_cat_, std::vector<int> &pos_cat_in_coll_, std::vector<int> &cat_between_obs_, int &first_coll_, int &last_coll_)
+{
+    dist_obst_cat_.clear(); pos_cat_in_coll_.clear(); cat_between_obs_.clear();
+    dist_obst_cat_ = dist_obst_cat; 
+    pos_cat_in_coll_ = pos_cat_in_coll; 
+    cat_between_obs_ = cat_between_obs;
+    first_coll_ = first_coll; 
+    last_coll_ = last_coll;
+}
+    

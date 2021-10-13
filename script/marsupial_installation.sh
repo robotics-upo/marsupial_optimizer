@@ -6,6 +6,13 @@ read -p "Installing optimizer for marsupial robot configuration based in g2o. Pr
 sudo apt-get install qtbase5-dev libqt5svg5-dev 
 sudo apt install libdw-dev
 
+# For arduino (https://maker.pro/arduino/tutorial/how-to-use-arduino-with-robot-operating-system-ros)
+# sudo apt-get install ros-$ROS_DISTRO-rosserial
+# sudo apt-get install ros-$ROS_DISTRO-rosserial-arduino
+# http://wiki.ros.org/rosserial_arduino/Tutorials/Arduino%20IDE%20Setup
+git clone -b melodic-devel https://github.com/ros-drivers/rosserial.git
+
+
 cd ~/marsupial_ws/src
 
 # git clone https://github.com/robotics-upo/marsupial_g2o.git

@@ -174,6 +174,7 @@ public:
 
 	Solver::Options options;
   	Solver::Summary summary;
+	float initial_cost, final_cost, successful_steps, unsuccessful_steps, time_optimazation ;
 	
 	tf::TransformListener listener;
 
@@ -255,6 +256,7 @@ public:
 	vector<Eigen::Vector3d> vec_pose_ugv_opt, vec_pose_uav_opt; 
 	vector<Eigen::Vector3d> vec_pose_init_ugv, vec_pose_init_uav;
 	vector<double> vec_time_ugv_opt, vec_time_uav_opt;
+	vector<int> vec_fix_status_ugv_prepross;
 
 	vector<int> v_id_point_not_fix_ugv, v_id_point_not_fix_uav; // save the id number of position no fix , from vector vec_pose_init_uav
 	

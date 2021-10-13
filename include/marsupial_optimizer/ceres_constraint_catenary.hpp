@@ -1,7 +1,6 @@
 #ifndef CERES_CONSTRAINS_CATENARY_HPP
 #define CERES_CONSTRAINS_CATENARY_HPP
 
-
 #include "ceres/ceres.h"
 #include "glog/logging.h"
 #include "Eigen/Core"
@@ -29,12 +28,11 @@ using ceres::Problem;
 using ceres::Solve;
 using ceres::Solver;
 
-
 struct CatenaryFunctor {
   CatenaryFunctor(double weight_factor_1, double weight_factor_2, double weight_factor_3, double safty_bound, double length_tether_max_,
   				pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points, Grid3d* grid_3D_,
                 pcl::KdTreeFLANN <pcl::PointXYZ> trav_kdT, pcl::PointCloud <pcl::PointXYZ>::Ptr trav_pc, geometry_msgs::Point pos_reel_ugv, int size, 
-				double pos_reel_z, Eigen::Vector3d fix_pos_ref, ros::NodeHandlePtr nhP, octomap::OcTree* octotree_full_)
+				double pos_reel_z, Eigen::Vector3d fix_pos_ref, ros::NodeHandlePtr nhP, octomap::OcTree* octotree_full_, std::vector<double> &vec_l_min)
                 : wf_1(weight_factor_1), wf_2(weight_factor_2), wf_3(weight_factor_3),sb_(safty_bound), ltm_(length_tether_max_), kdT_(kdT_From_NN), 
 				o_p_(obstacles_Points), g_3D_(grid_3D_),kdT_trav_(trav_kdT), pc_trav_(trav_pc), pos_reel_ugv_(pos_reel_ugv),size_(size), 
 				pr_z_(pos_reel_z), fp_ref_(fix_pos_ref), o_full_(octotree_full_)
@@ -56,123 +54,59 @@ struct CatenaryFunctor {
 		
 		visualization_msgs::MarkerArray catenary_marker_, plane_marker_, obs_plane_marker_;
 	    std::vector<geometry_msgs::Point> points_catenary;
+		std::vector<double> dist_obst_cat; 
+		std::vector<int> cat_between_obs;
+		std::vector<int> pos_cat_in_coll;
         
 		double d_obs_;
         double d_min = 100.0; //Initial nearest distance catenary to obstacle
 		
    		int id_marker_ = statePosUAV[0];		// Related with Marker frame.id
-        int n_points_cat_dis;
+        int n_points_cat_discard = 0;
 
 		double m1, m2, m3;
 		double max_value_residual = 100.0;
 		double min_value_residual = 0.0;
+		int first_coll, last_coll;
 
 		double pos_init_cat_[3];
 		pos_init_cat_[0] = statePosUGV[1]; 
 		pos_init_cat_[1] = statePosUGV[2];
 		pos_init_cat_[2] = statePosUGV[3] + pr_z_;
 
-		double dist_ = sqrt((statePosUAV[1]-pos_init_cat_[0])*(statePosUAV[1]-pos_init_cat_[0]) + 
+		double dist = sqrt((statePosUAV[1]-pos_init_cat_[0])*(statePosUAV[1]-pos_init_cat_[0]) + 
 							(statePosUAV[2]-pos_init_cat_[1])*(statePosUAV[2]-pos_init_cat_[1]) + 
 							(statePosUAV[3]-pos_init_cat_[2])*(statePosUAV[3]-pos_init_cat_[2])); 
-		double safety_length = 1.01 * dist_;
+		double safety_length ;
+		if (dist < 4.0)
+			safety_length = 1.010 * dist;
+		else
+			safety_length = 1.005 * dist;
 
-
-		points_catenary.clear();
+		points_catenary.clear(); cat_between_obs.clear();  dist_obst_cat.clear(); pos_cat_in_coll.clear();
 
 		geometry_msgs::Point min_point_z_cat, mid_point_cat, min_point_z_cat1, min_point_z_cat2;
-		int pos_in_cat_z_min , pos_in_cat_col_trav1, pos_in_cat_col_trav2, pos_segment_col_trav1, pos_segment_col_trav2;
-		bool just_one_axe = bc.configBisection(stateCat[1], pos_init_cat_[0], pos_init_cat_[1], pos_init_cat_[2], statePosUAV[1], statePosUAV[2], statePosUAV[3]);
+		int pos_in_cat_z_min , mid_p_cat;
+		
+		bc.readDataForCollisionAnalisys(g_3D_, sb_, o_full_, kdT_trav_, pc_trav_);
+		bool just_one_axe = bc.configBisection(stateCat[1], pos_init_cat_[0], pos_init_cat_[1], pos_init_cat_[2], statePosUAV[1], statePosUAV[2], statePosUAV[3], true);
 		bc.getPointCatenary3D(points_catenary);
 		bc.getMinPointZCat(min_point_z_cat, pos_in_cat_z_min);
+		bc.getMidPointCat(mid_point_cat, mid_p_cat);
+		bc.getStatusCollisionCat(dist_obst_cat, pos_cat_in_coll, cat_between_obs, first_coll, last_coll);
 
 		mP_.markerPoints(catenary_marker_, points_catenary, id_marker_, size_, catenary_marker_pub_);
 
-		n_points_cat_dis = 0;
-		std::vector<geometry_msgs::Point> nearest_p_cat_to_obs;
-		std::vector<double> min_dist_segment;
-		std::vector<double> cat_between_obs;
-		nearest_p_cat_to_obs.clear(); min_dist_segment.clear(); cat_between_obs.clear(); 
 		int num_point_per_segment = 1;
-		int num_segment = ceil(( points_catenary.size() - ( n_points_cat_dis + n_points_cat_dis ) )/num_point_per_segment); // previously (n_points_cat_dis+n_points_cat_dis/2.0)
-		int mid_p_cat = ceil(points_catenary.size()/2.0);
+		int num_segment = ceil(( points_catenary.size() )/num_point_per_segment); // previously (n_points_cat_discard+n_points_cat_discard/2.0)
 		if (num_segment <= 0)
 			num_segment = 1;
-		for (int i=0 ; i< num_segment ; i++){
-			geometry_msgs::Point _p;
-			_p.x = -1.0; 
-			_p.y = -1.0; 
-			_p.z = -1.0; 
-			nearest_p_cat_to_obs.push_back(_p);
-			min_dist_segment.push_back(0.0);
-			cat_between_obs.push_back(0.0);
-		}
 
-		// Next lines finding closest (d_ < d_safety) catenary points to obstacles and then compute error
-		std::vector <int> obs_in_segment_close_cat;
-		obs_in_segment_close_cat.clear();
-		int count_num_point_segment = 0;
-		int count_segment= 0 ;
-		bool aux_count = 0;
-		int pos_in_segment_z_min = 0;
-		double able_average_segment[num_segment];
-		able_average_segment[0] = 0.0;
-		for(size_t i = 0 ; i < points_catenary.size() ; i++){
-			double near_[3];
-			if (i >= n_points_cat_dis && (i < points_catenary.size() - n_points_cat_dis) ){
-				TrilinearParams d = g_3D_->getPointDistInterpolation((double)points_catenary[i].x, (double)points_catenary[i].y, (double)points_catenary[i].z);
-				double x , y, z;
-				x = points_catenary[i].x;
-				y = points_catenary[i].y;
-				z = points_catenary[i].z;
-				d_obs_= (d.a0 + d.a1*x + d.a2*y + d.a3*z + d.a4*x*y + d.a5*x*z + d.a6*y*z + d.a7*x*y*z); 
-				// Next lines to get nearest obstacle to each segment
-				count_num_point_segment++;	
-				if (d_obs_ < d_min){
-					min_dist_segment[count_segment] = d_obs_;
-					d_min = d_obs_;
-					nearest_p_cat_to_obs[count_segment].x = points_catenary[i].x; 
-					nearest_p_cat_to_obs[count_segment].y = points_catenary[i].y; 
-					nearest_p_cat_to_obs[count_segment].z = points_catenary[i].z; 
-					if (aux_count && d_obs_ < sb_){
-						able_average_segment[count_segment] = 1.0;
-						obs_in_segment_close_cat.push_back(count_segment);
-						aux_count = false;
-						if(i>0){
-							octomap::point3d r_;
-							octomap::point3d s_(points_catenary[i].x,points_catenary[i].y,points_catenary[i].z); //start for rayCast
-							octomap::point3d d_(points_catenary[i].x-points_catenary[i-1].x,
-												points_catenary[i].y-points_catenary[i-1].y, 
-												points_catenary[i].z-points_catenary[i-1].z ); //direction for rayCast
-							bool r_cast_coll = false; 
-							r_cast_coll = o_full_->castRay(s_, d_, r_);
-							if(r_cast_coll){
-								cat_between_obs[i]=1.0;	
-							}
-						}
-					}	
-				}
-				if (i == pos_in_cat_z_min)
-					pos_in_segment_z_min = count_segment;
-				if (i == mid_p_cat){
-					mid_point_cat.x = points_catenary[i].x;
-					mid_point_cat.y = points_catenary[i].y;
-					mid_point_cat.z = points_catenary[i].z;
-				}
-				if (count_num_point_segment >= num_point_per_segment){
-					count_num_point_segment = 0;
-					count_segment++;
-					aux_count = true;
-					d_min = 100.0;
-					able_average_segment[count_segment] = 0.0;
-				}
-			}
-		}
 		// Next lines compute distance between catenary lower point to traversabolity map.
 		double below_z_trav[3];
 		double d_below_z_trav = 0.0;
 		nn.nearestObstacleStateCeres(kdT_trav_ , min_point_z_cat.x, min_point_z_cat.y, min_point_z_cat.z, pc_trav_, below_z_trav[0], below_z_trav[1], below_z_trav[2]);
-		if (min_point_z_cat.z <= below_z_trav[2] + sb_){ 
+		if (min_point_z_cat.z <= below_z_trav[2] + sb_/2.0){ 
 			d_below_z_trav = sqrt((min_point_z_cat.x-below_z_trav[0])*(min_point_z_cat.x-below_z_trav[0])+
 								(min_point_z_cat.y-below_z_trav[1])*(min_point_z_cat.y-below_z_trav[1])+
 								(min_point_z_cat.z-below_z_trav[2])*(min_point_z_cat.z-below_z_trav[2]));
@@ -181,21 +115,24 @@ struct CatenaryFunctor {
 		double L_, L_max, L_min, L_new, length_less_coll_;
 		double not_catenary_ = 0.0;
 		if (!just_one_axe){
-			// printf("Entro 1\n");
 			L_max = L_min = L_ = L_new = safety_length;
 			int count_ = 0;
 			bool bound_finded_ = false;
 			bool starting_in_coll = false;
-			int count_point_not_coll = 0;
 			length_less_coll_ = safety_length;
 			int min_num_coll_ = 10000;
+			std::vector<double> dist_obst_cat_; 
+			std::vector<int> pos_cat_in_coll_, cat_between_obs_;
+			dist_obst_cat_.clear() ; pos_cat_in_coll_.clear(); cat_between_obs_.clear();
+			geometry_msgs::Point p_min;
+			double t_min[3];
+			int n_min, f_coll, l_coll;
 			while (L_ <= ltm_ || !bound_finded_){
 				if (safety_length > 4.0)
-						L_ = safety_length * (1.001 + 0.001*count_);
+						L_ = safety_length * (1.000 + 0.001*count_);
 					else
-						L_ = safety_length * (1.001 + 0.002*count_);
+						L_ = safety_length * (1.000 + 0.002*count_);
 				if( ltm_ < L_){
-					// printf("Entro 1.5\n");
 					if(!starting_in_coll){
 						L_max = L_new; 
 						break;
@@ -203,81 +140,51 @@ struct CatenaryFunctor {
 					else{
 						L_max = L_min = length_less_coll_;
 						not_catenary_ = 1.0;
-						ROS_ERROR("NOT SOLUTION FOR CATENARY 1: Always in collision point [%i]",id_marker_);
+						// ROS_ERROR("NOT SOLUTION FOR CATENARY 1: Always in collision point [%i]",id_marker_);
 						break;
 					}
 				}
-				geometry_msgs::Point p_min;
-				double t_min[3];
-				int n_;
-				bc.configBisection(L_, pos_init_cat_[0], pos_init_cat_[1], pos_init_cat_[2], statePosUAV[1], statePosUAV[2], statePosUAV[3]);
+				bc.configBisection(L_, pos_init_cat_[0], pos_init_cat_[1], pos_init_cat_[2], statePosUAV[1], statePosUAV[2], statePosUAV[3],true);
 				bc.getPointCatenary3D(points_catenary);
-				bc.getMinPointZCat(p_min, n_);
+				bc.getMinPointZCat(p_min, n_min);
 				nn.nearestObstacleStateCeres(kdT_trav_ , p_min.x, p_min.y, p_min.z, pc_trav_, t_min[0], t_min[1], t_min[2]);
-				if (p_min.z < t_min[2] ){
+				bc.getStatusCollisionCat(dist_obst_cat_, pos_cat_in_coll_, cat_between_obs_, f_coll, l_coll);
+				if (p_min.z < t_min[2] + 0.05){
 					if (starting_in_coll){
 						not_catenary_ = 1.0;
 						L_max = L_min = length_less_coll_;
-						ROS_ERROR("NOT SOLUTION FOR CATENARY 2: Always in collision point [%i] length_less_coll_=%f",id_marker_,length_less_coll_);
+						// ROS_ERROR("NOT SOLUTION FOR CATENARY 2: Always in collision point [%i] length_less_coll_=%f",id_marker_,length_less_coll_);
 						break;
 						}
-					// printf("Entro 1.8 min_point_z_cat[%i]=[%f %f %f]\n",n_, p_min.x, p_min.y, p_min.z);
 					L_max = L_new;
 					break;
 				}
-				count_point_not_coll = 0;
-				for(size_t i = 0 ; i < points_catenary.size() ; i++){
-					if (i >= n_points_cat_dis && (i < points_catenary.size() - n_points_cat_dis) ){
-						// if(cat_between_obs[i] == 0.0){ 
-						TrilinearParams d = g_3D_->getPointDistInterpolation((double)points_catenary[i].x, 
-																			 (double)points_catenary[i].y, 
-																			 (double)points_catenary[i].z);
-						double x , y, z;
-						x = points_catenary[i].x;
-						y = points_catenary[i].y;
-						z = points_catenary[i].z;
-						d_obs_= (d.a0 + d.a1*x + d.a2*y + d.a3*z + d.a4*x*y + d.a5*x*z + d.a6*y*z + d.a7*x*y*z); 
-						if (d_obs_ < sb_ ){
-							if (count_== 0){
-								// printf("Entro 2\n");
-								starting_in_coll = true;
-								break;
-							}
-							if (!starting_in_coll){
-								L_max = L_new; // Is the previous L value
-								bound_finded_ = true;
-								// printf("Entro 2.1\n");
-								break;
-							}
-						}
-						else{
-							count_point_not_coll++;
-						}
+				if (pos_cat_in_coll_.size() > 0){
+					if (count_== 0)
+						starting_in_coll = true;
+					if (!starting_in_coll){
+						L_max = L_new; // Is the previous L value
+						bound_finded_ = true;
 					}
 				}
-				if (count_point_not_coll == points_catenary.size() && starting_in_coll){
+				if (pos_cat_in_coll_.size()==0 && starting_in_coll){
 					L_min = L_;  // Is the current L value 
 					bound_finded_ = true;
-					count_point_not_coll = 0;
-					// printf("Entro 3 :  L_min =%f\n",L_min);
 				}
-				if(min_num_coll_ > (points_catenary.size()-count_point_not_coll)){
-					length_less_coll_ = L_;
-					min_num_coll_ = (points_catenary.size()-count_point_not_coll);
+				if(min_num_coll_ > pos_cat_in_coll_.size()){
+					length_less_coll_ = L_;  // Value to use in case of not solution because is the best option
+					min_num_coll_ = pos_cat_in_coll_.size();
 				}
-				// printf("count_point_not_coll =%i  points_catenary.size()=%lu\n",count_point_not_coll, points_catenary.size());
-				L_new = L_;
 				if (bound_finded_)
 					break;
+				L_new = L_;
 				count_++;
-				// printf("count_ =%i  L_=%f L_min=%f L_max=%f \n",count_, L_, L_min, L_max);
 			}
 			if(starting_in_coll && not_catenary_==0.0){
-				// printf("Entro 4\n");
 				L_ = L_min;
 				L_new = L_min;
 				bound_finded_ = false;
-				count_ = 1;
+				count_ = 0;
 				while (L_ <= ltm_ || !bound_finded_){
 					if (L_min > 4.0)
 						L_ = L_min * (1.001 + 0.001*count_);
@@ -285,44 +192,27 @@ struct CatenaryFunctor {
 						L_ = L_min * (1.001 + 0.004*count_);
 					if( (ltm_ - L_) < 0.0){
 						L_max = L_new; 
-						// printf("Entro 5.0 \n");
 						break;
 					}
-					geometry_msgs::Point p_min;
-					double t_min[3];
-					int n_;
-					bc.configBisection(L_, pos_init_cat_[0], pos_init_cat_[1], pos_init_cat_[2], statePosUAV[1], statePosUAV[2], statePosUAV[3]);
+					bc.configBisection(L_, pos_init_cat_[0], pos_init_cat_[1], pos_init_cat_[2], statePosUAV[1], statePosUAV[2], statePosUAV[3],true);
 					bc.getPointCatenary3D(points_catenary);
-					bc.getMinPointZCat(p_min, n_);
+					bc.getMinPointZCat(p_min, n_min);
 					nn.nearestObstacleStateCeres(kdT_trav_ , p_min.x, p_min.y, p_min.z, pc_trav_, t_min[0], t_min[1], t_min[2]);
+					bc.getStatusCollisionCat(dist_obst_cat_, pos_cat_in_coll_, cat_between_obs_, f_coll, l_coll);
 					if (p_min.z < t_min[2] ){ 
 						L_max = L_new;
-						// printf("Entro 5.1 min_point_z_cat[%i]=[%f %f %f]\n",n_, p_min.x, p_min.y, p_min.z);
 						break;
 					}
-					for(size_t i = 0 ; i < points_catenary.size() ; i++){
-						if (i >= n_points_cat_dis && (i < points_catenary.size() - n_points_cat_dis) ){
-							TrilinearParams d = g_3D_->getPointDistInterpolation((double)points_catenary[i].x, (double)points_catenary[i].y, (double)points_catenary[i].z);
-							double x , y, z;
-							x = points_catenary[i].x;
-							y = points_catenary[i].y;
-							z = points_catenary[i].z;
-							d_obs_= (d.a0 + d.a1*x + d.a2*y + d.a3*z + d.a4*x*y + d.a5*x*z + d.a6*y*z + d.a7*x*y*z); 
-							if (d_obs_ < sb_){
-								L_max = L_new; 
-								// printf("Entro 5.2 L_max=%f\n",L_max);
-								bound_finded_ = true;
-								break;
-							}
-						}
+					if (pos_cat_in_coll_.size() > 0){
+						L_max = L_new; 
+						bound_finded_ = true;
+						break;
 					}
-					L_new = L_;
 					if (bound_finded_)
 						break;
+					L_new = L_;
 					count_++;
-					// printf("count_ =%i  L_=%f L_min=%f L_max=%f \n",count_, L_, L_min, L_max);
 				}
-				starting_in_coll = false;
 			}
 		}
 		else{
@@ -332,25 +222,12 @@ struct CatenaryFunctor {
 		
 		/********** I Constraint to make cable far away from obstacles **********/
 		
-		double cost_function_obstacles_ = 0.0;
-		int first_coll, last_coll;
-		first_coll = last_coll = 0;
-		double status_length_;
-		for (int i=0 ; i < num_segment ; i++){
-			// if (min_dist_segment[i] > sb_)
-			// 	m1 = 0.0;
-			// else
-			// 	m1 = (max_value_residual - min_value_residual)/(0.0 - sb_);
-			
-			
-			// cost_function_obstacles_ = able_average_segment[i] *  m1 * (min_dist_segment[i] - sb_) + cost_function_obstacles_;
-			if(cat_between_obs[i]>0.0){
-				if (first_coll == 0)
-					first_coll  = i;
-				last_coll = i;
-			}
+		double status_length_, num_point_coll;
+
+		if (not_catenary_ == 1.0){
+			status_length_ = 0.0;
 		}
-		if (stateCat[1] < L_min){ 
+		else if (stateCat[1] < L_min){ 
 			status_length_ = 1.0/stateCat[1];
 			m1 = (max_value_residual - min_value_residual)/(2.0 - 0);
 		}
@@ -358,32 +235,24 @@ struct CatenaryFunctor {
 			status_length_ = stateCat[1];
 			m1 = (max_value_residual - min_value_residual)/(2.0 - 0.0);
 		}
-		else 
+		else // when catenary is in safety area
 			status_length_ = 0.0;
-		// residual[0] = wf_1 * (cost_function_obstacles_ + sb_* (last_coll- first_coll) * status_length_+ not_catenary_* sb_ * num_segment);
-		residual[0] = wf_1 * (20.0 * (last_coll- first_coll) * status_length_+ not_catenary_* sb_ * num_segment);
+
+		if(last_coll != 0  && first_coll != 0 && last_coll == first_coll)
+			num_point_coll = 1;
+		else
+			num_point_coll = last_coll- first_coll;
+
+		residual[0] = wf_1 * (10.0 * (num_point_coll) * status_length_+ not_catenary_* (sb_ * num_segment) );
 
 		/********** II Constraint to make length Cable longer than distance between UAV and UGV **********/ 
 
-		double min_value_residual1, cost1_, cost2_, cost3_, _d_, diff_;
-		cost1_ = cost2_ = cost3_ = 0.0;
-		if (not_catenary_ == 1.0){
-			min_value_residual1 = 10.0;
-			if ( stateCat[1] < length_less_coll_){
-				m2 = (max_value_residual - min_value_residual1)/(length_less_coll_*0.95 - length_less_coll_);
-				diff_ = length_less_coll_ - stateCat[1];
-			}
-			else{
-				m2 = (max_value_residual - min_value_residual1)/(length_less_coll_*1.05 - length_less_coll_);
-				diff_ = stateCat[1] - length_less_coll_;
-			}
-			_d_ = sqrt((statePosUAV[1]-statePosUGV[1])*(statePosUAV[1]-statePosUGV[1]) + 
-					   (statePosUAV[2]-statePosUGV[2])*(statePosUAV[2]-statePosUGV[2]) + 
-					   (statePosUAV[3]-statePosUGV[3])*(statePosUAV[3]-statePosUGV[3])); 
-
-			cost3_ = 1.0;
-		}
-		else if (stateCat[1] < L_min) {
+		double min_value_residual1, cost1_, cost2_;
+		cost1_ = cost2_ = 0.0;
+		// if (not_catenary_ == 1.0){
+		// 	// cost1_ = cost2_ = 0.0;
+		// }
+		if (stateCat[1] < L_min) {
 			min_value_residual1 = 10.0;
 			m2 = (max_value_residual - min_value_residual1)/(L_min*0.9 - L_min);
 			cost1_ = 1.0;
@@ -393,33 +262,34 @@ struct CatenaryFunctor {
 			m2 = (max_value_residual - min_value_residual1)/(L_max*1.1 - L_max);
 			cost2_ = 1.0;
 		}
-		else{
-			m2 = 0.0;
-			min_value_residual1 = 0.0;
-			cost1_ = cost2_ = 0.0;
-		}
 		
 		residual[1] = wf_2 * ( cost1_* (1.0/stateCat[1]) *( m2 * (stateCat[1] - L_min) + min_value_residual1) + 
-							   cost2_* ( stateCat[1] ) * ( m2 * (stateCat[1] - L_max) + min_value_residual1) + 
-							   cost3_* m2*(stateCat[1] - length_less_coll_) * (_d_));
-
+							   cost2_* ( stateCat[1] ) * ( m2 * (stateCat[1] - L_max) + min_value_residual1) );
 
 		/********** III Constraint to make cable not place below traversable map **********/
 
 		if (0.0 < d_below_z_trav)
-			m3 = (max_value_residual - min_value_residual)/(0.05 - 0.0);
+			m3 = (max_value_residual - min_value_residual)/(sb_ - 0.0);
 		else
 			m3 = 0.0;
 		residual[2] = wf_3 * m3 * stateCat[1] * (d_below_z_trav);
 
+		double min_dist = 1000.0;
+		int pos_min_dist_= 0;
+		for (int i=0 ; i < dist_obst_cat.size() ; i++){
+			if (min_dist > dist_obst_cat[i]){
+				min_dist = dist_obst_cat[i];
+				pos_min_dist_ = i;
+			}
+		}
 
-		std::cout << std::fixed;
-		std::cout << std::setprecision(5);
-		std::cout << "node[" << statePosUAV[0] << "/" << statePosUGV[0] << "]  , residual[0]= " <<residual[0] << " residual[1]= " <<residual[1] << " residual[2]= " <<residual[2]; 
-		std::cout << " , 	there_is_not_cat=[" << not_catenary_ <<"] , [L=" << stateCat[1]<< "/Lmin=" << L_min << "/Lmax=" << L_max << "/d=" << safety_length <<" , points_cat_in_coll=["
-				  <<first_coll<<"-"<<last_coll<<"/"<<last_coll-first_coll<<"/"<<num_segment<<"]"<<std::endl;
-
-
+		// std::cout << std::fixed;
+		// std::cout << std::setprecision(5);
+		// std::cout << "node[" << statePosUAV[0] << "/" << statePosUGV[0] << "]  , residual[0]= " <<residual[0] << " residual[1]= " <<residual[1] 
+		// 			<< " residual[2]= " <<residual[2]; 
+		// std::cout << " , 	there_is_not_cat=[" << not_catenary_ <<"] , [L=" << stateCat[1]<< "/Lmin=" << L_min << "/Lmax=" << L_max << "/sd=" 
+		// 			<< safety_length <<" , points_cat_in_coll=["<<first_coll<<"-"<<last_coll<<"/"<<last_coll-first_coll<<"/"<<num_segment
+		// 			<<"] , min_dist["<< pos_min_dist_<<"]=[" << min_dist << "]" << std::endl;
 
 		// std::string _y2;
 		// std::cout << "Continue While -> waiting press key : " ;
