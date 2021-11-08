@@ -22,30 +22,29 @@ public:
   {}
 
   template <typename T>
-  bool operator()(const T* const statePos1, const T* const statePos2, const T* const stateT1, T* residual) const 
+  bool operator()(const T* const statePos1, const T* const statePos2, const T* const stateT, T* residual) const 
   {
       if (statePos2[0] < cfp_ugv){
         residual[0] = T{0.0}; 
         return true;
       }
       else{
-        T d_ugv_, arg_d_ugv_;
+        T d_, arg_d_ugv_;
         
         arg_d_ugv_ = pow(statePos2[1]-statePos1[1],2) + pow(statePos2[2]-statePos1[2],2) + pow(statePos2[3]-statePos1[3],2);
         
         if (arg_d_ugv_ < 0.001 && arg_d_ugv_ > -0.001)
-          d_ugv_ = T{0.0};
+          d_ = T{0.0};
         else               
-          d_ugv_ = sqrt(arg_d_ugv_);
+          d_ = sqrt(arg_d_ugv_);
         
-        if(stateT1[1] < 0.001)
+        if(stateT[1] < 0.001)
           residual[0] = T{0.0};
         else
-          residual[0] =  wf_ * ((d_ugv_ / stateT1[1]) - iv_);  //To avoid division that make underterminated residual: v*t=d
+          residual[0] =  wf_ * ((d_ / stateT[1]) - iv_);  //To avoid division that make underterminated residual: v*t=d
 
-        // printf("VelocityFunctorUGV , ");
-        // std::cout << "d_ugv_= " << d_ugv_ << " , stateT1[1]= " << stateT1[1] <<std::endl;
-        // std::cout << "residual[0]= " << residual[0] << std::endl;
+        // std::cout << "VelocityFunctorUGV : residual[0]= " << residual[0] << " , d_= " << d_ << " , stateT[1]= " << stateT[1] << std::endl;
+
 
         return true;
       }

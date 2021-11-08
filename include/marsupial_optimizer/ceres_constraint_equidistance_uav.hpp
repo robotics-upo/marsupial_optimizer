@@ -56,7 +56,7 @@ class EquiDistanceFunctorUAV
 
       residual[0] = wf_ * m *(d_pos - dr_);  
 
-      // std::cout<< "Equi-Distance UAV["<<statePos1[0]<<","<<statePos2[0]<<"]: residual[0]= "<<residual[0]<<" , d_pos= "<< d_pos <<" , init_d= "<<init_d<<std::endl;
+      // std::cout<< "Equi-Distance UAV: residual[0]= "<<residual[0]<<" , d_pos= "<< d_pos <<" , init_d= "<<init_d<<std::endl;
 
       return true;
     

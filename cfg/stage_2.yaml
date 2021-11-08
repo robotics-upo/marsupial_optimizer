@@ -23,7 +23,7 @@ test_3:
   initial_pos_ugv_roll: 0.0
 
 test_4:
-  initial_pos_ugv_x: -6.0
+  initial_pos_ugv_x: -5.6
   initial_pos_ugv_y: 0.5
   initial_pos_ugv_z: 2.03
   initial_pos_ugv_yaw:  0.0

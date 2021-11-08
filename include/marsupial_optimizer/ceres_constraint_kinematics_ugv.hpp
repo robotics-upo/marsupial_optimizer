@@ -43,20 +43,6 @@ public:
 		else
 			norm_vector2 = sqrt(arg2);
 			
-		// // Compute cos(angle)	
-		// 		// Compute cos(angle)	
-		// if (norm_vector1 < 0.0001 || norm_vector2 < 0.0001)
-		// 	cos_angle = T{0.0};
-		// else
-		// 	cos_angle = dot_product/(norm_vector1 * norm_vector2);
-		// double bound = cos(ang_);
-		// //Compute Residual
-		// if ( cos_angle > bound || norm_vector1 < 0.0001 && norm_vector1 > -0.0001 || norm_vector2 < 0.0001 && norm_vector2 > -0.0001) 
-		// 	residual[0] = T(0.0);
-		// else
-		// 	residual[0] =  wf_ * 100.0 * (cos_angle - 1.0);
-
-		
 		// Compute cos(angle)	
 		if (norm_vector1 < 0.0001 || norm_vector2 < 0.0001)
 			cos_angle = T{0.0};
@@ -70,15 +56,6 @@ public:
         T value_dependent1 = T{bound};
         T m ;
 		
-		// T arg_d_pos= (pow(statePos1[1]-statePos2[1],2)) + pow(statePos1[2]-statePos2[2],2) + pow(statePos1[3]-statePos2[3],2);
-		// T d_pos;
-		// if(arg_d_pos< 0.0001 && arg_d_pos > -0.0001)
-        // 	d_pos = T{0.0};
-      	// else
-        // 	d_pos = sqrt(arg_d_pos);
-
-
-        // if ( cos_angle > bound || d_pos < 0.05){
         if ( cos_angle > bound){
             m = T{0.0};
 			b_ = T{1.0};
@@ -88,7 +65,7 @@ public:
 		}	
 		residual[0] =  wf_ * m * (cos_angle - b_);
 		
-		// std::cout << "KinematicsFunctorUGV["<<statePos1[0] <<","<<statePos2[0]<<","<<statePos3[0]<<"] , residual[0]= "<< residual[0] << " , cos_angle= " << cos_angle << " , b_= " << b_ << std::endl;
+		// std::cout << "KinematicsFunctorUGV residual[0]= "<< residual[0] << " , cos_angle= " << cos_angle << " , b_= " << b_ << std::endl;
 		
 		return true;
 	}

@@ -71,9 +71,9 @@ public:
             
             // residual[0] =  wf_ * 1000.0 * (exp(4.0*d_ugv_) - bound);
 
-            T max_value_residual = T{80.0};
+            T max_value_residual = T{200.0};
             T min_value_residual = T{0.0};
-            T value_dependent2 = T{0.2};
+            T value_dependent2 = T{0.1};
             T value_dependent1 = T{bound};
             T m ;
             if ( bound > d_ugv_ )

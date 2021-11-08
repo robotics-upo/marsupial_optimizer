@@ -153,7 +153,7 @@ inline Eigen::Vector3d NearNeighbor::nearestTraversabilityMarsupial(const pcl::K
 			ret_.y() = o_p_->points[ pointIdxRadiusSearch_[i] ].y;
 			ret_.z() = o_p_->points[ pointIdxRadiusSearch_[i] ].z;
 			z_aux_ = ret_.z();
-			ROS_ERROR("   NearestTraversabilityMarsupial - radiusSearch: [%f %f %f]",ret_.x(),ret_.y(),ret_.z());
+			// ROS_ERROR("   NearestTraversabilityMarsupial - radiusSearch: [%f %f %f]",ret_.x(),ret_.y(),ret_.z());
 			count++;
 			}
 		}

@@ -7,6 +7,7 @@
 
 #include <ros/ros.h>
 #include <geometry_msgs/Point.h>
+#include <geometry_msgs/Vector3.h>
 #include <visualization_msgs/MarkerArray.h>
 
 #include <pcl/search/impl/kdtree.hpp>
@@ -31,11 +32,11 @@ using ceres::Solver;
 struct CatenaryFunctor {
   CatenaryFunctor(double weight_factor_1, double weight_factor_2, double weight_factor_3, double safty_bound, double length_tether_max_,
   				pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points, Grid3d* grid_3D_,
-                pcl::KdTreeFLANN <pcl::PointXYZ> trav_kdT, pcl::PointCloud <pcl::PointXYZ>::Ptr trav_pc, geometry_msgs::Point pos_reel_ugv, int size, 
-				double pos_reel_z, Eigen::Vector3d fix_pos_ref, ros::NodeHandlePtr nhP, octomap::OcTree* octotree_full_, std::vector<double> &vec_l_min)
+                pcl::KdTreeFLANN <pcl::PointXYZ> trav_kdT, pcl::PointCloud <pcl::PointXYZ>::Ptr trav_pc, geometry_msgs::Vector3 pos_reel_ugv, int size, 
+				Eigen::Vector3d fix_pos_ref, ros::NodeHandlePtr nhP, octomap::OcTree* octotree_full_, std::vector<double> &vec_l_min)
                 : wf_1(weight_factor_1), wf_2(weight_factor_2), wf_3(weight_factor_3),sb_(safty_bound), ltm_(length_tether_max_), kdT_(kdT_From_NN), 
 				o_p_(obstacles_Points), g_3D_(grid_3D_),kdT_trav_(trav_kdT), pc_trav_(trav_pc), pos_reel_ugv_(pos_reel_ugv),size_(size), 
-				pr_z_(pos_reel_z), fp_ref_(fix_pos_ref), o_full_(octotree_full_)
+				fp_ref_(fix_pos_ref), o_full_(octotree_full_)
     {
 		catenary_marker_pub_ = nhP->advertise<visualization_msgs::MarkerArray>("catenary_marker", 1);
 		plane_pub_ = nhP->advertise<visualization_msgs::MarkerArray>("plane_markerArray", 1);
@@ -65,14 +66,14 @@ struct CatenaryFunctor {
         int n_points_cat_discard = 0;
 
 		double m1, m2, m3;
-		double max_value_residual = 100.0;
+		double max_value_residual = 200.0;
 		double min_value_residual = 0.0;
 		int first_coll, last_coll;
 
 		double pos_init_cat_[3];
 		pos_init_cat_[0] = statePosUGV[1]; 
 		pos_init_cat_[1] = statePosUGV[2];
-		pos_init_cat_[2] = statePosUGV[3] + pr_z_;
+		pos_init_cat_[2] = statePosUGV[3] + pr_ugv_[2];
 
 		double dist = sqrt((statePosUAV[1]-pos_init_cat_[0])*(statePosUAV[1]-pos_init_cat_[0]) + 
 							(statePosUAV[2]-pos_init_cat_[1])*(statePosUAV[2]-pos_init_cat_[1]) + 
@@ -149,7 +150,7 @@ struct CatenaryFunctor {
 				bc.getMinPointZCat(p_min, n_min);
 				nn.nearestObstacleStateCeres(kdT_trav_ , p_min.x, p_min.y, p_min.z, pc_trav_, t_min[0], t_min[1], t_min[2]);
 				bc.getStatusCollisionCat(dist_obst_cat_, pos_cat_in_coll_, cat_between_obs_, f_coll, l_coll);
-				if (p_min.z < t_min[2] + 0.05){
+				if (p_min.z < t_min[2] + 0.05){ //If catenary is not feasible for UGV and UAV position
 					if (starting_in_coll){
 						not_catenary_ = 1.0;
 						L_max = L_min = length_less_coll_;
@@ -223,36 +224,32 @@ struct CatenaryFunctor {
 		/********** I Constraint to make cable far away from obstacles **********/
 		
 		double status_length_, num_point_coll;
+		num_point_coll = 0.0;
 
-		if (not_catenary_ == 1.0){
-			status_length_ = 0.0;
-		}
-		else if (stateCat[1] < L_min){ 
-			status_length_ = 1.0/stateCat[1];
-			m1 = (max_value_residual - min_value_residual)/(2.0 - 0);
-		}
-		else if (stateCat[1] > L_max){
-			status_length_ = stateCat[1];
-			m1 = (max_value_residual - min_value_residual)/(2.0 - 0.0);
-		}
-		else // when catenary is in safety area
-			status_length_ = 0.0;
-
+		//First identify how many catenary points are in collision
 		if(last_coll != 0  && first_coll != 0 && last_coll == first_coll)
-			num_point_coll = 1;
+			num_point_coll = 1.0;
 		else
 			num_point_coll = last_coll- first_coll;
 
-		residual[0] = wf_1 * (10.0 * (num_point_coll) * status_length_+ not_catenary_* (sb_ * num_segment) );
+		//Second Identify type of collision, close to the Lmin or Lmax
+		if (not_catenary_ == 1.0)
+			status_length_ = 0.0;
+		else if (num_point_coll > 0.0 && stateCat[1] <= (L_max-L_min)/2.0 ) // second condition when catenary is inside safety area but a point is close to collision
+			status_length_ = 1.0/stateCat[1];
+		else if (num_point_coll > 0.0 && stateCat[1] > (L_max-L_min)/2.0 ) // second condition when catenary is inside safety area but a point is close to collision
+			status_length_ = stateCat[1];
+
+
+		residual[0] = wf_1 * (status_length_ * 10.0 * (sb_ * num_point_coll)+ not_catenary_ * 200.0 * (sb_ * num_segment) );
 
 		/********** II Constraint to make length Cable longer than distance between UAV and UGV **********/ 
 
-		double min_value_residual1, cost1_, cost2_;
-		cost1_ = cost2_ = 0.0;
-		// if (not_catenary_ == 1.0){
-		// 	// cost1_ = cost2_ = 0.0;
-		// }
-		if (stateCat[1] < L_min) {
+		double min_value_residual1, cost1_, cost2_, cost3_;
+		cost1_ = cost2_ = cost3_ = 0.0;
+		if (not_catenary_ == 1.0)
+			cost3_ = 1.0;
+		else if (stateCat[1] < L_min) {
 			min_value_residual1 = 10.0;
 			m2 = (max_value_residual - min_value_residual1)/(L_min*0.9 - L_min);
 			cost1_ = 1.0;
@@ -264,7 +261,8 @@ struct CatenaryFunctor {
 		}
 		
 		residual[1] = wf_2 * ( cost1_* (1.0/stateCat[1]) *( m2 * (stateCat[1] - L_min) + min_value_residual1) + 
-							   cost2_* ( stateCat[1] ) * ( m2 * (stateCat[1] - L_max) + min_value_residual1) );
+							   cost2_* ( stateCat[1] ) * ( m2 * (stateCat[1] - L_max) + min_value_residual1) +
+							   cost3_* 2000.0);
 
 		/********** III Constraint to make cable not place below traversable map **********/
 
@@ -283,23 +281,18 @@ struct CatenaryFunctor {
 			}
 		}
 
-		// std::cout << std::fixed;
-		// std::cout << std::setprecision(5);
-		// std::cout << "node[" << statePosUAV[0] << "/" << statePosUGV[0] << "]  , residual[0]= " <<residual[0] << " residual[1]= " <<residual[1] 
-		// 			<< " residual[2]= " <<residual[2]; 
-		// std::cout << " , 	there_is_not_cat=[" << not_catenary_ <<"] , [L=" << stateCat[1]<< "/Lmin=" << L_min << "/Lmax=" << L_max << "/sd=" 
-		// 			<< safety_length <<" , points_cat_in_coll=["<<first_coll<<"-"<<last_coll<<"/"<<last_coll-first_coll<<"/"<<num_segment
-		// 			<<"] , min_dist["<< pos_min_dist_<<"]=[" << min_dist << "]" << std::endl;
+		std::cout << std::fixed;
+		std::cout << std::setprecision(5);
+		std::cout << "CatenaryFunctor: node[" << statePosUAV[0] << "/" << statePosUGV[0] << "]  , residual[0]= " <<residual[0] << " residual[1]= " <<residual[1] << " residual[2]= " <<residual[2]; 
+		std::cout << " , 	there_is_not_cat=[" << not_catenary_ <<"] , [L=" << stateCat[1]<< "/Lmin=" << L_min << "/Lmax=" << L_max << "/d=" << safety_length <<" , points_cat_in_coll=["
+				  <<first_coll<<"-"<<last_coll<<"/"<<last_coll-first_coll<<"/"<<num_segment<<"]"<<std::endl;
 
-		// std::string _y2;
-		// std::cout << "Continue While -> waiting press key : " ;
-		// std::cin >> _y2;
 	return true;
     }
 
-    double wf_1, wf_2, wf_3, sb_, pr_z_, ltm_;
+    double wf_1, wf_2, wf_3, sb_, ltm_;
 	int size_;
-	geometry_msgs::Point pos_reel_ugv_;
+	geometry_msgs::Vector3 pos_reel_ugv_;
     double pr_ugv_[3];
     pcl::KdTreeFLANN <pcl::PointXYZ> kdT_;
     pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_;

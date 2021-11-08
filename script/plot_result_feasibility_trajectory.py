@@ -7,29 +7,44 @@ import os
 import csv
 import matplotlib.pyplot as plt
 import math
-import time
+import sys
+
+# Define argumento of num scenario and num position
+print("\n\t * IMPORTANT: Use this script given two parameter: scenario_number and initial_position_number *\n")  # Warnning message
+arg1 = sys.argv[1] # number of scenario to analize
+arg2 = sys.argv[2] # number of position to analize
 
 ## Get Data and compute percentage related with Trajectory Optimized
 #Open and managing files and data
 path = "/home/simon/results_marsupial_optimizer/"
-file_path = path + 'feasibility_analisys_for_trajectory.txt'
+file_path = path + 'results'+'_stage_'+ str(arg1)+'_InitPos_'+str(arg2)+'_feasibility_trajectory.txt'
+path_time = "/home/simon/results_marsupial_optimizer/"
+file_path_time = path_time + 'results'+'_stage_'+ str(arg1)+'_InitPos_'+str(arg2)+'_time_random_planner.txt'
 
-# q_ = "e"
-
-# while q_ != "q":
 count = 0
+count_T = 0
 count_feasibility = 0
 count_ugv_coll = 0
 count_uav_coll = 0
 count_cat_coll = 0
-count_time = 0.0
+sum_time_op = 0.0
+sum_time_gp = 0.0
+
+time_optimizer =[]
+time_gp = []
+count_all = []
+count_all_T = []
 
 file = open(file_path, 'r')
 Tlines = file.read().splitlines()
 Tlines.pop(0) # To remove first line in case to have titles
-        
-Tl_col_00 = []
 
+file_time = open(file_path_time, 'r')
+f_time_lines = file_time.read().splitlines()
+f_time_lines.pop(0) # To remove first line in case to have titles
+
+max_value_time_op = 0 #to save max value for line plot
+min_value_time_op = 10000000 #to save min value for line plot
 for l in Tlines:
     line = l.split(';') 
     if (float(line[0]) > 0):
@@ -41,14 +56,34 @@ for l in Tlines:
     if (float(line[3]) > 0):
         count_cat_coll += 1.0
     if (float(line[11]) > 0):
-        count_time += float(line[11])
+        sum_time_op += float(line[11])
+        time_optimizer.append(float(line[11]))
     count+=1.0
+    count_all.append(count)
+    if (max_value_time_op < float(line[11])):
+        max_value_time_op = float(line[11])    
+    if (min_value_time_op > float(line[11])):
+        min_value_time_op = float(line[11]) 
+
+max_value_time_gp = 0 #to save max value for line plot
+min_value_time_gp = 10000000 #to save min value for line plot
+for l in f_time_lines:
+    line = l.split(';') 
+    time_gp.append(float(line[0]))
+    sum_time_gp += float(line[0])
+    count_T+=1.0
+    count_all_T.append(count_T)
+    if (max_value_time_gp < float(line[0])):
+        max_value_time_gp = float(line[0])  
+    if (min_value_time_gp > float(line[0])):
+        min_value_time_gp = float(line[0]) 
         
 percentage_feasibility = (count_feasibility * 100.0)/count
 percentage_ugv_coll = (count_ugv_coll * 100.0)/count
 percentage_uav_coll = (count_uav_coll * 100.0)/count
 percentage_cat_coll = (count_cat_coll * 100.0)/count
-average_time = count_time/float(count)
+average_time_op = sum_time_op/float(count)
+average_time_gp = sum_time_gp/float(count_T)
 
 print("Percentage_feasibility: "+ str(percentage_feasibility))
 print("Percentage_ugv_coll: " + str(percentage_ugv_coll))
@@ -73,24 +108,40 @@ perc4 = [percentage_cat_coll, 100-percentage_cat_coll]
 value4 = [count_cat_coll, count-count_cat_coll]
 
 # Make figure and axes
-fig, axs = plt.subplots(2, 3, figsize=(12, 9), subplot_kw=dict(aspect="equal"))
+# fig, axs = plt.subplots(2, 3, figsize=(12, 9), subplot_kw=dict(aspect="equal"))
+fig, axs = plt.subplots(2, 3, figsize=(12, 9), subplot_kw=dict(aspect="auto"))
+# fig, axs = plt.subplots(2, 3, figsize=(12, 9))
 fig.suptitle('Result factibility and collision trajectory optimized (test_number ='+str(count)+")", fontsize=21, weight="bold")
 
-X = np.arange(0, math.pi*2, 0.05)
-Y = np.cos(X)
+# Fist plot (line plot for optimizer and path compute time) 
+axs[0,0].set_ylim(ymin=(min_value_time_gp-min_value_time_gp*0.2), ymax=(max_value_time_gp+min_value_time_gp*0.2))
+axs[0,0].plot(count_all_T,time_gp, 'o-', color='red')
+list_average_time_gp = [average_time_gp] * len(time_gp)
+axs[0,0].plot(count_all_T, list_average_time_gp, '-', color='magenta')
+axs[0,0].set_ylim(ymin=min_value_time_gp, ymax=max_value_time_gp)
+axs[0,0].tick_params(axis='y', labelcolor='red')
+axs[0,0].grid(color='pink')
+axs[0,0].set_ylabel('Global Planner Time[sec]',color="red", fontsize=12)
+axs2 = axs[0,0].twinx()
+axs2.plot(count_all, time_optimizer, 'o-', color='blue')
+axs2.tick_params(axis='y', labelcolor='blue')
+list_average_time_op = [average_time_op] * len(time_optimizer)
+axs2.plot(count_all, list_average_time_op, '-', color='cyan')
+axs2.grid(color='gray')
+axs2.set_ylabel("Optimization Time[sec]",color="blue",fontsize=12)
+axs2.set_ylim(min_value_time_op-min_value_time_op*0.1, max_value_time_op+min_value_time_op*0.1)
+axs2.set_title('Time Analysis[sec]', weight="bold")
 
-# Fist bar plot
-labels5 = ['Average']
-time_means = [average_time]
-width1 = 120  # the width of the bars
-rects1 = axs[0,0].bar(labels5, time_means, width1)
-axs[0,0].set_ylabel('Time[sec]')
-axs[0,0].set_title('Average Optimizer Time [sec]', weight="bold")
+# First plot (bar plot for average optimizer time)
+# labels5 = ['Average']
+# time_means = [average_time_op]
+# width1 = 120  # the width of the bars
+# rects1 = axs[0,0].bar(labels5, time_means, width1)
+# axs[0,0].set_ylabel('Time[sec]')
+# axs[0,0].set_title('Average Optimizer Time [sec]', weight="bold")
 
-for i, v in enumerate(time_means):
-    axs[0,0].text(-width1/4, float(v) , round(average_time, 2), color = 'grey', weight="bold")
-
-
+# for i, v in enumerate(time_means):
+#     axs[0,0].text(-width1/4, float(v) , round(average_time_op, 2), color = 'grey', weight="bold")
 
 # Second bar plot
 labels6 = ['UGV Collision' , 'UAV Collision', 'Cat Collision']
@@ -104,7 +155,6 @@ axs[1,0].set_title(' Fail Trajectory Number for collision', weight="bold")
 axs[1,0].set_ylabel('Collision Number')
 axs[1,0].set_xticks(bar_width2/2 + bar_width2*2*x )
 axs[1,0].set_xticklabels(('UGV' , 'UAV', 'Cat'))
-
 
 # First pie plot
 axs[0, 1].pie(perc1, labels=labels1)
@@ -141,19 +191,4 @@ axs[1,2].legend(wedges, labels4, title="Status", loc="best", bbox_to_anchor=(1, 
 autotexts[0].set_color('white')
 
 plt.show()
-
-    # plt.ion()
-    # plt.show(block='False')
-    
-    # # Here to update plot after 1 min
-    # count_t = 0
-    # if count_t < 60:
-    #     time.sleep(1)
-    #     count_t += 1
-    #     localtime = time.localtime()
-    #     result = time.strftime("%I:%M:%S %p", localtime)
-    #     print(result)
-    #     print ("count_t= ",count_t)
-
-    # plt.close()
 

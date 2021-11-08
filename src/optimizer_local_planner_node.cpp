@@ -8,7 +8,6 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "marsupial_node");
   google::InitGoogleLogging(argv[0]);
 
-  
   ROS_INFO("Starting MARSUPIAL_NODE for Optimization trajectory");
 
   OptimizerLocalPlanner OLPlanner_;

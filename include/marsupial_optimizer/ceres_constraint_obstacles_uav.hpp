@@ -98,7 +98,7 @@ public:
             
             residual[0] = wf_ * m *(d_ - d_sb_);
 
-            // std::cout << "ObstacleDistanceFunctorUAV: ["<<statePos1[0] <<"] residual[0]= " << residual[0] << " , d_= " << d_ << std::endl;
+            // std::cout << "ObstacleDistanceFunctorUAV: residual[0]= " << residual[0] << " , d_= " << d_ << std::endl;
 
             return true;
         }

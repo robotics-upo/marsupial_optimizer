@@ -47,6 +47,7 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib
   message_generation
   std_msgs
+  trajectory_msgs
   upo_actions
   dynamic_reconfigure
   octomap_msgs
@@ -62,6 +63,18 @@ message(STATUS "${CMAKE_MODULE_PATH}")
 find_package(Ceres REQUIRED)
 find_package(PCL REQUIRED)
 
+add_message_files(
+  FILES
+  marsupial_trajectory_optimized.msg
+)
+
+generate_messages(
+  DEPENDENCIES
+  geometry_msgs 
+  std_msgs
+  trajectory_msgs
+)
+
 generate_dynamic_reconfigure_options(
   cfg/OptimizationParams.cfg
 )
@@ -73,6 +86,8 @@ catkin_package(
   roscpp
   tf
   std_msgs 
+  geometry_msgs
+  trajectory_msgs
   message_generation 
   message_runtime
   upo_actions
@@ -80,7 +95,6 @@ catkin_package(
   pcl_ros
   octomap_msgs 
   octomap_ros
-  # sensor_msgs 
   DEPENDS system_lib octomap_msgs octomap_ros
 )
 
@@ -126,7 +140,7 @@ target_link_libraries(optimizer_local_planner_node marsupial_optimizer  Ceres::c
 
 add_executable(optimizer_publisher_tf_node src/optimizer_publisher_tf_node.cpp)
 # add_dependencies(optimizer_publisher_tf_node ${PROJECT_NAME}_gencfg)
-target_link_libraries(optimizer_publisher_tf_node marsupial_optimizer ${EXTERNAL_LIBS} ${catkin_LIBRARIES})
+target_link_libraries(optimizer_publisher_tf_node marsupial_optimizer Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES} ${catkin_LIBRARIES})
 
 # add_executable(catenary_solver_test_ceres src/catenary_solver_test_ceres.cpp )
 # # add_dependencies(optimizer_local_planner_fix_ugv_node ${PROJECT_NAME}_gencfg)

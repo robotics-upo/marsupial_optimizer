@@ -1,0 +1,2 @@
+trajectory_msgs/MultiDOFJointTrajectory trajectory
+float32[] length_catenary

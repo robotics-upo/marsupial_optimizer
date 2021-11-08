@@ -155,11 +155,11 @@ bool bisectionCatenary::configBisection(double _l, double _x1, double _y1, doubl
 
 void bisectionCatenary::checkStateCatenary(double _x1, double _y1, double _z1, double _x2, double _y2, double _z2)
 {
-  if( fabs(_x1 - _x2) <  0.000001)
+  if( fabs(_x1 - _x2) <  0.001)
         x_const = true;
-  if( fabs(_y1 - _y2) <  0.000001)
+  if( fabs(_y1 - _y2) <  0.001)
         y_const = true;
-  if( fabs(_z1 - _z2) <  0.000001)
+  if( fabs(_z1 - _z2) <  0.001)
         z_const = true;
   if(x_const && y_const){
   }

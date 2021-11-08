@@ -1,0 +1,11 @@
+stage_7_pos_final_1:
+    pose:
+        x: 4.2
+        y: -5.4
+        z: 5.2
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        w: 1.0
+

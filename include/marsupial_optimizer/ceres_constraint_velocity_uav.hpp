@@ -35,6 +35,8 @@ public:
         residual[0] = T{0.0};
       else
         residual[0] =  wf_ * ((d_ / stateT[1]) - iv_);
+
+      // std::cout << "VelocityFunctorUAV : residual[0]= " << residual[0] << " , d_= " << d_ << " , stateT[1]= " << stateT[1] << std::endl;
       
       return true;
   }

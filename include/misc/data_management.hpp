@@ -10,6 +10,7 @@
 
 #include <ros/ros.h>
 #include <geometry_msgs/Point.h> 
+#include <geometry_msgs/Vector3.h> 
 
 #include "Eigen/Core"
 
@@ -26,53 +27,54 @@ class DataManagement
 	public:
 		DataManagement();
 		// ~DataManagement(){};
-		virtual void initDataManagement(std::string path_, std::string name_output_file_, int scenario_number_, int num_pos_initial_, int num_goal_, 
-							double initial_velocity_ugv_, double initial_velocity_uav_, double initial_acceleration_ugv_, double initial_acceleration_uav_, double bound_cat_obs_, 
-							geometry_msgs::Point pos_reel_ugv_, std::vector<Eigen::Vector3d> vec_pose_init_ugv_, std::vector<Eigen::Vector3d> vec_pose_init_uav_,	
+		virtual void initDataManagement(std::string path_, std::string name_output_file_, int scenario_number_, int num_pos_initial_,double initial_velocity_ugv_, 
+							double initial_velocity_uav_, double initial_acceleration_ugv_, double initial_acceleration_uav_, double bound_cat_obs_, 
+							geometry_msgs::Vector3 pos_reel_ugv_, std::vector<Eigen::Vector3d> vec_pose_init_ugv_, std::vector<Eigen::Vector3d> vec_pose_init_uav_,	
 							std::vector<float> vec_len_cat_init_, std::vector<geometry_msgs::Quaternion> vec_rot_ugv_, 
 							std::vector<geometry_msgs::Quaternion> vec_rot_uav_, octomap::OcTree* octree_full_,octomap::OcTree* octree_ugv_);
 		virtual void writeTemporalDataBeforeOptimization(std::vector<double> vec_dist_init_ugv_, std::vector<double> vec_dist_init_uav_, 
-														std::vector<double> vec_time_init_ugv_, std::vector<double> vec_time_init_uav_, 
-														std::vector<double> v_angles_kinematic_ugv, std::vector<double> v_angles_kinematic_uav_);
+									std::vector<double> vec_time_init_, std::vector<double> v_angles_kinematic_ugv, std::vector<double> v_angles_kinematic_uav_);
 		void writeTemporalDataAfterOptimization(auto _s, std::vector<Eigen::Vector3d> vec_pose_ugv_opt_, std::vector<Eigen::Vector3d> vec_pose_uav_opt_, 
-												std::vector<double> vec_time_ugv_opt_, std::vector<double> vec_time_uav_opt_, std::vector<float> vec_len_cat_opt_,
+												std::vector<double> vec_time_opt_, std::vector<float> vec_len_cat_opt_,
 												std::vector<geometry_msgs::Quaternion> vec_rot_ugv_, std::vector<geometry_msgs::Quaternion> vec_rot_uav_, 
 												std::vector<double> v_angles_kinematic_ugv_, std::vector<double> v_angles_kinematic_uav_);
 		virtual void getDataForOptimizerAnalysis(pcl::KdTreeFLANN <pcl::PointXYZ> kdt_, pcl::KdTreeFLANN <pcl::PointXYZ> kdt_all_, 
 												 pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_points_ , pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_points_all_, 
 												 double opt_compute_time_ , std::string mode_, int &n_coll_init_path_, int &n_coll_opt_traj_);
- 		virtual geometry_msgs::Point getReelPos(const float px_, const float py_, const float pz_,const float qx_, const float qy_, const float qz_, const float qw_, geometry_msgs::Point p_reel_);
+ 		virtual geometry_msgs::Vector3 getReelPos(const float px_, const float py_, const float pz_,const float qx_, const float qy_, const float qz_, const float qw_, geometry_msgs::Vector3 p_reel_);
 		virtual geometry_msgs::Vector3 getEulerAngles(const float qx_, const float qy_, const float qz_, const float qw_);
 		virtual bool isObstacleBetweenTwoPoints(Eigen::Vector3d pose_opt_1, Eigen::Vector3d pose_opt_2, bool oct_full_);
-		virtual inline void feasibilityAnalisysTrajectory(float init_cost, float final_cost, float succes_steps, float unsuccess_step, float time_opt);
+		virtual inline void feasibilityAnalisysTrajectory(float init_cost, float final_cost, float succes_steps, float unsuccess_step, float time_opt, int &n_coll_opt_cat_);
 		// virtual void writeCatenaryFailData(int num_cat_fail_, double pos_node_, double old_length_, double dist_, double new_length_);
 		// virtual void openWriteCatenaryFailData();
 		// virtual void closeWriteCatenaryFailData();
 
 		std::string path;
 		std::string output_file, name_output_file;
-		int scenario_number, num_pos_initial, num_goal;
+		int scenario_number, num_pos_initial;
 		std::ofstream ofs, feasibility;
 		std::ofstream file_in_time ,file_in_velocity, file_in_acceleration, file_in_rotation, file_in_kinematic;
 		std::ofstream file_out_time, file_out_velocity, file_out_acceleration, file_out_rotation, file_out_kinematic ;
 		std::ofstream catenary_data_out;
 
 		std::vector<Eigen::Vector3d> vec_pose_ugv_opt, vec_pose_uav_opt;
-		std::vector<double> vec_time_ugv_opt, vec_time_uav_opt;
+		// std::vector<double> vec_time_ugv_opt, vec_time_uav_opt;
+		std::vector<double> vec_time_opt;
 		std::vector<double> vec_dist_ugv_opt, vec_dist_uav_opt, vec_vel_ugv_opt, vec_vel_uav_opt, vec_acc_ugv_opt, vec_acc_uav_opt;
 		std::vector<Eigen::Vector3d> vec_pose_init_ugv, vec_pose_init_uav;
 
 		double initial_velocity_ugv, initial_velocity_uav, initial_acceleration_ugv, initial_acceleration_uav, bound_cat_obs;
 
 		std::vector<double> vec_dist_init_ugv, vec_dist_init_uav;
-		std::vector<double> vec_time_init_ugv, vec_time_init_uav;
+		// std::vector<double> vec_time_init_ugv, vec_time_init_uav;
+		std::vector<double> vec_time_init;
 		std::vector<float> vec_len_cat_init, vec_len_cat_opt;
 		std::vector<geometry_msgs::Quaternion> vec_init_rot_ugv, vec_init_rot_uav, vec_opt_rot_ugv, vec_opt_rot_uav;
 
 	    NearNeighbor nn_;
 
 		geometry_msgs::Point ugv_pos_catenary;
-		geometry_msgs::Point pos_reel_ugv;
+		geometry_msgs::Vector3 pos_reel_ugv;
 
 		octomap::OcTree* octree_full;
 		octomap::OcTree* octree_ugv;
@@ -92,17 +94,16 @@ inline DataManagement::DataManagement()
 	pos_coll_cat = "";
 }
 
-inline void DataManagement::initDataManagement(std::string path_, std::string name_output_file_, int scenario_number_, int num_pos_initial_, int num_goal_, 
-					double initial_velocity_ugv_, double initial_velocity_uav_, double initial_acceleration_ugv_, double initial_acceleration_uav_, double bound_cat_obs_, 
-					geometry_msgs::Point pos_reel_ugv_, std::vector<Eigen::Vector3d> vec_pose_init_ugv_, std::vector<Eigen::Vector3d> vec_pose_init_uav_, 
-					std::vector<float> vec_len_cat_init_, std::vector<geometry_msgs::Quaternion> vec_rot_ugv_, std::vector<geometry_msgs::Quaternion> vec_rot_uav_, 
-					octomap::OcTree* octree_full_, octomap::OcTree* octree_ugv_)
+inline void DataManagement::initDataManagement(std::string path_, std::string name_output_file_, int scenario_number_, int num_pos_initial_,
+				double initial_velocity_ugv_, double initial_velocity_uav_, double initial_acceleration_ugv_, double initial_acceleration_uav_, double bound_cat_obs_, 
+				geometry_msgs::Vector3 pos_reel_ugv_, std::vector<Eigen::Vector3d> vec_pose_init_ugv_, std::vector<Eigen::Vector3d> vec_pose_init_uav_, 
+				std::vector<float> vec_len_cat_init_, std::vector<geometry_msgs::Quaternion> vec_rot_ugv_, std::vector<geometry_msgs::Quaternion> vec_rot_uav_, 
+				octomap::OcTree* octree_full_, octomap::OcTree* octree_ugv_)
 {
 	path = path_;
 	name_output_file = name_output_file_;
 	scenario_number = scenario_number_; 
 	num_pos_initial = num_pos_initial_;
-	num_goal = num_goal_;
 
 	initial_velocity_ugv = initial_velocity_ugv_; 
 	initial_velocity_uav = initial_velocity_uav_; 
@@ -124,28 +125,29 @@ inline void DataManagement::initDataManagement(std::string path_, std::string na
 	octree_full = octree_full_;
 	octree_ugv = octree_ugv_;
 
-	output_file = path+name_output_file+"_stage_"+std::to_string(scenario_number)+"_InitPos_"+std::to_string(num_pos_initial)+"_goal_"+std::to_string(num_goal)+"_";
+	output_file = path+"results"+"_stage_"+std::to_string(scenario_number)+"_InitPos_"+std::to_string(num_pos_initial)+"_"+name_output_file;
 }
 
 inline void DataManagement::writeTemporalDataBeforeOptimization(std::vector<double> vec_dist_init_ugv_, std::vector<double> vec_dist_init_uav_, 
-					std::vector<double> vec_time_init_ugv_, std::vector<double> vec_time_init_uav_, std::vector<double> v_angles_kinematic_ugv_, 
-					std::vector<double> v_angles_kinematic_uav_)
+					std::vector<double> vec_time_init_, std::vector<double> v_angles_kinematic_ugv_, std::vector<double> v_angles_kinematic_uav_)
 {
 	vec_dist_init_ugv.clear(); 
 	vec_dist_init_uav.clear(); 
-	vec_time_init_ugv.clear();
-	vec_time_init_uav.clear();
+	// vec_time_init_ugv.clear();
+	// vec_time_init_uav.clear();
+	vec_time_init.clear();
 	vec_dist_init_ugv = vec_dist_init_ugv_;
 	vec_dist_init_uav = vec_dist_init_uav_;
-	vec_time_init_ugv = vec_time_init_ugv_;
-	vec_time_init_uav = vec_time_init_uav_;
+	// vec_time_init_ugv = vec_time_init_ugv_;
+	// vec_time_init_uav = vec_time_init_uav_;
+	vec_time_init = vec_time_init_;
 
 	//! Save temporal state before optimization
-	file_in_time.open (path+"initial_time_ugv-uav.txt");
-	file_in_velocity.open (path+"initial_velocity_ugv-uav.txt");
-	file_in_acceleration.open (path+"initial_acceleration_ugv-uav.txt");
-	file_in_rotation.open (path+"initial_rotation_ugv-uav.txt");
-	file_in_kinematic.open (path+"initial_kinematic_ugv-uav.txt");
+	file_in_time.open (path+"results"+"_stage_"+std::to_string(scenario_number)+"_InitPos_"+std::to_string(num_pos_initial)+"_initial_time_ugv-uav.txt", std::ofstream::app);
+	file_in_velocity.open (path+"results"+"_stage_"+std::to_string(scenario_number)+"_InitPos_"+std::to_string(num_pos_initial)+"_initial_velocity_ugv-uav.txt", std::ofstream::app);
+	file_in_acceleration.open (path+"results"+"_stage_"+std::to_string(scenario_number)+"_InitPos_"+std::to_string(num_pos_initial)+"_initial_acceleration_ugv-uav.txt", std::ofstream::app);
+	file_in_rotation.open (path+"results"+"_stage_"+std::to_string(scenario_number)+"_InitPos_"+std::to_string(num_pos_initial)+"_initial_rotation_ugv-uav.txt", std::ofstream::app);
+	file_in_kinematic.open (path+"results"+"_stage_"+std::to_string(scenario_number)+"_InitPos_"+std::to_string(num_pos_initial)+"_initial_kinematic_ugv-uav.txt", std::ofstream::app);
 	
 	double _sum_dist_ugv = 0.0;
 	double _sum_time_ugv = 0.0;
@@ -156,32 +158,31 @@ inline void DataManagement::writeTemporalDataBeforeOptimization(std::vector<doub
 	double _value_acc_ugv = 0.0;
 	double _value_acc_uav = 0.0;
 
-	for (size_t i = 0; i < vec_time_init_uav.size() - 1; i++){
+	// for (size_t i = 0; i < vec_time_init_uav.size() - 1; i++){
+	for (size_t i = 0; i < vec_time_init.size() - 1; i++){
 		// Conditions for UGV
+		_sum_time_ugv = _sum_time_ugv + vec_time_init[i+1];
 		if ( vec_dist_init_ugv[i] < 0.0001){
 			_sum_dist_ugv = _sum_dist_ugv + 0.0;
-			_sum_time_ugv = _sum_time_ugv + 0.0;
 			_value_vel_ugv = 0.0;
 		}
 		else{
 			_sum_dist_ugv = _sum_dist_ugv + vec_dist_init_ugv[i];
-			_sum_time_ugv = _sum_time_ugv + vec_time_init_ugv[i+1];
 			_value_vel_ugv = initial_velocity_ugv;
 		}
 		// Conditions for UAV 
+		_sum_time_uav = _sum_time_uav + vec_time_init[i+1];
 		if ( vec_dist_init_uav[i] < 0.0001){
 			_sum_dist_uav = _sum_dist_uav + 0.0;
-			_sum_time_uav = _sum_time_uav + 0.0;
 			_value_vel_uav = 0.0;
 		}
 		else{
 			_sum_dist_uav = _sum_dist_uav + vec_dist_init_uav[i];
-			_sum_time_uav = _sum_time_uav + vec_time_init_uav[i+1];
 			_value_vel_uav = initial_velocity_uav;
 		}
 		
-		file_in_time << std::setprecision(6) << _sum_dist_ugv << ";" << _sum_time_ugv << ";" << _sum_dist_uav << ";" << _sum_time_uav << std::endl;
-		file_in_velocity  << std::setprecision(6) << _sum_dist_ugv << ";" << _value_vel_ugv << ";" << _sum_dist_uav << ";" << _value_vel_uav << std::endl;
+		file_in_time << std::setprecision(6) << _sum_dist_ugv << ";" << _sum_time_ugv << ";" << _sum_dist_uav << ";" << _sum_time_uav << "/";
+		file_in_velocity  << std::setprecision(6) << _sum_dist_ugv << ";" << _value_vel_ugv << ";" << _sum_dist_uav << ";" << _value_vel_uav << "/";
 		if (i > 0){
 			// Conditions for Acc UGV
 			if( (vec_dist_init_ugv[i] - vec_dist_init_ugv[i-1] < 0.0001) && (vec_dist_init_ugv[i+1] - vec_dist_init_ugv[i] < 0.0001) )
@@ -193,40 +194,47 @@ inline void DataManagement::writeTemporalDataBeforeOptimization(std::vector<doub
 				_value_acc_uav = 0.0;
 			else
 				_value_acc_uav = initial_acceleration_uav;
-			file_in_acceleration << std::setprecision(6) << _sum_dist_ugv << ";" << _value_acc_ugv << ";" << _sum_dist_uav << ";" << initial_acceleration_uav << std::endl;
+			file_in_acceleration << std::setprecision(6) << _sum_dist_ugv << ";" << _value_acc_ugv << ";" << _sum_dist_uav << ";" << initial_acceleration_uav << "/";
 		}
 		geometry_msgs::Vector3 _rot_init_ugv = getEulerAngles(vec_init_rot_ugv[i].x,vec_init_rot_ugv[i].y,vec_init_rot_ugv[i].z,vec_init_rot_ugv[i].w);
 		geometry_msgs::Vector3 _rot_init_uav = getEulerAngles(vec_init_rot_uav[i].x,vec_init_rot_uav[i].y,vec_init_rot_uav[i].z,vec_init_rot_uav[i].w);
 
 		file_in_rotation  << std::setprecision(6) << _rot_init_ugv.x << ";" << _rot_init_ugv.y << ";" << _rot_init_ugv.z << ";" 
-												  << _rot_init_uav.x << ";" << _rot_init_uav.y << ";" << _rot_init_uav.z << std::endl;
+												  << _rot_init_uav.x << ";" << _rot_init_uav.y << ";" << _rot_init_uav.z << "/";
 	}
 
 	for(size_t i=0 ; i< v_angles_kinematic_ugv_.size() ; i++){
-		file_in_kinematic << i << ";" << v_angles_kinematic_ugv_[i] << ";" << v_angles_kinematic_uav_[i] << std::endl;
+		file_in_kinematic << i << ";" << v_angles_kinematic_ugv_[i] << ";" << v_angles_kinematic_uav_[i] << "/";
 	}
 
-	file_in_time.close();	
-	file_in_velocity.close();	
+	file_in_time << std::endl;
+	file_in_time.close();
+	file_in_velocity << std::endl;
+	file_in_velocity.close();
+	file_in_acceleration << std::endl;
 	file_in_acceleration.close();
+	file_in_rotation << std::endl;
 	file_in_rotation.close();
-	file_in_kinematic.close(); 
+	file_in_kinematic << std::endl;
+	file_in_kinematic.close();
 }
 
 inline void DataManagement::writeTemporalDataAfterOptimization(auto _s, std::vector<Eigen::Vector3d> vec_pose_ugv_opt_, 
-					std::vector<Eigen::Vector3d> vec_pose_uav_opt_, std::vector<double> vec_time_ugv_opt_, std::vector<double> vec_time_uav_opt_, 
+					std::vector<Eigen::Vector3d> vec_pose_uav_opt_, std::vector<double> vec_time_opt_, 
 					std::vector<float> vec_len_cat_opt_, std::vector<geometry_msgs::Quaternion> vec_rot_ugv_, 
 					std::vector<geometry_msgs::Quaternion> vec_rot_uav_, std::vector<double> v_angles_kinematic_ugv_, std::vector<double> v_angles_kinematic_uav_)
 {
 	vec_pose_ugv_opt.clear();
 	vec_pose_uav_opt.clear();
-	vec_time_ugv_opt.clear();
-	vec_time_uav_opt.clear();
+	// vec_time_ugv_opt.clear();
+	// vec_time_uav_opt.clear();
+	vec_time_opt.clear();
 	vec_len_cat_opt.clear();
 	vec_pose_ugv_opt = vec_pose_ugv_opt_;
 	vec_pose_uav_opt = vec_pose_uav_opt_;
-	vec_time_ugv_opt = vec_time_ugv_opt_;
-	vec_time_uav_opt = vec_time_uav_opt_;
+	// vec_time_ugv_opt = vec_time_ugv_opt_;
+	// vec_time_uav_opt = vec_time_uav_opt_;
+	vec_time_opt = vec_time_opt_;
 	vec_len_cat_opt = vec_len_cat_opt_;
 	vec_opt_rot_ugv = vec_rot_ugv_;
 	vec_opt_rot_uav = vec_rot_uav_;
@@ -239,11 +247,11 @@ inline void DataManagement::writeTemporalDataAfterOptimization(auto _s, std::vec
 	vec_acc_uav_opt.clear();
 
 	//! Save Temporal Data Optimized in File.txt 
-	file_out_time.open (path+"optimized_time_ugv-uav.txt");
-	file_out_velocity.open (path+"optimized_velocity_ugv-uav.txt");
-	file_out_acceleration.open (path+"optimized_acceleration_ugv-uav.txt");
-	file_out_rotation.open (path+"optimized_rotation_ugv-uav.txt");
-	file_out_kinematic.open (path+"optimized_kinematic_ugv-uav.txt");
+	file_out_time.open (path+"results"+"_stage_"+std::to_string(scenario_number)+"_InitPos_"+std::to_string(num_pos_initial)+"_optimized_time_ugv-uav.txt", std::ofstream::app);
+	file_out_velocity.open (path+"results"+"_stage_"+std::to_string(scenario_number)+"_InitPos_"+std::to_string(num_pos_initial)+"_optimized_velocity_ugv-uav.txt", std::ofstream::app);
+	file_out_acceleration.open (path+"results"+"_stage_"+std::to_string(scenario_number)+"_InitPos_"+std::to_string(num_pos_initial)+"_optimized_acceleration_ugv-uav.txt", std::ofstream::app);
+	file_out_rotation.open (path+"results"+"_stage_"+std::to_string(scenario_number)+"_InitPos_"+std::to_string(num_pos_initial)+"_optimized_rotation_ugv-uav.txt", std::ofstream::app);
+	file_out_kinematic.open (path+"results"+"_stage_"+std::to_string(scenario_number)+"_InitPos_"+std::to_string(num_pos_initial)+"_optimized_kinematic_ugv-uav.txt", std::ofstream::app);
 
 	double sum_dis_pos_ugv_ = 0.0;
 	double sum_dis_pos_uav_ = 0.0;
@@ -254,10 +262,10 @@ inline void DataManagement::writeTemporalDataAfterOptimization(auto _s, std::vec
 	double min_time_interval = 0.001;
 	for (size_t i=0; i < _s -1; ++i){
 		if ( i == 0)
-			file_out_time << std::setprecision(6) << sum_dis_pos_ugv_ << ";" << vec_time_ugv_opt[i] << ";" << sum_dis_pos_uav_ << ";" << vec_time_uav_opt[i] << std::endl;
+			file_out_time << std::setprecision(6) << sum_dis_pos_ugv_ << ";" << vec_time_opt[i] << ";" << sum_dis_pos_uav_ << ";" << vec_time_opt[i] <<"/";
 		
-		double difftime_ugv_ = vec_time_ugv_opt[i+1];
-		double difftime_uav_ = vec_time_uav_opt[i+1];
+		double difftime_ugv_ = vec_time_opt[i+1];
+		double difftime_uav_ = vec_time_opt[i+1];
 		
 		double dist_ugv_ = (vec_pose_ugv_opt[i] - vec_pose_ugv_opt[i+1]).norm();
 		double dist_uav_ = (vec_pose_uav_opt[i] - vec_pose_uav_opt[i+1]).norm();
@@ -273,12 +281,12 @@ inline void DataManagement::writeTemporalDataAfterOptimization(auto _s, std::vec
 			sum_difftime_uav_ = sum_difftime_uav_ + difftime_uav_;
 
 		// Condition for vel UGV	
-		if (vec_time_ugv_opt[i+1] < min_time_interval)
+		if (vec_time_opt[i+1] < min_time_interval)
 			new_vel_ugv_  = 0.0;
 		else
 			new_vel_ugv_ = dist_ugv_ / difftime_ugv_;
 		// Condition for vel UAV	
-		if (vec_time_uav_opt[i+1] < min_time_interval)
+		if (vec_time_opt[i+1] < min_time_interval)
 			new_vel_uav_ = 0.0;
 		else	
 			new_vel_uav_ = dist_uav_ / difftime_uav_;
@@ -286,24 +294,24 @@ inline void DataManagement::writeTemporalDataAfterOptimization(auto _s, std::vec
 		vec_vel_ugv_opt.push_back(new_vel_ugv_);
 		vec_vel_uav_opt.push_back(new_vel_uav_);
 
-		file_out_time << std::setprecision(6) << sum_dis_pos_ugv_ << ";" << sum_difftime_ugv_ << ";" << sum_dis_pos_uav_ << ";" << sum_difftime_uav_ << std::endl;
-		file_out_velocity << std::setprecision(6) << sum_dis_pos_ugv_ << ";" << new_vel_ugv_ << ";" << sum_dis_pos_uav_ << ";" << new_vel_uav_ << std::endl;
+		file_out_time << std::setprecision(6) << sum_dis_pos_ugv_ << ";" << sum_difftime_ugv_ << ";" << sum_dis_pos_uav_ << ";" << sum_difftime_uav_ << "/";
+		file_out_velocity << std::setprecision(6) << sum_dis_pos_ugv_ << ";" << new_vel_ugv_ << ";" << sum_dis_pos_uav_ << ";" << new_vel_uav_ << "/";
 
 		geometry_msgs::Vector3 rot_ugv_ = getEulerAngles(vec_opt_rot_ugv[i].x,vec_opt_rot_ugv[i].y,vec_opt_rot_ugv[i].z,vec_opt_rot_ugv[i].w);
 		geometry_msgs::Vector3 rot_uav_ = getEulerAngles(vec_opt_rot_uav[i].x,vec_opt_rot_uav[i].y,vec_opt_rot_uav[i].z,vec_opt_rot_uav[i].w);
 
 		file_out_rotation  << std::setprecision(6) << rot_ugv_.x << ";" << rot_ugv_.y << ";" << rot_ugv_.z << ";" 
-									    		   << rot_uav_.x << ";" << rot_uav_.y << ";" << rot_uav_.z << std::endl;
+									    		   << rot_uav_.x << ";" << rot_uav_.y << ";" << rot_uav_.z << "/";
 
 	}
 	double sum_dis_ugv_ = 0.0;
 	double sum_dis_uav_ = 0.0;
 	for (size_t i = 0; i < _s-2; i++)
 	{
-		double difftime1_ugv_ = vec_time_ugv_opt[i+1];
-		double difftime2_ugv_ = vec_time_ugv_opt[i+2];
-		double difftime1_uav_ = vec_time_uav_opt[i+1];
-		double difftime2_uav_ = vec_time_uav_opt[i+2];
+		double difftime1_ugv_ = vec_time_opt[i+1];
+		double difftime2_ugv_ = vec_time_opt[i+2];
+		double difftime1_uav_ = vec_time_opt[i+1];
+		double difftime2_uav_ = vec_time_opt[i+2];
 
 		double distance1_ugv_ = (vec_pose_ugv_opt[i+1] - vec_pose_ugv_opt[i]).norm();	
 		double distance2_ugv_ = (vec_pose_ugv_opt[i+2] - vec_pose_ugv_opt[i+1]).norm();
@@ -350,17 +358,22 @@ inline void DataManagement::writeTemporalDataAfterOptimization(auto _s, std::vec
 			acceleration_uav_ = (velocity2_uav_- velocity1_uav_)/sumTime_uav_;
 		vec_acc_uav_opt.push_back(acceleration_uav_);
 
-		file_out_acceleration << std::setprecision(6) << sum_dis_ugv_ << ";" << acceleration_ugv_ << ";" << sum_dis_uav_ << ";" << acceleration_uav_ << std::endl;
+		file_out_acceleration << std::setprecision(6) << sum_dis_ugv_ << ";" << acceleration_ugv_ << ";" << sum_dis_uav_ << ";" << acceleration_uav_ << "/";
 	}
 
 	for(size_t i=0 ; i< v_angles_kinematic_ugv_.size() ; i++){
-		file_out_kinematic << i << ";" << v_angles_kinematic_ugv_[i] << ";" << v_angles_kinematic_uav_[i] << std::endl;
+		file_out_kinematic << i << ";" << v_angles_kinematic_ugv_[i] << ";" << v_angles_kinematic_uav_[i] << "/";
 	}
 
+	file_out_time << std::endl;
 	file_out_time.close();
+	file_out_velocity << std::endl;
 	file_out_velocity.close();
+	file_out_acceleration << std::endl;
 	file_out_acceleration.close();
+	file_out_rotation << std::endl;
 	file_out_rotation.close();
+	file_out_kinematic << std::endl;
 	file_out_kinematic.close();
 }
 
@@ -378,12 +391,14 @@ inline void DataManagement::getDataForOptimizerAnalysis(pcl::KdTreeFLANN <pcl::P
 	std::vector<Eigen::Vector3d> vec_pose_opt_;
 	bool use_oct_full = true;
 	mode = mode_;
+	vec_time_init_ =  vec_time_init; 
+	vec_time_opt_ = vec_time_opt;
 	
 	if (mode_ == "UGV"){
-		vec_time_init_ =  vec_time_init_ugv; 
+		// vec_time_init_ =  vec_time_init_ugv; 
 		vec_pose_init_ =  vec_pose_init_ugv; 
 		vec_dist_init_ = vec_dist_init_ugv;
-		vec_time_opt_ = vec_time_ugv_opt;
+		// vec_time_opt_ = vec_time_ugv_opt;
 		vec_vel_opt_ = vec_vel_ugv_opt;
 		vec_acc_opt_ = vec_acc_ugv_opt;
 		vec_pose_opt_ = vec_pose_ugv_opt;
@@ -394,10 +409,10 @@ inline void DataManagement::getDataForOptimizerAnalysis(pcl::KdTreeFLANN <pcl::P
 		pos_coll_cat = "";
 	}
 	else if (mode_ == "UAV"){
-		vec_time_init_ =  vec_time_init_uav; 
+		// vec_time_init_ =  vec_time_init_uav; 
 		vec_pose_init_ = vec_pose_init_uav;
 		vec_dist_init_ = vec_dist_init_uav;
-		vec_time_opt_ = vec_time_uav_opt;
+		// vec_time_opt_ = vec_time_uav_opt;
 		vec_vel_opt_ = vec_vel_uav_opt;
 		vec_acc_opt_ = vec_acc_uav_opt;
 		vec_pose_opt_ = vec_pose_uav_opt;
@@ -486,7 +501,7 @@ inline void DataManagement::getDataForOptimizerAnalysis(pcl::KdTreeFLANN <pcl::P
 	for(size_t i = 0 ; i < vec_pose_init_.size(); i ++){
 		CatenarySolver cS_;
 		v_points_catenary_init_.clear();
-		geometry_msgs::Point p_reel_ugv;
+		geometry_msgs::Vector3 p_reel_ugv;
 		p_reel_ugv = getReelPos(vec_pose_init_ugv[i].x(),vec_pose_init_ugv[i].y(),vec_pose_init_ugv[i].z(),vec_init_rot_ugv[i].x,vec_init_rot_ugv[i].y,vec_init_rot_ugv[i].z,vec_init_rot_ugv[i].w, pos_reel_ugv);
 		cS_.setMaxNumIterations(100);
 		cS_.solve(p_reel_ugv.x, p_reel_ugv.y, p_reel_ugv.z, vec_pose_init_uav[i].x(), vec_pose_init_uav[i].y(), vec_pose_init_uav[i].z(), vec_len_cat_init[i], v_points_catenary_init_);
@@ -566,7 +581,7 @@ inline void DataManagement::getDataForOptimizerAnalysis(pcl::KdTreeFLANN <pcl::P
 		if(mode_ == "UAV"){
 			CatenarySolver cS_;
 			v_points_catenary_opt_.clear();
-			geometry_msgs::Point p_reel_ugv;
+			geometry_msgs::Vector3 p_reel_ugv;
 			p_reel_ugv=getReelPos(vec_pose_ugv_opt[i].x(),vec_pose_ugv_opt[i].y(),vec_pose_ugv_opt[i].z(),vec_opt_rot_ugv[i].x,vec_opt_rot_ugv[i].y,vec_opt_rot_ugv[i].z,vec_opt_rot_ugv[i].w, pos_reel_ugv);
 			cS_.setMaxNumIterations(100);
 			cS_.solve(p_reel_ugv.x, p_reel_ugv.y, p_reel_ugv.z, vec_pose_uav_opt[i].x(), vec_pose_uav_opt[i].y(), vec_pose_uav_opt[i].z(), vec_len_cat_opt[i], v_points_catenary_opt_);
@@ -593,8 +608,7 @@ inline void DataManagement::getDataForOptimizerAnalysis(pcl::KdTreeFLANN <pcl::P
                             first_coll_  = j;
                         last_coll_ = j;
 						num_points_coll_cat++; 
-						std::cout << "d_diff= " << d_diff << std::endl;
-						printf("Catenary= %lu , d_diff=[%f] , position_Catenary=[%lu-%lu]/[%lu] vec_len_cat_opt=[%f] pos_rel=[%f %f %f]\n",i,d_diff,j,j-1,v_points_catenary_opt_.size(),vec_len_cat_opt[i], p_reel_ugv.x, p_reel_ugv.y, p_reel_ugv.z);
+						printf("Catenary= %lu , d_diff=[%.2f] , position_Catenary=[%lu-%lu]/[%lu] vec_len_cat_opt=[%f] pos_rel=[%f %f %f]\n",i,d_diff,j,j-1,v_points_catenary_opt_.size(),vec_len_cat_opt[i], p_reel_ugv.x, p_reel_ugv.y, p_reel_ugv.z);
 					}
 				}
 			}
@@ -621,7 +635,7 @@ inline void DataManagement::getDataForOptimizerAnalysis(pcl::KdTreeFLANN <pcl::P
 
 	distance_obs_cat_opt_mean_ = distance_obs_cat_opt_/ (double)count_cat_p_opt_;
 
-	std::string name_output_file = output_file + mode_ +".txt";
+	std::string name_output_file = output_file +"_"+ mode_ +".txt";
 	ofs.open(name_output_file.c_str(), std::ofstream::app);
 
 	if (ofs.is_open()) {
@@ -661,10 +675,10 @@ inline void DataManagement::getDataForOptimizerAnalysis(pcl::KdTreeFLANN <pcl::P
 	ofs.close();
 }
 
-inline geometry_msgs::Point DataManagement::getReelPos(const float px_, const float py_, const float pz_, const float qx_, const float qy_, const float qz_,
-					const float qw_, geometry_msgs::Point p_reel_)
+inline geometry_msgs::Vector3 DataManagement::getReelPos(const float px_, const float py_, const float pz_, const float qx_, const float qy_, const float qz_,
+					const float qw_, geometry_msgs::Vector3 p_reel_)
 {
-	geometry_msgs::Point ret;
+	geometry_msgs::Vector3 ret;
 
 	double roll_, pitch_, yaw_;
 	tf::Quaternion q_(qx_,qy_,qz_,qw_);
@@ -728,9 +742,10 @@ inline bool DataManagement::isObstacleBetweenTwoPoints(Eigen::Vector3d pose_opt_
 		return false;		
 }
 
-inline void DataManagement::feasibilityAnalisysTrajectory(float init_cost, float final_cost, float succes_steps, float unsuccess_step, float time_opt)
+inline void DataManagement::feasibilityAnalisysTrajectory(float init_cost, float final_cost, float succes_steps, float unsuccess_step, float time_opt, int &n_coll_opt_cat_)
 {
-	std::string name_file = path+"feasibility_analisys_for_trajectory.txt";
+	std::string name_file = path+"results"+"_stage_"+std::to_string(scenario_number)+"_InitPos_"+std::to_string(num_pos_initial)+"_"+
+							"feasibility_trajectory.txt";
 
 	std::ifstream ifile;
    	ifile.open(name_file);
@@ -744,6 +759,8 @@ inline void DataManagement::feasibilityAnalisysTrajectory(float init_cost, float
    	}
 	
 	feasibility.open(name_file.c_str(), std::ofstream::app);
+
+	n_coll_opt_cat_ = num_cat_coll;
 
 	int feasible = 0;
 	if (num_coll_ugv_traj == 0 && num_coll_uav_traj == 0 && num_cat_coll == 0)
@@ -766,23 +783,9 @@ inline void DataManagement::feasibilityAnalisysTrajectory(float init_cost, float
 					<<std::endl;
 	} 
 	else 
-		std::cout << "Couldn't be open feasibility_analisys_for_trajectory.txt "<< std::endl;
+		std::cout << "Couldn't be open result_feasibility_analisys_for_trajectory.txt "<< std::endl;
 	feasibility.close();
 }
 
-
-// inline void DataManagement::writeCatenaryFailData(int num_cat_fail_, double pos_node_, double old_length_, double dist_, double new_length_){
-// 	catenary_data_out << std::setprecision(6) << num_cat_fail_ << " ; " << pos_node_ << " ; "  << old_length_ << " ; "  << dist_ << " ; "  << new_length_ << std::endl; 
-// }
-
-// inline void DataManagement::openWriteCatenaryFailData(){
-// 	catenary_data_out.open (path+"cateary_optimized_data.txt");
-// 	catenary_data_out << "n_cat_fail/n_node/old_length/dist/ new_length" << std::endl;
-// }
-
-// inline void DataManagement::closeWriteCatenaryFailData()
-// {
-// 	catenary_data_out.close();
-// }
 
 #endif

@@ -5,25 +5,25 @@
         <Sequence>
             <Action ID="WaitSeconds" duration="2" name="Stage1WaitSeconds1"/>
             <ForceSuccess>
-                <Repeat num_cycles="10">
+                <Repeat num_cycles="0">
                     <Action ID="UPOGoToGoalByName" action="/Make_Plan" goal_name="stage_1_pos_final_1" name="Stage1GoToGoal1" state="gpf1"/>
                 </Repeat>
             </ForceSuccess>
             <Action ID="WaitSeconds" duration="2" name="Stage1WaitSeconds2"/>
             <ForceSuccess>
-                <Repeat num_cycles="10">
+                <Repeat num_cycles="0">
                     <Action ID="UPOGoToGoalByName" action="/Make_Plan" goal_name="stage_1_pos_final_2" name="Stage1GoToGoal2" state="gpf2"/>
                 </Repeat>
             </ForceSuccess>
             <Action ID="WaitSeconds" duration="2" name="Stage1WaitSeconds3"/>
             <ForceSuccess>
-                <Repeat num_cycles="10">
+                <Repeat num_cycles="0">
                     <Action ID="UPOGoToGoalByName" action="/Make_Plan" goal_name="stage_1_pos_final_3" name="Stage1GoToGoal3" state="gpf3"/>
                 </Repeat>
             </ForceSuccess>
             <Action ID="WaitSeconds" duration="2" name="Stage1WaitSeconds4"/>
             <ForceSuccess>
-                <Repeat num_cycles="10">
+                <Repeat num_cycles="7">
                     <Action ID="UPOGoToGoalByName" action="/Make_Plan" goal_name="stage_1_pos_final_4" name="Stage1GoToGoa4" state="gpf4"/>
                 </Repeat>
             </ForceSuccess>
