@@ -12,7 +12,9 @@ using ceres::Problem;
 using ceres::Solve;
 using ceres::Solver;
 
-
+#include <iostream>
+#include <fstream>
+#include <string>
 
 class VelocityFunctorUGV {
 
@@ -44,7 +46,13 @@ public:
           residual[0] =  wf_ * ((d_ / stateT[1]) - iv_);  //To avoid division that make underterminated residual: v*t=d
 
         // std::cout << "VelocityFunctorUGV : residual[0]= " << residual[0] << " , d_= " << d_ << " , stateT[1]= " << stateT[1] << std::endl;
-
+        
+        std::ofstream ofs;
+        std::string name_output_file = "/home/simon/residuals_optimization_data/velocity_ugv.txt";
+        ofs.open(name_output_file.c_str(), std::ofstream::app);
+        if (ofs.is_open()) 
+            ofs << residual[0] << ";" <<std::endl;
+        ofs.close();
 
         return true;
       }

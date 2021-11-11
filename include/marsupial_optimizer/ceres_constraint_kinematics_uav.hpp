@@ -12,6 +12,10 @@ using ceres::Problem;
 using ceres::Solve;
 using ceres::Solver;
 
+#include <iostream>
+#include <fstream>
+#include <string>
+
 class KinematicsFunctorUAV 
 {
 
@@ -48,15 +52,6 @@ public:
 		else
 			cos_angle = dot_product/(norm_vector1 * norm_vector2);
 
-
-		// double bound = cos(ang_);
-		// double factor_ = 10.0;
-        // double f_slope_ = -4.0;
-		// if ( cos_angle > bound) 
-		// 	residual[0] = T(0.0);
-		// else{
-		// 	residual[0] =  wf_ * 100.0 * (cos_angle - 1.0);
-		// }	
 		T bound = T{cos(ang_)};
 		T b_;
 		T max_value_residual = T{100.0};
@@ -75,6 +70,13 @@ public:
         
 		// std::cout << "KinematicsFunctorUAV: residual[0]= "<< residual[0] << " , cos_angle= " << cos_angle << " , b_= " << b_ << std::endl;
 		
+		std::ofstream ofs;
+		std::string name_output_file = "/home/simon/residuals_optimization_data/kinematic_uav.txt";
+		ofs.open(name_output_file.c_str(), std::ofstream::app);
+		if (ofs.is_open()) 
+			ofs << residual[0] << ";" <<std::endl;
+		ofs.close();
+
 		return true;
   	}
 

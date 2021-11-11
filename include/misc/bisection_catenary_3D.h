@@ -112,7 +112,8 @@ class bisectionCatenary
         // To manage information related with distance obst-cat, catenary feasibility, and grid3D
         Grid3d* grid_3D;
 	    NearNeighbor nn;
-        bool received_grid, get_distance_data;
+        bool received_grid; 
+        bool get_distance_data; // Is use to get data distance for catenary analysis
         double bound_obst;
         octomap::OcTree* octotree_full;
         pcl::KdTreeFLANN <pcl::PointXYZ> kdt_trav; 

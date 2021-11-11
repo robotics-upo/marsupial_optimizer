@@ -13,6 +13,10 @@ using ceres::Problem;
 using ceres::Solve;
 using ceres::Solver;
 
+#include <iostream>
+#include <fstream>
+#include <string>
+
 class KinematicsFunctorUGV 
 {
 
@@ -67,6 +71,13 @@ public:
 		
 		// std::cout << "KinematicsFunctorUGV residual[0]= "<< residual[0] << " , cos_angle= " << cos_angle << " , b_= " << b_ << std::endl;
 		
+		std::ofstream ofs;
+		std::string name_output_file = "/home/simon/residuals_optimization_data/kinematic_ugv.txt";
+		ofs.open(name_output_file.c_str(), std::ofstream::app);
+		if (ofs.is_open()) 
+			ofs << residual[0] << ";" <<std::endl;
+		ofs.close();
+
 		return true;
 	}
 

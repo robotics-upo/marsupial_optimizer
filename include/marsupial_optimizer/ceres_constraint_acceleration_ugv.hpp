@@ -12,6 +12,10 @@ using ceres::Problem;
 using ceres::Solve;
 using ceres::Solver;
 
+#include <iostream>
+#include <fstream>
+#include <string>
+
 class AccelerationFunctorUGV {
 
 public:
@@ -61,6 +65,12 @@ public:
 		// std::cout << "AccelerationFunctorUGV : residual[0]= " << residual[0] << " , a_= " << a_ << " , stateT1[1]= " << stateT1[1]
 		//  		  << " , stateT2[1]= " << stateT2[1] << " , v1_= " << v1_ <<" , v2_=" << v2_ << std::endl;
 
+		std::ofstream ofs;
+		std::string name_output_file = "/home/simon/residuals_optimization_data/acceleration_ugv.txt";
+		ofs.open(name_output_file.c_str(), std::ofstream::app);
+		if (ofs.is_open()) 
+			ofs << residual[0] << ";" <<std::endl;
+		ofs.close();
 
 		return true;
 }

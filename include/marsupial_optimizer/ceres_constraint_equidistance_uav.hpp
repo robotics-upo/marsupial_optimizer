@@ -11,6 +11,10 @@ using ceres::Problem;
 using ceres::Solve;
 using ceres::Solver;
 
+#include <iostream>
+#include <fstream>
+#include <string>
+
 class EquiDistanceFunctorUAV 
 {
   public:
@@ -57,6 +61,13 @@ class EquiDistanceFunctorUAV
       residual[0] = wf_ * m *(d_pos - dr_);  
 
       // std::cout<< "Equi-Distance UAV: residual[0]= "<<residual[0]<<" , d_pos= "<< d_pos <<" , init_d= "<<init_d<<std::endl;
+
+      std::ofstream ofs;
+      std::string name_output_file = "/home/simon/residuals_optimization_data/equidistancia_uav.txt";
+      ofs.open(name_output_file.c_str(), std::ofstream::app);
+      if (ofs.is_open()) 
+        ofs << residual[0] << ";" <<std::endl;
+      ofs.close();
 
       return true;
     

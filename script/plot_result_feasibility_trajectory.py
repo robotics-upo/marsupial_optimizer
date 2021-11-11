@@ -149,7 +149,7 @@ collisions = [count_ugv_coll, count_uav_coll, count_cat_coll]
 x = np.arange(len(collisions))
 bar_width2 = 1.4
 for i in range(len(collisions)):
-    b = axs[1,0].bar(bar_width2/2 + bar_width2*2*i, float(collisions[i]), bar_width2, bottom=0, label=['UGV','UAV','Cat'])
+    b = axs[1,0].bar(bar_width2/2 + bar_width2*2*i, float(collisions[i]), bar_width2,  color='red' , bottom=0, label=['UGV','UAV','Cat'])
     axs[1,0].text(bar_width2/4 + bar_width2*2*i, collisions[i] , int(collisions[i]), color = 'grey', weight="bold")
 axs[1,0].set_title(' Fail Trajectory Number for collision', weight="bold")
 axs[1,0].set_ylabel('Collision Number')

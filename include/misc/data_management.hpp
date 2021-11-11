@@ -732,10 +732,10 @@ inline bool DataManagement::isObstacleBetweenTwoPoints(Eigen::Vector3d pose_opt_
 	double d_obs = sqrt ((s_.x()-r_.x())*(s_.x()-r_.x()) + (s_.y()-r_.y())*(s_.y()-r_.y()) + (s_.z()-r_.z())*(s_.z()-r_.z()) );
 
 	if (r_cast_coll && d_obs <= d_12){
-		printf(" r_=[%f %f %f] s_=[%f %f %f] d_=[%f %f %f] dist12_=[%f] distObs_=[%f] r_cast_coll=%s\n",r_.x(),r_.y(),r_.z(),
-																						s_.x(),s_.y(),s_.z(),
-																						d_.x(),d_.y(),d_.z(),
-																						d_12, d_obs, r_cast_coll?"true":"false");
+		// printf(" r_=[%f %f %f] s_=[%f %f %f] d_=[%f %f %f] dist12_=[%f] distObs_=[%f] r_cast_coll=%s\n",r_.x(),r_.y(),r_.z(),
+		// 																				s_.x(),s_.y(),s_.z(),
+		// 																				d_.x(),d_.y(),d_.z(),
+		// 																				d_12, d_obs, r_cast_coll?"true":"false");
 		return true;
 	}
 	else

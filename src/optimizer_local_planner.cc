@@ -296,7 +296,8 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 							initial_acceleration_ugv, initial_acceleration_uav, distance_catenary_obstacle, pose_reel_local.transform.translation, vec_pose_init_ugv, 
 							vec_pose_init_uav, vec_len_cat_init, vec_init_rot_ugv, vec_init_rot_uav, mapFull_msg, mapTrav_msg);			   
 	getKinematicTrajectory(vec_pose_init_ugv, vec_pose_init_uav, v_init_angles_kinematic_ugv, v_init_angles_kinematic_uav);
-	dm_.writeTemporalDataBeforeOptimization(vec_dist_init_ugv, vec_dist_init_uav, vec_time_init, v_init_angles_kinematic_ugv, v_init_angles_kinematic_uav);
+	if(write_data_for_analysis)
+		dm_.writeTemporalDataBeforeOptimization(vec_dist_init_ugv, vec_dist_init_uav, vec_time_init, v_init_angles_kinematic_ugv, v_init_angles_kinematic_uav);
 
 	std::cout << std::endl <<  "==================================================="  << std::endl << "\tPreparing to execute Optimization: Creating Parameter Blocks!!" << std::endl;
 
@@ -560,8 +561,8 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		// 	ROS_INFO(PRINTF_BLUE"		- Optimize Time Autodiff");
 		// 	/*** Cost Function UAV VI : Time constraint UAV***/
 		// 	for (int i = 0; i < statesTimeUAV.size(); ++i) {
-		// 		CostFunction* cost_function_uav_6  = new AutoDiffCostFunction<TimeFunctorUAV, 1, 2>
-		// 										(new TimeFunctorUAV(w_delta, initial_time_uav)); 
+		// 		CostFunction* cost_function_uav_6  = new AutoDiffCostFunction<TimeFunctor, 1, 2>
+		// 										(new TimeFunctor(w_delta, initial_time_uav)); 
 		// 		problem.AddResidualBlock(cost_function_uav_6, NULL, statesTimeUAV[i].parameter);
 		// 		if (i == 0)
 		// 			problem.SetParameterBlockConstant(statesTimeUAV[i].parameter);
@@ -654,6 +655,13 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		ROS_INFO(PRINTF_GREEN"\n\n\n		Optimizer Local Planner: Goal position successfully achieved through optimization trajectory\n\n\n");
 		if (traj_in_rviz){
 			printf("Here 1.1\n");
+			if(pause_end_optimization){
+				/********************* To obligate stop method and check Optimization result *********************/
+				std::string y_ ;
+				std::cout << " *** Press key to continue: " << std::endl;
+				std::cin >> y_ ;
+				/*************************************************************************************************/
+			}
 			publishOptimizedTraj();
 			while(!finished_rviz_maneuver){
 				ros::spinOnce();
@@ -687,6 +695,13 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		ROS_INFO(PRINTF_RED"\n\n\n\n		Optimizer Local Planner: Goal position Not achieved through optimization trajectory\n\n\n");
 		if (traj_in_rviz){
 			printf("Here 1.2\n");
+			if(pause_end_optimization){
+				/********************* To obligate stop method and check Optimization result *********************/
+				std::string y_ ;
+				std::cout << " *** Press key to continue: " << std::endl;
+				std::cin >> y_ ;
+				/*************************************************************************************************/
+			}
 			publishOptimizedTraj();
 			ros::Duration(time_sleep_).sleep();
 			while(!finished_rviz_maneuver){
@@ -866,11 +881,11 @@ void OptimizerLocalPlanner::finishigOptimizationAndGetDataResult(int &n_coll_opt
 	traj_marker_uav_pub_.publish(lines_uav_marker);
 
 	getKinematicTrajectory(vec_pose_ugv_opt, vec_pose_uav_opt, v_opt_angles_kinematic_ugv, v_opt_angles_kinematic_uav);
-	dm_.writeTemporalDataAfterOptimization(size_path, vec_pose_ugv_opt, vec_pose_uav_opt, vec_time_opt, vec_len_cat_opt, vec_opt_rot_ugv, 
-										   vec_opt_rot_uav, v_opt_angles_kinematic_ugv, v_opt_angles_kinematic_uav);
-	std::cout << "...Temporal data saved in txt file." << std::endl << std::endl;
-	n_coll_opt_traj_ugv = n_coll_init_path_ugv = n_coll_opt_traj_uav = n_coll_init_path_uav = n_coll_opt_cat_ = 0;
 	if (write_data_for_analysis){
+		dm_.writeTemporalDataAfterOptimization(size_path, vec_pose_ugv_opt, vec_pose_uav_opt, vec_time_opt, vec_len_cat_opt, vec_opt_rot_ugv, 
+											   vec_opt_rot_uav, v_opt_angles_kinematic_ugv, v_opt_angles_kinematic_uav);
+		std::cout << "...Temporal data saved in txt file." << std::endl << std::endl;
+		n_coll_opt_traj_ugv = n_coll_init_path_ugv = n_coll_opt_traj_uav = n_coll_init_path_uav = n_coll_opt_cat_ = 0;
 		std::cout << "Saving data for analisys in txt file..." << std::endl;
 		double opt_compute_time_ = (final_time_opt - start_time_opt).toSec(); //Compute Time Optimization
 		dm_.getDataForOptimizerAnalysis(nn_ugv_obs.kdtree, nn_uav.kdtree, nn_ugv_obs.obs_points, nn_uav.obs_points, opt_compute_time_, "UGV", n_coll_init_path_ugv, n_coll_opt_traj_ugv);

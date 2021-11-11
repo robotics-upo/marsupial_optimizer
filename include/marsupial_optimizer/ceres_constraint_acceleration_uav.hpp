@@ -1,7 +1,6 @@
 #ifndef CERES_ACCELERATION_VELOCITY_UAV_HPP
 #define CERES_ACCELERATION_VELOCITY_UAV_HPP
 
-
 #include "ceres/ceres.h"
 #include "glog/logging.h"
 #include "Eigen/Core"
@@ -12,16 +11,18 @@ using ceres::Problem;
 using ceres::Solve;
 using ceres::Solver;
 
-
+#include <iostream>
+#include <fstream>
+#include <string>
 
 class AccelerationFunctorUAV {
 
 public:
-  AccelerationFunctorUAV(double weight_factor, double init_acc_uav): wf_(weight_factor), ia_(init_acc_uav) {}
+	AccelerationFunctorUAV(double weight_factor, double init_acc_uav): wf_(weight_factor), ia_(init_acc_uav) {}
 
-  template <typename T>
-  bool operator()(const T* const statePos1, const T* const statePos2, const T* const statePos3, 
-				  const T* const stateT1, const T* const stateT2, T* residual) const 
+  	template <typename T>
+  	bool operator()(const T* const statePos1, const T* const statePos2, const T* const statePos3, 
+					  const T* const stateT1, const T* const stateT2, T* residual) const 
 {
   	T d1_, d2_, v1_, v2_, a_;
 
@@ -50,14 +51,20 @@ public:
 
 	// std::cout << "AccelerationFunctorUAV : residual[0]= " << residual[0] << " , a_= " << a_ << " , stateT1[1]= " << stateT1[1]
 	// 	 		  << " , stateT2[1]= " << stateT2[1] << " , v1_= " << v1_ <<" , v2_= " << v2_ << std::endl;
+	
+	std::ofstream ofs;
+	std::string name_output_file = "/home/simon/residuals_optimization_data/acceleration_uav.txt";
+	ofs.open(name_output_file.c_str(), std::ofstream::app);
+	if (ofs.is_open()) 
+		ofs << residual[0] << ";" <<std::endl;
+	ofs.close();
 
 	return true;
-
 }
 
- double wf_, ia_;
+double wf_, ia_;
 
- private:
+private:
 };
 
 

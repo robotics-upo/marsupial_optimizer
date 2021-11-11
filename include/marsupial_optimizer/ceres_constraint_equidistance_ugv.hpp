@@ -11,6 +11,10 @@ using ceres::Problem;
 using ceres::Solve;
 using ceres::Solver;
 
+#include <iostream>
+#include <fstream>
+#include <string>
+
 class EquiDistanceFunctorUGV 
 {
   public:
@@ -58,6 +62,13 @@ class EquiDistanceFunctorUGV
       residual[0] = wf_ * m *(d_pos - dr_);  
 
       // std::cout<< "EquiDistance UGV: residual[0]= "<<residual[0]<<" , i_d= "<< i_d << " , d_pos= "<< d_pos <<" , init_d= ["<<init_d1<<"/"<<init_d2<<"]"<<std::endl;
+    
+      std::ofstream ofs;
+      std::string name_output_file = "/home/simon/residuals_optimization_data/equidistance_ugv.txt";
+      ofs.open(name_output_file.c_str(), std::ofstream::app);
+      if (ofs.is_open()) 
+        ofs << residual[0] << ";" <<std::endl;
+      ofs.close();
 
       return true;
 

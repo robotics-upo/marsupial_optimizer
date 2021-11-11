@@ -64,3 +64,14 @@ stage_4_pos_final_6:
         z: 0.0
         w: 1.0
 
+stage_4_pos_final_7:
+    pose:
+        x: -1.3
+        y: 3.5
+        z: 7.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        w: 1.0
+

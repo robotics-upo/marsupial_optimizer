@@ -12,6 +12,7 @@
 #include "marsupial_optimizer/marsupial_trajectory_optimized.h"
 #include "misc/marker_publisher.hpp"
 #include "misc/catenary_solver_ceres.hpp"
+#include "misc/bisection_catenary_3D.h"
 
 #define PRINTF_BLUE "\x1B[34m"
 
@@ -35,7 +36,7 @@ public:
 	
 	// ros::NodeHandlePtr nh;
     // ros::NodeHandle pnh("~");
-	ros::Subscriber sub_trajectory;
+	ros::Subscriber trajectory_sub_;
 	ros::Publisher finished_rviz_maneuver_pub_, catenary_marker_pub_;
 	std::string uav_base_frame, ugv_base_frame, reel_base_frame;
 	
@@ -88,7 +89,7 @@ ManagerTf::ManagerTf(ros::NodeHandlePtr nh, ros::NodeHandle pnh)
   	pnh.param("ugv_base_frame", ugv_base_frame, (std::string)"ugv_base_link");
   	pnh.param("reel_base_frame", reel_base_frame, (std::string)"reel_base_link");
 
-    sub_trajectory = nh->subscribe("/trajectory_optimized", 2000, &ManagerTf::trajectoryOptimizedCallBack,this);
+    trajectory_sub_ = nh->subscribe("/trajectory_optimized", 2000, &ManagerTf::trajectoryOptimizedCallBack,this);
     finished_rviz_maneuver_pub_ = nh->advertise<std_msgs::Bool>("/finished_rviz_maneuver", 1);
 	catenary_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("catenary_marker", 100);
 
@@ -108,6 +109,8 @@ void ManagerTf::initializationTf()
 		br.sendTransform(tf::StampedTransform(trans_ugv, ros::Time::now(), "/map", ugv_base_frame));
 		br.sendTransform(tf::StampedTransform(trans_uav, ros::Time::now(), "/map", uav_base_frame));
 	}
+	mp_.clearMarkers(catenary_marker, 150, catenary_marker_pub_);
+	getReelPose();
 }
 
 void ManagerTf::trajectoryOptimizedCallBack(const marsupial_optimizer::marsupial_trajectory_optimizedConstPtr &msg)
@@ -120,9 +123,11 @@ void ManagerTf::trajectoryOptimizedCallBack(const marsupial_optimizer::marsupial
 	tf::Vector3 v_ugv, v_uav;
 	tf::Quaternion q_ugv, q_uav;
 
-	CatenarySolver cSX_;
-	cSX_.setMaxNumIterations(100);
-	std::vector<geometry_msgs::Point> points_catenary_final;
+	// CatenarySolver cSX_;
+	bisectionCatenary bc;
+
+	// cSX_.setMaxNumIterations(100);
+	std::vector<geometry_msgs::Point> points_catenary_;
 
 	for (size_t i= 0; i < trajectory.trajectory.points.size() ; i++){
 		double ugv_x = trajectory.trajectory.points.at(i).transforms[0].translation.x;
@@ -139,25 +144,32 @@ void ManagerTf::trajectoryOptimizedCallBack(const marsupial_optimizer::marsupial
 		double uav_rot_y = trajectory.trajectory.points.at(i).transforms[1].rotation.y;
 		double uav_rot_z = trajectory.trajectory.points.at(i).transforms[1].rotation.z;
 		double uav_rot_w = trajectory.trajectory.points.at(i).transforms[1].rotation.w;
+		printf("UGV=[%.3f %.3f %.3f %.3f] UAV=[%.3f %.3f %.3f %.3f]\n", ugv_rot_x ,ugv_rot_y ,ugv_rot_z ,ugv_rot_w ,uav_rot_x ,uav_rot_y ,uav_rot_z ,uav_rot_w);
 		v_ugv = tf::Vector3(ugv_x, ugv_y, ugv_z);
 		q_ugv = tf::Quaternion(ugv_rot_x ,ugv_rot_y ,ugv_rot_z ,ugv_rot_w);
 		trans_ugv.setOrigin(v_ugv);
 		trans_ugv.setRotation(q_ugv);
 		v_uav = tf::Vector3(uav_x, uav_y, uav_z);
-		q_uav = tf::Quaternion(uav_rot_x ,uav_rot_y ,uav_rot_z ,uav_rot_z);
+		q_uav = tf::Quaternion(uav_rot_x ,uav_rot_y ,uav_rot_z ,uav_rot_w);
 		trans_uav.setOrigin(v_uav);
 		trans_uav.setRotation(q_uav);
 
 		//Graph final catenary states
-		points_catenary_final.clear();
+		points_catenary_.clear();
 		geometry_msgs::Vector3 p_reel_ =  getReelPoint(ugv_x, ugv_y, ugv_z, ugv_rot_x ,ugv_rot_y ,ugv_rot_z ,ugv_rot_w);
-		cSX_.solve(p_reel_.x, p_reel_.y, p_reel_.z, uav_x, uav_y, uav_z, trajectory.length_catenary[i], points_catenary_final);
-		auto size_ = points_catenary_final.size();
+		
+		//Solve through Ceres
+			// cSX_.solve(p_reel_.x, p_reel_.y, p_reel_.z, uav_x, uav_y, uav_z, trajectory.length_catenary[i], points_catenary_);
+		//Solver through Bisection
+			bool just_one_axe = bc.configBisection(trajectory.length_catenary[i], p_reel_.x, p_reel_.y, p_reel_.z, uav_x, uav_y, uav_z, false);
+			bc.getPointCatenary3D(points_catenary_);
+		
+		auto size_ = points_catenary_.size();
 		mp_.clearMarkers(catenary_marker, 150, catenary_marker_pub_);
 		
 		br.sendTransform(tf::StampedTransform(trans_ugv, ros::Time::now(), "/map", ugv_base_frame));
 		br.sendTransform(tf::StampedTransform(trans_uav, ros::Time::now(), "/map", uav_base_frame));
-		mp_.markerPoints(catenary_marker, points_catenary_final, i, size_, catenary_marker_pub_);	
+		mp_.markerPoints(catenary_marker, points_catenary_, i, size_, catenary_marker_pub_);	
 
 		ros::Duration(1.0).sleep();
 		printf("Rviz Trajectory: [%lu/%lu]: UGV=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f] UAV=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f] length=[%.3f]\n", i,trajectory.trajectory.points.size(),
@@ -185,8 +197,9 @@ void ManagerTf::getReelPose()
 	try{
         pose_reel_local = tfBuffer->lookupTransform(ugv_base_frame, reel_base_frame, ros::Time(0));
     }catch (tf2::TransformException &ex){
-        ROS_WARN("Optimizer Local Planner: Couldn't get Local Reel Pose (frame: %s), so not possible to set Tether start point; tf exception: %s", reel_base_frame.c_str(),ex.what());
+        // ROS_WARN("Optimizer Local Planner: Couldn't get Local Reel Pose (frame: %s), so not possible to set Tether start point; tf exception: %s", reel_base_frame.c_str(),ex.what());
     }
+	// printf("ManagerTf::getReelPose()  , pose_reel_local=[%f %f %f] \n",pose_reel_local.transform.translation.x, pose_reel_local.transform.translation.y,pose_reel_local.transform.translation.z);
 }
 
 geometry_msgs::Vector3 ManagerTf::getReelPoint(const float px_, const float py_, const float pz_,const float qx_, const float qy_, const float qz_, const float qw_)
