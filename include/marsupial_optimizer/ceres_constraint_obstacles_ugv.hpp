@@ -41,7 +41,6 @@ public:
             NearNeighbor nn;
 
             nn.nearestObstacleStateCeres(kdT_ , state1[1],state1[2], state1[3], o_p_, near_[0], near_[1], near_[2]);
-            // std::cout <<"NearestObstaclesFunctorUGV: state1["<<state1[0]<<"]=[" << state1[1] <<","<<state1[2]<<","<<state1[3] << "] , near=["<<near_[0]<<","<<near_[1]<<","<<near_[2]<<"]"<< std::endl;
             return true;
         }
 
@@ -54,8 +53,8 @@ public:
     struct ObstaclesFunctorUGV 
     {
         ObstaclesFunctorUGV(double weight_factor, double safty_bound, 
-        pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points)
-            : wf_(weight_factor), sb_(safty_bound), kdT_(kdT_From_NN), o_p_(obstacles_Points)
+        pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points, bool write_data)
+            : wf_(weight_factor), sb_(safty_bound), kdT_(kdT_From_NN), o_p_(obstacles_Points), w_d_(write_data)
         {
             compute_nearest_distance.reset(new ceres::CostFunctionToFunctor<4,4>(
                                     new ceres::NumericDiffCostFunction<ComputeDistanceObstaclesUGV,
@@ -93,16 +92,19 @@ public:
 
             // std::cout << "ObstacleDistanceFunctorUGV: residual[0]= " << residual[0] << " , d_= " << d_ << std::endl;
             
-            std::ofstream ofs;
-		    std::string name_output_file = "/home/simon/residuals_optimization_data/obstacles_ugv.txt";
-		    ofs.open(name_output_file.c_str(), std::ofstream::app);
-		    if (ofs.is_open()) 
-			    ofs << residual[0] << ";" <<std::endl;
-		    ofs.close();
+	        if(w_d_){
+                std::ofstream ofs;
+                std::string name_output_file = "/home/simon/residuals_optimization_data/obstacles_ugv.txt";
+                ofs.open(name_output_file.c_str(), std::ofstream::app);
+                if (ofs.is_open()) 
+                    ofs << residual[0] << "/" <<std::endl;
+                ofs.close();
+            }
 
             return true;
         }
 
+        bool w_d_;
         std::unique_ptr<ceres::CostFunctionToFunctor<4,4> > compute_nearest_distance;
         double wf_, sb_;
         pcl::KdTreeFLANN <pcl::PointXYZ> kdT_;

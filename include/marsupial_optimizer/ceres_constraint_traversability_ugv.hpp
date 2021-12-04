@@ -52,8 +52,8 @@ public:
 
     struct TraversabilityFunctor 
     {
-        TraversabilityFunctor(double weight_factor, pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points)
-            : wf_(weight_factor), kdT_(kdT_From_NN), o_p_(obstacles_Points)
+        TraversabilityFunctor(double weight_factor, pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points, bool write_data)
+            : wf_(weight_factor), kdT_(kdT_From_NN), o_p_(obstacles_Points), w_d_(write_data)
         {
             compute_nearest_distance.reset(new ceres::CostFunctionToFunctor<4,4>(
                                     new ceres::NumericDiffCostFunction<ComputeDistanceTraversability,
@@ -72,32 +72,37 @@ public:
             d_ugv_ = (statePos[3]-n_[2])*(statePos[3]-n_[2]); // To the closest point to traversavility PC is only consider distance in Z axe
             bound = T{0.001};  // Bound maximum distance above UGV traversability map
             
-            // residual[0] =  wf_ * 1000.0 * (exp(4.0*d_ugv_) - bound);
-
             T max_value_residual = T{200.0};
             T min_value_residual = T{0.0};
             T value_dependent2 = T{0.1};
-            T value_dependent1 = T{bound};
+            // T value_dependent1 = T{bound};
+            T value_dependent1 = T{0.0};
             T m ;
-            if ( bound > d_ugv_ )
-                m = T{0.0};
-            else
-                m = (max_value_residual- min_value_residual)/(value_dependent2 - value_dependent1);
+            // if ( bound > d_ugv_ )
+            //     m = T{0.0};
+            // else
+            //     m = (max_value_residual- min_value_residual)/(value_dependent2 - value_dependent1);
 
-            residual[0] =  wf_ * m * (d_ugv_ - bound);
+            m = (max_value_residual- min_value_residual)/(value_dependent2 - value_dependent1);
+
+            // residual[0] =  wf_ * m * (d_ugv_ - bound);
+            residual[0] =  wf_ *( m * (d_ugv_ - value_dependent1) + min_value_residual);
 
 		    // std::cout << "TraversabilityFunctor["<<statePos[0] <<"] , residual[0]= "<< residual[0] << " , d_ugv_= " << d_ugv_ << " , bound= " << bound << std::endl;
             
-            std::ofstream ofs;
-            std::string name_output_file = "/home/simon/residuals_optimization_data/traversability_ugv.txt";
-            ofs.open(name_output_file.c_str(), std::ofstream::app);
-            if (ofs.is_open()) 
-                ofs << residual[0] << ";" <<std::endl;
-            ofs.close();
+	        if(w_d_){
+                std::ofstream ofs;
+                std::string name_output_file = "/home/simon/residuals_optimization_data/traversability_ugv.txt";
+                ofs.open(name_output_file.c_str(), std::ofstream::app);
+                if (ofs.is_open()) 
+                    ofs << residual[0] << "/" <<std::endl;
+                ofs.close();
+            }
             
             return true;
         }
 
+        bool w_d_;
         std::unique_ptr<ceres::CostFunctionToFunctor<4,4> > compute_nearest_distance;
         double wf_;
         pcl::KdTreeFLANN <pcl::PointXYZ> kdT_;

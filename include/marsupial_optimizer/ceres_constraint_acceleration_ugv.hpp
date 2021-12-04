@@ -19,7 +19,8 @@ using ceres::Solver;
 class AccelerationFunctorUGV {
 
 public:
-  AccelerationFunctorUGV(double weight_factor, double init_acc_ugv, double count_fix_points_ugv): wf_(weight_factor), ia_ugv_(init_acc_ugv), cfp_ugv(count_fix_points_ugv) {}
+  AccelerationFunctorUGV(double weight_factor, double init_acc_ugv, double count_fix_points_ugv, bool write_data): 
+  wf_(weight_factor), ia_ugv_(init_acc_ugv), cfp_ugv(count_fix_points_ugv), w_d_(write_data) {}
 
 	template <typename T>
 	bool operator()(const T* const statePosUGV1, const T* const statePosUGV2, const T* const statePosUGV3,
@@ -28,32 +29,34 @@ public:
 		T d1_, d2_, arg_d1_, arg_d2_;
 		T v1_, v2_, a_;
 
+		double low_value = 0.001;
+
 		//Get value distance between pos 1 and pos 2
 		arg_d1_ = pow(statePosUGV1[1]-statePosUGV2[1],2) + pow(statePosUGV1[2]-statePosUGV2[2],2) + pow(statePosUGV1[3]-statePosUGV2[3],2);
-		if (arg_d1_ < 0.001 && arg_d1_ > -0.001)
+		if (arg_d1_ < low_value && arg_d1_ > -low_value)
 			d1_ = T{0.0};
 		else
 			d1_ = sqrt(arg_d1_);
 		
 		//Get value distance between pos 2 and pos 3
 		arg_d2_ = pow(statePosUGV2[1]-statePosUGV3[1],2) + pow(statePosUGV2[2]-statePosUGV3[2],2) + pow(statePosUGV2[3]-statePosUGV3[3],2);
-		if (arg_d2_ < 0.001 && arg_d2_ > -0.001)
+		if (arg_d2_ < low_value && arg_d2_ > -low_value)
 			d2_ = T{0.0};
 		else
 			d2_ = sqrt(arg_d2_);
 
-		if(stateT1[1] < 0.001)
+		if(stateT1[1] < low_value)
 			v1_ = T{0.0};
 		else
 			v1_ = d1_ / (stateT1[1]);
 		
-		if(stateT2[1] < 0.001)
+		if(stateT2[1] < low_value)
 			v2_ = T{0.0};
 		else
 			v2_ = d2_ / (stateT2[1]);
 		
 
-		if(stateT1[1] < 0.001 && stateT2[1]< 0.001){
+		if(stateT1[1] < low_value && stateT2[1]< low_value){
 			a_ = T{0.0};
 			residual[0] =  a_;
 		}	
@@ -65,17 +68,20 @@ public:
 		// std::cout << "AccelerationFunctorUGV : residual[0]= " << residual[0] << " , a_= " << a_ << " , stateT1[1]= " << stateT1[1]
 		//  		  << " , stateT2[1]= " << stateT2[1] << " , v1_= " << v1_ <<" , v2_=" << v2_ << std::endl;
 
-		std::ofstream ofs;
-		std::string name_output_file = "/home/simon/residuals_optimization_data/acceleration_ugv.txt";
-		ofs.open(name_output_file.c_str(), std::ofstream::app);
-		if (ofs.is_open()) 
-			ofs << residual[0] << ";" <<std::endl;
-		ofs.close();
-
+		if(w_d_){
+			std::ofstream ofs;
+			std::string name_output_file = "/home/simon/residuals_optimization_data/acceleration_ugv.txt";
+			ofs.open(name_output_file.c_str(), std::ofstream::app);
+			if (ofs.is_open()) 
+				ofs << residual[0] << "/" <<std::endl;
+			ofs.close();
+		}
+		
 		return true;
 }
 
  double wf_, ia_ugv_, ia_uav_ , cfp_ugv;
+ bool w_d_;
 
  private:
 };

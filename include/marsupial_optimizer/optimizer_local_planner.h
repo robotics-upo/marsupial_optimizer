@@ -11,6 +11,7 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include <random>
 #include <stdint.h>
 
+#include <stdio.h>
 #include <iostream>
 #include <vector>
 #include <iterator>
@@ -26,12 +27,10 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "marsupial_optimizer/ceres_constraint_equidistance_ugv_analytic.hpp"
 #include "marsupial_optimizer/ceres_constraint_equidistance_uav.hpp"
 #include "marsupial_optimizer/ceres_constraint_equidistance_uav_analytic.hpp"
-// #include "marsupial_optimizer/ceres_constraint_length_ugv.hpp"
 #include "marsupial_optimizer/ceres_constraint_obstacles_ugv.hpp"
 #include "marsupial_optimizer/ceres_constraint_obstacles_ugv_analytic.hpp"
 #include "marsupial_optimizer/ceres_constraint_obstacles_uav.hpp"
 #include "marsupial_optimizer/ceres_constraint_obstacles_uav_analytic.hpp"
-// #include "marsupial_optimizer/ceres_constraint_repulsion_uav.hpp"
 // #include "marsupial_optimizer/ceres_constraint_obstacles_through_uav.hpp"
 // #include "marsupial_optimizer/ceres_constraint_obstacles_through_ugv.hpp"
 #include "marsupial_optimizer/ceres_constraint_traversability_ugv.hpp"
@@ -41,8 +40,6 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "marsupial_optimizer/ceres_constraint_kinematics_uav.hpp"
 #include "marsupial_optimizer/ceres_constraint_kinematics_uav_analytic.hpp"
 // #include "marsupial_optimizer/ceres_constraint_rotation_ugv.hpp"
-// #include "marsupial_optimizer/ceres_constraint_time_ugv.hpp"
-// #include "marsupial_optimizer/ceres_constraint_time_uav.hpp"
 #include "marsupial_optimizer/ceres_constraint_time.hpp"
 #include "marsupial_optimizer/ceres_constraint_velocity_ugv.hpp"
 #include "marsupial_optimizer/ceres_constraint_velocity_uav.hpp"
@@ -157,17 +154,17 @@ public:
 	void finishedRvizManeuverCallBack(const std_msgs::BoolConstPtr &msg);
 	void interpolateFixedPointsPath(vector<Eigen::Vector3d> &v_inter_ , int mode_);
 	void calculateDistanceVertices(vector<double> &_v_D_ugv,vector<double> &_v_D_uav);
-	// void getTemporalState(vector<double> &_time_ugv, vector<double> &_time_uav);
 	void getTemporalState(vector<double> &_time);
 	void getInitialGlobalPath(trajectory_msgs::MultiDOFJointTrajectory _path, vector<Eigen::Vector3d> &v_ugv_, vector<Eigen::Vector3d> &v_uav_);
 	void initializingParametersblock();
 	void finishigOptimizationAndGetDataResult(int &n_coll_opt_traj_ugv, int &n_coll_init_path_ugv, int &n_coll_opt_traj_uav, int &n_coll_init_path_uav, int &n_coll_opt_cat_);
 	void getDataForOptimizerAnalysis();
-	void getKinematicTrajectory(vector<Eigen::Vector3d> v_pos2kin_ugv, vector<Eigen::Vector3d> v_pos2kin_uav, vector<double> &v_angles_kin_ugv, vector<double> &v_angles_kin_uav);
+	void getSmoothnessTrajectory(vector<Eigen::Vector3d> v_pos2kin_ugv, vector<Eigen::Vector3d> v_pos2kin_uav, vector<double> &v_angles_kin_ugv, vector<double> &v_angles_kin_uav);
 	geometry_msgs::Vector3 getReelPoint(const float px_, const float py_, const float pz_,const float qx_, const float qy_, const float qz_, const float qw_);
 	void getReelPose();
 	void processingCatenary();
 	void publishOptimizedTraj();
+	void cleanResidualConstraintsFile();
 	
 	upo_actions::ExecutePathResult action_result;
 
@@ -199,7 +196,7 @@ public:
 	int n_iter_opt;	//Iterations Numbers of Optimizer
 	int size_path;
 	double distance_catenary_obstacle, dynamic_catenary, initial_distance_states_ugv, initial_distance_states_uav;
-	double w_alpha_uav, w_alpha_ugv, w_beta_uav, w_beta_ugv, w_iota_ugv, w_iota_uav, w_theta_ugv, w_gamma_uav, w_gamma_ugv, w_kappa_ugv, w_kappa_uav, w_delta, w_delta_ugv; 
+	double w_alpha_uav, w_alpha_ugv, w_beta_uav, w_beta_ugv, w_iota_ugv, w_iota_uav, w_theta_ugv, w_gamma_uav, w_gamma_ugv, w_kappa_ugv, w_kappa_uav, w_delta; 
 	double w_epsilon, w_epsilon_ugv, w_zeta_uav , w_zeta_ugv, w_eta_1, w_eta_2, w_eta_3, w_lambda, w_mu_uav, w_nu_ugv;
 
 	bool optimize_ugv , optimize_uav, optimize_cat, fix_last_position_ugv;
@@ -258,13 +255,11 @@ public:
 	vector<geometry_msgs::Quaternion> vec_init_rot_ugv, vec_init_rot_uav, vec_opt_rot_ugv, vec_opt_rot_uav;
 
 	vector<double> vec_dist_init_ugv, vec_dist_init_uav;
-	// vector<double> vec_time_init_ugv, vec_time_init_uav;
 	vector<double> vec_time_init;
-	vector<double> v_init_angles_kinematic_ugv, v_init_angles_kinematic_uav, v_opt_angles_kinematic_ugv, v_opt_angles_kinematic_uav;
+	vector<double> v_init_angles_smooth_ugv, v_init_angles_smooth_uav, v_opt_angles_smooth_ugv, v_opt_angles_smooth_uav;
 	vector<float> vec_len_cat_init, vec_len_cat_opt;
 	vector<Eigen::Vector3d> vec_pose_ugv_opt, vec_pose_uav_opt; 
 	vector<Eigen::Vector3d> vec_pose_init_ugv, vec_pose_init_uav;
-	// vector<double> vec_time_ugv_opt, vec_time_uav_opt;
 	vector<double> vec_time_opt;
 	vector<int> vec_fix_status_ugv_prepross;
 
@@ -277,11 +272,12 @@ public:
 	double length_tether_max;
 	int count_fix_points_initial_ugv, count_fix_points_final_ugv, count_not_fix_points_ugv, count_not_fix_points_uav, count_fix_points_uav;
 
-	int equidistance_uav_constraint, obstacles_uav_constraint, kinematics_uav_constraint;
-	bool time_uav_constraint,velocity_uav_constraint,acceleration_uav_constraint;
-	bool time_ugv_constraint,velocity_ugv_constraint,acceleration_ugv_constraint;
+	int equidistance_uav_constraint, obstacles_uav_constraint, smoothness_uav_constraint;
+	bool velocity_uav_constraint,acceleration_uav_constraint;
+	bool time_constraint, velocity_ugv_constraint, acceleration_ugv_constraint;
 	bool finished_rviz_maneuver;
-	int equidistance_ugv_constraint, obstacles_ugv_constraint,traversability_ugv_constraint, kinematic_ugv_constraint;
+	int equidistance_ugv_constraint, obstacles_ugv_constraint,traversability_ugv_constraint, smoothness_ugv_constraint;
+	bool write_data_residual;
 
 private:
 	void resetFlags();

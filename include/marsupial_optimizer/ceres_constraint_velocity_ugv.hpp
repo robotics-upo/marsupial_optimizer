@@ -19,8 +19,8 @@ using ceres::Solver;
 class VelocityFunctorUGV {
 
 public:
-  VelocityFunctorUGV(double weight_factor, double init_vel_, double count_fix_points_ugv)
-                    : wf_(weight_factor), iv_(init_vel_), cfp_ugv(count_fix_points_ugv) 
+  VelocityFunctorUGV(double weight_factor, double init_vel_, double count_fix_points_ugv, bool write_data)
+                    : wf_(weight_factor), iv_(init_vel_), cfp_ugv(count_fix_points_ugv), w_d_(write_data) 
   {}
 
   template <typename T>
@@ -47,18 +47,21 @@ public:
 
         // std::cout << "VelocityFunctorUGV : residual[0]= " << residual[0] << " , d_= " << d_ << " , stateT[1]= " << stateT[1] << std::endl;
         
-        std::ofstream ofs;
-        std::string name_output_file = "/home/simon/residuals_optimization_data/velocity_ugv.txt";
-        ofs.open(name_output_file.c_str(), std::ofstream::app);
-        if (ofs.is_open()) 
-            ofs << residual[0] << ";" <<std::endl;
-        ofs.close();
+	      if(w_d_){
+          std::ofstream ofs;
+          std::string name_output_file = "/home/simon/residuals_optimization_data/velocity_ugv.txt";
+          ofs.open(name_output_file.c_str(), std::ofstream::app);
+          if (ofs.is_open()) 
+              ofs << residual[0] << "/" <<std::endl;
+          ofs.close();
+        }
 
         return true;
       }
       
   }
 
+ bool w_d_;
  double wf_, iv_, cfp_ugv;
 
  private:

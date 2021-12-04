@@ -36,10 +36,10 @@ struct CatenaryFunctor {
   CatenaryFunctor(double weight_factor_1, double weight_factor_2, double weight_factor_3, double safty_bound, double length_tether_max_,
   				pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points, Grid3d* grid_3D_,
                 pcl::KdTreeFLANN <pcl::PointXYZ> trav_kdT, pcl::PointCloud <pcl::PointXYZ>::Ptr trav_pc, geometry_msgs::Vector3 pos_reel_ugv, int size, 
-				Eigen::Vector3d fix_pos_ref, ros::NodeHandlePtr nhP, octomap::OcTree* octotree_full_, std::vector<double> &vec_l_min)
+				Eigen::Vector3d fix_pos_ref, ros::NodeHandlePtr nhP, octomap::OcTree* octotree_full_, std::vector<double> &vec_l_min, bool write_data)
                 : wf_1(weight_factor_1), wf_2(weight_factor_2), wf_3(weight_factor_3),sb_(safty_bound), ltm_(length_tether_max_), kdT_(kdT_From_NN), 
 				o_p_(obstacles_Points), g_3D_(grid_3D_),kdT_trav_(trav_kdT), pc_trav_(trav_pc), pos_reel_ugv_(pos_reel_ugv),size_(size), 
-				fp_ref_(fix_pos_ref), o_full_(octotree_full_)
+				fp_ref_(fix_pos_ref), o_full_(octotree_full_), w_d_(write_data)
     {
 		catenary_marker_pub_ = nhP->advertise<visualization_msgs::MarkerArray>("catenary_marker", 1);
 		plane_pub_ = nhP->advertise<visualization_msgs::MarkerArray>("plane_markerArray", 1);
@@ -59,13 +59,15 @@ struct CatenaryFunctor {
 		std::vector<double> dist_obst_cat; 
 		std::vector<int> cat_between_obs, pos_cat_in_coll;
 		int first_coll, last_coll;
+		first_coll = last_coll = 0;
+		bool collision_ = false;
 		// For Marker
    		int id_marker_ = statePosUAV[0];		// Related with Marker frame.id
 		// For residual[1] Length Cat
-		double max_value_residual = 200.0;
+		double max_value_residual = 100.0;
 		double min_value_residual = 20.0;
 
-		double pos_init_cat_[3];
+		double pos_init_cat_[3], const_collision_;
 		pos_init_cat_[0] = statePosUGV[1]; 
 		pos_init_cat_[1] = statePosUGV[2];
 		pos_init_cat_[2] = statePosUGV[3] + pr_ugv_[2];
@@ -75,7 +77,7 @@ struct CatenaryFunctor {
 							(statePosUAV[3]-pos_init_cat_[2])*(statePosUAV[3]-pos_init_cat_[2])); 
 		double cost_cat_ = 0.0;
 		double d_obs_;
-		double min_val_proximity_ = 0.0001;
+		double min_val_proximity_ = 0.005;
 		double safety_length ;
 		if (dist < 4.0)
 			safety_length = 1.010 * dist;
@@ -97,19 +99,27 @@ struct CatenaryFunctor {
 			y_ = points_catenary[i].y;
 			z_ = points_catenary[i].z;
 			d_obs_= (d.a0 + d.a1*x_ + d.a2*y_ + d.a3*z_ + d.a4*x_*y_ + d.a5*x_*z_ + d.a6*y_*z_ + d.a7*x_*y_*z_);
-			if(d_obs_ < min_val_proximity_ || (i >= first_coll && i <= last_coll) )
-				cost_ = 1.0/min_val_proximity_;
+			if(d_obs_ < min_val_proximity_ || (i >= first_coll && i <= last_coll && i > 0) ){
+				cost_ = (1.0/min_val_proximity_)*1.0;
+				collision_ = true;
+			}
 			else
-				cost_ = 1.0/d_obs_;
+				cost_ = (1.0/d_obs_);
 			cost_cat_ = cost_cat_ + cost_;
+			// std::cout<< "cost_cat_: "<<cost_cat_<<" , cost_: "<< cost_ << " , p=["<< x_ <<"/"<< y_ <<"/"<< z_ <<"] d_obs_= "<< d_obs_ << 
+			//             " , min_val_proximity_= " << min_val_proximity_<< " , id_marker_: "<< id_marker_<<" , ["<<i<<"/"<<points_catenary.size() <<
+			// 			"] , collision= "<<collision_<<std::endl;
 		}
+		if (collision_)
+			const_collision_ = 100.0;
+		else
+			const_collision_ = 0.0;
 
-		
 		/********** I Constraint to make cable far away from obstacles **********/
 		
-		residual[0] = wf_1 * (cost_cat_);
+		residual[0] = wf_1 * (cost_cat_ + const_collision_);
 
-		/********** II Constraint to make length Cable longer than distance between UAV and UGV **********/ 
+		/********** II Constraint to make length Cable longer than euclidean distance between UAV and UGV **********/ 
 
 		double m_, f_;
 		if (stateCat[1] < safety_length) {
@@ -132,15 +142,24 @@ struct CatenaryFunctor {
 		// std::cout <<"] , [L=" << stateCat[1]<< "/d=" << safety_length <<" , points_cat_in_coll=["
 		// 		  <<first_coll<<"-"<<last_coll<<"/"<<last_coll-first_coll << "]"<<std::endl;
 
-		std::ofstream ofs;
-		std::string name_output_file = "/home/simon/residuals_optimization_data/catenary.txt";
-		ofs.open(name_output_file.c_str(), std::ofstream::app);
-		if (ofs.is_open()) 
-			ofs << residual[0] << " ; "
-				<< residual[1] << " ; "
-				<< residual[2] << " ; "
-				<<std::endl;
-		ofs.close();
+		if(w_d_){
+			std::ofstream ofs;
+			std::string name_output_file = "/home/simon/residuals_optimization_data/catenary.txt";
+			ofs.open(name_output_file.c_str(), std::ofstream::app);
+			if (ofs.is_open()) 
+				ofs << residual[0] << " ; "
+					<< residual[1] << " ; "
+					<< residual[2] << " / "
+					// << "node= " << statePosUGV[0] << " ; "
+					// << "L= " << stateCat[1] << " ; "
+					// << "cat.size()= " << points_catenary.size() << " ; "
+					// << "safty_L= " << safety_length << " ; "
+					// << "first_coll= " << first_coll << " ; "
+					// << "last_coll= " << last_coll << " ; "
+					// << "n_cat_coll= " << last_coll-first_coll << " ; "
+					<<std::endl;
+			ofs.close();
+		}
 	
 		// std::string y_ ;
 		// y_ = "s";
@@ -157,6 +176,7 @@ struct CatenaryFunctor {
 	return true;
     }
 
+ 	bool w_d_;
     double wf_1, wf_2, wf_3, sb_, ltm_;
 	int size_;
 	geometry_msgs::Vector3 pos_reel_ugv_;

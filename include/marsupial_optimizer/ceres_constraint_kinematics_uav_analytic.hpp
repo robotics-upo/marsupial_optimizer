@@ -13,15 +13,15 @@ using ceres::Solve;
 using ceres::Solver;
 using ceres::HuberLoss;
 
-class KinematicsFunctorUAVAnalytic : public SizedCostFunction<1, 4, 4, 4>  
+class smoothnessFunctorUAVAnalytic : public SizedCostFunction<1, 4, 4, 4>  
 {
 
 public:
-	KinematicsFunctorUAVAnalytic(double weight_factor, double angle_bound, int fix_pos_init_uav, int fix_pos_final_uav)
+	smoothnessFunctorUAVAnalytic(double weight_factor, double angle_bound, int fix_pos_init_uav, int fix_pos_final_uav)
 						: wf_(weight_factor), ang_(angle_bound), fpi_(fix_pos_init_uav), fpf_(fix_pos_final_uav) 
 	{}
 
-    virtual ~KinematicsFunctorUAVAnalytic(void) 
+    virtual ~smoothnessFunctorUAVAnalytic(void) 
     {}
 
   	virtual bool Evaluate(double const* const* parameters, double* residuals, double** jacobians) const 

@@ -17,12 +17,12 @@ using ceres::Solver;
 #include <fstream>
 #include <string>
 
-class KinematicsFunctorUGV 
+class SmoothnessFunctorUGV 
 {
 
 public:
-  	KinematicsFunctorUGV(double weight_factor, double angle_bound)
-	: wf_(weight_factor), ang_(angle_bound) 
+  	SmoothnessFunctorUGV(double weight_factor, double angle_bound, bool write_data)
+	: wf_(weight_factor), ang_(angle_bound), w_d_(write_data) 
 	{}
 
   	template <typename T>
@@ -54,33 +54,41 @@ public:
 			cos_angle = dot_product/(norm_vector1 * norm_vector2);
 		T bound = T{cos(ang_)};
 		T b_;
-		T max_value_residual = T{100.0};
+		// T max_value_residual = T{100.0};
+		T max_value_residual = T{20.0};
         T min_value_residual = T{0.0};
         T value_dependent2 = T{-1.0};
-        T value_dependent1 = T{bound};
+        // T value_dependent1 = T{bound};
+        T value_dependent1 = T{1.0};
         T m ;
 		
-        if ( cos_angle > bound){
-            m = T{0.0};
-			b_ = T{1.0};
-		} else{
-            m = (max_value_residual- min_value_residual)/(value_dependent2 - value_dependent1);
-			b_ = bound;
-		}	
-		residual[0] =  wf_ * m * (cos_angle - b_);
+        // if ( cos_angle > bound){
+        //     m = T{0.0};
+		// 	b_ = T{1.0};
+		// } else{
+        //     m = (max_value_residual- min_value_residual)/(value_dependent2 - value_dependent1);
+		// 	b_ = bound;
+		// }
+        m = (max_value_residual- min_value_residual)/(value_dependent2 - value_dependent1);
+
+		// residual[0] =  wf_ * m * (cos_angle - b_);
+		residual[0] =  wf_ *( m * (cos_angle - value_dependent1) + min_value_residual);
 		
-		// std::cout << "KinematicsFunctorUGV residual[0]= "<< residual[0] << " , cos_angle= " << cos_angle << " , b_= " << b_ << std::endl;
+		// std::cout << "SmoothnessFunctorUGV residual[0]= "<< residual[0] << " , cos_angle= " << cos_angle << " , b_= " << b_ << std::endl;
 		
-		std::ofstream ofs;
-		std::string name_output_file = "/home/simon/residuals_optimization_data/kinematic_ugv.txt";
-		ofs.open(name_output_file.c_str(), std::ofstream::app);
-		if (ofs.is_open()) 
-			ofs << residual[0] << ";" <<std::endl;
-		ofs.close();
+		if(w_d_){
+			std::ofstream ofs;
+			std::string name_output_file = "/home/simon/residuals_optimization_data/kinematic_ugv.txt";
+			ofs.open(name_output_file.c_str(), std::ofstream::app);
+			if (ofs.is_open()) 
+				ofs << residual[0] << "/" <<std::endl;
+			ofs.close();
+		}
 
 		return true;
 	}
 
+bool w_d_;
 double wf_, ang_;
 
 private:

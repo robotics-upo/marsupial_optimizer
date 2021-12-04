@@ -14,16 +14,16 @@ using ceres::Solve;
 using ceres::Solver;
 using ceres::HuberLoss;
 
-class KinematicsFunctorUGVAnalytic : public SizedCostFunction<1, 4, 4, 4> 
+class smoothnessFunctorUGVAnalytic : public SizedCostFunction<1, 4, 4, 4> 
 {
 
 public:
 
-  	KinematicsFunctorUGVAnalytic(double weight_factor, double angle_bound, double count_fix_points_ugv)
+  	smoothnessFunctorUGVAnalytic(double weight_factor, double angle_bound, double count_fix_points_ugv)
 	  : wf_(weight_factor), ang_(angle_bound), cfp_ugv(count_fix_points_ugv)
 	{}
 
-    virtual ~KinematicsFunctorUGVAnalytic(void) 
+    virtual ~smoothnessFunctorUGVAnalytic(void) 
     {}
 
 

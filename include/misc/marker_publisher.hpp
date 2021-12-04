@@ -46,7 +46,7 @@ inline void MarkerPublisher::markerPoints(visualization_msgs::MarkerArray _marke
     else
         c_color3 = 0.0;
 	
-	double _scale = 0.06;
+	double _scale = 0.05;
 
 	if(change_marker_==1){
 		c_color1 = 0.0;
