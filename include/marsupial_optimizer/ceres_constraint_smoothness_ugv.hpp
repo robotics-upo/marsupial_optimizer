@@ -1,5 +1,5 @@
-#ifndef CERES_CONSTRAINS_KINEMATICS_UGV_HPP
-#define CERES_CONSTRAINS_KINEMATICS_UGV_HPP
+#ifndef CERES_CONSTRAINS_SMOOTHNESS_UGV_HPP
+#define CERES_CONSTRAINS_SMOOTHNESS_UGV_HPP
 
 
 #include "ceres/ceres.h"
@@ -74,11 +74,12 @@ public:
 		// residual[0] =  wf_ * m * (cos_angle - b_);
 		residual[0] =  wf_ *( m * (cos_angle - value_dependent1) + min_value_residual);
 		
-		// std::cout << "SmoothnessFunctorUGV residual[0]= "<< residual[0] << " , cos_angle= " << cos_angle << " , b_= " << b_ << std::endl;
+		// std::cout << "SmoothnessFunctorUGV residual[0]= "<< residual[0] << " , cos_angle= " << cos_angle << " , nodes[" 
+		// 												 << statePos1[0] << "," << statePos2[0] << "," << statePos3[0] << "]" << std::endl;
 		
 		if(w_d_){
 			std::ofstream ofs;
-			std::string name_output_file = "/home/simon/residuals_optimization_data/kinematic_ugv.txt";
+			std::string name_output_file = "/home/simon/residuals_optimization_data/smoothness_ugv.txt";
 			ofs.open(name_output_file.c_str(), std::ofstream::app);
 			if (ofs.is_open()) 
 				ofs << residual[0] << "/" <<std::endl;

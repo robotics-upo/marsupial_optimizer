@@ -34,7 +34,7 @@ class EquiDistanceFunctorUAV
       else  
         d_pos = sqrt(arg_d_pos);
 
-      T max_value_residual = T{50.0};
+      T max_value_residual = T{10.0};
       T min_value_residual = T{0.0};
       T m;
       // T init_d = i_d*T{1.2};
@@ -52,14 +52,15 @@ class EquiDistanceFunctorUAV
       // }
       
       m = (max_value_residual- min_value_residual)/( 1.5*init_d - init_d);
-      if(d_pos > init_d)
-        f_ = 1.0;
-      else
-        f_ = 0.000;
+      // if(d_pos > init_d)
+      //   f_ = 1.0;
+      // else
+      //   f_ = 0.000;
       // residual[0] = wf_ * m *(d_pos - dr_);  
-      residual[0] = wf_ *( m *(d_pos - init_d) + min_value_residual)*f_;  
+      // residual[0] = wf_ *( m *(d_pos - init_d) + min_value_residual)*f_;  
+      residual[0] = wf_ *( m *(d_pos - init_d) + min_value_residual);  
 
-      std::cout<< "Equi-Distance UAV: residual[0]= "<<residual[0]<<" , d_pos= "<< d_pos <<" , init_d= "<<init_d<<std::endl;
+      // std::cout<< "Equi-Distance UAV: residual[0]= "<<residual[0]<<" , d_pos= "<< d_pos <<" , init_d= "<<init_d<<std::endl;
 
 	    if(w_d_){
         std::ofstream ofs;

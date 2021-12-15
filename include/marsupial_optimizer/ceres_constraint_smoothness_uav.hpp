@@ -1,5 +1,5 @@
-#ifndef CERES_CONSTRAINS_KINEMATICS_UAV_HPP
-#define CERES_CONSTRAINS_KINEMATICS_UAV_HPP
+#ifndef CERES_CONSTRAINS_SMOOTHNESS_UAV_HPP
+#define CERES_CONSTRAINS_SMOOTHNESS_UAV_HPP
 
 
 #include "ceres/ceres.h"
@@ -78,7 +78,7 @@ public:
 		
 		if(w_d_){
 			std::ofstream ofs;
-			std::string name_output_file = "/home/simon/residuals_optimization_data/kinematic_uav.txt";
+			std::string name_output_file = "/home/simon/residuals_optimization_data/smoothness_uav.txt";
 			ofs.open(name_output_file.c_str(), std::ofstream::app);
 			if (ofs.is_open()) 
 				ofs << residual[0] << "/" <<std::endl;

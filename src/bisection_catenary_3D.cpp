@@ -185,6 +185,7 @@ void bisectionCatenary::getPointCatenary3D(vector<geometry_msgs::Point> &v_p_)
     dist_obst_cat.clear(); pos_cat_in_coll.clear(); cat_between_obs.clear();
     if (!x_const || !y_const){ 
         double x_value_, y_value_, x_step;
+        int check_continuity_ = 0;
         x_step = (XB)/num_point_catenary;
         x_value_ = 0.0;
         
@@ -219,31 +220,34 @@ void bisectionCatenary::getPointCatenary3D(vector<geometry_msgs::Point> &v_p_)
                 else
                     dist_cat_obs = -1.0;
                 dist_obst_cat.push_back(dist_cat_obs);
-                if(dist_cat_obs < bound_obst ){
-                    pos_cat_in_coll.push_back(i);
+                
+                // if(dist_cat_obs < bound_obst ){
                     if(i>0){
 						octomap::point3d r_;
 						octomap::point3d s_(p_.x,p_.y,p_.z); //start for rayCast
 						octomap::point3d d_(v_p_[i-1].x - p_.x, v_p_[i-1].y - p_.y, v_p_[i-1].z - p_.z); //direction for rayCast
                         bool r_cast_coll = false; 
                         r_cast_coll = octotree_full->castRay(s_, d_, r_);
-
                         double dist12_ = sqrt ( (v_p_[i-1].x-s_.x())*(v_p_[i-1].x-s_.x())+
                                                 (v_p_[i-1].y-s_.y())*(v_p_[i-1].y-s_.y())+ 
 					   		                    (v_p_[i-1].z-s_.z())*(v_p_[i-1].z-s_.z()) );
-	
                         double distObs_ = sqrt ((s_.x()-r_.x())*(s_.x()-r_.x())+(s_.y()-r_.y())*(s_.y()-r_.y())+(s_.z()-r_.z())*(s_.z()-r_.z()) );
-                        // if (d_.x() != 0.0 && d_.y() != 0.0 && d_.z() != 0.0){
+                            // if((dist_cat_obs < bound_obst ) || r_cast_coll && distObs_ <= dist12_){
                             if(r_cast_coll && distObs_ <= dist12_){
                                 cat_between_obs.push_back(i);	
-                                if (first_coll == 0)
-                                    first_coll  = i;
+                                if (first_coll == 0){
+                                    first_coll  = i;    
+                                    check_continuity_++;
+                                }
                                 last_coll = i;
+                                pos_cat_in_coll.push_back(i);
                             }
-                        // }
                     }
-                }        
+                // }        
             }
+            if ( ((last_coll-first_coll) == check_continuity_ ) && check_continuity_ != 0 && first_coll != 0 && last_coll != 0)
+                last_coll = num_point_catenary;
+
             v_p_.push_back(p_);
             if (p_z_min > p_.z){
                 min_point_z_cat.x = p_.x; 

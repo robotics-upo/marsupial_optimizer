@@ -43,7 +43,7 @@ class NearNeighbor
 		virtual void setKDTree(const sensor_msgs::PointCloud2 &pc2_);
 	    virtual Eigen::Vector3d nearestObstacleVertex(const pcl::KdTreeFLANN <pcl::PointXYZ> &kdT_, Eigen::Vector3d vert_, pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_);
 	    virtual Eigen::Vector3d nearestObstacleMarsupial(const pcl::KdTreeFLANN <pcl::PointXYZ> &kdT_, Eigen::Vector3d vert_, pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_);
-		virtual Eigen::Vector3d nearestTraversabilityMarsupial(const pcl::KdTreeFLANN <pcl::PointXYZ> kdT_, Eigen::Vector3d vert_, pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_ , double radius_);
+		virtual Eigen::Vector3d nearestTraversabilityUGVMarsupial(const pcl::KdTreeFLANN <pcl::PointXYZ> kdT_, Eigen::Vector3d vert_, pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_ , double radius_);
 		virtual bool nearestObstacleStateCeres(const pcl::KdTreeFLANN <pcl::PointXYZ> &kdT_, double x_, double y_, double z_, pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_, double &ret_x_, double &ret_y_, double &ret_z_);
 		virtual bool radiusNearestObstacleVertex(const pcl::KdTreeFLANN <pcl::PointXYZ> &kdT_, Eigen::Vector3d vert_, pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_ , float _radius);
 		virtual double distanceObstacleVertex(const pcl::KdTreeFLANN <pcl::PointXYZ> &kdT_, Eigen::Vector3d vert_);
@@ -130,7 +130,7 @@ inline Eigen::Vector3d NearNeighbor::nearestObstacleMarsupial(const pcl::KdTreeF
 	return ret_;
 }
 
-inline Eigen::Vector3d NearNeighbor::nearestTraversabilityMarsupial(const pcl::KdTreeFLANN <pcl::PointXYZ> kdT_, Eigen::Vector3d vert_, pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_ , double radius_)
+inline Eigen::Vector3d NearNeighbor::nearestTraversabilityUGVMarsupial(const pcl::KdTreeFLANN <pcl::PointXYZ> kdT_, Eigen::Vector3d vert_, pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_ , double radius_)
 {
 	Eigen::Vector3d ret_;
 	double z_aux_ = vert_.z();
@@ -153,7 +153,7 @@ inline Eigen::Vector3d NearNeighbor::nearestTraversabilityMarsupial(const pcl::K
 			ret_.y() = o_p_->points[ pointIdxRadiusSearch_[i] ].y;
 			ret_.z() = o_p_->points[ pointIdxRadiusSearch_[i] ].z;
 			z_aux_ = ret_.z();
-			// ROS_ERROR("   NearestTraversabilityMarsupial - radiusSearch: [%f %f %f]",ret_.x(),ret_.y(),ret_.z());
+			// ROS_ERROR("   nearestTraversabilityUGVMarsupial - radiusSearch: [%f %f %f]",ret_.x(),ret_.y(),ret_.z());
 			count++;
 			}
 		}

@@ -35,10 +35,10 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 // #include "marsupial_optimizer/ceres_constraint_obstacles_through_ugv.hpp"
 #include "marsupial_optimizer/ceres_constraint_traversability_ugv.hpp"
 #include "marsupial_optimizer/ceres_constraint_traversability_ugv_analytic.hpp"
-#include "marsupial_optimizer/ceres_constraint_kinematics_ugv.hpp"
-#include "marsupial_optimizer/ceres_constraint_kinematics_ugv_analytic.hpp"
-#include "marsupial_optimizer/ceres_constraint_kinematics_uav.hpp"
-#include "marsupial_optimizer/ceres_constraint_kinematics_uav_analytic.hpp"
+#include "marsupial_optimizer/ceres_constraint_smoothness_ugv.hpp"
+#include "marsupial_optimizer/ceres_constraint_smoothness_ugv_analytic.hpp"
+#include "marsupial_optimizer/ceres_constraint_smoothness_uav.hpp"
+#include "marsupial_optimizer/ceres_constraint_smoothness_uav_analytic.hpp"
 // #include "marsupial_optimizer/ceres_constraint_rotation_ugv.hpp"
 #include "marsupial_optimizer/ceres_constraint_time.hpp"
 #include "marsupial_optimizer/ceres_constraint_velocity_ugv.hpp"
@@ -104,6 +104,7 @@ using ceres::AutoDiffCostFunction;
 using ceres::NumericDiffCostFunction;
 using ceres::CENTRAL;
 using ceres::FORWARD;
+using ceres::RIDDERS;
 using ceres::CostFunction;
 using ceres::Problem;
 using ceres::Solve;

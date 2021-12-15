@@ -36,7 +36,7 @@ class EquiDistanceFunctorUGV
       else
         d_pos = sqrt(arg_d_pos);
 
-      T max_value_residual = T{50.0};
+      T max_value_residual = T{10.0};
       T min_value_residual = T{0.0};
       T m;
       // T init_d1 = i_d*T{1.1};

@@ -72,6 +72,8 @@ private:
 	gridCell *m_grid;
 	int m_gridSize, m_gridSizeX, m_gridSizeY, m_gridSizeZ;
 	int m_gridStepY, m_gridStepZ;
+
+	double ws_x_max, ws_x_min, ws_y_max, ws_y_min, ws_z_max, ws_z_min;
 	
 	// 3D point clound representation of the map
 	pcl::PointCloud<pcl::PointXYZ>::Ptr m_cloud;
@@ -103,7 +105,9 @@ public:
 		// Load paraeters
 		double value;
 		ros::NodeHandle lnh("~");
+
 		m_nodeName = node_name;
+
 		if(!lnh.getParam("global_frame_id", m_globalFrameId))
 			m_globalFrameId = "map";	
 		if(!lnh.getParam("map_path", m_mapPath))
@@ -120,6 +124,20 @@ public:
 		if(!lnh.getParam("sensor_dev", value))
 			value = 0.2;
 		m_sensorDev = (float)value;
+
+		if(!lnh.getParam("ws_x_min", ws_x_min))
+			ws_x_min = 5;
+		if(!lnh.getParam("ws_x_max", ws_x_max))
+			ws_x_max = 5;
+		if(!lnh.getParam("ws_y_min", ws_y_min))
+			ws_y_min = -5;
+		if(!lnh.getParam("ws_y_max", ws_y_max))
+			ws_y_max = 5;
+		if(!lnh.getParam("ws_z_min", ws_z_min))
+			ws_z_min = 0;
+		if(!lnh.getParam("ws_z_max", ws_z_max))
+			ws_z_max = 5;
+
 		
 		// Load octomap 
 		m_octomap = NULL;
@@ -184,7 +202,9 @@ public:
 		m_nodeName = node_name;
 
 		if(!lnh.getParam("sensor_dev", value))
-			value = 0.2;
+			value = 0.4;
+
+
 		m_sensorDev = (float)value;
 		m_mapPath = map_path;
 		// Load octomap 
@@ -507,8 +527,15 @@ protected:
 		
 		// Get map parameters
 		double minX, minY, minZ, maxX, maxY, maxZ, res;
-		m_octomap->getMetricMin(minX, minY, minZ);
-		m_octomap->getMetricMax(maxX, maxY, maxZ);
+		// m_octomap->getMetricMin(minX, minY, minZ);
+		// m_octomap->getMetricMax(maxX, maxY, maxZ);
+		maxX = ws_x_max ; // Next lines were added because once were fixed tje point cloud os the different stage the octomap size changed
+		minX = ws_x_min ; 
+		maxY = ws_y_max ; 
+		minY = ws_y_min ; 
+		maxZ = ws_z_max ;
+		minZ = ws_z_min ;
+
 		min_X = round(minX); min_Y = round(minY); min_Z = round(minZ); 
 		max_X = round(maxX); max_Y = round(maxY); max_Z = round(maxZ);
 		res = m_octomap->getResolution();

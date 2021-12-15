@@ -60,8 +60,8 @@ public:
 		residual[0] =  wf_ * (a_ - ia_);
 	}
 
-	std::cout << "AccelerationFunctorUAV : residual[0]= " << residual[0] << " , a_= " << a_ << " , stateT1[1]= " << stateT1[1]
-		 		  << " , stateT2[1]= " << stateT2[1] << " , v1_= " << v1_ <<" , v2_= " << v2_ << std::endl;
+	// std::cout << "AccelerationFunctorUAV : residual[0]= " << residual[0] << " , a_= " << a_ << " , stateT1[1]= " << stateT1[1]
+	// 	 		  << " , stateT2[1]= " << stateT2[1] << " , v1_= " << v1_ <<" , v2_= " << v2_ << std::endl;
 	
 	if(w_d_){
 		std::ofstream ofs;

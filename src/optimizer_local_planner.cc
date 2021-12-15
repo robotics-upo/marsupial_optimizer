@@ -263,13 +263,13 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	auto path_shared_ptr = execute_path_srv_ptr->acceptNewGoal();
   	globalTrajectory = path_shared_ptr->path;
 	vec_len_cat_init = path_shared_ptr->length_catenary; 
-	printf("\tReceiving Nodes from Global Path Planner (pos_ugv/pos_uav/length_cat) : \n");
-	for (size_t i = 0; i < globalTrajectory.points.size(); i++){
-		printf("Global_path_point[%lu/%lu]: [%.3f %.3f %.3f / %.3f %.3f %.3f / %.3f]\n",i, globalTrajectory.points.size(),
-		globalTrajectory.points.at(i).transforms[0].translation.x, globalTrajectory.points.at(i).transforms[0].translation.y, globalTrajectory.points.at(i).transforms[0].translation.z,
-		globalTrajectory.points.at(i).transforms[1].translation.x, globalTrajectory.points.at(i).transforms[1].translation.y, globalTrajectory.points.at(i).transforms[1].translation.z,
-		vec_len_cat_init[i]);
-	}
+	// printf("\tReceiving Nodes from Global Path Planner (pos_ugv/pos_uav/length_cat) : \n");
+	// for (size_t i = 0; i < globalTrajectory.points.size(); i++){
+	// 	printf("Global_path_point[%lu/%lu]: [%.3f %.3f %.3f / %.3f %.3f %.3f / %.3f]\n",i, globalTrajectory.points.size(),
+	// 	globalTrajectory.points.at(i).transforms[0].translation.x, globalTrajectory.points.at(i).transforms[0].translation.y, globalTrajectory.points.at(i).transforms[0].translation.z,
+	// 	globalTrajectory.points.at(i).transforms[1].translation.x, globalTrajectory.points.at(i).transforms[1].translation.y, globalTrajectory.points.at(i).transforms[1].translation.z,
+	// 	vec_len_cat_init[i]);
+	// }
 
 	if(write_data_residual)
 		cleanResidualConstraintsFile();
@@ -295,8 +295,8 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
  	getTemporalState(vec_time_init);
 
 	dm_.initDataManagement(path, name_output_file, scenario_number, num_pos_initial, initial_velocity_ugv, initial_velocity_uav, 
-							initial_acceleration_ugv, initial_acceleration_uav, distance_catenary_obstacle-0.05, pose_reel_local.transform.translation, vec_pose_init_ugv, 
-							vec_pose_init_uav, vec_len_cat_init, vec_init_rot_ugv, vec_init_rot_uav, mapFull_msg, mapTrav_msg);			   
+							initial_acceleration_ugv, initial_acceleration_uav, distance_catenary_obstacle, pose_reel_local.transform.translation, vec_pose_init_ugv, 
+							vec_pose_init_uav, vec_len_cat_init, vec_init_rot_ugv, vec_init_rot_uav, mapFull_msg, mapTrav_msg, grid_3D);			   
 	getSmoothnessTrajectory(vec_pose_init_ugv, vec_pose_init_uav, v_init_angles_smooth_ugv, v_init_angles_smooth_uav);
 	if(write_data_for_analysis)
 		dm_.writeTemporalDataBeforeOptimization(vec_dist_init_ugv, vec_dist_init_uav, vec_time_init, v_init_angles_smooth_ugv, v_init_angles_smooth_uav);
@@ -372,7 +372,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			ROS_INFO(PRINTF_GREEN"		- Optimize Traversability Autodiff");
 			for (int i = 0; i < statesPosUGV.size(); ++i) {
 				CostFunction* cost_function_ugv_4  = new AutoDiffCostFunction<TraversabilityDistanceFunctorUGV::TraversabilityFunctor, 1, 4>
-												(new TraversabilityDistanceFunctorUGV::TraversabilityFunctor(w_theta_ugv, nn_trav.kdtree, nn_trav.obs_points,write_data_residual)); 
+												(new TraversabilityDistanceFunctorUGV::TraversabilityFunctor(w_theta_ugv, nn_trav.kdtree, nn_trav.obs_points, step, write_data_residual)); 
 				problem.AddResidualBlock(cost_function_ugv_4, NULL, statesPosUGV[i].parameter);
 				if (i < count_fix_points_initial_ugv)
 					problem.SetParameterBlockConstant(statesPosUGV[i].parameter);
@@ -605,12 +605,12 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		ROS_INFO(PRINTF_ORANGE"		- Optimize Lentgh");
 		std::vector<double> vec_l_min;
 		for (int i = 0; i < statesLength.size(); ++i) {
-			CostFunction* cost_function_cat_1  = new NumericDiffCostFunction<CatenaryFunctor, FORWARD, 3, 4, 4, 2>
+			CostFunction* cost_function_cat_1  = new NumericDiffCostFunction<CatenaryFunctor, RIDDERS, 3, 4, 4, 2>
 										(new CatenaryFunctor(w_eta_1, w_eta_2, w_eta_3, distance_catenary_obstacle, length_tether_max, nn_uav.kdtree, 
 											nn_uav.obs_points, grid_3D, nn_trav.kdtree, nn_trav.obs_points, pose_reel_local.transform.translation, size_path, 
 											new_path_uav[i], nh, mapFull_msg, vec_l_min, write_data_residual)); 
 			problem.AddResidualBlock(cost_function_cat_1, NULL, statesPosUAV[i].parameter, statesPosUGV[i].parameter, statesLength[i].parameter);
-			if (i == 0)
+			if (i == 0 || (fix_last_position_ugv && i == statesLength.size()-1))
 				problem.SetParameterBlockConstant(statesLength[i].parameter);
 			else{
 				problem.SetParameterLowerBound(statesLength[i].parameter, 1, 0.1);
@@ -654,8 +654,11 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 
 	cleanVectors();		//Clear vector after optimization and previus the next iteration
 	double time_sleep_ = 10.0;
-	if (n_coll_opt_traj_ugv_ == 0 && n_coll_opt_traj_uav_ == 0 && n_coll_opt_cat_== 0 && initial_cost!=final_cost ){
+	if (n_coll_opt_traj_ugv_ == 0 && n_coll_opt_traj_uav_ == 0 && n_coll_opt_cat_== 0 ){
+		if (initial_cost==final_cost)
+			ROS_INFO(PRINTF_ORANGE"\n		Optimizer Local Planner: Final Cost equal than Initial Cost");
 		ROS_INFO(PRINTF_GREEN"\n\n\n		Optimizer Local Planner: Goal position successfully achieved through optimization trajectory\n\n\n");
+
 		if (traj_in_rviz){
 			if(pause_end_optimization){
 				/********************* To obligate stop method and check Optimization result *********************/
@@ -693,6 +696,8 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		execute_path_srv_ptr->setSucceeded(action_result);
 	}
 	else{
+		if (initial_cost==final_cost)
+				ROS_INFO(PRINTF_ORANGE"\n		Optimizer Local Planner: Final Cost equal than Initial Cost");
 		ROS_INFO(PRINTF_RED"\n\n\n\n		Optimizer Local Planner: Goal position Not achieved through optimization trajectory\n\n\n");
 		if (traj_in_rviz){
 			if(pause_end_optimization){
@@ -740,7 +745,7 @@ void OptimizerLocalPlanner::initializingParametersblock()
 	//Set Parameter Blocks from path global information
 	statesPosUGV.clear(); statesPosUAV.clear(); statesRotUGV.clear(); statesRotUAV.clear(); statesTime.clear(); statesLength.clear();
 	
-	printf("Initial States.Parameter[____]:  [  pos_x  pos_y  pos_z  rot_r  trot_p  rot_y pos_x  pos_y  pos_z  rot_x  rot_y  rot_z  rot_w  time  length  ]\n");
+	printf("Initial States.Parameter[____]:  [  pos_x  pos_y  pos_z  rot_r  trot_p  rot_y pos_x  pos_y  pos_z  rot_x  rot_y  rot_z  rot_w  time_ugv  time_uav  length ]\n");
 	for (size_t i = 0 ; i < new_path_uav.size(); i ++){
 		parameterBlockPos parameter_block_pos_ugv;
 		parameterBlockPos parameter_block_pos_uav;
@@ -813,7 +818,8 @@ void OptimizerLocalPlanner::finishigOptimizationAndGetDataResult(int &n_coll_opt
 	vec_opt_rot_uav.clear();
 	new_path_ugv.clear(); //clear the old path to set the optimizer solution as a new path
 	new_path_uav.clear(); //clear the old path to set the optimizer solution as a new path
-
+double new_equi_dist = 0; 
+double distance_ = 0;
   	for (size_t i = 0; i < size_path; i++){
 		Eigen::Vector3d position_ugv_ = Eigen::Vector3d(statesPosUGV[i].parameter[1],statesPosUGV[i].parameter[2],statesPosUGV[i].parameter[3]);
 		vec_pose_ugv_opt.push_back(position_ugv_);
@@ -833,8 +839,16 @@ void OptimizerLocalPlanner::finishigOptimizationAndGetDataResult(int &n_coll_opt
 		rot_angle_uav_.z = statesRotUAV[i].parameter[3];
 		rot_angle_uav_.w = statesRotUAV[i].parameter[4];
 		vec_opt_rot_uav.push_back(rot_angle_uav_);
+		
+		// if ( i != 0){
+		// 	distance_ = sqrt( (position_uav_.x()-vec_pose_uav_opt[i-1].x() ) * ( position_uav_.x()-vec_pose_uav_opt[i-1].x() ) + 
+		// 	 				  (position_uav_.y()-vec_pose_uav_opt[i-1].y() ) * ( position_uav_.y()-vec_pose_uav_opt[i-1].y() ) + 
+		// 					  (position_uav_.z()-vec_pose_uav_opt[i-1].z() ) * ( position_uav_.z()-vec_pose_uav_opt[i-1].z() ) );	
+		// 	new_equi_dist = new_equi_dist + distance_;
+		// }
+		// printf("new_equi_dist = [%f/%f] \n", distance_, new_equi_dist);
 	}
-
+	
 	mp_.clearMarkers(catenary_marker, 150, catenary_marker_pub_);  //To delete possibles outliers points 
 	// Staff for fost-proccessing of catenary length
 	processingCatenary();
@@ -1442,17 +1456,17 @@ void OptimizerLocalPlanner::cleanResidualConstraintsFile()
 	// else
     // 	puts( "File successfully deleted: equidistance_ugv.txt");	
 
-	if( remove( "/home/simon/residuals_optimization_data/kinematic_uav.txt" ) != 0 ){
-    	perror( "Error deleting file: kinematic_uav.txt" );
+	if( remove( "/home/simon/residuals_optimization_data/smoothness_uav.txt" ) != 0 ){
+    	perror( "Error deleting file: smoothness_uav.txt" );
   	}
 	// else
-    // 	puts( "File successfully deleted: kinematic_uav.txt" );
+    // 	puts( "File successfully deleted: smoothness_uav.txt" );
 
-	if( remove( "/home/simon/residuals_optimization_data/kinematic_ugv.txt" ) != 0 ){
-    	perror( "Error deleting file: kinematic_ugv.txt" );
+	if( remove( "/home/simon/residuals_optimization_data/smoothness_ugv.txt" ) != 0 ){
+    	perror( "Error deleting file: smoothness_ugv.txt" );
   	}
 	// else
-    // 	puts( "File successfully deleted: kinematic_ugv.txt");	
+    // 	puts( "File successfully deleted: smoothness_ugv.txt");	
 
 	if( remove( "/home/simon/residuals_optimization_data/obstacles_uav.txt" ) != 0 ){
     	perror( "Error deleting file: obstacles_uav.txt");
@@ -1482,5 +1496,11 @@ void OptimizerLocalPlanner::cleanResidualConstraintsFile()
     	perror( "Error deleting file: catenary.txt");
   	}
 	// else
-    	// puts( "File successfully deleted: catenary.txt");	
+    	// puts( "File successfully deleted: catenary.txt");
+
+	if( remove( "/home/simon/residuals_optimization_data/catenary2.txt" ) != 0 ){
+    	perror( "Error deleting file: catenary2.txt");
+  	}
+	// else
+    	// puts( "File successfully deleted: catenary2.txt");	
 }
