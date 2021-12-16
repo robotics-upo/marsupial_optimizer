@@ -17,18 +17,13 @@ cd ~/marsupial_ws/src
 
 # git clone https://github.com/robotics-upo/marsupial_g2o.git
 
-#To install planner lazy-theta*
-git clone https://github.com/robotics-upo/lazy_theta_star_planners.git
+
 
 # To install mcl3d
-https://github.com/robotics-upo/mcl3d.git
-https://github.com/robotics-upo/range_msgs.git
+# https://github.com/robotics-upo/mcl3d.git
+# https://github.com/robotics-upo/range_msgs.git
 
-#To get action for actionlib
-https://github.com/robotics-upo/upo_actions.git
 
-#To get a marker in the desired frame_link
-https://github.com/robotics-upo/upo_markers.git
 
 #To get .bt form gazebo world
 sim_gazebo_plugins # Tengo que subir este paquete
@@ -38,8 +33,19 @@ sudo apt-get install ros-$ROS_DISTRO-ros-type-introspection
 sudo apt-get install libqt5svg5-dev qtbase5-dev  
 sudo apt install libdw-dev
 
-git clone -b v2 https://github.com/robotics-upo/Groot.git
-git clone -b mbzirc https://github.com/robotics-upo/behavior_tree_ros.git
 git clone -b mbzirc https://github.com/robotics-upo/behavior_tree_plugins.git
+git clone -b mbzirc https://github.com/robotics-upo/behavior_tree_ros.git
 git clone -b mbzirc https://github.com/robotics-upo/BehaviorTree.CPP.git
+git clone -b v2 https://github.com/robotics-upo/Groot.git
 
+#To install planner lazy-theta*
+git clone https://github.com/robotics-upo/lazy_theta_star_planners.git
+
+#To install Random planners
+https://github.com/SaimonMR/rrt_star_planners.git
+
+#To get action for actionlib
+https://github.com/robotics-upo/upo_actions.git
+
+#To get a marker in the desired frame_link
+https://github.com/robotics-upo/upo_markers.git
