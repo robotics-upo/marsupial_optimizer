@@ -606,7 +606,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		std::vector<double> vec_l_min;
 		for (int i = 0; i < statesLength.size(); ++i) {
 			CostFunction* cost_function_cat_1  = new NumericDiffCostFunction<CatenaryFunctor, RIDDERS, 3, 4, 4, 2>
-										(new CatenaryFunctor(w_eta_1, w_eta_2, w_eta_3, distance_catenary_obstacle, length_tether_max, nn_uav.kdtree, 
+										(new CatenaryFunctor(w_eta_1, w_eta_2, w_eta_3, distance_catenary_obstacle, vec_len_cat_init[i], length_tether_max, nn_uav.kdtree, 
 											nn_uav.obs_points, grid_3D, nn_trav.kdtree, nn_trav.obs_points, pose_reel_local.transform.translation, size_path, 
 											new_path_uav[i], nh, mapFull_msg, vec_l_min, write_data_residual)); 
 			problem.AddResidualBlock(cost_function_cat_1, NULL, statesPosUAV[i].parameter, statesPosUGV[i].parameter, statesLength[i].parameter);

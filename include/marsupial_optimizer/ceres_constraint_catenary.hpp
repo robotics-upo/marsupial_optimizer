@@ -33,11 +33,11 @@ using ceres::Solve;
 using ceres::Solver;
 
 struct CatenaryFunctor {
-  CatenaryFunctor(double weight_factor_1, double weight_factor_2, double weight_factor_3, double safty_bound, double length_tether_max_,
+  CatenaryFunctor(double weight_factor_1, double weight_factor_2, double weight_factor_3, double safty_bound, float min_length_cat, double length_tether_max_,
   				pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points, Grid3d* grid_3D_,
                 pcl::KdTreeFLANN <pcl::PointXYZ> trav_kdT, pcl::PointCloud <pcl::PointXYZ>::Ptr trav_pc, geometry_msgs::Vector3 pos_reel_ugv, int size, 
 				Eigen::Vector3d fix_pos_ref, ros::NodeHandlePtr nhP, octomap::OcTree* octotree_full_, std::vector<double> &vec_l_min, bool write_data)
-                : wf_1(weight_factor_1), wf_2(weight_factor_2), wf_3(weight_factor_3),sb_(safty_bound), ltm_(length_tether_max_), kdT_(kdT_From_NN), 
+                : wf_1(weight_factor_1), wf_2(weight_factor_2), wf_3(weight_factor_3),sb_(safty_bound), m_L_c_(min_length_cat), ltm_(length_tether_max_), kdT_(kdT_From_NN), 
 				o_p_(obstacles_Points), g_3D_(grid_3D_),kdT_trav_(trav_kdT), pc_trav_(trav_pc), pos_reel_ugv_(pos_reel_ugv),size_(size), 
 				fp_ref_(fix_pos_ref), o_full_(octotree_full_), w_d_(write_data)
     {
@@ -82,11 +82,11 @@ struct CatenaryFunctor {
 		double d_obs_;
 		double min_val_proximity_ = 0.015;
 		double min_dist_cat_obst = 1000.0;
-		double safety_length ;
-		if (dist < 4.0)
-			safety_length = 1.010 * dist;
-		else
-			safety_length = 1.005 * dist;
+		double safety_length = m_L_c_;
+		// if (dist < 4.0)
+		// 	safety_length = 1.010 * dist;
+		// else
+		// 	safety_length = 1.005 * dist;
 		
 		double Length_; // this value is use to ensure correct evaluation of catenary model
 		if (stateCat[1] < safety_length)
@@ -248,6 +248,7 @@ struct CatenaryFunctor {
 
  	bool w_d_;
     double wf_1, wf_2, wf_3, sb_, ltm_;
+	float m_L_c_;
 	int size_;
 	geometry_msgs::Vector3 pos_reel_ugv_;
     double pr_ugv_[3];
