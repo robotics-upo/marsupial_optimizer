@@ -1311,20 +1311,23 @@ void OptimizerLocalPlanner::processingCatenary()
 	vec_len_cat_opt.clear();
 	int first_ = 1;
 	for(size_t i = 0; i < statesPosUAV.size(); i++){
-		// Post-processing of catenary length
-		geometry_msgs::Vector3 p_reel_ =  getReelPoint(statesPosUGV[i].parameter[1],statesPosUGV[i].parameter[2],statesPosUGV[i].parameter[3],
-										  statesRotUGV[i].parameter[1],statesRotUGV[i].parameter[2],statesRotUGV[i].parameter[3], statesRotUGV[i].parameter[4]);
 		parameter_block_post_length.parameter[0] = i; //id parameter
-		double _d_ = sqrt(pow(p_reel_.x - statesPosUAV[i].parameter[1],2) + 
-						  pow(p_reel_.y - statesPosUAV[i].parameter[2],2) + 
-						  pow(p_reel_.z - statesPosUAV[i].parameter[3],2));
-		if (_d_ > statesLength[i].parameter[1]){
+		// Post-processing of catenary length
+		// geometry_msgs::Vector3 p_reel_ =  getReelPoint(statesPosUGV[i].parameter[1],statesPosUGV[i].parameter[2],statesPosUGV[i].parameter[3],
+		// 								  statesRotUGV[i].parameter[1],statesRotUGV[i].parameter[2],statesRotUGV[i].parameter[3], statesRotUGV[i].parameter[4]);
+		// double _d_ = sqrt(pow(p_reel_.x - statesPosUAV[i].parameter[1],2) + 
+		// 				  pow(p_reel_.y - statesPosUAV[i].parameter[2],2) + 
+		// 				  pow(p_reel_.z - statesPosUAV[i].parameter[3],2));
+		// if (_d_ > statesLength[i].parameter[1]){
+		if (vec_len_cat_init[i] > statesLength[i].parameter[1]){
 			if(first_ == 1)
 				printf(PRINTF_ORANGE"processingCatenary()\n");
 			first_++;
-			parameter_block_post_length.parameter[1] = _d_ * 1.005;	// 1.02 in catenary constraint
+			// parameter_block_post_length.parameter[1] = _d_ * 1.005;	// 1.02 in catenary constraint
+			parameter_block_post_length.parameter[1] = vec_len_cat_init[i] * 1.005;	// 1.02 in catenary constraint
 			count_cat_fail ++;
-			printf(PRINTF_RED"	Catenary number = %lu  [L=%f/d=%f]\n",i,statesLength[i].parameter[1],_d_);
+			// printf(PRINTF_RED"	Catenary number = %lu  [L=%f/d=%f]\n",i,statesLength[i].parameter[1],_d_);
+			printf(PRINTF_RED"	Catenary number = %lu  [L=%f/d=%f]\n",i,statesLength[i].parameter[1],vec_len_cat_init[i]);
 		}
 		else
 			parameter_block_post_length.parameter[1] = statesLength[i].parameter[1];	
