@@ -122,13 +122,13 @@ struct CatenaryFunctor {
 					d_obs_ = min_val_proximity_ ;
 				if (d_obs_ < min_dist_cat_obst)
 					min_dist_cat_obst = d_obs_;
-				cost_ = (1.0/min_dist_cat_obst)*2.0;
+				cost_ = (1.0/min_dist_cat_obst)*1.0;
 				collision_ = true;
 			}
 			else if (d_obs_ < sb_) {
 				if (d_obs_ < min_val_proximity_)
 					d_obs_ = min_val_proximity_ ;
-				cost_ = (1.0/d_obs_)*2.0;
+				cost_ = (1.0/d_obs_)*1.0;
 			}
 			else{
 				if (d_obs_ < min_val_proximity_)
