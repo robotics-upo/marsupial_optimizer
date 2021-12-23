@@ -88,6 +88,25 @@ bisectionCatenary::bisectionCatenary()
     received_grid = false;
     get_distance_data = false;
 
+    use_markers = false;
+} 
+
+bisectionCatenary::bisectionCatenary(ros::NodeHandlePtr nhP_)
+{
+    num_point_per_unit_length = 10;
+    resolution = 0.05;
+    div_res = 1.0/resolution;
+    factor_bisection_a = 1000.0;
+    factor_bisection_b = 1000.0;
+    first_coll = 0;
+    last_coll = 0;
+    received_grid = false;
+    get_distance_data = false;
+    nhP = nhP_;
+
+    use_markers = true;
+
+	points_between_cat_marker_pub_ = nhP->advertise<visualization_msgs::MarkerArray>("points_between_cat_marker", 1);
 } 
 
 // bisectionCatenary::~bisectionCatenary(){} 
@@ -181,11 +200,12 @@ void bisectionCatenary::checkStateCatenary(double _x1, double _y1, double _z1, d
 
 void bisectionCatenary::getPointCatenary3D(vector<geometry_msgs::Point> &v_p_)
 {
+    std::vector<geometry_msgs::Point> v_p_bet_cat;
     double p_z_min = 1000.0;
     dist_obst_cat.clear(); pos_cat_in_coll.clear(); cat_between_obs.clear();
     if (!x_const || !y_const){ 
         double x_value_, y_value_, x_step;
-        int check_continuity_ = 0;
+        // int check_continuity_ = 0;
         x_step = (XB)/num_point_catenary;
         x_value_ = 0.0;
         
@@ -197,14 +217,19 @@ void bisectionCatenary::getPointCatenary3D(vector<geometry_msgs::Point> &v_p_)
         geometry_msgs::Point p_;
         float p_x_, p_y_, p_z_;
         first_coll = last_coll = 0;
+
+        if (use_markers)
+            clearMarkers(p_bet_cat_marker, 50, points_between_cat_marker_pub_);
+
         for(size_t i=0; i < num_point_catenary +1; i++){
             y_value_ = (c_value * cosh((x_value_ - Xc)/c_value)+ (Yc - c_value)); // evalute CatenaryChain
-            p_x_ = resolution * round( (X1 + _direc_x* cos(tetha) * x_value_) * div_res);
-            p_y_ = resolution * round( (Y1 + _direc_y* sin(tetha) * x_value_) * div_res);
-            p_z_ = resolution * round( (y_value_)* div_res);
             p_.x = X1 + _direc_x* cos(tetha) * x_value_;
             p_.y = Y1 + _direc_y* sin(tetha) * x_value_;
             p_.z = y_value_;
+            p_x_ = resolution * round( (p_.x) * div_res);
+            p_y_ = resolution * round( (p_.y) * div_res);
+            p_z_ = resolution * round( (p_.z) * div_res);
+            
             x_value_ = x_value_ + x_step;
 
             if(get_distance_data){
@@ -222,31 +247,78 @@ void bisectionCatenary::getPointCatenary3D(vector<geometry_msgs::Point> &v_p_)
                 dist_obst_cat.push_back(dist_cat_obs);
                 
                 // if(dist_cat_obs < bound_obst ){
-                    if(i>0){
-						octomap::point3d r_;
-						octomap::point3d s_(p_.x,p_.y,p_.z); //start for rayCast
-						octomap::point3d d_(v_p_[i-1].x - p_.x, v_p_[i-1].y - p_.y, v_p_[i-1].z - p_.z); //direction for rayCast
-                        bool r_cast_coll = false; 
-                        r_cast_coll = octotree_full->castRay(s_, d_, r_);
-                        double dist12_ = sqrt ( (v_p_[i-1].x-s_.x())*(v_p_[i-1].x-s_.x())+
-                                                (v_p_[i-1].y-s_.y())*(v_p_[i-1].y-s_.y())+ 
-					   		                    (v_p_[i-1].z-s_.z())*(v_p_[i-1].z-s_.z()) );
-                        double distObs_ = sqrt ((s_.x()-r_.x())*(s_.x()-r_.x())+(s_.y()-r_.y())*(s_.y()-r_.y())+(s_.z()-r_.z())*(s_.z()-r_.z()) );
-                            // if((dist_cat_obs < bound_obst ) || r_cast_coll && distObs_ <= dist12_){
-                            if(r_cast_coll && distObs_ <= dist12_){
-                                cat_between_obs.push_back(i);	
-                                if (first_coll == 0){
-                                    first_coll  = i;    
-                                    check_continuity_++;
-                                }
-                                last_coll = i;
-                                pos_cat_in_coll.push_back(i);
-                            }
+                    // if(i>0){
+					// 	octomap::point3d r_;
+					// 	octomap::point3d s_(p_.x,p_.y,p_.z); //start for rayCast
+					// 	octomap::point3d d_(v_p_[i-1].x - p_.x, v_p_[i-1].y - p_.y, v_p_[i-1].z - p_.z); //direction for rayCast
+
+                    //     bool r_cast_coll = false; 
+                    //     r_cast_coll = octotree_full->castRay(s_, d_, r_);
+                    //     double dist12_ = sqrt ( (v_p_[i-1].x-s_.x())*(v_p_[i-1].x-s_.x())+
+                    //                             (v_p_[i-1].y-s_.y())*(v_p_[i-1].y-s_.y())+ 
+					//    		                    (v_p_[i-1].z-s_.z())*(v_p_[i-1].z-s_.z()) );
+                    //     double distObs_ = sqrt ((s_.x()-r_.x())*(s_.x()-r_.x())+(s_.y()-r_.y())*(s_.y()-r_.y())+(s_.z()-r_.z())*(s_.z()-r_.z()) );
+                    //         // if((dist_cat_obs < bound_obst ) || r_cast_coll && distObs_ <= dist12_){
+                    //         if(r_cast_coll && distObs_ <= dist12_){
+                    //             cat_between_obs.push_back(i);	
+                    //             if (first_coll == 0){
+                    //                 first_coll  = i;    
+                    //                 check_continuity_++;
+                    //             }
+                    //             last_coll = i;
+                    //             pos_cat_in_coll.push_back(i);
+                    //         }
+                    // }
+                if( i>0 ){ //Check if there is obtacle between two catenary points
+                    double d_p_cat = sqrt((p_.x-v_p_[i-1].x)*(p_.x-v_p_[i-1].x)+(p_.y-v_p_[i-1].y)*(p_.y-v_p_[i-1].y)+(p_.z-v_p_[i-1].z)*(p_.z-v_p_[i-1].z));
+                    int n_p_bet_cat = round (d_p_cat/0.04);
+                    double interval_xy = 0.0; 
+                    double interval_z = 0.0; 
+                    if (n_p_bet_cat > 0){
+                        interval_xy = sqrt((p_.x-v_p_[i-1].x)*(p_.x-v_p_[i-1].x) + (p_.y-v_p_[i-1].y)*(p_.y-v_p_[i-1].y)) /n_p_bet_cat; 
+                        interval_z = (p_.z-v_p_[i-1].z) /n_p_bet_cat; 
                     }
+                    double tetha_ = atan2((p_.y-v_p_[i-1].y),(p_.x-v_p_[i-1].x));
+                    v_p_bet_cat.clear();
+                    // printf("n_p_bet_cat = %i , interval=[%f/%f] d_p_cat=%f , p_[%f %f %f] p_-1[%f %f %f] \n", n_p_bet_cat, interval_xy, interval_z, d_p_cat, p_.x, p_.y, p_.z,  v_p_[i-1].x,  v_p_[i-1].y,  v_p_[i-1].z);
+                    
+                    for (int j = 0; j < n_p_bet_cat + 1 ; j++){
+                        geometry_msgs::Point p_b_cat_;
+                        p_b_cat_.x = v_p_[i-1].x + cos(tetha_) * interval_xy*(j);
+                        p_b_cat_.y = v_p_[i-1].y + sin(tetha_) * interval_xy*(j);
+                        p_b_cat_.z = v_p_[i-1].z + (j)*(interval_z);
+                        v_p_bet_cat.push_back(p_b_cat_);
+                        // printf("\t v_p_bet_cat.size()=%lu p_b_cat_[%f %f %f]\n", v_p_bet_cat.size(), p_b_cat_.x, p_b_cat_.y, p_b_cat_.z);
+                        double p_b_cat_x_ = resolution * round( (p_b_cat_.x) * div_res);
+                        double p_b_cat_y_ = resolution * round( (p_b_cat_.y) * div_res);
+                        double p_b_cat_z_ = resolution * round( (p_b_cat_.z) * div_res);
+                        bool _is_into_ = grid_3D->isIntoMap(p_b_cat_x_, p_b_cat_y_, p_b_cat_z_);
+                        double d_obt_cat;
+                        if (_is_into_)
+                            d_obt_cat = grid_3D->getPointDist((double)p_b_cat_.x,(double)p_b_cat_.y,(double)p_b_cat_.z);
+                        else
+                            d_obt_cat = -1.0;
+                        if (d_obt_cat < bound_obst){
+                            cat_between_obs.push_back(i);	
+                            if (first_coll == 0){
+                                first_coll  = i-1;   
+                                pos_cat_in_coll.push_back(first_coll); 
+                                // check_continuity_++;
+                            }
+                            last_coll = i;
+                            pos_cat_in_coll.push_back(i);
+                            break;
+                        }
+                    }
+                    if (use_markers) 
+                        markerPoints(p_bet_cat_marker, v_p_bet_cat, points_between_cat_marker_pub_);
+                }
                 // }        
             }
-            if ( ((last_coll-first_coll) == check_continuity_ ) && check_continuity_ != 0 && first_coll != 0 && last_coll != 0)
-                last_coll = num_point_catenary;
+          
+            
+            // if ( ((last_coll-first_coll) == check_continuity_ ) && check_continuity_ != 0 && first_coll != 0 && last_coll != 0)
+            //     last_coll = num_point_catenary;
 
             v_p_.push_back(p_);
             if (p_z_min > p_.z){
@@ -261,13 +333,16 @@ void bisectionCatenary::getPointCatenary3D(vector<geometry_msgs::Point> &v_p_)
 				mid_point_cat.y = p_.y;
 				mid_point_cat.z = p_.z;
             }
-            // printf("point_cat = [%f %f %f]\n",p_.x, p_.y, p_.z);
         }
+        // for (size_t k  = 0 ; k < pos_cat_in_coll.size() ; k++){
+        //     printf("pos_cat_in_coll[%lu]=%i \n",k, pos_cat_in_coll[k]);
+        // }
     }
     else{
         v_p_.clear();
         getPointCatenaryStraight(v_p_);
     }
+    
 }
 
 void bisectionCatenary::getPointCatenaryStraight(std::vector<geometry_msgs::Point> &v_p_)
@@ -440,3 +515,51 @@ void bisectionCatenary::getStatusCollisionCat(std::vector<double> &dist_obst_cat
     last_coll_ = last_coll;
 }
     
+void bisectionCatenary::markerPoints(visualization_msgs::MarkerArray _marker, std::vector<geometry_msgs::Point> _vector, ros::Publisher c_m_pub_)
+{
+    std::string string_marker;
+    std::string ns_marker;
+            
+    ns_marker = "p_b_cat";
+
+    _marker.markers.resize(_vector.size());
+            
+    for (size_t i = 0; i < _vector.size(); ++i){
+        _marker.markers[i].header.frame_id = "/map";
+        _marker.markers[i].header.stamp = ros::Time::now();
+        _marker.markers[i].ns = ns_marker;
+        _marker.markers[i].id = i+1;
+        _marker.markers[i].action = visualization_msgs::Marker::ADD;
+        _marker.markers[i].type = visualization_msgs::Marker::CUBE;
+        _marker.markers[i].lifetime = ros::Duration(0);
+        _marker.markers[i].pose.position.x = _vector[i].x; 
+        _marker.markers[i].pose.position.y = _vector[i].y; 
+        _marker.markers[i].pose.position.z = _vector[i].z;
+
+        _marker.markers[i].pose.orientation.x = 0.0;
+        _marker.markers[i].pose.orientation.y = 0.0;
+        _marker.markers[i].pose.orientation.z = 0.0;
+        _marker.markers[i].pose.orientation.w = 1.0;
+        _marker.markers[i].scale.x = 0.01;
+        _marker.markers[i].scale.y = 0.01;
+        _marker.markers[i].scale.z = 0.01;
+        _marker.markers[i].color.a = 1.0;
+        _marker.markers[i].color.r = 0.01 ;
+        _marker.markers[i].color.g = 0.01;
+        _marker.markers[i].color.b = 0.01;
+        // printf("INSIDE MARKER _vector.size()=%lu , _vector[%lu][%f %f %f] \n", _vector.size(), i,_vector[i].x,_vector[i].y,_vector[i].z);
+
+    }	
+    c_m_pub_.publish(_marker);
+}
+
+void bisectionCatenary::clearMarkers(visualization_msgs::MarkerArray _marker, int _s, ros::Publisher c_m_pub_)
+{
+    _marker.markers.clear();
+    _marker.markers.resize(_s);
+
+    for (int i = 0 ; i < _s; i++){
+        _marker.markers[i].action = visualization_msgs::Marker::DELETEALL;
+    }
+    c_m_pub_.publish(_marker);
+}

@@ -303,7 +303,7 @@ public:
 
 	double getPointDist(double x, double y, double z)
 	{
-		// printf("getPointDist: point2grid(x, y, z)=%i\n",point2grid(x, y, z));
+		// printf("getPointDist: point2grid(%f, %f, %f)=%i\n",x,y,z,point2grid(x, y, z));
 		return m_grid[point2grid(x, y, z)].dist;
 	}
 

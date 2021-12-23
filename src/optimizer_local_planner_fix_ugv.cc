@@ -154,7 +154,7 @@ void OptimizerLocalPlanner::executeOptimizerPathPreemptCB()
     execute_path_srv_ptr->setPreempted(); // set the action state to preempted
 
     resetFlags();
-    mp_.clearMarkersPointLines(points_marker, lines_marker,traj_marker_pub_,0);
+    // mp_.clearMarkersPointLines(points_marker, lines_marker,traj_marker_pub_,0);
 }
 
 
@@ -182,13 +182,13 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	printf("ugv_pos_reel_catenary=[%f %f %f]\n",ugv_pos_catenary.x,ugv_pos_catenary.y,ugv_pos_catenary.z);
 	checkObstaclesBetweenCatenaries(v_pre_initial_length_catenary,size);
 	ros::Duration(1.0).sleep();
-	mp_.clearMarkers(catenary_marker, 150, catenary_marker_pub_);
+	// mp_.clearMarkers(catenary_marker, 150, catenary_marker_pub_);
 	ros::Duration(2.0).sleep();
 
 	count_edges = 0;
 
 	// resetFlags();
-  	mp_.clearMarkersPointLines(points_marker, lines_marker,traj_marker_pub_,size);
+  	// mp_.clearMarkersPointLines(points_marker, lines_marker,traj_marker_pub_,size);
 	calculateDistanceVertices(new_path,vec_dist_init);
  	getTemporalState(vec_time_init,vec_dist_init,initial_velocity);
 
@@ -324,14 +324,14 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		CatenarySolver cSX_;
 		cSX_.setMaxNumIterations(100);
 	  	cSX_.solve(ugv_pos_catenary.x, ugv_pos_catenary.y, ugv_pos_catenary.z, statesPos[i].parameter[1], statesPos[i].parameter[2], statesPos[i].parameter[3], statesLength[i].parameter[1], points_catenary_final);
-		mp_.markerPoints(catenary_marker, points_catenary_final, i, size, catenary_marker_pub_);
+		// mp_.markerPoints(catenary_marker, points_catenary_final, i, size, catenary_marker_pub_);
 		double _d_ = sqrt(pow(ugv_pos_catenary.x -statesPos[i].parameter[1],2) + pow(ugv_pos_catenary.y - statesPos[i].parameter[2],2) + pow(ugv_pos_catenary.z-statesPos[i].parameter[3],2));
 		printf("points_catenary_final.size()=[%lu] ugv_reel_pos[%lu] = [%f %f %f] , statesPos[%lu]=[%f %f %f] , l=[%f] d=[%f]\n",points_catenary_final.size(),i,ugv_pos_catenary.x, ugv_pos_catenary.y, ugv_pos_catenary.z,i,statesPos[i].parameter[1], statesPos[i].parameter[2], statesPos[i].parameter[3],statesLength[i].parameter[1],_d_);
 		points_catenary_final.clear();
 	}
 
-	mp_.getMarkerPoints(points_marker,vec_pose_opt,"points_lines",1);
-	mp_.getMarkerLines(lines_marker,vec_pose_opt,"points_lines",1);
+	// mp_.getMarkerPoints(points_marker,vec_pose_opt,"points_lines",1);
+	// mp_.getMarkerLines(lines_marker,vec_pose_opt,"points_lines",1);
 	traj_marker_pub_.publish(points_marker);
 	traj_marker_pub_.publish(lines_marker);
 
@@ -960,8 +960,8 @@ void OptimizerLocalPlanner::checkObstaclesBetweenCatenaries(std::vector <double>
 			_vectorOUT.push_back(_length2);
 			i++;
 		}
-		mp_.markerPoints(catenary_marker ,_pre_points_catenary1, i-1, _s-2, catenary_marker_pub_);
-		mp_.markerPoints(catenary_marker ,_pre_points_catenary2, i,_s-2, catenary_marker_pub_);
+		// mp_.markerPoints(catenary_marker ,_pre_points_catenary1, i-1, _s-2, catenary_marker_pub_);
+		// mp_.markerPoints(catenary_marker ,_pre_points_catenary2, i,_s-2, catenary_marker_pub_);
 	}
 	
 	printf("---------------------------------------------------------------------------------------------\n");

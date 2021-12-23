@@ -45,7 +45,9 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "marsupial_optimizer/ceres_constraint_velocity_uav.hpp"
 #include "marsupial_optimizer/ceres_constraint_acceleration_ugv.hpp"
 #include "marsupial_optimizer/ceres_constraint_acceleration_uav.hpp"
+
 #include "marsupial_optimizer/ceres_constraint_catenary.hpp"
+#include "marsupial_optimizer/ceres_constraint_catenary_length.hpp"
 #include "marsupial_optimizer/ceres_constraint_dynamic_catenary.hpp"
 
 #include "marsupial_optimizer/marsupial_trajectory_optimized.h"
@@ -153,14 +155,14 @@ public:
 	void traversableMapCallBack(const octomap_msgs::OctomapConstPtr &msg);
 	void deleteMarkersCallBack(const std_msgs::BoolConstPtr &msg);
 	void finishedRvizManeuverCallBack(const std_msgs::BoolConstPtr &msg);
-	void interpolateFixedPointsPath(vector<Eigen::Vector3d> &v_inter_ , int mode_);
+	void interpolateFixedPointsPath(vector<geometry_msgs::Vector3> &v_inter_ , int mode_);
 	void calculateDistanceVertices(vector<double> &_v_D_ugv,vector<double> &_v_D_uav);
 	void getTemporalState(vector<double> &_time);
-	void getInitialGlobalPath(trajectory_msgs::MultiDOFJointTrajectory _path, vector<Eigen::Vector3d> &v_ugv_, vector<Eigen::Vector3d> &v_uav_);
+	void getInitialGlobalPath(trajectory_msgs::MultiDOFJointTrajectory _path, vector<geometry_msgs::Vector3> &v_ugv_, vector<geometry_msgs::Vector3> &v_uav_);
 	void initializingParametersblock();
 	void finishigOptimizationAndGetDataResult(int &n_coll_opt_traj_ugv, int &n_coll_init_path_ugv, int &n_coll_opt_traj_uav, int &n_coll_init_path_uav, int &n_coll_opt_cat_);
 	void getDataForOptimizerAnalysis();
-	void getSmoothnessTrajectory(vector<Eigen::Vector3d> v_pos2kin_ugv, vector<Eigen::Vector3d> v_pos2kin_uav, vector<double> &v_angles_kin_ugv, vector<double> &v_angles_kin_uav);
+	void getSmoothnessTrajectory(vector<geometry_msgs::Vector3> v_pos2kin_ugv, vector<geometry_msgs::Vector3> v_pos2kin_uav, vector<double> &v_angles_kin_ugv, vector<double> &v_angles_kin_uav);
 	geometry_msgs::Vector3 getReelPoint(const float px_, const float py_, const float pz_,const float qx_, const float qy_, const float qz_, const float qw_);
 	void getReelPose();
 	void processingCatenary();
@@ -244,7 +246,7 @@ public:
 
 	void setStraightTrajectory(double x1, double y1, double z1, double x2, double y2, double z2, int n_v_u_);	//Function to create a straight line from point A to B
 
-	vector<Eigen::Vector3d> new_path_ugv, new_path_uav;
+	vector<geometry_msgs::Vector3> new_path_ugv, new_path_uav;
 	vector<parameterBlockPos> statesPosUGV;
 	vector<parameterBlockPos> statesPosUAV;
 	vector<parameterBlockRot> statesRotUGV;
@@ -259,8 +261,8 @@ public:
 	vector<double> vec_time_init;
 	vector<double> v_init_angles_smooth_ugv, v_init_angles_smooth_uav, v_opt_angles_smooth_ugv, v_opt_angles_smooth_uav;
 	vector<float> vec_len_cat_init, vec_len_cat_opt;
-	vector<Eigen::Vector3d> vec_pose_ugv_opt, vec_pose_uav_opt; 
-	vector<Eigen::Vector3d> vec_pose_init_ugv, vec_pose_init_uav;
+	vector<geometry_msgs::Vector3> vec_pose_ugv_opt, vec_pose_uav_opt; 
+	vector<geometry_msgs::Vector3> vec_pose_init_ugv, vec_pose_init_uav;
 	vector<double> vec_time_opt;
 	vector<int> vec_fix_status_ugv_prepross;
 

@@ -16,6 +16,7 @@
 #include <iostream>
 #include <vector>
 #include <ros/ros.h>
+#include <visualization_msgs/MarkerArray.h>
 #include <geometry_msgs/Point.h>
 
 #include "misc/grid3d.hpp"
@@ -47,6 +48,7 @@ class bisectionCatenary
         vector <geometry_msgs::Point> catenary_chain_points_3D;
 
         bisectionCatenary();
+        bisectionCatenary(ros::NodeHandlePtr nhP_);
         // ~bisectionCatenary();
 
         virtual bool configBisection(double _l, double _x1, double _y1, double _z1, double _x2, double _y2, double _z2 , bool get_distance_data_ = false);
@@ -69,6 +71,10 @@ class bisectionCatenary
         virtual void readDataForCollisionAnalisys(Grid3d* g_3D_ , double bound_obst_, octomap::OcTree* octotree_full_,
                                             pcl::KdTreeFLANN <pcl::PointXYZ> trav_kdT_, pcl::PointCloud <pcl::PointXYZ>::Ptr trav_pc_);
 
+        virtual void clearMarkers(visualization_msgs::MarkerArray _marker, int _s, ros::Publisher c_m_pub_);
+        virtual void markerPoints(visualization_msgs::MarkerArray _marker, std::vector<geometry_msgs::Point> _vector, ros::Publisher c_m_pub_);
+
+        
         //Length Catenary Chain 
         double L; 
         //Lashing points(X1,Y1,Z1) and (X2,Y2,Z2)
@@ -83,7 +89,12 @@ class bisectionCatenary
         std::vector<double> dist_obst_cat;
         std::vector<int> pos_cat_in_coll;
         std::vector<int> cat_between_obs;
-        int first_coll, last_coll;
+        int first_coll, last_coll, new_coll;
+
+	    ros::Publisher points_between_cat_marker_pub_;
+    	visualization_msgs::MarkerArray p_bet_cat_marker;
+        ros::NodeHandlePtr nhP;
+        bool use_markers;
 
     protected:
         double kConst;
