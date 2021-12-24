@@ -1353,23 +1353,23 @@ void OptimizerLocalPlanner::processingCatenary()
 		if (_d_ > statesLength[i].parameter[1]){
 			if(first_ == 1)
 				printf(PRINTF_ORANGE"processingCatenary()\n");
-			// first_++;
-			// // parameter_block_post_length.parameter[1] = _d_ * 1.005;	// 1.02 in catenary constraint
-			// parameter_block_post_length.parameter[1] = vec_len_cat_init[i];	// 1.02 in catenary constraint
-			// count_cat_fail ++;
-			// // printf(PRINTF_RED"	Catenary number = %lu  [L=%f/d=%f]\n",i,statesLength[i].parameter[1],_d_);
+			first_++;
+			// parameter_block_post_length.parameter[1] = _d_ * 1.005;	// 1.02 in catenary constraint
+			parameter_block_post_length.parameter[1] = vec_len_cat_init[i];	// 1.02 in catenary constraint
+			count_cat_fail ++;
+			// printf(PRINTF_RED"	Catenary number = %lu  [L=%f/d=%f]\n",i,statesLength[i].parameter[1],_d_);
 			printf(PRINTF_RED"UGV[%f %f %f] UAV[%f %f %f] reel[%f %f %f] Catenary number = %lu  [d=%f/L_o=%f/L_i=%f]\n",
 			statesPosUGV[i].parameter[1],statesPosUGV[i].parameter[2],statesPosUGV[i].parameter[3], statesPosUAV[i].parameter[1],statesPosUAV[i].parameter[2],
 			statesPosUAV[i].parameter[3],p_reel_.x, p_reel_.y, p_reel_.z,i,_d_,statesLength[i].parameter[1],vec_len_cat_init[i]);
 		}
-		// else
-		// 	parameter_block_post_length.parameter[1] = statesLength[i].parameter[1];	
+		else
+			parameter_block_post_length.parameter[1] = statesLength[i].parameter[1];	
 		
-		// statesPostLength.push_back(parameter_block_post_length);
-		// vec_len_cat_opt.push_back(parameter_block_post_length.parameter[1]);
+		statesPostLength.push_back(parameter_block_post_length);
+		vec_len_cat_opt.push_back(parameter_block_post_length.parameter[1]);
 	}
-	// statesLength.clear();
-	// statesLength = statesPostLength;
+	statesLength.clear();
+	statesLength = statesPostLength;
 }
 
 void OptimizerLocalPlanner::publishOptimizedTraj()
