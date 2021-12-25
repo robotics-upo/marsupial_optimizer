@@ -174,7 +174,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		
 	getPointsFromGlobalPath(globalTrajectory,new_path);
     int size = new_path.size();
-    ROS_INFO_COND(debug, PRINTF_GREEN "Number of Vertices to optimize = [%lu] = size",size);
+    ROS_INFO_COND(debug, PRINTF_GREEN "Number of Vertices to optimize = [%i] = size",size);
 
 	// setInitialLengthCatenaryAndPosUGV(vec_len_cat_init[i].length, size);
 	// ros::Duration(4.0).sleep();
