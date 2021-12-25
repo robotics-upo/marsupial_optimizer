@@ -43,16 +43,12 @@ public:
 {
   	T m_, f_;
 
-	T p_reel[3], const_collision_;
+	T p_reel[3];
 	p_reel[0] = stateUGV[1]; 
 	p_reel[1] = stateUGV[2];
 	p_reel[2] = stateUGV[3] + pos_reel_ugv_.z;
-	T cost_cat_ = T{0.0};
-	T d_obs_;
-	T min_val_proximity_ = T{0.015};
-	T min_dist_cat_obst = T{1000.0};
 	T safety_length = T{m_L_c_};
-	T max_value_residual = T{20.0};
+	T max_value_residual = T{40.0};
 	T min_value_residual = T{0.0};
 
 	T dist = sqrt((stateUAV[1]-p_reel[0])*(stateUAV[1]-p_reel[0])+(stateUAV[2]-p_reel[1])*(stateUAV[2]-p_reel[1])+(stateUAV[3]-p_reel[2])*(stateUAV[3]-p_reel[2])); 
