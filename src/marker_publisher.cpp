@@ -1,37 +1,6 @@
-#ifndef MARKER_PUBLISHER_HPP
-#define MARKER_PUBLISHER_HPP
+#include "misc/marker_publisher.h"
 
-#include <iostream>
-#include <fstream>
-#include <vector>
-
-// #include <g2o/core/factory.h>
-#include <iomanip>
-#include <Eigen/StdVector>
-
-#include <ros/ros.h>
-#include <geometry_msgs/Point.h>
-#include <visualization_msgs/MarkerArray.h>
-
-class MarkerPublisher
-{
-	public:
-		MarkerPublisher(){};
-		~MarkerPublisher(){};
-		void markerPoints(visualization_msgs::MarkerArray _marker, std::vector<geometry_msgs::Point> _vector, int _suffix, int _n_v, ros::Publisher c_m_pub_, int change_marker_= 0);
-		void clearMarkers(visualization_msgs::MarkerArray _marker, auto _s, ros::Publisher c_m_pub_);
-		void getMarkerPoints(visualization_msgs::MarkerArray &marker_, std::vector<geometry_msgs::Vector3> _vector, std::string ns, int colour_);
-		void getMarkerLines(visualization_msgs::MarkerArray &marker_, std::vector<geometry_msgs::Vector3> _vector, std::string ns, int colour_);
-		void clearMarkersPointLines(visualization_msgs::MarkerArray &p_m_, visualization_msgs::MarkerArray &l_m_, ros::Publisher traj_m_pub_, auto _s);
-
-	protected:
-
-	private:
-
-};
-
-
-inline void MarkerPublisher::markerPoints(visualization_msgs::MarkerArray _marker, std::vector<geometry_msgs::Point> _vector, int _suffix, int _n_v, ros::Publisher c_m_pub_, int change_marker_)
+void MarkerPublisher::markerPoints(visualization_msgs::MarkerArray _marker, std::vector<geometry_msgs::Point> _vector, int _suffix, int _n_v, ros::Publisher c_m_pub_, int change_marker_)
 {
     std::string string_marker;
     std::string ns_marker;
@@ -94,18 +63,18 @@ inline void MarkerPublisher::markerPoints(visualization_msgs::MarkerArray _marke
     c_m_pub_.publish(_marker);
 }
 
-inline void MarkerPublisher::clearMarkers(visualization_msgs::MarkerArray _marker, auto _s, ros::Publisher c_m_pub_)
+void MarkerPublisher::clearMarkers(visualization_msgs::MarkerArray _marker, int _s, ros::Publisher c_m_pub_)
 {
     _marker.markers.clear();
     _marker.markers.resize(_s);
 
-    for (auto i = 0 ; i < _s; i++){
+    for (int i = 0 ; i < _s; i++){
         _marker.markers[i].action = visualization_msgs::Marker::DELETEALL;
     }
     c_m_pub_.publish(_marker);
 }
 
-inline void MarkerPublisher::getMarkerPoints(visualization_msgs::MarkerArray &marker_, std::vector<geometry_msgs::Vector3> vector_, std::string ns_, int colour_)
+void MarkerPublisher::getMarkerPoints(visualization_msgs::MarkerArray &marker_, std::vector<geometry_msgs::Vector3> vector_, std::string ns_, int colour_)
 {
 	// RED: colour_ = 0 ; GREEN : colour_ = 1 ; BLUE: colour_ = 2 ; YELLOW = 3 ; PURPLE = 4; ; BLACK = 5 ; WHITE = 6
 	for (size_t i = 0; i < vector_.size(); i++){
@@ -168,7 +137,7 @@ inline void MarkerPublisher::getMarkerPoints(visualization_msgs::MarkerArray &ma
 	}	
 }
 
-inline void MarkerPublisher::getMarkerLines(visualization_msgs::MarkerArray &marker_, std::vector<geometry_msgs::Vector3> _vector, std::string ns_, int colour_)
+void MarkerPublisher::getMarkerLines(visualization_msgs::MarkerArray &marker_, std::vector<geometry_msgs::Vector3> _vector, std::string ns_, int colour_)
 {
 	// RED: colour_ = 0 ; GREEN : colour_ = 1 ; BLUE: colour_ = 2 ; YELLOW = 3 ; PURPLE = 4;
 	for (size_t i = 0; i < _vector.size()-1; i++){
@@ -224,7 +193,7 @@ inline void MarkerPublisher::getMarkerLines(visualization_msgs::MarkerArray &mar
 	}
 }
 
-void MarkerPublisher::clearMarkersPointLines(visualization_msgs::MarkerArray &p_m_, visualization_msgs::MarkerArray &l_m_, ros::Publisher traj_m_pub_, auto _s)
+void MarkerPublisher::clearMarkersPointLines(visualization_msgs::MarkerArray &p_m_, visualization_msgs::MarkerArray &l_m_, ros::Publisher traj_m_pub_, int _s)
 {
 	l_m_.markers.clear();
 	p_m_.markers.clear();
@@ -232,12 +201,10 @@ void MarkerPublisher::clearMarkersPointLines(visualization_msgs::MarkerArray &p_
 	l_m_.markers.resize(_s);
 	p_m_.markers.resize(_s);
 
-	for (auto i = 0 ; i < _s; i++){
+	for (int i = 0 ; i < _s; i++){
 		p_m_.markers[i].action = visualization_msgs::Marker::DELETEALL;
 		l_m_.markers[i].action = visualization_msgs::Marker::DELETEALL;
 	}
 	traj_m_pub_.publish(p_m_);
 	traj_m_pub_.publish(l_m_);
 }
-
-#endif

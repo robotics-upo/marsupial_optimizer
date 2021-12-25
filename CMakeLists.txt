@@ -118,6 +118,7 @@ include_directories(include)
 
 add_library(marsupial_optimizer 
 src/bisection_catenary_3D.cpp
+src/marker_publisher.cpp
   ) 
 target_link_libraries(marsupial_optimizer
    ${EXTERNAL_LIBS}

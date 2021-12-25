@@ -10,7 +10,7 @@
 #include <visualization_msgs/MarkerArray.h>
 
 #include "marsupial_optimizer/marsupial_trajectory_optimized.h"
-#include "misc/marker_publisher.hpp"
+#include "misc/marker_publisher.h"
 #include "misc/catenary_solver_ceres.hpp"
 #include "misc/bisection_catenary_3D.h"
 

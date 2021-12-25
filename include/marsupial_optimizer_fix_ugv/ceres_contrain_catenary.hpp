@@ -16,7 +16,7 @@
 #include <pcl/point_types.h>
 
 #include "misc/near_neighbor.hpp"
-#include "misc/marker_publisher.hpp"
+#include "misc/marker_publisher.h"
 #include "misc/catenary_solver_ceres.hpp"
 
 using ceres::AutoDiffCostFunction;

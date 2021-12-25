@@ -17,7 +17,7 @@
 
 #include "misc/near_neighbor.hpp"
 #include "misc/bisection_catenary_3D.h"
-#include "misc/marker_publisher.hpp"
+#include "misc/marker_publisher.h"
 
 #include <octomap_msgs/Octomap.h> 
 #include <octomap/OcTree.h>

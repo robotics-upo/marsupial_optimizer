@@ -173,7 +173,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	}
 		
 	getPointsFromGlobalPath(globalTrajectory,new_path);
-    auto size = new_path.size();
+    int size = new_path.size();
     ROS_INFO_COND(debug, PRINTF_GREEN "Number of Vertices to optimize = [%lu] = size",size);
 
 	// setInitialLengthCatenaryAndPosUGV(vec_len_cat_init[i].length, size);
@@ -535,7 +535,7 @@ void OptimizerLocalPlanner::getDataForOptimizerAnalysis()
 	ofs.close();
 }
 
-void OptimizerLocalPlanner::writeTemporalDataAfterOptimization(auto _s)
+void OptimizerLocalPlanner::writeTemporalDataAfterOptimization(int _s)
 {
 	//! Save Temporal Data Optimized in File.txt 
 	file_out_time.open (path+"optimized_time.txt");
@@ -707,7 +707,7 @@ void OptimizerLocalPlanner::getTemporalState(vector<structTime> &_time, vector<s
 	}
 }
 
-void OptimizerLocalPlanner::setInitialLengthCatenaryAndPosUGV(std::vector <double> &_vector, auto _s)
+void OptimizerLocalPlanner::setInitialLengthCatenaryAndPosUGV(std::vector <double> &_vector, int _s)
 {
 	tfListener();
 
@@ -723,7 +723,7 @@ void OptimizerLocalPlanner::setInitialLengthCatenaryAndPosUGV(std::vector <doubl
 	}
 }
 
-void OptimizerLocalPlanner::preComputeLengthCatenary(std::vector <double> &_vector, auto _s)
+void OptimizerLocalPlanner::preComputeLengthCatenary(std::vector <double> &_vector, int _s)
 {
 	std::vector<geometry_msgs::Point> _pre_points_catenary;
 	Eigen::Vector3d _obstacles_near_catenary;
@@ -847,7 +847,7 @@ void OptimizerLocalPlanner::tfListener(){
 	ugv_pos_catenary.z = transform.getOrigin().z();
 }
 
-void OptimizerLocalPlanner::checkObstaclesBetweenCatenaries(std::vector <double> _vectorIN, auto _s)
+void OptimizerLocalPlanner::checkObstaclesBetweenCatenaries(std::vector <double> _vectorIN, int _s)
 {
 	std::vector <double> _vectorOUT;
 	int _num_points;

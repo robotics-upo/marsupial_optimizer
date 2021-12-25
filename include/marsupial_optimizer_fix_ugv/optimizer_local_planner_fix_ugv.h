@@ -11,8 +11,6 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include <random>
 #include <stdint.h>
 
-
-
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -141,23 +139,22 @@ public:
 	void dynRecCb(marsupial_optimizer::OptimizationParamsConfig &config, uint32_t level);
 	void collisionMapCallBack(const octomap_msgs::OctomapConstPtr &msg);
 	// void configMarkers(std::string ns, std::string frame);
-	// void clearMarkers(auto _s);
+	// void clearMarkers(int _s);
 	void calculateDistanceVertices(vector<Eigen::Vector3d> _path,vector<structDistance> &_v_sD);
 	void getTemporalState(vector<structTime> &_time, vector<structDistance> _v_sD, double _vel);
 	void writeTemporalDataBeforeOptimization(void);
-	void writeTemporalDataAfterOptimization(auto _s);
-	void setInitialLengthCatenaryAndPosUGV(std::vector <double> &_vector, auto _s);
-	void preComputeLengthCatenary(std::vector <double> &_vector, auto _s);
+	void writeTemporalDataAfterOptimization(int _s);
+	void setInitialLengthCatenaryAndPosUGV(std::vector <double> &_vector, int _s);
+	void preComputeLengthCatenary(std::vector <double> &_vector, int _s);
 	void getPointsFromGlobalPath(trajectory_msgs::MultiDOFJointTrajectory _path,vector<Eigen::Vector3d> &_v_gp);
-	void checkObstaclesBetweenCatenaries(std::vector <double> _vectorIN, auto _s);
+	void checkObstaclesBetweenCatenaries(std::vector <double> _vectorIN, int _s);
 	void straightTrajectoryVertices(double x1, double y1, double z1, double x2, double y2, double z2, int _n_v_u, std::vector<Eigen::Vector3d> &_v);
 	void getDataForOptimizerAnalysis();
 
 	void markerPoints(visualization_msgs::MarkerArray _marker, std::vector<geometry_msgs::Point> _vector, int _suffix, int _n_v, ros::Publisher c_m_pub_);
-	void clearMarkers(visualization_msgs::MarkerArray _marker, auto _s, ros::Publisher c_m_pub_);
+	void clearMarkers(visualization_msgs::MarkerArray _marker, int _s, ros::Publisher c_m_pub_);
 	void getMarkerPoints(visualization_msgs::MarkerArray &marker_, vector<Eigen::Vector3d> _vector, std::string ns);
 	void getMarkerLines(visualization_msgs::MarkerArray &marker_, vector<Eigen::Vector3d> _vector, std::string ns);
-	void clearMarkersPointLines(auto _s);
 
 	upo_actions::ExecutePathResult action_result;
 

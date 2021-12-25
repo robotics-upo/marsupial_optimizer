@@ -36,7 +36,7 @@ class DataManagement
 							std::vector<geometry_msgs::Quaternion> vec_rot_uav_, octomap::OcTree* octree_full_,octomap::OcTree* octree_ugv_, Grid3d* grid_3D_);
 		virtual void writeTemporalDataBeforeOptimization(std::vector<double> vec_dist_init_ugv_, std::vector<double> vec_dist_init_uav_, 
 									std::vector<double> vec_time_init_, std::vector<double> v_angles_kinematic_ugv, std::vector<double> v_angles_kinematic_uav_);
-		void writeTemporalDataAfterOptimization(auto _s, std::vector<geometry_msgs::Vector3> vec_pose_ugv_opt_, std::vector<geometry_msgs::Vector3> vec_pose_uav_opt_, 
+		void writeTemporalDataAfterOptimization(int _s, std::vector<geometry_msgs::Vector3> vec_pose_ugv_opt_, std::vector<geometry_msgs::Vector3> vec_pose_uav_opt_, 
 												std::vector<double> vec_time_opt_, std::vector<float> vec_len_cat_opt_,
 												std::vector<geometry_msgs::Quaternion> vec_rot_ugv_, std::vector<geometry_msgs::Quaternion> vec_rot_uav_, 
 												std::vector<double> v_angles_kinematic_ugv_, std::vector<double> v_angles_kinematic_uav_);
@@ -225,7 +225,7 @@ inline void DataManagement::writeTemporalDataBeforeOptimization(std::vector<doub
 	file_in_kinematic.close();
 }
 
-inline void DataManagement::writeTemporalDataAfterOptimization(auto _s, std::vector<geometry_msgs::Vector3> vec_pose_ugv_opt_, 
+inline void DataManagement::writeTemporalDataAfterOptimization(int _s, std::vector<geometry_msgs::Vector3> vec_pose_ugv_opt_, 
 					std::vector<geometry_msgs::Vector3> vec_pose_uav_opt_, std::vector<double> vec_time_opt_, 
 					std::vector<float> vec_len_cat_opt_, std::vector<geometry_msgs::Quaternion> vec_rot_ugv_, 
 					std::vector<geometry_msgs::Quaternion> vec_rot_uav_, std::vector<double> v_angles_kinematic_ugv_, std::vector<double> v_angles_kinematic_uav_)

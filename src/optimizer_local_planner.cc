@@ -57,26 +57,26 @@ OptimizerLocalPlanner::OptimizerLocalPlanner()
 	nh->param<double>("w_alpha_ugv", w_alpha_ugv,0.1);
 	nh->param<double>("w_alpha_uav", w_alpha_uav,0.1);
 	nh->param<double>("w_beta_uav",	w_beta_uav,0.1);
-	nh->param<double>("w_iota_ugv",	w_iota_ugv,0.1);
-	nh->param<double>("w_iota_uav",	w_iota_uav,0.1);
 	nh->param<double>("w_beta_ugv",	w_beta_ugv,0.1);
-	nh->param<double>("w_theta_ugv",	w_theta_ugv,0.1);
 	nh->param<double>("w_gamma_uav", w_gamma_uav,0.1);
 	nh->param<double>("w_gamma_ugv", w_gamma_ugv,0.1);
-	nh->param<double>("w_kappa_ugv", w_kappa_ugv,0.1);
-	nh->param<double>("w_kappa_uav", w_kappa_uav,0.1);
-	nh->param<double>("w_delta", w_delta,0.1);
 	nh->param<double>("w_epsilon_ugv", w_epsilon_ugv,0.1);
-	nh->param<double>("w_epsilon", w_epsilon,0.1);
+	nh->param<double>("w_epsilon_uav", w_epsilon_uav,0.1);
 	nh->param<double>("w_zeta_uav", w_zeta_uav,0.1);
 	nh->param<double>("w_zeta_ugv", w_zeta_ugv,0.1);
+	nh->param<double>("w_delta", w_delta,0.1);
+	nh->param<double>("w_theta_ugv",	w_theta_ugv,0.1);
+
+	nh->param<double>("w_kappa_ugv", w_kappa_ugv,0.1);
+	nh->param<double>("w_kappa_uav", w_kappa_uav,0.1);
+	
+	
 	nh->param<double>("w_mu_uav", w_mu_uav,0.1);
 	nh->param<double>("w_nu_ugv", w_nu_ugv,0.1);
 	
 	nh->param<double>("w_eta_1", w_eta_1,0.1);
 	nh->param<double>("w_eta_2", w_eta_2,0.1);
 	nh->param<double>("w_eta_3", w_eta_3,0.1);
-	nh->param<double>("w_lambda", w_lambda,0.1);
 
 	nh->param<int>("n_iter_opt", n_iter_opt,200);
 	nh->param<double>("distance_obstacle_ugv", distance_obstacle_ugv,0.5);
@@ -113,9 +113,9 @@ OptimizerLocalPlanner::OptimizerLocalPlanner()
 	cleanVectors();
 	mp_.clearMarkersPointLines(points_ugv_marker, lines_ugv_marker,traj_marker_ugv_pub_,20);
   	mp_.clearMarkersPointLines(points_uav_marker, lines_uav_marker,traj_marker_uav_pub_,20);
-	ROS_INFO(PRINTF_BLUE"alpha_uav=[%f] alpha_ugv=[%f] beta_uav=[%f] beta_ugv=[%f] iota_uav=[%f] theta_ugv=[%f] gamma_uav=[%f] gamma_ugv=[%f] kappa_ugv=[%f] kappa_uav=[%f] delta=[%f] epsilon=[%f] zeta=[%f] eta_1=[%f] lambda=[%f]",
-						 w_alpha_uav, w_alpha_ugv, w_beta_uav, w_beta_ugv, w_iota_uav, w_theta_ugv,w_gamma_uav, w_gamma_ugv, w_kappa_ugv, 
-						 w_kappa_uav, w_delta, w_epsilon, w_zeta_uav, w_eta_1, w_lambda);
+	ROS_INFO(PRINTF_BLUE"alpha_uav=[%f] alpha_ugv=[%f] beta_uav=[%f] beta_ugv=[%f] theta_ugv=[%f] gamma_uav=[%f] gamma_ugv=[%f] kappa_ugv=[%f] kappa_uav=[%f] delta=[%f] epsilon=[%f] zeta=[%f] eta_1=[%f] eta_2=[%f]",
+						 w_alpha_uav, w_alpha_ugv, w_beta_uav, w_beta_ugv, w_theta_ugv,w_gamma_uav, w_gamma_ugv, w_kappa_ugv, 
+						 w_kappa_uav, w_delta, w_epsilon_uav, w_zeta_uav, w_eta_1, w_eta_2);
 	ROS_INFO(PRINTF_BLUE"Optimizer_Local_Planner: Parameters loaded, ready for Optimization Process. Waiting for Action!!");
 	configServices();
 
@@ -579,7 +579,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			/*** Cost Function UAV VII : Velocity constraint UAV***/
 			for (int i = 0; i < statesTime.size() - 1; ++i) {
 				CostFunction* cost_function_uav_7  = new AutoDiffCostFunction<VelocityFunctorUAV, 1, 4, 4, 2>
-												(new VelocityFunctorUAV(w_epsilon, initial_velocity_uav,write_data_residual)); 
+												(new VelocityFunctorUAV(w_epsilon_uav, initial_velocity_uav,write_data_residual)); 
 				problem.AddResidualBlock(cost_function_uav_7, NULL, 
 										statesPosUAV[i].parameter, statesPosUAV[i+1].parameter, 
 										statesTime[i+1].parameter);
@@ -1142,7 +1142,7 @@ void OptimizerLocalPlanner::interpolateFixedPointsPath(vector<geometry_msgs::Vec
 		vec_pose_init_ugv.clear();
 		vec_pose_init_ugv = vec_pose_init_aux_;
 		v_inter_ = vec_pose_init_aux_;
-		auto s_ = vec_pose_init_ugv.size();
+		int s_ = vec_pose_init_ugv.size();
 		mp_.clearMarkersPointLines(post_points_ugv_marker, post_lines_ugv_marker, post_traj_marker_ugv_pub_,s_);
 		mp_.getMarkerPoints(post_points_ugv_marker, vec_pose_init_ugv, "post_points_ugv_m", 5);	// RED: colour_ = 0 ; GREEN : colour_ = 1 ; BLUE: colour_ = 2 ; YELLOW = 3 ; PURPLE = 4 ; BLACK = 5 ; WHITE = 6;
 		mp_.getMarkerLines(post_lines_ugv_marker, vec_pose_init_ugv, "post_lines_ugv_m", 5);
@@ -1153,7 +1153,7 @@ void OptimizerLocalPlanner::interpolateFixedPointsPath(vector<geometry_msgs::Vec
 		vec_pose_init_uav.clear();
 		vec_pose_init_uav = vec_pose_init_aux_;
 		v_inter_ = vec_pose_init_aux_;
-		auto s_ = vec_pose_init_uav.size();
+		int s_ = vec_pose_init_uav.size();
 		mp_.clearMarkersPointLines(post_points_uav_marker, post_lines_uav_marker, post_traj_marker_uav_pub_,s_);
 		mp_.getMarkerPoints(post_points_uav_marker, vec_pose_init_uav, "post_points_uav_m", 6);	// RED: colour_ = 0 ; GREEN : colour_ = 1 ; BLUE: colour_ = 2 ; YELLOW = 3 ; PURPLE = 4 ; BLACK = 5 ; WHITE = 6;
 		mp_.getMarkerLines(post_lines_uav_marker, vec_pose_init_uav, "post_lines_uav_m", 6);
@@ -1199,7 +1199,7 @@ void OptimizerLocalPlanner::calculateDistanceVertices(vector<double> &_v_D_ugv,v
         pL= sqrt(x * x + y * y + z * z);
 		
 		sum_distance_ = sum_distance_ + pL;
-		printf("sum_distance=%f , pL=%f ,new_path_uav.size()=%lu\n",sum_distance_,pL,new_path_uav.size());
+		// printf("sum_distance=%f , pL=%f ,new_path_uav.size()=%lu\n",sum_distance_,pL,new_path_uav.size());
 		_v_D_uav.push_back(pL);
     }
 	// initial_distance_states_uav = sum_distance_ / (new_path_uav.size()-1);
