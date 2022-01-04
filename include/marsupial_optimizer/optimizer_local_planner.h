@@ -47,6 +47,7 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "marsupial_optimizer/ceres_constraint_acceleration_uav.hpp"
 
 #include "marsupial_optimizer/ceres_constraint_catenary.hpp"
+#include "marsupial_optimizer/ceres_constraint_catenary_autodiff.hpp"
 #include "marsupial_optimizer/ceres_constraint_catenary_length.hpp"
 #include "marsupial_optimizer/ceres_constraint_dynamic_catenary.hpp"
 
@@ -278,8 +279,9 @@ public:
 	int equidistance_uav_constraint, obstacles_uav_constraint, smoothness_uav_constraint;
 	bool velocity_uav_constraint,acceleration_uav_constraint;
 	bool time_constraint, velocity_ugv_constraint, acceleration_ugv_constraint;
+	bool catenary_length_constraint;
 	bool finished_rviz_maneuver;
-	int equidistance_ugv_constraint, obstacles_ugv_constraint,traversability_ugv_constraint, smoothness_ugv_constraint;
+	int equidistance_ugv_constraint, obstacles_ugv_constraint,traversability_ugv_constraint, smoothness_ugv_constraint, catenary_constraint;
 	bool write_data_residual;
 
 private:

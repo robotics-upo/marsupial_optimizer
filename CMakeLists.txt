@@ -35,7 +35,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(marsupial_optimizer CXX)
 
 # Set to Release in order to speed up the program significantly
-set(CMAKE_BUILD_TYPE Debug) #None, Debug, Release, RelWithDebInfo, MinSizeRel
+set(CMAKE_BUILD_TYPE Release) #None, Debug, Release, RelWithDebInfo, MinSizeRel
 
 # add_compile_options(-std=c++14)
 
@@ -118,7 +118,7 @@ include_directories(include)
 
 add_library(marsupial_optimizer 
 src/bisection_catenary_3D.cpp
-src/marker_publisher.cpp
+
   ) 
 target_link_libraries(marsupial_optimizer
    ${EXTERNAL_LIBS}
@@ -128,20 +128,24 @@ target_link_libraries(marsupial_optimizer
 # add_executable(optimizer_local_planner_fix_ugv src/optimizer_local_planner_fix_ugv.cc)
 # target_link_libraries(optimizer_local_planner_fix_ugv Ceres::ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES} ${EXTERNAL_LIBS})
 
-add_executable(optimizer_local_planner_fix_ugv_node src/optimizer_local_planner_fix_ugv_node.cpp src/optimizer_local_planner_fix_ugv.cc )
+add_executable(optimizer_local_planner_fix_ugv_node src/optimizer_local_planner_fix_ugv_node.cpp src/optimizer_local_planner_fix_ugv.cc src/marker_publisher.cpp)
 # add_dependencies(optimizer_local_planner_fix_ugv_node ${PROJECT_NAME}_gencfg)
 target_link_libraries(optimizer_local_planner_fix_ugv_node marsupial_optimizer  Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES})
 
 add_executable(region_growing_segmentation_node src/region_growing_segmentation_node.cpp)
 target_link_libraries (region_growing_segmentation_node   ${PCL_LIBRARIES} ${catkin_LIBRARIES})
 
-add_executable(optimizer_local_planner_node src/optimizer_local_planner_node.cpp src/optimizer_local_planner.cc )
+add_executable(optimizer_local_planner_node src/optimizer_local_planner_node.cpp src/optimizer_local_planner.cc src/marker_publisher.cpp)
 # add_dependencies(optimizer_local_planner_node ${PROJECT_NAME}_gencfg)
 target_link_libraries(optimizer_local_planner_node marsupial_optimizer  Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES})
 
-add_executable(optimizer_publisher_tf_node src/optimizer_publisher_tf_node.cpp)
+add_executable(optimizer_publisher_tf_node src/optimizer_publisher_tf_node.cpp src/marker_publisher.cpp) 
 # add_dependencies(optimizer_publisher_tf_node ${PROJECT_NAME}_gencfg)
 target_link_libraries(optimizer_publisher_tf_node marsupial_optimizer Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES} ${catkin_LIBRARIES})
+
+add_executable(test_catenary_optimizer src/test_catenary_optimizer.cc src/marker_publisher.cpp)
+# add_dependencies(optimizer_local_planner_node ${PROJECT_NAME}_gencfg)
+target_link_libraries(test_catenary_optimizer marsupial_optimizer  Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES})
 
 # add_executable(catenary_solver_test_ceres src/catenary_solver_test_ceres.cpp )
 # # add_dependencies(optimizer_local_planner_fix_ugv_node ${PROJECT_NAME}_gencfg)

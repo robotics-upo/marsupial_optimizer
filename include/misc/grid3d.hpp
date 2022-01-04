@@ -594,11 +594,11 @@ protected:
 		}
 		
 		// Write grid general info 
-		fread(&m_gridSize, sizeof(int), 1, pf);
-		fread(&m_gridSizeX, sizeof(int), 1, pf);
-		fread(&m_gridSizeY, sizeof(int), 1, pf);
-		fread(&m_gridSizeZ, sizeof(int), 1, pf);
-		fread(&m_sensorDev, sizeof(float), 1, pf);
+		size_t value_1_ = fread(&m_gridSize, sizeof(int), 1, pf);
+		size_t value_2_ = fread(&m_gridSizeX, sizeof(int), 1, pf);
+		size_t value_3_ = fread(&m_gridSizeY, sizeof(int), 1, pf);
+		size_t value_4_ = fread(&m_gridSizeZ, sizeof(int), 1, pf);
+		size_t value_5_ = fread(&m_sensorDev, sizeof(float), 1, pf);
 		m_gridStepY = m_gridSizeX;
 		m_gridStepZ = m_gridSizeX*m_gridSizeY;
 		
@@ -606,7 +606,7 @@ protected:
 		if(m_grid != NULL)
 			delete []m_grid;
 		m_grid = new gridCell[m_gridSize];
-		fread(m_grid, sizeof(gridCell), m_gridSize, pf);
+		size_t value_6_ = fread(m_grid, sizeof(gridCell), m_gridSize, pf);
 		
 		// Close file
 		fclose(pf);
@@ -650,10 +650,11 @@ protected:
 	void computeGrid(void)
 	{
 		printf("\n \tReady to Compute Grid 3D\n");
-		std::string name_output_file = "/home/simon/grid_stage.txt";
-		std::cout << "Saving data in output file for Grid3D : " << name_output_file << std::endl;
 
-		ofs.open(name_output_file.c_str(), std::ofstream::app);
+		// std::string name_output_file = "/home/simon/grid_stage.txt";
+		// std::cout << "Saving data in output file for Grid3D : " << name_output_file << std::endl;
+		// ofs.open(name_output_file.c_str(), std::ofstream::app);
+		
 		//Publish percent variable
 		std_msgs::Float32 percent_msg;
 		percent_msg.data = 0;
@@ -710,16 +711,16 @@ protected:
 					// printf(" , m_grid.dist= %f , m_grid.prob=%f\n", m_grid[index].dist, m_grid[index].prob);
 
 
-					if (ofs.is_open()) {
-						ofs << "index=["<< index << "] m_resolution=[" << m_resolution << "] searchPoint=[" << searchPoint.x << " " <<searchPoint.y<< " " 
-						<< searchPoint.z << "]  , m_grid.dist= "<< m_grid[index].dist << " , m_grid.prob= " << m_grid[index].prob << " ;" << std::endl;
-					} 
-					else 
-						std::cout << "Couldn't be open the output data file for Grid3D" << std::endl;
+					// if (ofs.is_open()) {
+					// 	ofs << "index=["<< index << "] m_resolution=[" << m_resolution << "] searchPoint=[" << searchPoint.x << " " <<searchPoint.y<< " " 
+					// 	<< searchPoint.z << "]  , m_grid.dist= "<< m_grid[index].dist << " , m_grid.prob= " << m_grid[index].prob << " ;" << std::endl;
+					// } 
+					// else 
+					// 	std::cout << "Couldn't be open the output data file for Grid3D" << std::endl;
 				}
 			}
 		}
-		ofs.close();
+		// ofs.close();
 
 	}
 	

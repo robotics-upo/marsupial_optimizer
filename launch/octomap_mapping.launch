@@ -14,9 +14,9 @@
 		<!-- <param name="base_frame_id" value="base_link"/> -->
 		<param name="frame_id" value="/world"/>
 		<param name="occupancy_min_z" value="0"/>
-		<param name="occupancy_max_z" value="10"/>
+		<param name="occupancy_max_z" value="5"/>
 		<param name="pointcloud_min_z" value="0"/>
-		<param name="pointcloud_max_z" value="10"/>
+		<param name="pointcloud_max_z" value="5"/>
 		
 		<!-- maximum range to integrate (speedup!) -->
 		<!-- <param name="sensor_model/max_range" value="5.0" /> -->

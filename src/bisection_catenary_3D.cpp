@@ -125,6 +125,8 @@ bool bisectionCatenary::configBisection(double _l, double _x1, double _y1, doubl
     L =_l;
     X1 =_x1; Y1 = _y1; Z1= _z1;
     X2 = _x2; Y2 = _y2;  Z2= _z2;
+
+    L_minor_than_D = false;
     
     distance_3d = sqrt(pow(X2-X1,2)+pow(Y2-Y1,2)+pow(Z2-Z1,2)); //Distance between lashing represent in 3D
     
@@ -134,8 +136,11 @@ bool bisectionCatenary::configBisection(double _l, double _x1, double _y1, doubl
     checkStateCatenary(_x1, _y1, _z1, _x2, _y2, _z2);
     if (L > distance_3d)
         getNumberPointsCatenary(L);
-    else
-        getNumberPointsCatenary(distance_3d);
+    else{
+        getNumberPointsCatenary(1.001*distance_3d);
+        printf("Warning: Input Length minor that necesary distance between point to apply bisection method\n");
+        L_minor_than_D = true;
+    }
 
     mid_p_cat = ceil(num_point_catenary/2.0);
 
@@ -221,7 +226,7 @@ void bisectionCatenary::getPointCatenary3D(vector<geometry_msgs::Point> &v_p_)
         if (use_markers)
             clearMarkers(p_bet_cat_marker, 50, points_between_cat_marker_pub_);
 
-        for(size_t i=0; i < num_point_catenary +1; i++){
+        for(size_t i=0; i < num_point_catenary ; i++){
             y_value_ = (c_value * cosh((x_value_ - Xc)/c_value)+ (Yc - c_value)); // evalute CatenaryChain
             p_.x = X1 + _direc_x* cos(tetha) * x_value_;
             p_.y = Y1 + _direc_y* sin(tetha) * x_value_;
@@ -298,7 +303,12 @@ void bisectionCatenary::getPointCatenary3D(vector<geometry_msgs::Point> &v_p_)
                             d_obt_cat = grid_3D->getPointDist((double)p_b_cat_.x,(double)p_b_cat_.y,(double)p_b_cat_.z);
                         else
                             d_obt_cat = -1.0;
-                        if (d_obt_cat < bound_obst){
+                        double a_;
+                        if(j==0)
+                            a_ = 1.0;
+                        else
+                            a_ = 0.80;
+                        if (d_obt_cat < bound_obst*a_){
                             cat_between_obs.push_back(i);	
                             if (first_coll == 0){
                                 first_coll  = i-1;   
@@ -349,7 +359,7 @@ void bisectionCatenary::getPointCatenaryStraight(std::vector<geometry_msgs::Poin
 {
     double _step = distance_3d / (double) num_point_catenary;
 
-    for(int i=0; i < num_point_catenary +1; i++)
+    for(int i=0; i < num_point_catenary ; i++)
     {       
         geometry_msgs::Point p_;
 
@@ -442,7 +452,7 @@ bool bisectionCatenary::lookingSignChanging (double a2, double b2, int mode_)
         return true;
 }
 
-inline void bisectionCatenary::getNumberPointsCatenary(double _length){num_point_catenary = ceil( (double)num_point_per_unit_length * _length);}  
+inline void bisectionCatenary::getNumberPointsCatenary(double _length){num_point_catenary = round( (double)num_point_per_unit_length * _length);}  
 
 bool bisectionCatenary::setNumPointsPerUnitLength(int n)
 {

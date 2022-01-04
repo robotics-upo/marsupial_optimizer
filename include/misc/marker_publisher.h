@@ -23,6 +23,7 @@ class MarkerPublisher
 		void getMarkerPoints(visualization_msgs::MarkerArray &marker_, std::vector<geometry_msgs::Vector3> _vector, std::string ns, int colour_);
 		void getMarkerLines(visualization_msgs::MarkerArray &marker_, std::vector<geometry_msgs::Vector3> _vector, std::string ns, int colour_);
 		void clearMarkersPointLines(visualization_msgs::MarkerArray &p_m_, visualization_msgs::MarkerArray &l_m_, ros::Publisher traj_m_pub_, int _s);
+		void initialAndFinalPointsMarker(geometry_msgs::Vector3 v3_i, geometry_msgs::Vector3 v3_f, ros::Publisher nearest_point_pub_);
 
 	protected:
 

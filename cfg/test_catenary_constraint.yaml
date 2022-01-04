@@ -1,0 +1,90 @@
+test_catenary_1:
+    x_init: 3.519
+    y_init: -0.942
+    z_init: 0.025
+    x_final: 0.200
+    y_final: -0.250
+    z_final: 4.050
+
+test_catenary_2:
+    x_init: 3.492
+    y_init: -0.923
+    z_init: 0.025
+    x_final: 0.300
+    y_final: 0.000
+    z_final: 4.300
+
+test_catenary_3:
+    x_init: 3.465
+    y_init: -0.904
+    z_init:  0.025
+    x_final: 0.550
+    y_final: -0.200
+    z_final: 4.450
+    
+test_catenary_4:
+    x_init: 3.438 
+    y_init: -0.885
+    z_init: 0.025
+    x_final: 0.850 
+    y_final: -0.150 
+    z_final: 4.650
+
+test_catenary_5:
+    x_init: 3.412
+    y_init: -0.865 
+    z_init: 0.025  
+    x_final: 0.850 
+    y_final: -0.200 
+    z_final: 5.000
+
+test_catenary_6:
+    x_init: 3.385 
+    y_init: -0.846 
+    z_init: 0.025  
+    x_final: 1.150 
+    y_final: -0.300 
+    z_final: 5.150
+
+test_catenary_7:
+    x_init: 3.358 
+    y_init: -0.827 
+    z_init: 0.025  
+    x_final: 1.350 
+    y_final: 0.000 
+    z_final: 5.250
+    
+test_catenary_8:
+    x_init: 3.331 
+    y_init: -0.808 
+    z_init: 0.025  
+    x_final: 1.250 
+    y_final: -0.100 
+    z_final: 5.6000
+
+test_catenary_9:
+    x_init: 3.304 
+    y_init: -0.788 
+    z_init: 0.025  
+    x_final: 1.150 
+    y_final: -0.200 
+    z_final: 5.950
+
+test_catenary_10:
+    x_init: 3.277
+    y_init: -0.769 
+    z_init: 0.025  
+    x_final: 1.150 
+    y_final: -0.500 
+    z_final: 6.150
+
+test_catenary_11:
+    x_init: 3.250 
+    y_init: -0.750 
+    z_init: 0.025  
+    x_final: 1.050 
+    y_final: -0.500 
+    z_final: 6.500
+    
+
+

@@ -54,6 +54,9 @@ OptimizerLocalPlanner::OptimizerLocalPlanner()
 	nh->param<bool>("velocity_uav_constraint",velocity_uav_constraint, true);
 	nh->param<bool>("acceleration_uav_constraint",acceleration_uav_constraint, true);
 
+	nh->param<int>("catenary_constraint",catenary_constraint, 0);
+	nh->param<bool>("catenary_length_constraint",catenary_length_constraint, false);
+
 	nh->param<double>("w_alpha_ugv", w_alpha_ugv,0.1);
 	nh->param<double>("w_alpha_uav", w_alpha_uav,0.1);
 	nh->param<double>("w_beta_uav",	w_beta_uav,0.1);
@@ -602,7 +605,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	if (optimize_cat){
 		ROS_INFO(PRINTF_ORANGE" PREPARING  CATENARY  PARAMETER  BLOCKS  TO  OPTIMIZE:");
 		/*** Cost Function Cable I : Catenary constrain  ***/
-		ROS_INFO(PRINTF_ORANGE"		- Optimize Lentgh");
+		// ROS_INFO(PRINTF_ORANGE"		- Optimize Lentgh");
 		// for (int i = 0; i < statesLength.size(); ++i) {
 		// 	CostFunction* cost_function_cat_1  = new NumericDiffCostFunction<CatenaryFunctor, RIDDERS, 3, 4, 4, 2>
 		// 								(new CatenaryFunctor(w_eta_1, w_eta_2, w_eta_3, distance_catenary_obstacle, vec_len_cat_init[i], length_tether_max, nn_uav.kdtree, 
@@ -616,32 +619,60 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		// 		problem.SetParameterUpperBound(statesLength[i].parameter, 1, length_tether_max);
 		// 	}
 		// }
-
-		for (int i = 0; i < statesLength.size(); ++i) {
-			CostFunction* cost_function_cat_1  = new NumericDiffCostFunction<CatenaryFunctor, RIDDERS, 1, 4, 4, 2>
-										(new CatenaryFunctor(w_eta_1, w_eta_3, distance_catenary_obstacle, vec_len_cat_init[i], length_tether_max, nn_uav.kdtree, 
-											nn_uav.obs_points, grid_3D, nn_trav.kdtree, nn_trav.obs_points, pose_reel_local.transform.translation, size_path, 
-											new_path_uav[i], nh, mapFull_msg, write_data_residual)); 
-			problem.AddResidualBlock(cost_function_cat_1, NULL, statesPosUAV[i].parameter, statesPosUGV[i].parameter, statesLength[i].parameter);
-			if (i == 0 || (fix_last_position_ugv && i == statesLength.size()-1))
-				problem.SetParameterBlockConstant(statesLength[i].parameter);
-			else{
-				problem.SetParameterLowerBound(statesLength[i].parameter, 1, 0.1);
-				problem.SetParameterUpperBound(statesLength[i].parameter, 1, length_tether_max);
+		if(catenary_constraint==1){
+			ROS_INFO(PRINTF_ORANGE"		- Optimize Catenary Obstacles Autodiff");
+			for (int i = 0; i < statesLength.size(); ++i) {
+				CostFunction* cost_function_cat_1  = new AutoDiffCostFunction<AutodiffCatenaryFunctor::CatenaryFunctor, 1, 4, 4, 2>
+											(new AutodiffCatenaryFunctor::CatenaryFunctor(w_eta_1, w_eta_3, distance_catenary_obstacle, vec_len_cat_init[i], length_tether_max, nn_uav.kdtree, 
+												nn_uav.obs_points, grid_3D, nn_trav.kdtree, nn_trav.obs_points, pose_reel_local.transform.translation, size_path, 
+												new_path_uav[i], nh, mapFull_msg, write_data_residual)); 
+				problem.AddResidualBlock(cost_function_cat_1, NULL, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesLength[i].parameter);
+				if (i == 0 || (fix_last_position_ugv && i == statesLength.size()-1))
+					problem.SetParameterBlockConstant(statesLength[i].parameter);
+				else{
+					problem.SetParameterLowerBound(statesLength[i].parameter, 1, 0.1);
+					problem.SetParameterUpperBound(statesLength[i].parameter, 1, length_tether_max);
+				}
 			}
 		}
-		for (int i = 0; i < statesLength.size(); ++i) {
-			CostFunction* cost_function_cat_2  = new AutoDiffCostFunction<CatenaryLengthFunctor, 1, 4, 4, 2>
-										(new CatenaryLengthFunctor(w_eta_2, vec_len_cat_init[i], new_path_uav[i], write_data_residual)); 
-			problem.AddResidualBlock(cost_function_cat_2, NULL, statesPosUAV[i].parameter, statesPosUGV[i].parameter, statesLength[i].parameter);
-			// if (i == 0 || (fix_last_position_ugv && i == statesLength.size()-1))
-			// 	problem.SetParameterBlockConstant(statesLength[i].parameter);
-			// else{
-			// 	problem.SetParameterLowerBound(statesLength[i].parameter, 1, 0.1);
-			// 	problem.SetParameterUpperBound(statesLength[i].parameter, 1, length_tether_max);
-			// }
-		}		
-
+		if(catenary_constraint==0){
+			ROS_INFO(PRINTF_ORANGE"		- Optimize Catenary Obstacles Numeric");
+			for (int i = 0; i < statesLength.size(); ++i) {
+				CostFunction* cost_function_cat_1  = new NumericDiffCostFunction<CatenaryFunctor, RIDDERS, 1, 4, 4, 2>
+											(new CatenaryFunctor(w_eta_1, w_eta_3, distance_catenary_obstacle, vec_len_cat_init[i], length_tether_max, nn_uav.kdtree, 
+												nn_uav.obs_points, grid_3D, nn_trav.kdtree, nn_trav.obs_points, pose_reel_local.transform.translation, size_path, 
+												new_path_uav[i], nh, mapFull_msg, write_data_residual)); 
+				problem.AddResidualBlock(cost_function_cat_1, NULL, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesLength[i].parameter);
+				if (i == 0 || (fix_last_position_ugv && i == statesLength.size()-1))
+					problem.SetParameterBlockConstant(statesLength[i].parameter);
+				else{
+					problem.SetParameterLowerBound(statesLength[i].parameter, 1, 0.1);
+					problem.SetParameterUpperBound(statesLength[i].parameter, 1, length_tether_max);
+				}
+			}
+		}
+		if(catenary_length_constraint){
+			ROS_INFO(PRINTF_ORANGE"		- Optimize Catenary Lentgh Autodiff");
+			for (int i = 0; i < statesLength.size(); ++i) {
+				CostFunction* cost_function_cat_2  = new AutoDiffCostFunction<CatenaryLengthFunctor::CatenaryLength, 1, 4, 4, 2>
+											(new CatenaryLengthFunctor::CatenaryLength(w_eta_2, vec_len_cat_init[i], pose_reel_local.transform.translation, mapFull_msg, write_data_residual)); 
+				problem.AddResidualBlock(cost_function_cat_2, NULL, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesLength[i].parameter);
+				if (i == 0 || (fix_last_position_ugv && i == statesLength.size()-1))
+					problem.SetParameterBlockConstant(statesLength[i].parameter);
+				else{
+					problem.SetParameterLowerBound(statesLength[i].parameter, 1, vec_len_cat_init[i]*0.73);
+					problem.SetParameterUpperBound(statesLength[i].parameter, 1, length_tether_max);			
+				}
+				// problem.SetParameterBlockConstant(statesPosUAV[i].parameter);
+				// problem.SetParameterBlockConstant(statesPosUGV[i].parameter);
+			}		
+		}
+		// for (int i = 0; i < statesLength.size(); ++i) {
+		// 	if (i != 0 || (i != statesLength.size()-1)){
+		// 		problem.SetParameterBlockVariable(statesPosUGV[i].parameter);
+		// 		problem.SetParameterBlockVariable(statesPosUAV[i].parameter);
+		// 	}
+		// }
 		/*** Cost Function Cable II : Dynamic Catenary constrain  ***/
 		// for (int i = 0; i < statesLength.size() - 1; ++i) {
 		// 	CostFunction* cost_function_cat_2  = new AutoDiffCostFunction<DynamicCatenaryFunctor, 1, 2, 2>(new DynamicCatenaryFunctor(w_lambda, dynamic_catenary)); 
@@ -1338,7 +1369,7 @@ void OptimizerLocalPlanner::processingCatenary()
 	// Staff for fost-proccessing of catenary length
 	parameterBlockLength parameter_block_post_length;
 	statesPostLength.clear();
-	int count_cat_fail = 0;
+	// int count_cat_fail = 0;
 	vec_len_cat_opt.clear();
 	int first_ = 1;
 	for(size_t i = 0; i < statesPosUAV.size(); i++){
@@ -1354,9 +1385,9 @@ void OptimizerLocalPlanner::processingCatenary()
 			if(first_ == 1)
 				printf(PRINTF_ORANGE"processingCatenary()\n");
 			first_++;
-			// parameter_block_post_length.parameter[1] = _d_ * 1.005;	// 1.02 in catenary constraint
-			parameter_block_post_length.parameter[1] = vec_len_cat_init[i];	// 1.02 in catenary constraint
-			count_cat_fail ++;
+			parameter_block_post_length.parameter[1] = _d_ * 1.005;	// 1.02 in catenary constraint
+			// parameter_block_post_length.parameter[1] = vec_len_cat_init[i];	// 1.02 in catenary constraint
+			// count_cat_fail ++;
 			// printf(PRINTF_RED"	Catenary number = %lu  [L=%f/d=%f]\n",i,statesLength[i].parameter[1],_d_);
 			printf(PRINTF_RED"UGV[%f %f %f] UAV[%f %f %f] reel[%f %f %f] Catenary number = %lu  [d=%f/L_o=%f/L_i=%f]\n",
 			statesPosUGV[i].parameter[1],statesPosUGV[i].parameter[2],statesPosUGV[i].parameter[3], statesPosUAV[i].parameter[1],statesPosUAV[i].parameter[2],
@@ -1537,6 +1568,12 @@ void OptimizerLocalPlanner::cleanResidualConstraintsFile()
   	}
 	// else
     	// puts( "File successfully deleted: catenary.txt");
+	if( remove( "/home/simon/residuals_optimization_data/catenary_length2.txt" ) != 0 ){
+    	perror( "Error deleting file: catenary_length2.txt");
+  	}
+	// else
+    	// puts( "File successfully deleted: catenary.txt");
+
 
 	if( remove( "/home/simon/residuals_optimization_data/catenary2.txt" ) != 0 ){
     	perror( "Error deleting file: catenary2.txt");

@@ -15,7 +15,7 @@
 
 #include "Eigen/Core"
 
-#include <pcl-1.8/pcl/point_cloud.h>
+#include <pcl-1.10/pcl/point_cloud.h>
 #include <pcl/search/impl/kdtree.hpp>
 #include <pcl/kdtree/impl/kdtree_flann.hpp>
 
@@ -531,6 +531,8 @@ inline void DataManagement::getDataForOptimizerAnalysis(pcl::KdTreeFLANN <pcl::P
 		// cS_.solve(p_reel_ugv.x, p_reel_ugv.y, p_reel_ugv.z, vec_pose_init_uav[i].x(), vec_pose_init_uav[i].y(), vec_pose_init_uav[i].z(), vec_len_cat_init[i], v_points_catenary_init_);
 		bc1.configBisection(vec_len_cat_init[i], p_reel_ugv.x, p_reel_ugv.y, p_reel_ugv.z, 
 							vec_pose_init_uav[i].x, vec_pose_init_uav[i].y, vec_pose_init_uav[i].z, false);
+		if (bc1.L_minor_than_D == true)
+			printf("Before optimization , position[%lu/%lu]: L < D \n",i,vec_pose_opt_.size());		
 		bc1.getPointCatenary3D(v_points_catenary_init_);
 		
 		for (size_t j= 0 ; j < v_points_catenary_init_.size() ; j++){
@@ -611,8 +613,11 @@ inline void DataManagement::getDataForOptimizerAnalysis(pcl::KdTreeFLANN <pcl::P
 		// cS_.solve(p_reel_ugv.x, p_reel_ugv.y, p_reel_ugv.z, vec_pose_uav_opt[i].x(), vec_pose_uav_opt[i].y(), vec_pose_uav_opt[i].z(), vec_len_cat_opt[i], v_points_catenary_opt_);
 		bc2.readDataForCollisionAnalisys(g_3D_, bound_cat_obs, octree_full, kdt_, obstacles_points_);
 		bc2.configBisection(vec_len_cat_opt[i], p_reel_ugv.x, p_reel_ugv.y, p_reel_ugv.z,vec_pose_uav_opt[i].x,vec_pose_uav_opt[i].y,vec_pose_uav_opt[i].z,true);
+		if (bc2.L_minor_than_D == true)
+			printf("After optimization , position[%lu/%lu]: L < D \n",i,vec_pose_opt_.size());		
 		bc2.getPointCatenary3D(v_points_catenary_opt_);
 		bc2.getStatusCollisionCat(dist_obst_cat, pos_cat_in_coll, cat_between_obs, first_coll_, last_coll_);
+		
 		num_points_coll_cat = 0;
 		double min_val_proximity_ = 0.015;
 		for (size_t j= 0 ; j < dist_obst_cat.size() ; j++){

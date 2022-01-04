@@ -94,7 +94,7 @@ class bisectionCatenary
 	    ros::Publisher points_between_cat_marker_pub_;
     	visualization_msgs::MarkerArray p_bet_cat_marker;
         ros::NodeHandlePtr nhP;
-        bool use_markers;
+        bool use_markers, L_minor_than_D;
 
     protected:
         double kConst;

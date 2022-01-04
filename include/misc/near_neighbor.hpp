@@ -12,7 +12,7 @@
 #include <ros/ros.h>
 #include <sensor_msgs/PointCloud2.h>
 
-#include <pcl-1.8/pcl/point_cloud.h>
+#include <pcl-1.10/pcl/point_cloud.h>
 #include <pcl/search/impl/kdtree.hpp>
 #include <pcl/kdtree/impl/kdtree_flann.hpp>
 #include <pcl/point_types.h>
