@@ -266,13 +266,6 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	auto path_shared_ptr = execute_path_srv_ptr->acceptNewGoal();
   	globalTrajectory = path_shared_ptr->path;
 	vec_len_cat_init = path_shared_ptr->length_catenary; 
-	// printf("\tReceiving Nodes from Global Path Planner (pos_ugv/pos_uav/length_cat) : \n");
-	// for (size_t i = 0; i < globalTrajectory.points.size(); i++){
-	// 	printf("Global_path_point[%lu/%lu]: [%.3f %.3f %.3f / %.3f %.3f %.3f / %.3f]\n",i, globalTrajectory.points.size(),
-	// 	globalTrajectory.points.at(i).transforms[0].translation.x, globalTrajectory.points.at(i).transforms[0].translation.y, globalTrajectory.points.at(i).transforms[0].translation.z,
-	// 	globalTrajectory.points.at(i).transforms[1].translation.x, globalTrajectory.points.at(i).transforms[1].translation.y, globalTrajectory.points.at(i).transforms[1].translation.z,
-	// 	vec_len_cat_init[i]);
-	// }
 
 	if(write_data_residual)
 		cleanResidualConstraintsFile();
@@ -282,9 +275,6 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	vec_fix_status_ugv_prepross.assign(globalTrajectory.points.size(),0);
 	getInitialGlobalPath(globalTrajectory, new_path_ugv, new_path_uav);
 	
-	// for(int i=0 ; i < globalTrajectory.points.size(); i++){
-	// 	printf("	vec_fix_status_ugv_prepross=[%i/%i]\n",vec_fix_status_ugv_prepross[i],i);
-	// }
 	size_path = new_path_uav.size();
 
 	//Clear optimized Markers
@@ -375,7 +365,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			ROS_INFO(PRINTF_GREEN"		- Optimize Traversability Autodiff");
 			for (int i = 0; i < statesPosUGV.size(); ++i) {
 				CostFunction* cost_function_ugv_4  = new AutoDiffCostFunction<TraversabilityDistanceFunctorUGV::TraversabilityFunctor, 1, 4>
-												(new TraversabilityDistanceFunctorUGV::TraversabilityFunctor(w_theta_ugv, nn_trav.kdtree, nn_trav.obs_points, step, write_data_residual)); 
+												(new TraversabilityDistanceFunctorUGV::TraversabilityFunctor(w_theta_ugv, nn_trav.kdtree, nn_trav.obs_points, write_data_residual)); 
 				problem.AddResidualBlock(cost_function_ugv_4, NULL, statesPosUGV[i].parameter);
 				if (i < count_fix_points_initial_ugv)
 					problem.SetParameterBlockConstant(statesPosUGV[i].parameter);
@@ -605,27 +595,13 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	if (optimize_cat){
 		ROS_INFO(PRINTF_ORANGE" PREPARING  CATENARY  PARAMETER  BLOCKS  TO  OPTIMIZE:");
 		/*** Cost Function Cable I : Catenary constrain  ***/
-		// ROS_INFO(PRINTF_ORANGE"		- Optimize Lentgh");
-		// for (int i = 0; i < statesLength.size(); ++i) {
-		// 	CostFunction* cost_function_cat_1  = new NumericDiffCostFunction<CatenaryFunctor, RIDDERS, 3, 4, 4, 2>
-		// 								(new CatenaryFunctor(w_eta_1, w_eta_2, w_eta_3, distance_catenary_obstacle, vec_len_cat_init[i], length_tether_max, nn_uav.kdtree, 
-		// 									nn_uav.obs_points, grid_3D, nn_trav.kdtree, nn_trav.obs_points, pose_reel_local.transform.translation, size_path, 
-		// 									new_path_uav[i], nh, mapFull_msg, write_data_residual)); 
-		// 	problem.AddResidualBlock(cost_function_cat_1, NULL, statesPosUAV[i].parameter, statesPosUGV[i].parameter, statesLength[i].parameter);
-		// 	if (i == 0 || (fix_last_position_ugv && i == statesLength.size()-1))
-		// 		problem.SetParameterBlockConstant(statesLength[i].parameter);
-		// 	else{
-		// 		problem.SetParameterLowerBound(statesLength[i].parameter, 1, 0.1);
-		// 		problem.SetParameterUpperBound(statesLength[i].parameter, 1, length_tether_max);
-		// 	}
-		// }
 		if(catenary_constraint==1){
 			ROS_INFO(PRINTF_ORANGE"		- Optimize Catenary Obstacles Autodiff");
 			for (int i = 0; i < statesLength.size(); ++i) {
 				CostFunction* cost_function_cat_1  = new AutoDiffCostFunction<AutodiffCatenaryFunctor::CatenaryFunctor, 1, 4, 4, 2>
 											(new AutodiffCatenaryFunctor::CatenaryFunctor(w_eta_1, w_eta_3, distance_catenary_obstacle, vec_len_cat_init[i], length_tether_max, nn_uav.kdtree, 
 												nn_uav.obs_points, grid_3D, nn_trav.kdtree, nn_trav.obs_points, pose_reel_local.transform.translation, size_path, 
-												new_path_uav[i], nh, mapFull_msg, write_data_residual)); 
+												new_path_uav[i], nh, mapFull_msg, step, write_data_residual)); 
 				problem.AddResidualBlock(cost_function_cat_1, NULL, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesLength[i].parameter);
 				if (i == 0 || (fix_last_position_ugv && i == statesLength.size()-1))
 					problem.SetParameterBlockConstant(statesLength[i].parameter);
@@ -655,7 +631,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			ROS_INFO(PRINTF_ORANGE"		- Optimize Catenary Lentgh Autodiff");
 			for (int i = 0; i < statesLength.size(); ++i) {
 				CostFunction* cost_function_cat_2  = new AutoDiffCostFunction<CatenaryLengthFunctor::CatenaryLength, 1, 4, 4, 2>
-											(new CatenaryLengthFunctor::CatenaryLength(w_eta_2, vec_len_cat_init[i], pose_reel_local.transform.translation, mapFull_msg, write_data_residual)); 
+											(new CatenaryLengthFunctor::CatenaryLength(w_eta_2, vec_len_cat_init[i], pose_reel_local.transform.translation, write_data_residual)); 
 				problem.AddResidualBlock(cost_function_cat_2, NULL, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesLength[i].parameter);
 				if (i == 0 || (fix_last_position_ugv && i == statesLength.size()-1))
 					problem.SetParameterBlockConstant(statesLength[i].parameter);
@@ -663,16 +639,8 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 					problem.SetParameterLowerBound(statesLength[i].parameter, 1, vec_len_cat_init[i]*0.73);
 					problem.SetParameterUpperBound(statesLength[i].parameter, 1, length_tether_max);			
 				}
-				// problem.SetParameterBlockConstant(statesPosUAV[i].parameter);
-				// problem.SetParameterBlockConstant(statesPosUGV[i].parameter);
 			}		
 		}
-		// for (int i = 0; i < statesLength.size(); ++i) {
-		// 	if (i != 0 || (i != statesLength.size()-1)){
-		// 		problem.SetParameterBlockVariable(statesPosUGV[i].parameter);
-		// 		problem.SetParameterBlockVariable(statesPosUAV[i].parameter);
-		// 	}
-		// }
 		/*** Cost Function Cable II : Dynamic Catenary constrain  ***/
 		// for (int i = 0; i < statesLength.size() - 1; ++i) {
 		// 	CostFunction* cost_function_cat_2  = new AutoDiffCostFunction<DynamicCatenaryFunctor, 1, 2, 2>(new DynamicCatenaryFunctor(w_lambda, dynamic_catenary)); 
@@ -1081,8 +1049,10 @@ void OptimizerLocalPlanner::interpolateFixedPointsPath(vector<geometry_msgs::Vec
 	// mode_==0 for UGV , mode_==1 for UAV
 	vector<geometry_msgs::Vector3> vec_pose_init_aux_;
 	vector<geometry_msgs::Vector3> vec_pose_init_;
+	vector<bool> is_pos_interpolated_;
+	vector<float> vec_length_aux_;
 	vec_pose_init_aux_.clear();
-	v_inter_.clear();
+	v_inter_.clear(); is_pos_interpolated_.clear();
 	int count_fix_points_;
 
 	if (mode_==0){
@@ -1126,6 +1096,7 @@ void OptimizerLocalPlanner::interpolateFixedPointsPath(vector<geometry_msgs::Vec
 					pos_ugv_.y = vec_pose_init_[init_pos_].y + (y_/count_)*j;
 					pos_ugv_.z = vec_pose_init_[init_pos_].z + (z_/count_)*j;
 					vec_pose_init_aux_.push_back(pos_ugv_);
+					is_pos_interpolated_.push_back(true);
 					if (mode_==0){
 						if (final_pos_aux != final_pos_){
 							final_pos_aux = final_pos_;
@@ -1138,10 +1109,12 @@ void OptimizerLocalPlanner::interpolateFixedPointsPath(vector<geometry_msgs::Vec
 			}
 			else{
 				vec_pose_init_aux_.push_back(vec_pose_init_[i]);
+				is_pos_interpolated_.push_back(false);
 			}
 		}
 		else{
 			vec_pose_init_aux_.push_back(vec_pose_init_[i]);
+			is_pos_interpolated_.push_back(false);
 			if(i < count_fix_points_){
 				vec_fix_status_ugv_prepross[i]=group_;
 				group_++;
@@ -1158,6 +1131,7 @@ void OptimizerLocalPlanner::interpolateFixedPointsPath(vector<geometry_msgs::Vec
 				pos_ugv_.y = vec_pose_init_[vec_pose_init_.size()-(1+count_)].y + (y_ugv_/count_)*j;
 				pos_ugv_.z = vec_pose_init_[vec_pose_init_.size()-(1+count_)].z + (z_ugv_/count_)*j;
 				vec_pose_init_aux_.push_back(pos_ugv_);
+				is_pos_interpolated_.push_back(true);
 				vec_fix_status_ugv_prepross[vec_pose_init_.size()-(j)]= count_- group_;
 				group_++;
 			}
@@ -1167,6 +1141,7 @@ void OptimizerLocalPlanner::interpolateFixedPointsPath(vector<geometry_msgs::Vec
 	
 	int num_pos_ = vec_pose_init_.size()-1;
 	vec_pose_init_aux_.push_back(vec_pose_init_[num_pos_]);
+	is_pos_interpolated_.push_back(false); // always false because is the last point
 
 	//Set new values in vec_pos_init_ugv or vec_pos_init_ugv
 	if (mode_==0){
@@ -1193,6 +1168,24 @@ void OptimizerLocalPlanner::interpolateFixedPointsPath(vector<geometry_msgs::Vec
 	}
 	else
 		ROS_ERROR("WARNNING : In method interpolateFixedPointsPath from optimizer was not set the MODE, this is going to run into trouble");
+
+	for (int m=0 ; m < is_pos_interpolated_.size(); m++){
+		// printf("[%i]is_pos_interpolated_=%s \n", m, is_pos_interpolated_[m]? "true":"false");
+		if(is_pos_interpolated_[m]){
+			double length_;
+			if ( computeCatenary(m, mode_,length_)){
+				vec_length_aux_.push_back(length_);
+				}
+			else{
+				vec_length_aux_.push_back(vec_len_cat_init[m]);
+				ROS_ERROR("not catenary interpolated !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+			}
+		}
+		else
+			vec_length_aux_.push_back(vec_len_cat_init[m]);
+	}
+	vec_len_cat_init.clear();
+	vec_len_cat_init = vec_length_aux_;
 }
 
 void OptimizerLocalPlanner::calculateDistanceVertices(vector<double> &_v_D_ugv,vector<double> &_v_D_uav)
@@ -1481,6 +1474,93 @@ void OptimizerLocalPlanner::publishOptimizedTraj()
 	msg.trajectory = trajectory_;
 	msg.length_catenary = l_cat_;
     trajectory_pub_.publish(msg);
+}
+
+bool OptimizerLocalPlanner::computeCatenary(int p_, int mode_, double &l_cat_)
+{
+    geometry_msgs::Point p_final_;
+	geometry_msgs::Vector3 p_reel_;
+    std::vector<geometry_msgs::Point> p_catenary_;
+
+	bisectionCatenary bc;
+
+    p_reel_ = getReelPoint(vec_pose_init_ugv[p_].x , vec_pose_init_ugv[p_].y , vec_pose_init_ugv[p_].z,
+                           vec_init_rot_uav[p_].x, vec_init_rot_uav[p_].y, vec_init_rot_uav[p_].z, vec_init_rot_uav[p_].w);
+                    
+    double dist_ = sqrt(pow(p_reel_.x - vec_pose_init_uav[p_].x,2) + 
+                                   pow(p_reel_.y - vec_pose_init_uav[p_].y,2) + 
+                                   pow(p_reel_.z - vec_pose_init_uav[p_].z,2));
+	double dist_init_final_;
+	if (dist_ < 4.0)
+		dist_init_final_ = 1.010 * dist_;
+	else
+		dist_init_final_ = 1.005 * dist_;
+    double delta_ = 0.0;	//Initial Value
+    bool check_catenary = true;
+    bool hard_collision_ = false;
+	bool increase_catenary;
+    double security_dis_ca_ = distance_catenary_obstacle;
+                    
+	do{
+		increase_catenary = false;
+	    p_catenary_.clear();
+		
+	    l_cat_ = dist_init_final_* (1.0 + delta_);
+	    if (l_cat_ > length_tether_max){
+	        check_catenary = false;
+			printf("interpolated_cat bigger than maximum length\n");
+			hard_collision_ = true;
+	        break;
+	    }
+
+		// printf("pose[%i] dist_init_final_=[%f] L=[%f] p_reel=[%f %f %f] p_uav=[%f %f %f] \n", p_, dist_init_final_, l_cat_, p_reel_.x, p_reel_.y, p_reel_.z, vec_pose_init_uav[p_].x,vec_pose_init_uav[p_].y, vec_pose_init_uav[p_].z);	
+
+	    bool just_one_axe = bc.configBisection(l_cat_, p_reel_.x, p_reel_.y, p_reel_.z, vec_pose_init_uav[p_].x, vec_pose_init_uav[p_].y, vec_pose_init_uav[p_].z, false);
+		bc.getPointCatenary3D(p_catenary_);
+		double d_min_point_cat = 100000;
+		if (p_catenary_.size() > 2){
+		    for (size_t i = 0 ; i < p_catenary_.size() ; i++){
+		        geometry_msgs::Point point_cat, p_in_cat_;
+		        if (p_catenary_[i].z < ws_z_min*map_resolution + ((1*map_resolution)+security_dis_ca_)){
+		            check_catenary = false;
+					printf("interpolated_cat_collison in the floor\n");
+					hard_collision_ = true;
+		            break;
+		        }
+		        p_in_cat_.x = p_catenary_[i].x;
+		        p_in_cat_.y = p_catenary_[i].y;
+		        p_in_cat_.z = p_catenary_[i].z;
+		        double dist_cat_obs;
+		        bool is_into_ = grid_3D->isIntoMap(p_in_cat_.x,p_in_cat_.y,p_in_cat_.z);
+		        if(is_into_)
+		            dist_cat_obs =  grid_3D->getPointDist((double)p_in_cat_.x,(double)p_in_cat_.y,(double)p_in_cat_.z) ;
+	            else
+	                dist_cat_obs = -1.0;
+	            if (d_min_point_cat > dist_cat_obs){
+	                d_min_point_cat = dist_cat_obs;
+	            }
+	            if (dist_cat_obs < security_dis_ca_){
+	                delta_ = delta_ + 0.001;
+	                increase_catenary = true;
+	                break;
+	            }
+	            point_cat.x = p_catenary_[i].x;
+	            point_cat.y = p_catenary_[i].y;
+	            point_cat.z = p_catenary_[i].z;
+	        }
+	        if (check_catenary && !increase_catenary){
+	            check_catenary = false;
+	        }
+	    }
+	    else{
+	        check_catenary = false;
+	    }
+	}while (check_catenary);
+
+	if (!check_catenary && !hard_collision_)
+		return true;
+	else
+		return false;
 }
 
 void OptimizerLocalPlanner::cleanResidualConstraintsFile()

@@ -56,7 +56,7 @@ class bisectionCatenary
         //Find points with sign changes in interval a-b, times that function pass through the origin 
         virtual bool lookingSignChanging (double a, double b, int mode_);
         virtual double functionBisection(double xr_aux, int mode_);
-        virtual void getPointCatenary3D(vector<geometry_msgs::Point> &_v_p);
+        virtual void getPointCatenary3D(vector<geometry_msgs::Point> &_v_p, bool dist_interpolation_ = true);
         virtual void getPointCatenaryStraight(vector<geometry_msgs::Point> &_v_p);
         virtual void resetVariables();
         virtual void setFactorBisection(double _fa,double _fb);
@@ -80,16 +80,19 @@ class bisectionCatenary
         //Lashing points(X1,Y1,Z1) and (X2,Y2,Z2)
         double X1,Y1,Z1,X2,Y2,Z2;
           
-        double factor_bisection_a, factor_bisection_b;
+        double factor_bisection_a, factor_bisection_b, min_distance_cat_obs;
 
         geometry_msgs::Point min_point_z_cat, mid_point_cat;
         int pos_in_cat_z_min, mid_p_cat;
 
         // To manage information related with distance obst-cat, catenary feasibility, and grid3D
         std::vector<double> dist_obst_cat;
+        std::vector<bool> through_obst;
+        std::vector<int> kind_status;
         std::vector<int> pos_cat_in_coll;
         std::vector<int> cat_between_obs;
         int first_coll, last_coll, new_coll;
+        int num_point_per_unit_length;
 
 	    ros::Publisher points_between_cat_marker_pub_;
     	visualization_msgs::MarkerArray p_bet_cat_marker;
@@ -109,7 +112,6 @@ class bisectionCatenary
         double bs_p, bs_Y0, bs_X0;
         double n_interval; 
         int num_point_catenary;
-        int num_point_per_unit_length;
         double c_value, h_value, Xc, Yc, XC, YC, ZC;
         double _direc_x , _direc_y, _direc_z, distance_3d ; 
 

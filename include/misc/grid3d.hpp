@@ -315,7 +315,7 @@ public:
 	TrilinearParams getPointDistInterpolation(double x, double y, double z)
 	{
 		TrilinearParams r;
-		if(x >= min_X && y >= min_Y && z >= min_Z && x < max_X && y < max_Y && z < max_Z){
+		if(x > min_X && y > min_Y && z > min_Z && x < max_X && y < max_Y && z < max_Z){
 			// printf("getPointDistInterpolation: point2grid(x, y, z)=%i\n",point2grid(x, y, z));
 			r = m_triGrid[point2grid(x, y, z)];
 		}

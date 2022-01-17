@@ -203,7 +203,7 @@ void bisectionCatenary::checkStateCatenary(double _x1, double _y1, double _z1, d
         _direc_y = 0.0;    
 }
 
-void bisectionCatenary::getPointCatenary3D(vector<geometry_msgs::Point> &v_p_)
+void bisectionCatenary::getPointCatenary3D(vector<geometry_msgs::Point> &v_p_, bool dist_interpolation_)
 {
     std::vector<geometry_msgs::Point> v_p_bet_cat;
     double p_z_min = 1000.0;
@@ -223,6 +223,7 @@ void bisectionCatenary::getPointCatenary3D(vector<geometry_msgs::Point> &v_p_)
         float p_x_, p_y_, p_z_;
         first_coll = last_coll = 0;
 
+        min_distance_cat_obs = 1000.0;
         if (use_markers)
             clearMarkers(p_bet_cat_marker, 50, points_between_cat_marker_pub_);
 
@@ -240,40 +241,23 @@ void bisectionCatenary::getPointCatenary3D(vector<geometry_msgs::Point> &v_p_)
             if(get_distance_data){
                 bool is_into_ = grid_3D->isIntoMap(p_x_,p_y_,p_z_);
                 if(is_into_){
-                    TrilinearParams d = grid_3D->getPointDistInterpolation((double)p_.x, (double)p_.y, (double)p_.z);
+                    if (dist_interpolation_){
+                    TrilinearParams d = grid_3D->getPointDistInterpolation((double)p_x_, (double)p_y_, (double)p_z_);
                     double x = p_.x;
                     double y = p_.y;
                     double z = p_.z;
                     dist_cat_obs= (d.a0 + d.a1*x + d.a2*y + d.a3*z + d.a4*x*y + d.a5*x*z + d.a6*y*z + d.a7*x*y*z); 
-                    // dist_cat_obs =  grid_3D->getPointDist(p_x_,p_y_,p_z_);
+                    }
+                    else
+                        dist_cat_obs =  grid_3D->getPointDist(p_x_,p_y_,p_z_);
                 }
                 else
                     dist_cat_obs = -1.0;
                 dist_obst_cat.push_back(dist_cat_obs);
-                
-                // if(dist_cat_obs < bound_obst ){
-                    // if(i>0){
-					// 	octomap::point3d r_;
-					// 	octomap::point3d s_(p_.x,p_.y,p_.z); //start for rayCast
-					// 	octomap::point3d d_(v_p_[i-1].x - p_.x, v_p_[i-1].y - p_.y, v_p_[i-1].z - p_.z); //direction for rayCast
 
-                    //     bool r_cast_coll = false; 
-                    //     r_cast_coll = octotree_full->castRay(s_, d_, r_);
-                    //     double dist12_ = sqrt ( (v_p_[i-1].x-s_.x())*(v_p_[i-1].x-s_.x())+
-                    //                             (v_p_[i-1].y-s_.y())*(v_p_[i-1].y-s_.y())+ 
-					//    		                    (v_p_[i-1].z-s_.z())*(v_p_[i-1].z-s_.z()) );
-                    //     double distObs_ = sqrt ((s_.x()-r_.x())*(s_.x()-r_.x())+(s_.y()-r_.y())*(s_.y()-r_.y())+(s_.z()-r_.z())*(s_.z()-r_.z()) );
-                    //         // if((dist_cat_obs < bound_obst ) || r_cast_coll && distObs_ <= dist12_){
-                    //         if(r_cast_coll && distObs_ <= dist12_){
-                    //             cat_between_obs.push_back(i);	
-                    //             if (first_coll == 0){
-                    //                 first_coll  = i;    
-                    //                 check_continuity_++;
-                    //             }
-                    //             last_coll = i;
-                    //             pos_cat_in_coll.push_back(i);
-                    //         }
-                    // }
+                if (min_distance_cat_obs > dist_cat_obs && min_distance_cat_obs > 0.0)
+                    min_distance_cat_obs = dist_cat_obs;
+                
                 if( i>0 ){ //Check if there is obtacle between two catenary points
                     double d_p_cat = sqrt((p_.x-v_p_[i-1].x)*(p_.x-v_p_[i-1].x)+(p_.y-v_p_[i-1].y)*(p_.y-v_p_[i-1].y)+(p_.z-v_p_[i-1].z)*(p_.z-v_p_[i-1].z));
                     int n_p_bet_cat = round (d_p_cat/0.04);
@@ -293,31 +277,49 @@ void bisectionCatenary::getPointCatenary3D(vector<geometry_msgs::Point> &v_p_)
                         p_b_cat_.y = v_p_[i-1].y + sin(tetha_) * interval_xy*(j);
                         p_b_cat_.z = v_p_[i-1].z + (j)*(interval_z);
                         v_p_bet_cat.push_back(p_b_cat_);
-                        // printf("\t v_p_bet_cat.size()=%lu p_b_cat_[%f %f %f]\n", v_p_bet_cat.size(), p_b_cat_.x, p_b_cat_.y, p_b_cat_.z);
-                        double p_b_cat_x_ = resolution * round( (p_b_cat_.x) * div_res);
-                        double p_b_cat_y_ = resolution * round( (p_b_cat_.y) * div_res);
-                        double p_b_cat_z_ = resolution * round( (p_b_cat_.z) * div_res);
-                        bool _is_into_ = grid_3D->isIntoMap(p_b_cat_x_, p_b_cat_y_, p_b_cat_z_);
-                        double d_obt_cat;
-                        if (_is_into_)
-                            d_obt_cat = grid_3D->getPointDist((double)p_b_cat_.x,(double)p_b_cat_.y,(double)p_b_cat_.z);
-                        else
-                            d_obt_cat = -1.0;
-                        double a_;
-                        if(j==0)
-                            a_ = 1.0;
-                        else
-                            a_ = 0.80;
-                        if (d_obt_cat < bound_obst*a_){
-                            cat_between_obs.push_back(i);	
-                            if (first_coll == 0){
-                                first_coll  = i-1;   
-                                pos_cat_in_coll.push_back(first_coll); 
-                                // check_continuity_++;
+                        if(j > 0){
+                            // printf("\t v_p_bet_cat.size()=%lu p_b_cat_[%f %f %f]\n", v_p_bet_cat.size(), p_b_cat_.x, p_b_cat_.y, p_b_cat_.z);
+                            double p_b_cat_x_ = resolution * round( (p_b_cat_.x) * div_res);
+                            double p_b_cat_y_ = resolution * round( (p_b_cat_.y) * div_res);
+                            double p_b_cat_z_ = resolution * round( (p_b_cat_.z) * div_res);
+                            bool _is_into_ = grid_3D->isIntoMap(p_b_cat_x_, p_b_cat_y_, p_b_cat_z_);
+                            double d_obt_cat;
+                            if (_is_into_)
+                                d_obt_cat = grid_3D->getPointDist((double)p_b_cat_.x,(double)p_b_cat_.y,(double)p_b_cat_.z);
+                            else
+                                d_obt_cat = -1.0;
+                            double a_;
+                            if(j==0)
+                                a_ = 1.0;
+                            else
+                                a_ = 0.80;
+
+                            octomap::point3d r_;
+                            octomap::point3d s_(v_p_bet_cat[j-1].x,v_p_bet_cat[j-1].y,v_p_bet_cat[j-1].z); //start for rayCast
+                            octomap::point3d d_(v_p_bet_cat[j].x-v_p_bet_cat[j-1].x,v_p_bet_cat[j].y-v_p_bet_cat[j-1].y,v_p_bet_cat[j].z-v_p_bet_cat[j-1].z); //direction for rayCast
+
+                            bool r_cast_coll = false; 
+                            r_cast_coll = octotree_full->castRay(s_, d_, r_);
+                            double dist12_ = sqrt ( (v_p_bet_cat[j].x-s_.x())*(v_p_bet_cat[j].x-s_.x())+
+                                                    (v_p_bet_cat[j].y-s_.y())*(v_p_bet_cat[j].y-s_.y())+ 
+                                                    (v_p_bet_cat[j].z-s_.z())*(v_p_bet_cat[j].z-s_.z()) );
+                            double distObs_ = sqrt ((s_.x()-r_.x())*(s_.x()-r_.x())+(s_.y()-r_.y())*(s_.y()-r_.y())+(s_.z()-r_.z())*(s_.z()-r_.z()) );
+                            bool ray_cat_coll_ = false;
+                            if(r_cast_coll && distObs_ <= dist12_)
+                                ray_cat_coll_ = true;
+                            through_obst.push_back(ray_cat_coll_);
+
+                            if (d_obt_cat < bound_obst*a_ && ray_cat_coll_){
+                            // if (d_obt_cat < bound_obst*a_){
+                                cat_between_obs.push_back(i);	
+                                if (first_coll == 0){
+                                    first_coll  = i-1;   
+                                    pos_cat_in_coll.push_back(first_coll); 
+                                }
+                                last_coll = i;
+                                pos_cat_in_coll.push_back(i);
+                                break;
                             }
-                            last_coll = i;
-                            pos_cat_in_coll.push_back(i);
-                            break;
                         }
                     }
                     if (use_markers) 

@@ -64,14 +64,14 @@ public:
 	struct BisectionCatenary 
 	{
 		BisectionCatenary (ros::NodeHandlePtr nhP_, Grid3d* g_3D_, octomap::OcTree* o_full_, double sb_, pcl::KdTreeFLANN <pcl::PointXYZ> kdT_, 
-		pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_, pcl::KdTreeFLANN <pcl::PointXYZ> kdT_trav_, pcl::PointCloud <pcl::PointXYZ>::Ptr pc_trav_, int size_)
-		: nhP(nhP_), g_3D(g_3D_), o_full(o_full_), sb(sb_), kdT(kdT_), o_p(o_p_), kdT_trav(kdT_trav_), pc_trav(pc_trav_), size(size_)
+		pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_, pcl::KdTreeFLANN <pcl::PointXYZ> kdT_trav_, pcl::PointCloud <pcl::PointXYZ>::Ptr pc_trav_, int size_, float map_resolution)
+		: nhP(nhP_), g_3D(g_3D_), o_full(o_full_), sb(sb_), kdT(kdT_), o_p(o_p_), kdT_trav(kdT_trav_), pc_trav(pc_trav_), size(size_), m_r_(map_resolution)
 		{
 			catenary_marker_pub_ = nhP_->advertise<visualization_msgs::MarkerArray>("catenary_marker", 1);
 			plane_pub_ = nhP_->advertise<visualization_msgs::MarkerArray>("plane_markerArray", 1);
 			obs_plane_pub_ = nhP_->advertise<visualization_msgs::MarkerArray>("obsplane_markerArray", 1);
 		}
-		bool operator()(const double *state1, const double *state2, const double *state2f, const double *Length, double *Catenary) const 
+		bool operator()(const double *state1,const double *state2, const double *state2f,const double *Length, double *Catenary) const 
 		{
 			MarkerPublisher mP_;
 			bisectionCatenary bc(nhP);
@@ -83,22 +83,17 @@ public:
 			geometry_msgs::Point min_point_z_cat;
 
 			int id_marker_ = state2[0];		// Related with Marker frame.id
-			double min_val_proximity_ = 0.015;
+			double min_val_proximity_ = 0.04;
+			// double min_val_proximity_ = sb;
 			double cost_cat = 0.0;
-			int pos_in_cat_z_min, first_coll, last_coll;
-
-			// std::cout << "state1["<< state1[0] << "," << state1[1] << "," << state1[2] << "," << state1[3] 
-					//   << "] , state2[" << state2[0] << ","<< state2[1] << "," << state2[2] << "," << state2[3] 
-					//   << "] , state2f[" << state2f[0] << "," << state2f[1] << "," << state2f[2] << "," << state2f[3] 
-					//   << "] , Length[" << Length[0] << "," << Length[1] << "," << Length[2] << "," << Length[3]<< "]" 
-					//   << "] , Catenary[" << Catenary[0] << "," << Catenary[1] << "," << Catenary[2] << "," << Catenary[3]<< "]" << std::endl;
+			int first_coll, last_coll;
 
 			points_catenary.clear();  dist_obst_cat.clear(); pos_cat_in_coll.clear(); cat_between_obs.clear(); 
 			bc.readDataForCollisionAnalisys(g_3D, sb, o_full, kdT_trav, pc_trav);
 			bool just_one_axe = bc.configBisection(Length[1], state1[1], state1[2], state1[3], state2[1], state2[2], state2[3], true);
 			bc.getPointCatenary3D(points_catenary);
 			bc.getStatusCollisionCat(dist_obst_cat, pos_cat_in_coll, cat_between_obs, first_coll, last_coll);
-			bc.getMinPointZCat(min_point_z_cat, pos_in_cat_z_min);
+			double min_distance_cat_obs_ = bc.min_distance_cat_obs;
 
 			mP_.markerPoints(catenary_marker_, points_catenary, id_marker_, size, catenary_marker_pub_);
 			if (bc.L_minor_than_D == true){
@@ -110,7 +105,6 @@ public:
 					std::cin >> yy_ ;
 				}
 			}
-
 
 			if (( (state2f[1]-state2[1]) != 0.0 || (state2f[2]-state2[2]) != 0.0 || (state2f[3]-state2[3]) != 0.0) && first_coll!= 0){
 				octomap::point3d r_;
@@ -127,22 +121,40 @@ public:
 			double x_, y_, z_, cost_ , add_extracost;
 			double d_below_z_trav = 0.0;
 			geometry_msgs::Point n_coll_cat, point_coll_trav;
-			bool is_collision = false;
+			int is_collision = 0;
+			int count_coll = 0;
 			for (size_t i = 0; i < points_catenary.size(); i++){
-				TrilinearParams d = g_3D->getPointDistInterpolation((double)points_catenary[i].x, (double)points_catenary[i].y, (double)points_catenary[i].z);
-				x_ = points_catenary[i].x;
-				y_ = points_catenary[i].y;
-				z_ = points_catenary[i].z;
-				double d_obs= (d.a0 + d.a1*x_ + d.a2*y_ + d.a3*z_ + d.a4*x_*y_ + d.a5*x_*z_ + d.a6*y_*z_ + d.a7*x_*y_*z_);
+				double p_x_ = m_r_ * round( (points_catenary[i].x) * 1/m_r_);
+				double p_y_ = m_r_ * round( (points_catenary[i].y) * 1/m_r_);
+				double p_z_ = m_r_ * round( (points_catenary[i].z) * 1/m_r_);
+				// bool _is_into_ = g_3D->isIntoMap((double)points_catenary[i].x, (double)points_catenary[i].y, (double)points_catenary[i].z);
+				bool _is_into_ = g_3D->isIntoMap((double)p_x_, (double)p_y_, (double)p_z_);
+				double d_obs;
+				if (_is_into_){
+					// TrilinearParams d = g_3D->getPointDistInterpolation((double)points_catenary[i].x, (double)points_catenary[i].y, (double)points_catenary[i].z);
+					TrilinearParams d = g_3D->getPointDistInterpolation((double)p_x_, (double)p_y_, (double)p_z_);
+					x_ = p_x_;
+					y_ = p_y_;
+					z_ = p_z_;
+					d_obs= (d.a0 + d.a1*x_ + d.a2*y_ + d.a3*z_ + d.a4*x_*y_ + d.a5*x_*z_ + d.a6*y_*z_ + d.a7*x_*y_*z_);
+				}
+				else
+					d_obs = -1.0;
+
 
 				if((i >= first_coll && i <= last_coll && i > 0) ){
-					cost_ = (1.0/min_val_proximity_)*6.0;
-					is_collision = true;
+					cost_ = (1.0/min_val_proximity_)*2.0;
+					is_collision = 1;
+					count_coll++;
 				}
 				else if (d_obs < sb){ 
 					if (d_obs < min_val_proximity_)
 						d_obs = min_val_proximity_;
-					cost_ = (1.0/d_obs)*4.0;
+					// cost_ = (1.0/d_obs)*1.0;
+					cost_ = (1.0/min_distance_cat_obs_)*2.0;
+					// cost_ = (1.0/min_val_proximity_)*1.0;
+					is_collision = 2;
+					count_coll ++;
 				}
 				else
 					cost_ = (1.0/d_obs)*1.0;
@@ -150,16 +162,36 @@ public:
 				cost_cat = cost_cat + cost_;
 			}
 
-			if (is_collision)
-				add_extracost = 0.0;
-			else
-				add_extracost = 0.0;
-				
+			// if (is_collision==1){
+			// 	for(int k = 0 ; k < bc.dist_obst_cat.size(); k++){
+			// 		printf("dist_obst_cat[%i/%lu]= %f \n", k,dist_obst_cat.size(),dist_obst_cat[k]);
+			// 	}
+			// 	std::string yy_ ;
+			// 	yy_ = "s";
+			// 	std::cout << "Cat[" << state1[0] <<"] in collision["<<first_coll << "-"<<last_coll  << "] cost="<< cost_cat <<". Press key 'y': ";
+			// 	while (yy_ != "y"){
+			// 		std::cin >> yy_ ;
+			// 	}
+			// }
+			// if (is_collision==2){
+			// 	for(int k = 0 ; k < bc.dist_obst_cat.size(); k++){
+			// 		printf("dist_obst_cat[%i/%lu]= %f \n", k,dist_obst_cat.size(),dist_obst_cat[k]);
+			// 	}
+			// 	std::string yy_ ;
+			// 	yy_ = "s";
+			// 	std::cout << "Cat[" << state1[0] <<"] close obstacle["<<first_coll << "-"<<last_coll  << "] cost="<< cost_cat <<". Press key 'y': ";
+			// 	while (yy_ != "y"){
+			// 		std::cin >> yy_ ;
+			// 	}
+			// }
+
 			Catenary[0] = cost_cat;
 			Catenary[1] = first_coll;
 			Catenary[2] = last_coll;
-			Catenary[3] = last_coll-first_coll;
+			// Catenary[3] = last_coll-first_coll;
+			Catenary[3] = count_coll;
 			Catenary[4] = points_catenary.size();
+			Catenary[5] = bc.num_point_per_unit_length;
 
 			return true;
 		}
@@ -167,6 +199,7 @@ public:
 		ros::NodeHandlePtr nhP;
 
 		octomap::OcTree* o_full;
+		float m_r_;
 		double sb;
 		int size;
 		pcl::KdTreeFLANN <pcl::PointXYZ> kdT, kdT_trav;
@@ -179,129 +212,63 @@ public:
 	CatenaryFunctor(double weight_factor_1, double weight_factor_3, double safty_bound, float min_length_cat, double length_tether_max_,
 					pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points, Grid3d* grid_3D_,
 					pcl::KdTreeFLANN <pcl::PointXYZ> trav_kdT, pcl::PointCloud <pcl::PointXYZ>::Ptr trav_pc, geometry_msgs::Vector3 pos_reel_ugv, int size, 
-					geometry_msgs::Vector3 fix_pos_ref, ros::NodeHandlePtr nhP_, octomap::OcTree* octotree_full_, bool write_data)
+					geometry_msgs::Vector3 fix_pos_ref, ros::NodeHandlePtr nhP_, octomap::OcTree* octotree_full_, float map_resolution, bool write_data)
 					: wf_1(weight_factor_1), sb_(safty_bound), m_L_c_(min_length_cat), kdT_(kdT_From_NN), 
 					o_p_(obstacles_Points), g_3D_(grid_3D_),kdT_trav_(trav_kdT), pc_trav_(trav_pc), pos_reel_ugv_(pos_reel_ugv),size_(size), 
-					fp_ref(fix_pos_ref), o_full_(octotree_full_), w_d_(write_data)
+					fp_ref(fix_pos_ref), o_full_(octotree_full_), m_r_(map_resolution), w_d_(write_data)
 		{
 			nhP = nhP_;
 			
 			ray_casting.reset(new ceres::CostFunctionToFunctor<1,4,4>(
 							  new ceres::NumericDiffCostFunction<RayCasting, ceres::CENTRAL,1,4,4>(new RayCasting(o_full_))));
 
-			bisection_catenary.reset(new ceres::CostFunctionToFunctor<5,4,4,4,2>(
-							  new ceres::NumericDiffCostFunction<BisectionCatenary, ceres::CENTRAL,5,4,4,4,2>
-							  (new BisectionCatenary(nhP_, g_3D_, o_full_, sb_, kdT_, o_p_, kdT_trav_, pc_trav_, size_))));
-							  
+			bisection_catenary.reset(new ceres::CostFunctionToFunctor<6,4,4,4,2>(
+							  new ceres::NumericDiffCostFunction<BisectionCatenary, ceres::CENTRAL,6,4,4,4,2>
+							  (new BisectionCatenary(nhP_, g_3D_, o_full_, sb_, kdT_, o_p_, kdT_trav_, pc_trav_, size_, m_r_))));
 		}
 
 		template <typename T>
 		bool operator()(const T* const stateUGV, const T* const stateUAV, const T* const stateCat, T* residual) const 
 		{
 			/*----------------------  Define Variables  ----------------------*/
-			T ugv_reel[4];
-			T uav_fix[4];
+
 			T pr_ugv_ [3];
+			T L_, d_obs_[1];
 
 			pr_ugv_[0] = T{pos_reel_ugv_.x};
 			pr_ugv_[1] = T{pos_reel_ugv_.y};
 			pr_ugv_[2] = T{pos_reel_ugv_.z};
 
-			ugv_reel[0] = stateUGV[0]; 
-			ugv_reel[1] = stateUGV[1]; 
-			ugv_reel[2] = stateUGV[2];
-			ugv_reel[3] = stateUGV[3] + pr_ugv_[2];
-			uav_fix[0] = stateUAV[0]; 
-			uav_fix[1] = T{fp_ref.x}; 
-			uav_fix[2] = T{fp_ref.y}; 
-			uav_fix[3] = T{fp_ref.z}; 
-	
-			// std::cout << std::fixed;
-			// std::cout << std::setprecision(4);
-			// std::cout << "CatenaryFunctor : stateUGV["<< stateUGV[1] << "," << stateUGV[2] << "," << stateUGV[3] << 
-			// 			 "] stateUAV[" << stateUAV[1] << "," << stateUAV[2] << "," << stateUAV[3] << 
-			// 			 "] ugv_reel[" << ugv_reel[1] << "," << ugv_reel[2] << "," << ugv_reel[3] <<
-			// 			 "] stateCat[" << stateCat[1] << "]" << std::endl;
+			const T ugv_reel[4] = {stateUGV[0],stateUGV[1],stateUGV[2],stateUGV[3] + pr_ugv_[2]};
+			const T stateUAV_[4] = {stateUAV[0], stateUAV[1], stateUAV[2], stateUAV[3]};
+			const T uav_fix[4] = {stateUAV[0], T{fp_ref.x}, T{fp_ref.y}, T{fp_ref.z}};
 
 			T dist  = T{ 1.005 * sqrt(pow(stateUAV[1]-ugv_reel[1],2)+pow(stateUAV[2]-ugv_reel[2],2)+pow(stateUAV[3]-ugv_reel[3],2))}; 
-			double arg_f = m_L_c_;
-			T safety_length = T{arg_f};
-			T Length_[2], d_obs_[1]; 
-
 			if (stateCat[1] < dist )
-				Length_[1] = dist;
+				L_ = dist;
 			else
-				Length_[1] = stateCat[1];
+				L_ = stateCat[1];
 
+			const T Length_[2] = {stateCat[0] , L_};
 			/*----------------------  Compute Ray Casting for LoS between reel-UGV and UAV to get L----------------------*/
 
             T kind_length_initial[1];
 			if ((ugv_reel[1]-stateUAV[1]) != 0.0 || (ugv_reel[2]-stateUAV[2]) != 0.0 || (ugv_reel[3]-stateUAV[3]) != 0.0)
-				(*ray_casting)(ugv_reel, stateUAV, kind_length_initial);
+				(*ray_casting)(ugv_reel, stateUAV_, kind_length_initial);
 
-			// Length_[0] = stateCat[0];
-			// if (kind_length_initial[0]==1.0 && safety_length > dist){
-			// 	if (stateCat[1] < safety_length)
-			// 		Length_[1] = safety_length;
-			// 	else
-			// 		Length_[1] = stateCat[1];
-			// }
-			// else{
-			// 	if (stateCat[1] < dist && dist < 4.0)
-			// 		Length_[1] = 1.010 * dist;
-			// 	else if (stateCat[1] < dist && dist > 4.0)
-			// 		Length_[1] = 1.005 * dist;
-			// 	else
-			// 		Length_[1] = stateCat[1];
-			// }
-
-			// std::cout << std::fixed;
-			// std::cout << std::setprecision(4);
-			// std::cout << "CatenaryFunctor : Length["<< Length_[0] << "," << Length_[1] << "]" << std::endl; 
 			/*----------------------  Compute Catenary Bisection Method  ----------------------*/
 			
-			T catenary[5];
-			(*bisection_catenary)(ugv_reel, stateUAV, uav_fix, Length_, catenary);
-			// std::cout << "CatenaryFunctor : ["<< stateCat[0] << "] cat.size= " << catenary[4] << std::endl; 
+			T catenary[6];
+			(*bisection_catenary)(ugv_reel, stateUAV_, uav_fix, Length_, catenary);
 
 			/********************************   Compute Residual   ********************************/
 
-			// double max_value_residual = 10000.0;
-			// double min_value_residual = 1000.0;
-			// T m_, f_;
-			// if (stateCat[1] < Length_[1]) {
-			// 	m_ = T{(max_value_residual - min_value_residual)/(Length_[1]*0.9 - Length_[1])};
-			// 	f_ = T{1.0};
-			// }
-			// else{
-			// 	m_ = T{0.0};
-			// 	f_ = T{0.0};		
-			// }
-
-			// T diff_cat_coll; 
-			// if (catenary[2] == 0 && catenary[1]== 0)
-			// 	diff_cat_coll = T{1.0};
-			// else
-			// 	diff_cat_coll = catenary[3]; //last_coll-first_coll
-			
 			T cost_cat_ = catenary[0];
-
-			// T residual_0 = (cost_cat_/Length_[1])*diff_cat_coll *diff_cat_coll ;
-			// T residual_1 = ( ( m_ * (stateCat[1] - Length_[1]) + min_value_residual) * f_);
-
-			// residual[0] = wf_1 * ( residual_0  + residual_1);
-			// residual[0] = wf_1 * ((cost_cat_/Length_[1]));
-			// residual[0] = wf_1 * (cost_cat_);
-			residual[0] = wf_1 * (cost_cat_/(catenary[4]-catenary[3]));
-
-			// std::cout << std::fixed;
-			// std::cout << std::setprecision(4);
-			// std::cout <<"CatenaryFunctor[" << stateCat[0] <<"] : residual[0]= " <<residual[0] ;
-			// std::cout << " cost_cat_= " << cost_cat_; 
-			// // std::cout << " R[0]= " <<residual_0 << " R[1]= " <<residual_1; 
-			// std::cout <<" , [stateCat[1]=" << stateCat[1]<< "/L_s=" << Length_[1] << "] , pts_cat_coll=["
-			// 		  <<catenary[3] << "]" ;
-			// std::cout << std::endl ;
+			// residual[0] = wf_1 * (cost_cat_/(catenary[4]-catenary[3]));
+			// residual[0] = wf_1 * (cost_cat_/(L_-catenary[3]/catenary[5]));
+			// T m_ = (20.0 - 1.0 )/(catenary[4] - 0.0);
+			// T y_ =  m_ * (catenary[3] - 0.0) + 1.0;
+			residual[0] = wf_1 * (cost_cat_);
 
 			if(w_d_){
 				std::ofstream ofs;
@@ -315,41 +282,45 @@ public:
 				std::string name_output_file2 = "/home/simon/residuals_optimization_data/catenary2.txt";
 				ofs2.open(name_output_file2.c_str(), std::ofstream::app);
 				if (ofs2.is_open()) 
-					ofs2 << residual[0] << "; "
-						<< "[" << stateUGV[0] << "]; "
+					ofs2 << residual[0] << " ; "
+						<< "(" << stateUGV[0] << "); "
 						<< "L= " << stateCat[1] << "; "
-						<< "/L_s= " << Length_[1] << "; " 
-						<< "/d= " << dist << "; " 
-						<< "cat_coll[" << catenary[1] << "-" << catenary[2] << "/" << catenary[3] << "]; "
-						<< "cost_cat_=[" << cost_cat_ << "] ; "
-						// << "N=[" << cost_cat_/Length_[1] << "] ; "
-						<< "N=[" << cost_cat_/(catenary[4]-catenary[3]) << "] ; "
-						// << "R[0]=" << residual_0 << "; R[1]=" <<residual_1 << " ; " 
-						<< "cat.size()= " << catenary[4]  << "; "
-						// << "d_below_z_trav= " << d_below_z_trav << "; "
-						<< " is_LoS= " << kind_length_initial[0] <<"/" 
+						<< "L_s= " << Length_[1] << "; " 
+						<< "d= " << dist << "; " 
+						<< "cat_coll=" << catenary[1] << "-" << catenary[2] << "-" << catenary[3] << "; "
+						<< "cost_cat_=" << cost_cat_ << "; "
+						// << "N=" << cost_cat_/(catenary[4]-catenary[3]) << "; "
+						<< "N=" << cost_cat_/(L_-catenary[3]/catenary[5]) << "; "
+						// << "y_" << y_ << "; "
+						<< "cat.size= " << catenary[4]  << "; "
+						<< "num_point_per_unit_length= " << catenary[5]  << "; "
+						<< " is_LoS= " << kind_length_initial[0] <<";" 
+						<< "posUGV=" << stateUGV[1] << "-" << stateUGV[2] << "-" << stateUGV[3] << "-"<<";"
+						<< "posUAV=" << stateUAV[1] << "-" << stateUAV[2] << "-" << stateUAV[3] << "-"<<"/"
 						<< std::endl;
 				ofs2.close();
 			}
 		
-			// std::string yy_ ;
-			// yy_ = "s";
-			// /********************* To obligate stop method and check Optimization result *********************/
-			// 	std::cout << " Press key 'y': ";
-			// 	while (yy_ != "y"){
-			// 		std::cin >> yy_ ;
-			// 	}
-			// /**********************************************************************************************/
-
+			// if (catenary[3] > T{0.0}){
+			// 	std::string yy_ ;
+			// 	yy_ = "s";
+			// 	/********************* To obligate stop method and check Optimization result *********************/
+			// 		std::cout << " Press key 'y': ";
+			// 		while (yy_ != "y"){
+			// 			std::cin >> yy_ ;
+			// 		}
+			// 	/**********************************************************************************************/
+			// }
+			
 		return true;
 		}
-
+		
         std::unique_ptr<ceres::CostFunctionToFunctor<1,4,4> > ray_casting;
-        std::unique_ptr<ceres::CostFunctionToFunctor<5,4,4,4,2> > bisection_catenary;
+        std::unique_ptr<ceres::CostFunctionToFunctor<6,4,4,4,2> > bisection_catenary;
 
 		bool w_d_;
 		double wf_1;
-		float m_L_c_;
+		float m_L_c_, m_r_;
 		int size_;
 		geometry_msgs::Vector3 pos_reel_ugv_, fp_ref;
 

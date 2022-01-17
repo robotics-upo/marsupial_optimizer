@@ -169,6 +169,7 @@ public:
 	void processingCatenary();
 	void publishOptimizedTraj();
 	void cleanResidualConstraintsFile();
+	bool computeCatenary(int p_, int mode_, double &l_cat_);
 	
 	upo_actions::ExecutePathResult action_result;
 

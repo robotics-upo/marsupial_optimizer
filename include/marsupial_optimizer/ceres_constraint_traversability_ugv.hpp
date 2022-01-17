@@ -52,8 +52,8 @@ public:
 
     struct TraversabilityFunctor 
     {
-        TraversabilityFunctor(double weight_factor, pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points, float map_resolution, bool write_data)
-            : wf_(weight_factor), kdT_(kdT_From_NN), o_p_(obstacles_Points), m_r_(map_resolution), w_d_(write_data)
+        TraversabilityFunctor(double weight_factor, pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points, bool write_data)
+            : wf_(weight_factor), kdT_(kdT_From_NN), o_p_(obstacles_Points), w_d_(write_data)
         {
             compute_nearest_distance.reset(new ceres::CostFunctionToFunctor<4,4>(
                                     new ceres::NumericDiffCostFunction<ComputeDistanceTraversability,
@@ -104,7 +104,6 @@ public:
         }
 
         bool w_d_;
-        float m_r_;
         std::unique_ptr<ceres::CostFunctionToFunctor<4,4> > compute_nearest_distance;
         double wf_;
         pcl::KdTreeFLANN <pcl::PointXYZ> kdT_;
