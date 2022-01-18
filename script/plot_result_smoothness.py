@@ -81,13 +81,14 @@ Tlines_uav.pop(0) # To remove first line in case to have titles
 
 # Filling Tuples
 for l in TlinesI:
-    line = re.split(';|/|', l)
+    sum_element_array = l.count(';') + l.count('/')
+    line = re.split(';|/', l)
     sum_smooth_ugv = 0
     sum_smooth_uav = 0
     count+=1
     TI_ugv = []
     TI_uav = []
-    for ln in range(0, len(line)/3, 3):
+    for ln in range(0, sum_element_array, 3):
         TI_ugv.append(float(line[ln+1]))
         TI_uav.append(float(line[ln+2]))
         sum_smooth_ugv = sum_smooth_ugv + float(line[ln+1])
@@ -103,12 +104,13 @@ I_mean_smooth_ugv = t_I_sum_smooth_ugv/count
 I_mean_smooth_uav = t_I_sum_smooth_uav/count
 
 for l in TlinesO:
-    line = re.split(';|/|', l)
+    sum_element_array = l.count(';') + l.count('/')
+    line = re.split(';|/', l)
     sum_smooth_ugv = 0
     sum_smooth_uav = 0
     TO_ugv = []
     TO_uav = []
-    for ln in range(0, len(line)/3, 3):
+    for ln in range(0, sum_element_array, 3):
         TO_ugv.append(float(line[ln+1]))
         TO_uav.append(float(line[ln+2]))
         sum_smooth_ugv = sum_smooth_ugv + float(line[ln+1])
