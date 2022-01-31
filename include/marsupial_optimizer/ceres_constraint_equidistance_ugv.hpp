@@ -29,9 +29,9 @@ class EquiDistanceFunctorUGV
       double f_; 
       
       //Get distance between two consecutive poses
-      arg_d_pos= (pow(statePos1[1]-statePos2[1],2)) + pow(statePos1[2]-statePos2[2],2) + pow(statePos1[3]-statePos2[3],2);
+      arg_d_pos = pow(statePos1[1]-statePos2[1],2) + pow(statePos1[2]-statePos2[2],2) + pow(statePos1[3]-statePos2[3],2);
       
-      if(arg_d_pos< 0.0001 && arg_d_pos > -0.0001)
+      if(arg_d_pos < 0.0001 && arg_d_pos > -0.0001)
         d_pos = T{0.0};
       else
         d_pos = sqrt(arg_d_pos);
@@ -39,28 +39,15 @@ class EquiDistanceFunctorUGV
       T max_value_residual = T{10.0};
       T min_value_residual = T{0.0};
       T m;
-      // T init_d1 = i_d*T{1.1};
-      // T init_d2 = i_d*T{0.9};
       T init_d = T{i_d};
-      // if (init_d1 >= d_pos && d_pos > init_d2){
-      //   m = T{0.0};
-      // }
-      // else if(d_pos > init_d1){
-      //   dr_ = init_d1; 
-      //   m = (max_value_residual- min_value_residual)/( 2.0*dr_ - dr_);
-      // }
-      // else if(init_d2 > d_pos){
-      //   dr_ = init_d2;
-      //   m = -(max_value_residual- min_value_residual)/( 2.0*dr_ - dr_);
-      // }
       
       m = (max_value_residual- min_value_residual)/( 1.5*init_d - init_d);
+      
       if(d_pos > init_d)
         f_ = 1.0;
       else
         f_ = 0.0;
 
-      // residual[0] = wf_ * m *(d_pos - dr_);  
       residual[0] = wf_ *( m *(d_pos - init_d) + min_value_residual)*f_;  
 
       // std::cout<< "EquiDistance UGV: residual[0]= "<<residual[0]<<" , i_d= "<< i_d << " , d_pos= "<< d_pos <<" , init_d= ["<<init_d1<<"/"<<init_d2<<"]"<<std::endl;

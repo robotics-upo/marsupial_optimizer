@@ -17,13 +17,15 @@ arg2 = sys.argv[2] # number of position to analize
 
 ## Get Data and compute percentage related with Trajectory Optimized
 #Open and managing files and data
-path_I = "/home/simon/results_marsupial_optimizer/"
+user_ = 'simon'
+
+path_I = '/home/'+ user_ +'/results_marsupial_optimizer/'
 file_pathI = path_I + 'results'+'_stage_'+ str(arg1)+'_InitPos_'+str(arg2)+'_initial_kinematic_ugv-uav.txt'
-path_O = "/home/simon/results_marsupial_optimizer/"
+path_O = '/home/'+ user_ +'/results_marsupial_optimizer/'
 file_pathO = path_O + 'results'+'_stage_'+ str(arg1)+'_InitPos_'+str(arg2)+'_optimized_kinematic_ugv-uav.txt'
-path_ugv = "/home/simon/results_marsupial_optimizer/"
+path_ugv = '/home/'+ user_ +'/results_marsupial_optimizer/'
 file_path_ugv = path_ugv + 'results'+'_stage_'+ str(arg1)+'_InitPos_'+str(arg2)+'_method_UGV.txt'
-path_uav = "/home/simon/results_marsupial_optimizer/"
+path_uav = '/home/'+ user_ +'/results_marsupial_optimizer/'
 file_path_uav = path_uav + 'results'+'_stage_'+ str(arg1)+'_InitPos_'+str(arg2)+'_method_UAV.txt'
 
 # Initialization variables

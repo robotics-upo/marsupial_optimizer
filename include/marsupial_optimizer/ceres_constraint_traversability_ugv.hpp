@@ -75,17 +75,11 @@ public:
             T max_value_residual = T{20.0};
             T min_value_residual = T{0.0};
             T value_dependent2 = T{0.05};
-            // T value_dependent1 = T{bound};
             T value_dependent1 = T{0.0};
             T m ;
-            // if ( bound > d_ugv_ )
-            //     m = T{0.0};
-            // else
-            //     m = (max_value_residual- min_value_residual)/(value_dependent2 - value_dependent1);
 
             m = (max_value_residual- min_value_residual)/(value_dependent2 - value_dependent1);
 
-            // residual[0] =  wf_ * m * (d_ugv_ - bound);
             residual[0] =  wf_ *( m * (d_ugv_ - value_dependent1) + min_value_residual);
 
 		    // std::cout << "TraversabilityFunctor["<<statePos[0] <<"] , residual[0]= "<< residual[0] << " , d_ugv_= " << d_ugv_ << " , bound= " << bound <<

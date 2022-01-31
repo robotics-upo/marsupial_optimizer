@@ -16,9 +16,11 @@ arg2 = sys.argv[2] # number of position to analize
 
 ## Get Data and compute percentage related with Trajectory Optimized
 #Open and managing files and data
-path = "/home/simon/results_marsupial_optimizer/"
+user_ = 'simon'
+
+path = '/home/'+ user_ +'/results_marsupial_optimizer/'
 file_path = path + 'results'+'_stage_'+ str(arg1)+'_InitPos_'+str(arg2)+'_feasibility_trajectory.txt'
-path_time = "/home/simon/results_marsupial_optimizer/"
+path_time = '/home/'+ user_ +'/results_marsupial_optimizer/'
 # file_path_time = path_time + 'results'+'_stage_'+ str(arg1)+'_InitPos_'+str(arg2)+'_time_random_planner.txt'
 file_path_time = path_time + 'results'+'_stage_'+ str(arg1)+'_InitPos_'+str(arg2)+'_method_UAV.txt'
 

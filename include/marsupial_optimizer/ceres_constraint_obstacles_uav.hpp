@@ -11,8 +11,6 @@
 #include <pcl/point_types.h>
 
 #include "misc/near_neighbor.hpp"
-#include <octomap_msgs/Octomap.h> 
-#include <octomap/OcTree.h>
 
 using ceres::AutoDiffCostFunction;
 using ceres::CostFunction;
@@ -33,9 +31,7 @@ public:
     {
         ComputeDistanceObstaclesUAV (pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points)
         : kdT_(kdT_From_NN), o_p_(obstacles_Points)
-        {
-    
-        }
+        {}
 
         bool operator()(const double *state1, double *near_) const 
         {
@@ -50,12 +46,11 @@ public:
         pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_;
     };
 
-
     struct ObstaclesFunctor 
     {
         ObstaclesFunctor(double weight_factor, double safty_bound, 
-        pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points, bool write_data)
-            : wf_(weight_factor), sb_(safty_bound), kdT_(kdT_From_NN), o_p_(obstacles_Points), w_d_(write_data)
+        pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points, std::string path_, bool write_data)
+            : wf_(weight_factor), sb_(safty_bound), kdT_(kdT_From_NN), o_p_(obstacles_Points), p_(path_), w_d_(write_data)
         {
             compute_nearest_distance.reset(new ceres::CostFunctionToFunctor<4,4>(
                                     new ceres::NumericDiffCostFunction<ComputeDistanceObstaclesUAV,
@@ -74,9 +69,7 @@ public:
             double f_slope_ = 5.0;
             
             (*compute_nearest_distance)(statePos1, n_);
-            arg_d = (statePos1[1]-n_[0])*(statePos1[1]-n_[0]) + 
-                        (statePos1[2]-n_[1])*(statePos1[2]-n_[1]) + 
-                        (statePos1[3]-n_[2])*(statePos1[3]-n_[2]);
+            arg_d = (statePos1[1]-n_[0])*(statePos1[1]-n_[0]) + (statePos1[2]-n_[1])*(statePos1[2]-n_[1]) + (statePos1[3]-n_[2])*(statePos1[3]-n_[2]);
             
             if (arg_d < 0.0001 && arg_d > -0.0001)
                 d_ = T{0.0};
@@ -99,7 +92,7 @@ public:
 
 	        if(w_d_){
                 std::ofstream ofs;
-                std::string name_output_file = "/home/simon/residuals_optimization_data/obstacles_uav.txt";
+                std::string name_output_file = p_+"obstacles_uav.txt";
                 ofs.open(name_output_file.c_str(), std::ofstream::app);
                 if (ofs.is_open()) 
                     ofs << residual[0] << "/" <<std::endl;
@@ -111,6 +104,7 @@ public:
 
         bool w_d_;
         double wf_, sb_;
+        std::string p_;
         std::unique_ptr<ceres::CostFunctionToFunctor<4,4> > compute_nearest_distance;
         pcl::KdTreeFLANN <pcl::PointXYZ> kdT_;
         pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_;

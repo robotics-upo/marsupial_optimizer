@@ -31,12 +31,9 @@ public:
     {
         ComputeDistanceObstaclesUGV (pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points)
         : kdT_(kdT_From_NN), o_p_(obstacles_Points)
-        {
-    
-        }
+        {}
 
-        bool operator()(const double *state1, 
-                        double *near_) const 
+        bool operator()(const double *state1, double *near_) const 
         {
             NearNeighbor nn;
 
@@ -48,7 +45,6 @@ public:
         pcl::KdTreeFLANN <pcl::PointXYZ> kdT_;
         pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_;
     };
-
 
     struct ObstaclesFunctorUGV 
     {

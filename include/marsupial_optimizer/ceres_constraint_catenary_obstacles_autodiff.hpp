@@ -1,5 +1,5 @@
-#ifndef CERES_CONSTRAINS_CATENARY_AUTODIFF_HPP
-#define CERES_CONSTRAINS_CATENARY_AUTODIFF_HPP
+#ifndef CERES_CONSTRAINS_CATENARY_OBSTACLE_AUTODIFF_HPP
+#define CERES_CONSTRAINS_CATENARY_OBSTACLE_AUTODIFF_HPP
 
 #include "ceres/ceres.h"
 #include "glog/logging.h"
@@ -266,8 +266,6 @@ public:
 			T cost_cat_ = catenary[0];
 			// residual[0] = wf_1 * (cost_cat_/(catenary[4]-catenary[3]));
 			// residual[0] = wf_1 * (cost_cat_/(L_-catenary[3]/catenary[5]));
-			// T m_ = (20.0 - 1.0 )/(catenary[4] - 0.0);
-			// T y_ =  m_ * (catenary[3] - 0.0) + 1.0;
 			residual[0] = wf_1 * (cost_cat_);
 
 			if(w_d_){

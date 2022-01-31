@@ -27,9 +27,11 @@ class EquiDistanceFunctorUAV
     {
       T arg_d_pos, d_pos, diff, dr_;
       double f_; 
+
+      //Get distance between two consecutive poses
       arg_d_pos = pow(statePos1[1]-statePos2[1],2) + pow(statePos1[2]-statePos2[2],2) + pow(statePos1[3]-statePos2[3],2);
       
-      if (arg_d_pos < 0.0001 && arg_d_pos > -0.0001)
+      if(arg_d_pos < 0.0001 && arg_d_pos > -0.0001)
         d_pos = T{0.0};
       else  
         d_pos = sqrt(arg_d_pos);
@@ -37,27 +39,10 @@ class EquiDistanceFunctorUAV
       T max_value_residual = T{10.0};
       T min_value_residual = T{0.0};
       T m;
-      // T init_d = i_d*T{1.2};
       T init_d = T{i_d};
-      // if (init_d >= d_pos && d_pos > i_d){
-      //   m = T{0.0};
-      // }
-      // else if(d_pos > init_d){
-      //   dr_ = init_d; 
-      //   m = (max_value_residual- min_value_residual)/( 2.0*dr_ - dr_);
-      // }
-      // else if(i_d > d_pos){
-      //   dr_ = T{i_d};
-      //   m = -(max_value_residual- min_value_residual)/( 2.0*dr_ - dr_);
-      // }
       
       m = (max_value_residual- min_value_residual)/( 1.5*init_d - init_d);
-      // if(d_pos > init_d)
-      //   f_ = 1.0;
-      // else
-      //   f_ = 0.000;
-      // residual[0] = wf_ * m *(d_pos - dr_);  
-      // residual[0] = wf_ *( m *(d_pos - init_d) + min_value_residual)*f_;  
+
       residual[0] = wf_ *( m *(d_pos - init_d) + min_value_residual);  
 
       // std::cout<< "Equi-Distance UAV: residual[0]= "<<residual[0]<<" , d_pos= "<< d_pos <<" , init_d= "<<init_d<<std::endl;

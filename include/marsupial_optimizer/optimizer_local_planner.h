@@ -46,8 +46,8 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "marsupial_optimizer/ceres_constraint_acceleration_ugv.hpp"
 #include "marsupial_optimizer/ceres_constraint_acceleration_uav.hpp"
 
-#include "marsupial_optimizer/ceres_constraint_catenary.hpp"
-#include "marsupial_optimizer/ceres_constraint_catenary_autodiff.hpp"
+#include "marsupial_optimizer/ceres_constraint_catenary_obstacles_numeric.hpp"
+#include "marsupial_optimizer/ceres_constraint_catenary_obstacles_autodiff.hpp"
 #include "marsupial_optimizer/ceres_constraint_catenary_length.hpp"
 #include "marsupial_optimizer/ceres_constraint_dynamic_catenary.hpp"
 
@@ -187,7 +187,7 @@ public:
 	tf::TransformListener listener;
 	geometry_msgs::TransformStamped pose_reel_global, pose_reel_local;
 
-	std::string path, name_output_file;
+	std::string path, files_results, files_residuals, name_output_file;
 
     double map_resolution;
 	float step , step_inv;

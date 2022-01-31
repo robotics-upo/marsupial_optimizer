@@ -97,6 +97,8 @@ OptimizerLocalPlanner::OptimizerLocalPlanner()
 	nh->param<bool>("verbose_optimizer",verbose_optimizer, true);
 	nh->param<bool>("write_data_for_analysis",write_data_for_analysis, false);
 	nh->param("path", path, (std::string) "~/");
+	nh->param("files_results", files_results, (std::string) "results/");
+	nh->param("files_residuals", files_residuals, (std::string) "residuals/");
 	nh->param("name_output_file", name_output_file, (std::string) "optimization_test");
 	nh->param<int>("scenario_number", scenario_number, 1);
 	nh->param<int>("num_pos_initial", num_pos_initial, 1);
@@ -287,7 +289,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	calculateDistanceVertices(vec_dist_init_ugv, vec_dist_init_uav);
  	getTemporalState(vec_time_init);
 
-	dm_.initDataManagement(path, name_output_file, scenario_number, num_pos_initial, initial_velocity_ugv, initial_velocity_uav, 
+	dm_.initDataManagement(path+files_results, name_output_file, scenario_number, num_pos_initial, initial_velocity_ugv, initial_velocity_uav, 
 							initial_acceleration_ugv, initial_acceleration_uav, distance_catenary_obstacle, pose_reel_local.transform.translation, vec_pose_init_ugv, 
 							vec_pose_init_uav, vec_len_cat_init, vec_init_rot_ugv, vec_init_rot_uav, mapFull_msg, mapTrav_msg, grid_3D);			   
 	getSmoothnessTrajectory(vec_pose_init_ugv, vec_pose_init_uav, v_init_angles_smooth_ugv, v_init_angles_smooth_uav);
@@ -338,7 +340,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 				problem.SetParameterLowerBound(statesPosUGV[i].parameter, 3, 0.0); 
 			}
 		}
-		/*** Cost Function UGV III : Obstacles constraint UGV***/
+		/*** Cost Function UGV II : Obstacles constraint UGV***/
 		if (obstacles_ugv_constraint==1){
 			ROS_INFO(PRINTF_GREEN"		- Optimize Obstacles Autodiff");
 			for (int i = 0; i < statesPosUGV.size(); ++i) {
@@ -360,7 +362,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 				problem.AddResidualBlock(cost_function_ugv_3, new ceres::CauchyLoss(0.1), statesPosUGV[i].parameter); 
 			}
 		}
-		/*** Cost Function UGV IV : Traversability constraint UGV***/
+		/*** Cost Function UGV III : Traversability constraint UGV***/
 		if (traversability_ugv_constraint == 1){
 			ROS_INFO(PRINTF_GREEN"		- Optimize Traversability Autodiff");
 			for (int i = 0; i < statesPosUGV.size(); ++i) {
@@ -380,7 +382,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 				problem.AddResidualBlock(cost_function_ugv_4, new ceres::CauchyLoss(0.1), statesPosUGV[i].parameter); 
 			}
 		}
-		/*** Cost Function UGV V : Smoothness constrain UGV ***/
+		/*** Cost Function UGV IV : Smoothness constrain UGV ***/
 		if (smoothness_ugv_constraint == 1){
 			ROS_INFO(PRINTF_GREEN"		- Optimize Smoothness Autodiff");
 			for (int i = 0; i < statesPosUGV.size() - 2; ++i) {
@@ -388,10 +390,6 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 					CostFunction* cost_function_ugv_5  = new AutoDiffCostFunction<SmoothnessFunctorUGV, 1, 4, 4, 4>(new SmoothnessFunctorUGV(w_gamma_ugv, angle_min_traj,write_data_residual)); 
 					problem.AddResidualBlock(cost_function_ugv_5, NULL, statesPosUGV[i].parameter, statesPosUGV[i+1].parameter, statesPosUGV[i+2].parameter);
 				}
-				// if (i < count_fix_points_initial_ugv)
-				// 	problem.SetParameterBlockConstant(statesPosUGV[i].parameter);
-				// if (i > (statesPosUGV.size() - (count_fix_points_final_ugv+3)))
-				// 	problem.SetParameterBlockConstant(statesPosUGV[i+2].parameter);
 			}
 		}
 		if (smoothness_ugv_constraint == 0){
@@ -401,7 +399,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 				problem.AddResidualBlock(cost_function_ugv_5, new ceres::CauchyLoss(0.1), statesPosUGV[i].parameter, statesPosUGV[i+1].parameter, statesPosUGV[i+2].parameter); 
 			}
 		}
-		/*** Cost Function UGV VI : Rotation constraint UGV ***/
+		/*** Cost Function UGV V : Rotation constraint UGV ***/
 		// for (int i = 0; i < statesRotUGV.size() - 1; ++i) {
 		// 	double _roll, _pitch, _yaw;
 		// 	tf::Quaternion _q(statesRotUGV[i+1].parameter[1],statesRotUGV[i+1].parameter[2],statesRotUGV[i+1].parameter[3],statesRotUGV[i+1].parameter[4]);
@@ -411,7 +409,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		// 	problem.AddResidualBlock(cost_function_ugv_6, NULL, statesPosUGV[i].parameter, statesPosUGV[i+1].parameter, statesRotUGV[i+1].parameter);
 		// }
 
-		/*** Cost Function UGV VII : Time constraint UGV***/
+		/*** Cost Function UGV VI : Time constraint UGV***/
 		if (time_constraint){
 			ROS_INFO(PRINTF_GREEN"		- Optimize Time Autodiff");
 			for (int i = 0; i < statesTime.size(); ++i) {
@@ -423,7 +421,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 					problem.SetParameterLowerBound(statesTime[i].parameter, 1, min_T);
 			}
 		}	
-		/*** Cost Function UGV VIII : Velocity constraint UGV***/
+		/*** Cost Function UGV VII : Velocity constraint UGV***/
 		if (velocity_ugv_constraint){
 			ROS_INFO(PRINTF_GREEN"		- Optimize Velocity Autodiff");
 			for (int i = 0; i < statesTime.size() - 1; ++i) {
@@ -432,7 +430,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 				problem.AddResidualBlock(cost_function_ugv_8, NULL, statesPosUGV[i].parameter, statesPosUGV[i+1].parameter, statesTime[i+1].parameter);
 			}
 		}
-		/*** Cost Function UGV IX : Acceleration constraint UGV***/
+		/*** Cost Function UGV VIII : Acceleration constraint UGV***/
 		if (acceleration_ugv_constraint){
 			ROS_INFO(PRINTF_GREEN"		- Optimize Acceleration Autodiff");
 			for (int i = 0; i < statesTime.size() - 2; ++i) {
@@ -443,6 +441,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			}
 		}
 	}
+	
 	/****************************   UAV Constraints  ****************************/	
 	if (optimize_uav){
 		ROS_INFO(PRINTF_BLUE" PREPARING  UAV  PARAMETER  BLOCKS  TO  OPTIMIZE:");
@@ -499,7 +498,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			ROS_INFO(PRINTF_BLUE"		- Optimize Obstacles Autodiff");
 			for (int i = 0; i < statesPosUAV.size(); ++i) {
 				CostFunction* cost_function_uav_2  = new AutoDiffCostFunction<ObstacleDistanceFunctorUAV::ObstaclesFunctor , 1, 4>
-												(new ObstacleDistanceFunctorUAV::ObstaclesFunctor (w_beta_uav, distance_obstacle_uav, nn_uav.kdtree, nn_uav.obs_points,write_data_residual)); 
+												(new ObstacleDistanceFunctorUAV::ObstaclesFunctor (w_beta_uav, distance_obstacle_uav, nn_uav.kdtree, nn_uav.obs_points, path+files_results, write_data_residual)); 
 				problem.AddResidualBlock(cost_function_uav_2, NULL, statesPosUAV[i].parameter);
 				if (i == 0)
 					problem.SetParameterBlockConstant(statesPosUAV[i].parameter);
@@ -531,7 +530,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			}
 		}
 		
-		/*** Cost Function UAV IV : Smoothness constraint UAV ***/
+		/*** Cost Function UAV III : Smoothness constraint UAV ***/
 		if(smoothness_uav_constraint==1){
 			ROS_INFO(PRINTF_BLUE"		- Optimize Smoothness Autodiff");
 			for (int i = 0; i < statesPosUAV.size() - 2; ++i) {
@@ -548,7 +547,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			}
 		}	
 
-		/*** Cost Function UAV V : Rotation constraint UAV ***/
+		/*** Cost Function UAV IV : Rotation constraint UAV ***/
 		// for (int i = 0; i < statesRotUAV.size() - 1; ++i) {
 		// 	CostFunction* cost_function_uav_5  = new NumericDiffCostFunction<RotationFunctorUAV, CENTRAL, 1, 5, 5>(new RotationFunctorUAV(w_kappa_uav)); 
 		// 	problem.AddResidualBlock(cost_function_uav_5, NULL, statesRotUAV[i].parameter, statesRotUAV[i+1].parameter);
@@ -567,9 +566,9 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		// 	}
 		// }
 
+		/*** Cost Function UAV V : Velocity constraint UAV ***/
 		if(velocity_uav_constraint){
 			ROS_INFO(PRINTF_BLUE"		- Optimize Velocity Autodiff");
-			/*** Cost Function UAV VII : Velocity constraint UAV***/
 			for (int i = 0; i < statesTime.size() - 1; ++i) {
 				CostFunction* cost_function_uav_7  = new AutoDiffCostFunction<VelocityFunctorUAV, 1, 4, 4, 2>
 												(new VelocityFunctorUAV(w_epsilon_uav, initial_velocity_uav,write_data_residual)); 
@@ -579,9 +578,9 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			}	
 		}
 
+		/*** Cost Function UAV VI : Acceleration constraint UAV ***/
 		if(acceleration_uav_constraint){
 			ROS_INFO(PRINTF_BLUE"		- Optimize Acceleration Autodiff");
-			/*** Cost Function UAV VIII : Acceleration constraint UAV***/
 			for (int i = 0; i < statesTime.size() - 2; ++i) {
 				CostFunction* cost_function_uav_8  = new AutoDiffCostFunction<AccelerationFunctorUAV, 1, 4, 4, 4, 2, 2>
 												(new AccelerationFunctorUAV(w_zeta_uav, initial_acceleration_uav,write_data_residual)); 
@@ -591,6 +590,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			}
 		}
 	}
+	
 	/****************************   Catenary Constraints  ****************************/	
 	if (optimize_cat){
 		ROS_INFO(PRINTF_ORANGE" PREPARING  CATENARY  PARAMETER  BLOCKS  TO  OPTIMIZE:");
@@ -677,6 +677,8 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 
 	cleanVectors();		//Clear vector after optimization and previus the next iteration
 	double time_sleep_ = 10.0;
+	
+	// Inform if is a feabible Trajectory or not, and visualize traj in RVIZ
 	if (n_coll_opt_traj_ugv_ == 0 && n_coll_opt_traj_uav_ == 0 && n_coll_opt_cat_== 0 ){
 		if (initial_cost==final_cost)
 			ROS_INFO(PRINTF_ORANGE"\n		Optimizer Local Planner: Final Cost equal than Initial Cost");
@@ -759,6 +761,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		action_result.arrived = false;
 		execute_path_srv_ptr->setSucceeded(action_result);
 	}
+	
 	std::cout <<"Optimization Local Planner Proccess ended !!!!!!!!!!!!!!!!!!!!!!!" << std::endl << "==================================================="<< std::endl << std::endl << std::endl;
 	resetFlags();
 }
@@ -841,8 +844,8 @@ void OptimizerLocalPlanner::finishigOptimizationAndGetDataResult(int &n_coll_opt
 	vec_opt_rot_uav.clear();
 	new_path_ugv.clear(); //clear the old path to set the optimizer solution as a new path
 	new_path_uav.clear(); //clear the old path to set the optimizer solution as a new path
-double new_equi_dist = 0; 
-double distance_ = 0;
+	double new_equi_dist = 0; 
+	double distance_ = 0;
   	for (size_t i = 0; i < size_path; i++){
 		geometry_msgs::Vector3 position_ugv_, position_uav_;
 		position_ugv_.x = statesPosUGV[i].parameter[1];
@@ -1034,12 +1037,6 @@ void OptimizerLocalPlanner::getInitialGlobalPath(trajectory_msgs::MultiDOFJointT
 		vec_pose_init_uav.push_back(v_uav_[i]);
 	}
 
-	// To move all the states that have the same position through interpolation
-	// double d_all_nodes = sqrt(pow(v_ugv_[0].x()-v_ugv_[ v_ugv_.size()-1].x(),2) +
-	// 					 	  pow(v_ugv_[0].y()-v_ugv_[ v_ugv_.size()-1].y(),2) +
-	// 					 	  pow(v_ugv_[0].z()-v_ugv_[ v_ugv_.size()-1].z(),2));
-	// if (d_all_nodes > 0.001)
-
 	interpolateFixedPointsPath(v_ugv_,0);
 	interpolateFixedPointsPath(v_uav_,1);
 }
@@ -1223,7 +1220,6 @@ void OptimizerLocalPlanner::calculateDistanceVertices(vector<double> &_v_D_ugv,v
         pL= sqrt(x * x + y * y + z * z);
 		
 		sum_distance_ = sum_distance_ + pL;
-		// printf("sum_distance=%f , pL=%f ,new_path_uav.size()=%lu\n",sum_distance_,pL,new_path_uav.size());
 		_v_D_uav.push_back(pL);
     }
 	// initial_distance_states_uav = sum_distance_ / (new_path_uav.size()-1);
@@ -1322,8 +1318,6 @@ void OptimizerLocalPlanner::getSmoothnessTrajectory(vector<geometry_msgs::Vector
 				angle_ugv = 0.000;
 		}
 		v_angles_kin_ugv.push_back(angle_ugv);
-		// printf("smoothness UGV: angle=[%f] arg=[%f] dot_product=[%f] norm_v1=[%f] norm_v2=[%f]\n",angle_ugv,(dot_product_ugv / (norm_vector1_ugv*norm_vector2_ugv)),
-		// dot_product_ugv,norm_vector1_ugv,norm_vector2_ugv);
 	}
 
 	for (size_t i=0 ; i < v_pos2kin_uav.size()-2 ; i++){
@@ -1352,8 +1346,6 @@ void OptimizerLocalPlanner::getSmoothnessTrajectory(vector<geometry_msgs::Vector
 		}
 
 		v_angles_kin_uav.push_back(angle_uav);
-		// printf("smoothness UAV: angle=[%f] arg=[%f] dot_product=[%f] norm_v1=[%f] norm_v2=[%f]\n",angle_uav,(dot_product_uav / (norm_vector1_uav*norm_vector2_uav)),
-		// dot_product_uav,norm_vector1_uav,norm_vector2_uav);
 	}
 }
 
@@ -1565,7 +1557,7 @@ bool OptimizerLocalPlanner::computeCatenary(int p_, int mode_, double &l_cat_)
 
 void OptimizerLocalPlanner::cleanResidualConstraintsFile()
 {
-    std::string path_ = "/home/simon/residuals_optimization_data/";
+    std::string path_ = path+files_residuals;
 
 	if( remove("/home/simon/residuals_optimization_data/acceleration_uav.txt") != 0 ){
     	perror( "Error deleting file: acceleration_uav.txt" );
