@@ -2,14 +2,10 @@
 
 # -*- coding: utf-8 -*-
 
-#Apertura de archivos CSV y gestion de datos
-
 import numpy as np
 import os
 import csv
-
-num_execute_scenario = 10
-total_row = 1
+import sys
 
 # path = "/home/simon/"
 # file_path = path + 'time_compute_initial_planner.txt'
@@ -24,12 +20,20 @@ total_row = 1
 #     Tl_col_00.append(float(line[Tcol_00]))
 #     # TvCol01= float(line[Tcol_00])
 
+print("\n\t *** IMPORTANT: Use this script given two parameters: <scenario_number> <initial_position_number> <mode UGV or UAV>***\n")  # Warnning message
+arg1 = sys.argv[1] # number of scenario to analize
+arg2 = sys.argv[2] # number of position to analize
+arg3 = sys.argv[3] # number of position to analize
+
+user_ = 'simon' # Change this value to the user name
+
+total_row = 1
 num_exp= 100.0
-user_ = 'simon'
-stage_num = '1'
-initial_pos = '1'
-file_path_ugv = '/home/' + user_ + '/results_marsupial_optimizer/results_stage_'+ stage_num +'_InitPos_'+ initial_pos + '_method_UGV.txt'
-file_path_uav = '/home/' + user_ + '/results_marsupial_optimizer/results_stage_'+ stage_num +'_InitPos_'+ initial_pos + '_method_UAV.txt'
+stage_num = arg1 
+initial_pos = arg2 
+mode = arg3
+file_path_ugv = '/home/' + user_ + '/results_marsupial_optimizer/results_stage_'+ stage_num +'_InitPos_'+ initial_pos + '_method_'+ mode +'.txt'
+file_path_uav = '/home/' + user_ + '/results_marsupial_optimizer/results_stage_'+ stage_num +'_InitPos_'+ initial_pos + '_method_'+ mode +'.txt'
 print('Magement Data For: ',file_path_ugv)
 col_00 = 0
 col_01 = 1
@@ -181,7 +185,7 @@ for i in range(0, total_row):
     # vCol25 = vCol25 + float(l_col_25[i]) 
     
     count+= 1
-    if count % num_execute_scenario == 0 :
+    if count % num_exp == 0 :
         output_file.writelines( str(TvCol00/num_exp) + ';' +  str(vCol00/num_exp) + ';' +  str(vCol01/num_exp) + ';' +  str(vCol02/num_exp) + ';' +  str(vCol03/num_exp) + ';' +  str(vCol04/num_exp) + ';' +  str(vCol05/num_exp) + ';' +  str(vCol06/num_exp) + ';' +  str(vCol07/num_exp) + ';' +  str(vCol08/num_exp) + ';' +  str(vCol09/num_exp) + ';' +  str(vCol10/num_exp) + ';' +  str(vCol11/num_exp) + ';' +  str(vCol12/num_exp) + ';' +  str(vCol13/num_exp) + ';' +  str(vCol14/num_exp) + ';' +  str(vCol15/num_exp) + ';' +  str(vCol16/num_exp) + ';' +  str(vCol17/num_exp) + ';' +  str(vCol18/num_exp) + ';' +  str(vCol19/num_exp) + ';' +  str(vCol20/num_exp) + ';' +  str(vCol21/num_exp) + ';' +  str(vCol22/num_exp) + ';' +  str(vCol23/num_exp) + ';' +  str(vCol24/num_exp) + '\n')
         TvCol00 = 0.0
         vCol00= 0.0

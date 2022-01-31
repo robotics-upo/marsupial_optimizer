@@ -16,7 +16,7 @@ arg2 = sys.argv[2] # number of position to analize
 
 ## Get Data and compute percentage related with Trajectory Optimized
 #Open and managing files and data
-user_ = 'simon'
+user_ = 'simon' # Change this value to the user name
 
 path = '/home/'+ user_ +'/results_marsupial_optimizer/'
 file_path = path + 'results'+'_stage_'+ str(arg1)+'_InitPos_'+str(arg2)+'_feasibility_trajectory.txt'
