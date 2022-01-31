@@ -14,6 +14,7 @@ arg3 = sys.argv[3] # number of position to analize
 
 user_ = 'simon' # Change this value to the user name
 
+total_row = 1
 num_exp= 100.0
 stage_num = arg1 
 initial_pos = arg2 
@@ -140,9 +141,9 @@ vCol21= 0.0
 
 output_file = open('/home/' + user_ + '/results_marsupial_optimizer/results.cvs', 'a') #Si no existia el archivo, lo crea y escribe al final
 count = 0
-for i in range(0, 100):
+for i in range(0, total_row):
     #Anadir resultados, segun columnas: nombre de test, tiempo medio de tes ...
-    # output_file.writelines(str(l_col_00[i]) + ';' + str(l_col_01[i]) + ';' + str(l_col_02[i]) + ';' + str(l_col_03[i]) + ';' + str(l_col_04[i]) + ';' + str(l_col_05[i]) + ';' + str(l_col_06[i]) + ';' + str(l_col_07[i]) + ';' + str(l_col_08[i]) + ';' + str(l_col_09[i]) + ';' + str(l_col_10[i]) + ';' + str(l_col_11[i]) + ';' + str(l_col_12[i]) + ';' + str(l_col_13[i]) + ';' + str(l_col_14[i]) + ';' + str(l_col_15[i]) + ';' + str(l_col_16[i]) + ';' + str(l_col_17[i]) + ';' + str(l_col_18[i]) + ';' + str(l_col_19[i]) + ';' + str(l_col_20[i]) + ';' + str(l_col_21[i]) + '\n')
+    output_file.writelines(str(l_col_00[i]) + ';' + str(l_col_01[i]) + ';' + str(l_col_02[i]) + ';' + str(l_col_03[i]) + ';' + str(l_col_04[i]) + ';' + str(l_col_05[i]) + ';' + str(l_col_06[i]) + ';' + str(l_col_07[i]) + ';' + str(l_col_08[i]) + ';' + str(l_col_09[i]) + ';' + str(l_col_10[i]) + ';' + str(l_col_11[i]) + ';' + str(l_col_12[i]) + ';' + str(l_col_13[i]) + ';' + str(l_col_14[i]) + ';' + str(l_col_15[i]) + ';' + str(l_col_16[i]) + ';' + str(l_col_17[i]) + ';' + str(l_col_18[i]) + ';' + str(l_col_19[i]) + ';' + str(l_col_20[i]) + ';' + str(l_col_21[i]) + '\n')
     vCol00 = vCol00 + float(l_col_00[i])
     vCol01 = vCol01 + float(l_col_01[i])
     vCol02 = vCol02 + float(l_col_02[i])
@@ -169,37 +170,36 @@ for i in range(0, 100):
     # vCol23 = vCol23 + float(l_col_23[i])
     # vCol24 = vCol24 + float(l_col_24[i]) 
     # vCol25 = vCol25 + float(l_col_25[i]) 
-
+    
     count+= 1
-    if count % 100 == 0 :
-        output_file.writelines( str(vCol00/num_exp) + ';' +  str(vCol01/num_exp) + ';' +  str(vCol02/num_exp) + ';' +  str(vCol03/num_exp) + ';' +  str(vCol04/num_exp) + ';' +  str(vCol05/num_exp) + ';' +  str(vCol06/num_exp) + ';' +  str(vCol07/num_exp) + ';' +  str(vCol08/num_exp) + ';' +  str(vCol09/num_exp) + ';' +  str(vCol10/num_exp) + ';' +  str(vCol11/num_exp) + ';' +  str(vCol12/num_exp) + ';' +  str(vCol13/num_exp) + ';' +  str(vCol14/num_exp) + ';' +  str(vCol15/num_exp) + ';' +  str(vCol16/num_exp) + ';' +  str(vCol17/num_exp) + ';' +  str(vCol18/num_exp) + ';' +  str(vCol19/num_exp) + ';' +  str(vCol20/num_exp) + ';' +  str(vCol21/num_exp) + '\n')
-        # vCol00= 0.0
-        # vCol01= 0.0
-        # vCol02= 0.0
-        # vCol03= 0.0
-        # vCol04= 0.0
-        # vCol05= 0.0
-        # vCol06= 0.0
-        # vCol07= 0.0
-        # vCol08= 0.0
-        # vCol09= 0.0
-        # vCol10= 0.0
-        # vCol11= 0.0
-        # vCol12= 0.0
-        # vCol13= 0.0
-        # vCol14= 0.0
-        # vCol15= 0.0
-        # vCol16= 0.0
-        # vCol17= 0.0
-        # vCol18= 0.0
-        # vCol19= 0.0
-        # vCol20= 0.0
-        # vCol21= 0.0
+    if count % num_exp == 0 :
+        output_file.writelines( str(TvCol00/num_exp) + ';' +  str(vCol00/num_exp) + ';' +  str(vCol01/num_exp) + ';' +  str(vCol02/num_exp) + ';' +  str(vCol03/num_exp) + ';' +  str(vCol04/num_exp) + ';' +  str(vCol05/num_exp) + ';' +  str(vCol06/num_exp) + ';' +  str(vCol07/num_exp) + ';' +  str(vCol08/num_exp) + ';' +  str(vCol09/num_exp) + ';' +  str(vCol10/num_exp) + ';' +  str(vCol11/num_exp) + ';' +  str(vCol12/num_exp) + ';' +  str(vCol13/num_exp) + ';' +  str(vCol14/num_exp) + ';' +  str(vCol15/num_exp) + ';' +  str(vCol16/num_exp) + ';' +  str(vCol17/num_exp) + ';' +  str(vCol18/num_exp) + ';' +  str(vCol19/num_exp) + ';' +  str(vCol20/num_exp) + ';' +  str(vCol21/num_exp) + ';' +  str(vCol22/num_exp) + ';' +  str(vCol23/num_exp) + ';' +  str(vCol24/num_exp) + '\n')
+        TvCol00 = 0.0
+        vCol00= 0.0
+        vCol01= 0.0
+        vCol02= 0.0
+        vCol03= 0.0
+        vCol04= 0.0
+        vCol05= 0.0
+        vCol06= 0.0
+        vCol07= 0.0
+        vCol08= 0.0
+        vCol09= 0.0
+        vCol10= 0.0
+        vCol11= 0.0
+        vCol12= 0.0
+        vCol13= 0.0
+        vCol14= 0.0
+        vCol15= 0.0
+        vCol16= 0.0
+        vCol17= 0.0
+        vCol18= 0.0
+        vCol19= 0.0
+        vCol20= 0.0
+        vCol21= 0.0
         # vCol22= 0.0
         # vCol23= 0.0
         # vCol24= 0.0
-
-print('vCol00:',vCol00,' vCol01:',vCol01)
 
 output_file.close()
 

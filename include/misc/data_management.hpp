@@ -139,13 +139,9 @@ inline void DataManagement::writeTemporalDataBeforeOptimization(std::vector<doub
 {
 	vec_dist_init_ugv.clear(); 
 	vec_dist_init_uav.clear(); 
-	// vec_time_init_ugv.clear();
-	// vec_time_init_uav.clear();
 	vec_time_init.clear();
 	vec_dist_init_ugv = vec_dist_init_ugv_;
 	vec_dist_init_uav = vec_dist_init_uav_;
-	// vec_time_init_ugv = vec_time_init_ugv_;
-	// vec_time_init_uav = vec_time_init_uav_;
 	vec_time_init = vec_time_init_;
 
 	//! Save temporal state before optimization
