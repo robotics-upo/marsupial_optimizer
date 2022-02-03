@@ -1177,7 +1177,7 @@ void OptimizerLocalPlanner::interpolateFixedPointsPath(vector<geometry_msgs::Vec
 				}
 			else{
 				vec_length_aux_.push_back(vec_len_cat_init[m]);
-				ROS_ERROR("not catenary interpolated !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+				ROS_ERROR("not catenary interpolated : length[%i]=%f",m,length_);
 			}
 		}
 		else
@@ -1671,9 +1671,9 @@ double OptimizerLocalPlanner::getPointDistanceFullMap(bool use_dist_func_, geome
 	}
 	else{
 		Eigen::Vector3d obs_, pos_;
-		pos_.x() = p_.x * step ;
-		pos_.y() = p_.y * step ; 
-		pos_.z() = p_.z * step ; 
+		pos_.x() = p_.x;
+		pos_.y() = p_.y; 
+		pos_.z() = p_.z; 
 		obs_ = nn_uav.nearestObstacleMarsupial(nn_uav.kdtree, pos_, nn_uav.obs_points);
 		dist = sqrt(pow(obs_.x()-pos_.x(),2) + pow(obs_.y()-pos_.y(),2) + pow(obs_.z()-pos_.z(),2));
 	}
