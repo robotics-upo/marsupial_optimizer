@@ -75,4 +75,13 @@ stage_2_pos_final_7:
         z: 0.0
         w: 1.0
 
-
+stage_2_pos_final_8:
+    pose:
+        x: 4.0
+        y: 0.0
+        z: 4.6
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        w: 1.0

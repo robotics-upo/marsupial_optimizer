@@ -64,8 +64,8 @@ public:
 	struct BisectionCatenary 
 	{
 		BisectionCatenary (ros::NodeHandlePtr nhP_, Grid3d* g_3D_, octomap::OcTree* o_full_, double sb_, pcl::KdTreeFLANN <pcl::PointXYZ> kdT_, 
-		pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_, pcl::KdTreeFLANN <pcl::PointXYZ> kdT_trav_, pcl::PointCloud <pcl::PointXYZ>::Ptr pc_trav_, int size_, float map_resolution)
-		: nhP(nhP_), g_3D(g_3D_), o_full(o_full_), sb(sb_), kdT(kdT_), o_p(o_p_), kdT_trav(kdT_trav_), pc_trav(pc_trav_), size(size_), m_r_(map_resolution)
+		pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_, pcl::KdTreeFLANN <pcl::PointXYZ> kdT_trav_, pcl::PointCloud <pcl::PointXYZ>::Ptr pc_trav_, int size_, float map_resolution, bool use_dist_func_)
+		: nhP(nhP_), g_3D(g_3D_), o_full(o_full_), sb(sb_), kdT(kdT_), o_p(o_p_), kdT_trav(kdT_trav_), pc_trav(pc_trav_), size(size_), m_r_(map_resolution), use_dist_func(use_dist_func_)
 		{
 			catenary_marker_pub_ = nhP_->advertise<visualization_msgs::MarkerArray>("catenary_marker", 1);
 			plane_pub_ = nhP_->advertise<visualization_msgs::MarkerArray>("plane_markerArray", 1);
@@ -75,6 +75,7 @@ public:
 		{
 			MarkerPublisher mP_;
 			bisectionCatenary bc(nhP);
+			NearNeighbor nn;
 
 			visualization_msgs::MarkerArray catenary_marker_, plane_marker_, obs_plane_marker_;
 			std::vector<geometry_msgs::Point> points_catenary;
@@ -121,26 +122,32 @@ public:
 			double x_, y_, z_, cost_ , add_extracost;
 			double d_below_z_trav = 0.0;
 			geometry_msgs::Point n_coll_cat, point_coll_trav;
+			geometry_msgs::Vector3 p_;
 			int is_collision = 0;
 			int count_coll = 0;
 			for (size_t i = 0; i < points_catenary.size(); i++){
-				double p_x_ = m_r_ * round( (points_catenary[i].x) * 1/m_r_);
-				double p_y_ = m_r_ * round( (points_catenary[i].y) * 1/m_r_);
-				double p_z_ = m_r_ * round( (points_catenary[i].z) * 1/m_r_);
-				// bool _is_into_ = g_3D->isIntoMap((double)points_catenary[i].x, (double)points_catenary[i].y, (double)points_catenary[i].z);
-				bool _is_into_ = g_3D->isIntoMap((double)p_x_, (double)p_y_, (double)p_z_);
+				p_.x = m_r_ * round( (points_catenary[i].x) * 1/m_r_);
+				p_.y = m_r_ * round( (points_catenary[i].y) * 1/m_r_);
+				p_.z = m_r_ * round( (points_catenary[i].z) * 1/m_r_);
+				// bool _is_into_ = g_3D->isIntoMap((double)p_.x, (double)p_.y, (double)p_.z);
 				double d_obs;
-				if (_is_into_){
-					// TrilinearParams d = g_3D->getPointDistInterpolation((double)points_catenary[i].x, (double)points_catenary[i].y, (double)points_catenary[i].z);
-					TrilinearParams d = g_3D->getPointDistInterpolation((double)p_x_, (double)p_y_, (double)p_z_);
-					x_ = p_x_;
-					y_ = p_y_;
-					z_ = p_z_;
-					d_obs= (d.a0 + d.a1*x_ + d.a2*y_ + d.a3*z_ + d.a4*x_*y_ + d.a5*x_*z_ + d.a6*y_*z_ + d.a7*x_*y_*z_);
+				if(use_dist_func){
+					bool is_into_ = g_3D->isIntoMap((double)p_.x,(double)p_.y,(double)p_.z);
+					if (is_into_){
+						TrilinearParams d = g_3D->getPointDistInterpolation((double)p_.x, (double)p_.y, (double)p_.z);
+						x_ = p_.x;
+						y_ = p_.y;
+						z_ = p_.z;
+						d_obs= (d.a0 + d.a1*x_ + d.a2*y_ + d.a3*z_ + d.a4*x_*y_ + d.a5*x_*z_ + d.a6*y_*z_ + d.a7*x_*y_*z_);
+					}
+					else
+						d_obs = -1.0;
 				}
-				else
-					d_obs = -1.0;
-
+				else{
+					geometry_msgs::Vector3 near_;
+            		nn.nearestObstacleStateCeres(kdT , p_.x,p_.y,p_.z, o_p, near_.x, near_.y, near_.z);
+					d_obs = sqrt(pow(near_.x-p_.x,2) + pow(near_.y-p_.y,2) + pow(near_.z-p_.z,2));
+				}
 
 				if((i >= first_coll && i <= last_coll && i > 0) ){
 					cost_ = (1.0/min_val_proximity_)*2.0;
@@ -199,6 +206,7 @@ public:
 		ros::NodeHandlePtr nhP;
 
 		octomap::OcTree* o_full;
+		bool use_dist_func;
 		float m_r_;
 		double sb;
 		int size;
@@ -212,10 +220,10 @@ public:
 	CatenaryFunctor(double weight_factor_1, double weight_factor_3, double safty_bound, float min_length_cat, double length_tether_max_,
 					pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points, Grid3d* grid_3D_,
 					pcl::KdTreeFLANN <pcl::PointXYZ> trav_kdT, pcl::PointCloud <pcl::PointXYZ>::Ptr trav_pc, geometry_msgs::Vector3 pos_reel_ugv, int size, 
-					geometry_msgs::Vector3 fix_pos_ref, ros::NodeHandlePtr nhP_, octomap::OcTree* octotree_full_, float map_resolution, bool write_data)
+					geometry_msgs::Vector3 fix_pos_ref, ros::NodeHandlePtr nhP_, octomap::OcTree* octotree_full_, float map_resolution, bool write_data, bool use_dist_func_)
 					: wf_1(weight_factor_1), sb_(safty_bound), m_L_c_(min_length_cat), kdT_(kdT_From_NN), 
 					o_p_(obstacles_Points), g_3D_(grid_3D_),kdT_trav_(trav_kdT), pc_trav_(trav_pc), pos_reel_ugv_(pos_reel_ugv),size_(size), 
-					fp_ref(fix_pos_ref), o_full_(octotree_full_), m_r_(map_resolution), w_d_(write_data)
+					fp_ref(fix_pos_ref), o_full_(octotree_full_), m_r_(map_resolution), w_d_(write_data), use_dist_func(use_dist_func_)
 		{
 			nhP = nhP_;
 			
@@ -224,7 +232,7 @@ public:
 
 			bisection_catenary.reset(new ceres::CostFunctionToFunctor<6,4,4,4,2>(
 							  new ceres::NumericDiffCostFunction<BisectionCatenary, ceres::CENTRAL,6,4,4,4,2>
-							  (new BisectionCatenary(nhP_, g_3D_, o_full_, sb_, kdT_, o_p_, kdT_trav_, pc_trav_, size_, m_r_))));
+							  (new BisectionCatenary(nhP_, g_3D_, o_full_, sb_, kdT_, o_p_, kdT_trav_, pc_trav_, size_, m_r_, use_dist_func))));
 		}
 
 		template <typename T>
@@ -316,7 +324,7 @@ public:
         std::unique_ptr<ceres::CostFunctionToFunctor<1,4,4> > ray_casting;
         std::unique_ptr<ceres::CostFunctionToFunctor<6,4,4,4,2> > bisection_catenary;
 
-		bool w_d_;
+		bool w_d_, use_dist_func;
 		double wf_1;
 		float m_L_c_, m_r_;
 		int size_;

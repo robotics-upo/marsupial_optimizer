@@ -105,6 +105,7 @@ OptimizerLocalPlanner::OptimizerLocalPlanner()
 
 	nh->param<bool>("debug", debug, false);
  	nh->param<bool>("show_config", showConfig, false);
+ 	nh->param<bool>("use_distance_function", use_distance_function, true);
 
 	ROS_INFO_COND(showConfig, PRINTF_BLUE "Optimizer Local Planner 3D Node Configuration:\n");
 		
@@ -118,7 +119,8 @@ OptimizerLocalPlanner::OptimizerLocalPlanner()
 	cleanVectors();
 	mp_.clearMarkersPointLines(points_ugv_marker, lines_ugv_marker,traj_marker_ugv_pub_,20);
   	mp_.clearMarkersPointLines(points_uav_marker, lines_uav_marker,traj_marker_uav_pub_,20);
-	ROS_INFO(PRINTF_BLUE"alpha_uav=[%f] alpha_ugv=[%f] beta_uav=[%f] beta_ugv=[%f] theta_ugv=[%f] gamma_uav=[%f] gamma_ugv=[%f] kappa_ugv=[%f] kappa_uav=[%f] delta=[%f] epsilon=[%f] zeta=[%f] eta_1=[%f] eta_2=[%f]",
+	ROS_INFO(PRINTF_BLUE"Optimizer_Local_Planner: use_distance_function: %s",use_distance_function?"true":"false");
+	ROS_INFO(PRINTF_BLUE"Optimizer_Local_Planner: alpha_uav=[%f] alpha_ugv=[%f] beta_uav=[%f] beta_ugv=[%f] theta_ugv=[%f] gamma_uav=[%f] gamma_ugv=[%f] kappa_ugv=[%f] kappa_uav=[%f] delta=[%f] epsilon=[%f] zeta=[%f] eta_1=[%f] eta_2=[%f]",
 						 w_alpha_uav, w_alpha_ugv, w_beta_uav, w_beta_ugv, w_theta_ugv,w_gamma_uav, w_gamma_ugv, w_kappa_ugv, 
 						 w_kappa_uav, w_delta, w_epsilon_uav, w_zeta_uav, w_eta_1, w_eta_2);
 	ROS_INFO(PRINTF_BLUE"Optimizer_Local_Planner: Parameters loaded, ready for Optimization Process. Waiting for Action!!");
@@ -498,7 +500,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			ROS_INFO(PRINTF_BLUE"		- Optimize Obstacles Autodiff");
 			for (int i = 0; i < statesPosUAV.size(); ++i) {
 				CostFunction* cost_function_uav_2  = new AutoDiffCostFunction<ObstacleDistanceFunctorUAV::ObstaclesFunctor , 1, 4>
-												(new ObstacleDistanceFunctorUAV::ObstaclesFunctor (w_beta_uav, distance_obstacle_uav, nn_uav.kdtree, nn_uav.obs_points, path+files_results, write_data_residual)); 
+												(new ObstacleDistanceFunctorUAV::ObstaclesFunctor (w_beta_uav, distance_obstacle_uav, nn_uav.kdtree, nn_uav.obs_points, path+files_results, write_data_residual, grid_3D, use_distance_function)); 
 				problem.AddResidualBlock(cost_function_uav_2, NULL, statesPosUAV[i].parameter);
 				if (i == 0)
 					problem.SetParameterBlockConstant(statesPosUAV[i].parameter);
@@ -601,7 +603,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 				CostFunction* cost_function_cat_1  = new AutoDiffCostFunction<AutodiffCatenaryFunctor::CatenaryFunctor, 1, 4, 4, 2>
 											(new AutodiffCatenaryFunctor::CatenaryFunctor(w_eta_1, w_eta_3, distance_catenary_obstacle, vec_len_cat_init[i], length_tether_max, nn_uav.kdtree, 
 												nn_uav.obs_points, grid_3D, nn_trav.kdtree, nn_trav.obs_points, pose_reel_local.transform.translation, size_path, 
-												new_path_uav[i], nh, mapFull_msg, step, write_data_residual)); 
+												new_path_uav[i], nh, mapFull_msg, step, write_data_residual, use_distance_function)); 
 				problem.AddResidualBlock(cost_function_cat_1, NULL, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesLength[i].parameter);
 				if (i == 0 || (fix_last_position_ugv && i == statesLength.size()-1))
 					problem.SetParameterBlockConstant(statesLength[i].parameter);
@@ -1512,7 +1514,7 @@ bool OptimizerLocalPlanner::computeCatenary(int p_, int mode_, double &l_cat_)
 		double d_min_point_cat = 100000;
 		if (p_catenary_.size() > 2){
 		    for (size_t i = 0 ; i < p_catenary_.size() ; i++){
-		        geometry_msgs::Point point_cat, p_in_cat_;
+		        geometry_msgs::Vector3 point_cat, p_in_cat_;
 		        if (p_catenary_[i].z < ws_z_min*map_resolution + ((1*map_resolution)+security_dis_ca_)){
 		            check_catenary = false;
 					printf("interpolated_cat_collison in the floor\n");
@@ -1522,12 +1524,14 @@ bool OptimizerLocalPlanner::computeCatenary(int p_, int mode_, double &l_cat_)
 		        p_in_cat_.x = p_catenary_[i].x;
 		        p_in_cat_.y = p_catenary_[i].y;
 		        p_in_cat_.z = p_catenary_[i].z;
-		        double dist_cat_obs;
-		        bool is_into_ = grid_3D->isIntoMap(p_in_cat_.x,p_in_cat_.y,p_in_cat_.z);
-		        if(is_into_)
-		            dist_cat_obs =  grid_3D->getPointDist((double)p_in_cat_.x,(double)p_in_cat_.y,(double)p_in_cat_.z) ;
-	            else
-	                dist_cat_obs = -1.0;
+				double dist_cat_obs = getPointDistanceFullMap(use_distance_function, p_in_cat_);
+		        // double dist_cat_obs;
+		        // bool is_into_ = grid_3D->isIntoMap(p_in_cat_.x,p_in_cat_.y,p_in_cat_.z);
+		        // if(is_into_)
+		        //     dist_cat_obs =  grid_3D->getPointDist((double)p_in_cat_.x,(double)p_in_cat_.y,(double)p_in_cat_.z) ;
+	            // else
+	            //     dist_cat_obs = -1.0;
+
 	            if (d_min_point_cat > dist_cat_obs){
 	                d_min_point_cat = dist_cat_obs;
 	            }
@@ -1652,4 +1656,27 @@ void OptimizerLocalPlanner::cleanResidualConstraintsFile()
   	}
 	// else
     	// puts( "File successfully deleted: catenary2.txt");	
+}
+
+double OptimizerLocalPlanner::getPointDistanceFullMap(bool use_dist_func_, geometry_msgs::Vector3 p_)
+{
+	double dist;
+
+	if(use_dist_func_){
+		bool is_into_ = grid_3D->isIntoMap(p_.x,p_.y,p_.z);
+		if(is_into_)
+			dist =  grid_3D->getPointDist((double)p_.x,(double)p_.y,(double)p_.z) ;
+		else
+			dist = -1.0;
+	}
+	else{
+		Eigen::Vector3d obs_, pos_;
+		pos_.x() = p_.x * step ;
+		pos_.y() = p_.y * step ; 
+		pos_.z() = p_.z * step ; 
+		obs_ = nn_uav.nearestObstacleMarsupial(nn_uav.kdtree, pos_, nn_uav.obs_points);
+		dist = sqrt(pow(obs_.x()-pos_.x(),2) + pow(obs_.y()-pos_.y(),2) + pow(obs_.z()-pos_.z(),2));
+	}
+	
+	return dist;
 }
