@@ -634,7 +634,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			ROS_INFO(PRINTF_ORANGE"		- Optimize Catenary Lentgh Autodiff");
 			for (int i = 0; i < statesLength.size(); ++i) {
 				CostFunction* cost_function_cat_2  = new AutoDiffCostFunction<CatenaryLengthFunctor::CatenaryLength, 1, 4, 4, 2>
-											(new CatenaryLengthFunctor::CatenaryLength(w_eta_2, vec_len_cat_init[i], pose_reel_local.transform.translation, write_data_residual)); 
+											(new CatenaryLengthFunctor::CatenaryLength(w_eta_2, vec_len_cat_init[i], pose_reel_local.transform.translation, write_data_residual, user_name)); 
 				problem.AddResidualBlock(cost_function_cat_2, NULL, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesLength[i].parameter);
 				if (i == 0 || (fix_last_position_ugv && i == statesLength.size()-1))
 					problem.SetParameterBlockConstant(statesLength[i].parameter);

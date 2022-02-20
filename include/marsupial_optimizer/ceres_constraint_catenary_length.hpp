@@ -39,8 +39,8 @@ public:
 
 	struct CatenaryLength 
 	{
-		CatenaryLength(double weight_factor, float min_length_cat, geometry_msgs::Vector3 pos_reel_ugv, bool write_data)
-					: wf_(weight_factor), m_L_c_(min_length_cat), pos_reel_ugv_(pos_reel_ugv), w_d_(write_data) 
+		CatenaryLength(double weight_factor, float min_length_cat, geometry_msgs::Vector3 pos_reel_ugv, bool write_data, std::string user_name)
+					: wf_(weight_factor), m_L_c_(min_length_cat), pos_reel_ugv_(pos_reel_ugv), w_d_(write_data), user_(user_name) 
 		{}
 
 		template <typename T>
@@ -78,8 +78,8 @@ public:
 			
 			if(w_d_){
 				std::ofstream ofs, ofs2;
-				std::string name_output_file = "/home/simon/residuals_optimization_data/catenary_length.txt";
-				std::string name_output_file2 = "/home/simon/residuals_optimization_data/catenary_length2.txt";
+				std::string name_output_file =  "/home/"+user_+"/residuals_optimization_data/catenary_length.txt";
+				std::string name_output_file2 = "/home/"+user_+"/residuals_optimization_data/catenary_length2.txt";
 				ofs.open(name_output_file.c_str(), std::ofstream::app);
 				ofs2.open(name_output_file2.c_str(), std::ofstream::app);
 				if (ofs.is_open()) 
@@ -100,6 +100,7 @@ public:
 		double wf_;
 		float m_L_c_;
 		geometry_msgs::Vector3 pos_reel_ugv_;
+		std::string user_;
 	};
 
 private:
