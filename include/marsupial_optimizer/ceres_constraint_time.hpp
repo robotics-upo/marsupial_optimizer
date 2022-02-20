@@ -19,7 +19,7 @@ using ceres::Solver;
 class TimeFunctor {
 
 public:
-  TimeFunctor(double weight_factor, double init_time_, bool write_data): wf_(weight_factor), it_(init_time_), w_d_(write_data) {}
+  TimeFunctor(double weight_factor, double init_time_, bool write_data, std::string user_name): wf_(weight_factor), it_(init_time_), w_d_(write_data), user_(user_name){}
 
   template <typename T>
   bool operator()(const T* const stateT, T* residual) const 
@@ -30,7 +30,7 @@ public:
    
     if(w_d_){
       std::ofstream ofs;
-	    std::string name_output_file = "/home/simon/residuals_optimization_data/time.txt";
+	    std::string name_output_file = "/home/"+user_+"/residuals_optimization_data/time.txt";
 	    ofs.open(name_output_file.c_str(), std::ofstream::app);
 	    if (ofs.is_open()) 
 	      ofs << residual[0] << "/" <<std::endl;
@@ -42,6 +42,7 @@ public:
 
  bool w_d_;
  double wf_, it_;
+ std::string user_;
 
  private:
 };

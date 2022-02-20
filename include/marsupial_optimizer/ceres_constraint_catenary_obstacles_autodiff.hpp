@@ -220,10 +220,11 @@ public:
 	CatenaryFunctor(double weight_factor_1, double weight_factor_3, double safty_bound, float min_length_cat, double length_tether_max_,
 					pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points, Grid3d* grid_3D_,
 					pcl::KdTreeFLANN <pcl::PointXYZ> trav_kdT, pcl::PointCloud <pcl::PointXYZ>::Ptr trav_pc, geometry_msgs::Vector3 pos_reel_ugv, int size, 
-					geometry_msgs::Vector3 fix_pos_ref, ros::NodeHandlePtr nhP_, octomap::OcTree* octotree_full_, float map_resolution, bool write_data, bool use_dist_func_)
+					geometry_msgs::Vector3 fix_pos_ref, ros::NodeHandlePtr nhP_, octomap::OcTree* octotree_full_, float map_resolution, bool write_data, 
+					bool use_dist_func_, std::string user_name)
 					: wf_1(weight_factor_1), sb_(safty_bound), m_L_c_(min_length_cat), kdT_(kdT_From_NN), 
 					o_p_(obstacles_Points), g_3D_(grid_3D_),kdT_trav_(trav_kdT), pc_trav_(trav_pc), pos_reel_ugv_(pos_reel_ugv),size_(size), 
-					fp_ref(fix_pos_ref), o_full_(octotree_full_), m_r_(map_resolution), w_d_(write_data), use_dist_func(use_dist_func_)
+					fp_ref(fix_pos_ref), o_full_(octotree_full_), m_r_(map_resolution), w_d_(write_data), use_dist_func(use_dist_func_), user_(user_name)
 		{
 			nhP = nhP_;
 			
@@ -278,14 +279,14 @@ public:
 
 			if(w_d_){
 				std::ofstream ofs;
-				std::string name_output_file = "/home/simon/residuals_optimization_data/catenary.txt";
+				std::string name_output_file = "/home/"+user_+"/residuals_optimization_data/catenary.txt";
 				ofs.open(name_output_file.c_str(), std::ofstream::app);
 				if (ofs.is_open()) 
 					ofs << residual[0] << " / "
 						<< std::endl;
 				ofs.close();
 				std::ofstream ofs2;
-				std::string name_output_file2 = "/home/simon/residuals_optimization_data/catenary2.txt";
+				std::string name_output_file2 = "/home/"+user_+"/residuals_optimization_data/catenary2.txt";
 				ofs2.open(name_output_file2.c_str(), std::ofstream::app);
 				if (ofs2.is_open()) 
 					ofs2 << residual[0] << " ; "
@@ -329,6 +330,7 @@ public:
 		float m_L_c_, m_r_;
 		int size_;
 		geometry_msgs::Vector3 pos_reel_ugv_, fp_ref;
+		std::string user_;
 
 		octomap::OcTree* o_full_;
 		double sb_;

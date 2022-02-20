@@ -5,20 +5,22 @@ import os
 import csv
 import sys
 
-print("\n\t *** IMPORTANT: Use this script given two parameters: <scenario_number> <initial_position_number> <mode UGV or UAV>***\n")  # Warnning message
-arg1 = sys.argv[1] # number of scenario to analize
-arg2 = sys.argv[2] # number of position to analize
+print("\n\t *** IMPORTANT: Use this script given two parameters: <pc_user_name> <scenario_number> <initial_position_number> ***\n")  # Warnning message
+pc_user = sys.argv[1] # number of position to analize
+arg1 = sys.argv[2] # number of position to analize
+arg2 = sys.argv[3] # number of position to analize
 
-user_ = 'simon' # Change this value to the user name
+# user_ = 'simon' # Change this value to the user name
+user_= pc_user # number of scenario to analize
 
 NE = 100.0 # number of Experiments
 num_parameters = 22
 stage_num = arg1 
 initial_pos = arg2 
 
-file_path_ugv = '/home/' + user_ + '/results_marsupial_optimizer/results_stage_'+ stage_num +'_InitPos_'+ initial_pos + '_method_UGV.txt'
-file_path_uav = '/home/' + user_ + '/results_marsupial_optimizer/results_stage_'+ stage_num +'_InitPos_'+ initial_pos + '_method_UAV.txt'
-file_path = '/home/' + user_ + '/results_marsupial_optimizer/results_stage_'+ stage_num +'_InitPos_'+ initial_pos + '_feasibility_trajectory.txt'
+file_path_ugv = '/home/' + user_ + '/results_marsupial_optimizer/distance_function/results_stage_'+ stage_num +'_InitPos_'+ initial_pos + '_method_UGV.txt'
+file_path_uav = '/home/' + user_ + '/results_marsupial_optimizer/distance_function/results_stage_'+ stage_num +'_InitPos_'+ initial_pos + '_method_UAV.txt'
+file_path = '/home/' + user_ + '/results_marsupial_optimizer/distance_function/results_stage_'+ stage_num +'_InitPos_'+ initial_pos + '_feasibility_trajectory.txt'
 print('Magement Data For: ',file_path) 
 
 matrix1=[] #values for UGV
@@ -36,6 +38,8 @@ lines = file.read().splitlines()
 lines.pop(0) # To remover first row in case have titles 
 
 # Create Matrix to save in rows the values of each experiment
+max_TCGP = 0
+max_TCO = 0
 i = 0
 for l in lines_ugv: # row
     line = l.split(';') 
@@ -49,6 +53,11 @@ for l in lines_ugv: # row
             value = matrix1[i][j]
         else:
             value = sM1[i-1][j] + matrix1[i][j]
+        if (j == 0 and max_TCGP < matrix1[i][j]): # To get Maximum TCGP value
+            max_TCGP = matrix1[i][j]
+        if (j == 1 and max_TCO < matrix1[i][j]): # To get Maximum TCO value
+            max_TCO = matrix1[i][j]
+
         sM1[i].append(value)
         # print('i:',i,' j:',j,' matrix1[i][j]:',matrix1[i][j],' value:',value, ' sM1[i-1][j]:',sM1[i-1][j])
     i+= 1
@@ -87,3 +96,6 @@ output_file2 = open('/home/' + user_ + '/results_marsupial_optimizer/results_man
 output_file2.writelines(str(sM1[99][4]/NE)+';'+str(sM1[99][5]/NE)+';'+str(sM1[99][2]/NE)+';'+str(sM1[99][3]/NE)+';'+str(sM1[99][6]/NE)+';'+str(sM1[99][7]/NE)+';'+str(sM1[99][8]/NE)+';'+str(sM1[99][9]/NE)+';'+str(sM2[99][2]/NE)+';'+str(sM2[99][3]/NE)+';'+str(sM2[99][6]/NE)+';'+str(sM2[99][7]/NE)+';'+str(sM2[99][8]/NE)+';'+str(sM2[99][9]/NE)+';'+str(sM1[99][10]/NE)+';'+str(sM1[99][11]/NE)+';'+str(sM1[99][12]/NE)+';'+str(sM1[99][13]/NE)+'\n')
 output_file2.close()
 
+output_file3 = open('/home/' + user_ + '/results_marsupial_optimizer/distance_function/results_maximum_compute_time.cvs', 'a') # If doesn't exist file, is create and write in the last row
+output_file3.writelines(str(max_TCGP)+';'+str(max_TCO)+'\n')
+output_file3.close()

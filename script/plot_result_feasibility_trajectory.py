@@ -10,18 +10,18 @@ import math
 import sys
 
 # Define argumento of num scenario and num position
-print("\n\t *** IMPORTANT: Use this script given two parameters: <scenario_number> <initial_position_number> ***\n")  # Warnning message
-arg1 = sys.argv[1] # number of scenario to analize
-arg2 = sys.argv[2] # number of position to analize
+print("\n\t *** IMPORTANT: Use this script given two parameters: <pc_user_name> <scenario_number> <initial_position_number> ***\n")  # Warnning message
+pc_user = sys.argv[1] # number of position to analize
+arg1 = sys.argv[2] # number of scenario to analize
+arg2 = sys.argv[3] # number of position to analize
 
 ## Get Data and compute percentage related with Trajectory Optimized
 #Open and managing files and data
-user_ = 'simon' # Change this value to the user name
+user_ = pc_user # Change this value to the user name
 
 path = '/home/'+ user_ +'/results_marsupial_optimizer/'
 file_path = path + 'results'+'_stage_'+ str(arg1)+'_InitPos_'+str(arg2)+'_feasibility_trajectory.txt'
 path_time = '/home/'+ user_ +'/results_marsupial_optimizer/'
-# file_path_time = path_time + 'results'+'_stage_'+ str(arg1)+'_InitPos_'+str(arg2)+'_time_random_planner.txt'
 file_path_time = path_time + 'results'+'_stage_'+ str(arg1)+'_InitPos_'+str(arg2)+'_method_UAV.txt'
 
 count = 0

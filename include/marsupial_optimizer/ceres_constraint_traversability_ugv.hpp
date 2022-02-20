@@ -52,8 +52,8 @@ public:
 
     struct TraversabilityFunctor 
     {
-        TraversabilityFunctor(double weight_factor, pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points, bool write_data)
-            : wf_(weight_factor), kdT_(kdT_From_NN), o_p_(obstacles_Points), w_d_(write_data)
+        TraversabilityFunctor(double weight_factor, pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points, bool write_data, std::string user_name)
+            : wf_(weight_factor), kdT_(kdT_From_NN), o_p_(obstacles_Points), w_d_(write_data), user_(user_name)
         {
             compute_nearest_distance.reset(new ceres::CostFunctionToFunctor<4,4>(
                                     new ceres::NumericDiffCostFunction<ComputeDistanceTraversability,
@@ -87,7 +87,7 @@ public:
             
 	        if(w_d_){
                 std::ofstream ofs;
-                std::string name_output_file = "/home/simon/residuals_optimization_data/traversability_ugv.txt";
+                std::string name_output_file = "/home/"+user_+"/residuals_optimization_data/traversability_ugv.txt";
                 ofs.open(name_output_file.c_str(), std::ofstream::app);
                 if (ofs.is_open()) 
                     ofs << residual[0] << "/" <<std::endl;
@@ -102,6 +102,7 @@ public:
         double wf_;
         pcl::KdTreeFLANN <pcl::PointXYZ> kdT_;
         pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_;
+        std::string user_;
     };
 
 

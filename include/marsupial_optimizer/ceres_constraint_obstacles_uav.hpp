@@ -78,8 +78,8 @@ public:
     struct ObstaclesFunctor 
     {
         ObstaclesFunctor(double weight_factor, double safty_bound, 
-        pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points, std::string path_, bool write_data, Grid3d* g_3D_, bool use_dist_func_)
-            : wf_(weight_factor), sb_(safty_bound), kdT_(kdT_From_NN), o_p_(obstacles_Points), p_(path_), w_d_(write_data), g_3D(g_3D_), use_dist_func(use_dist_func_)
+        pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points, std::string path_, bool write_data, Grid3d* g_3D_, bool use_dist_func_, std::string user_name)
+            : wf_(weight_factor), sb_(safty_bound), kdT_(kdT_From_NN), o_p_(obstacles_Points), p_(path_), w_d_(write_data), g_3D(g_3D_), use_dist_func(use_dist_func_), user_(user_name)
         {
             compute_nearest_distance.reset(new ceres::CostFunctionToFunctor<1,4>(
                                     new ceres::NumericDiffCostFunction<ComputeDistanceObstaclesUAV,
@@ -98,13 +98,6 @@ public:
             double f_slope_ = 5.0;
             
             (*compute_nearest_distance)(statePos1, d_);
-            // arg_d = (statePos1[1]-n_[0])*(statePos1[1]-n_[0]) + (statePos1[2]-n_[1])*(statePos1[2]-n_[1]) + (statePos1[3]-n_[2])*(statePos1[3]-n_[2]);
-            
-            // if (arg_d < 0.0001 && arg_d > -0.0001)
-            //     d_ = T{0.0};
-            // else
-            //     d_ = sqrt(arg_d);
-
 
             T d_sb_ = sb_ * T{1.05};
             T max_value_residual = T{100.0};
@@ -122,7 +115,7 @@ public:
 
 	        if(w_d_){
                 std::ofstream ofs;
-                std::string name_output_file = "/home/simon/residuals_optimization_data/obstacles_ugv.txt";
+                std::string name_output_file = "/home/"+user_+"/residuals_optimization_data/obstacles_ugv.txt";
                 ofs.open(name_output_file.c_str(), std::ofstream::app);
                 if (ofs.is_open()) 
                     ofs << residual[0] << "/" <<std::endl;
@@ -135,6 +128,7 @@ public:
         bool w_d_, use_dist_func;
         double wf_, sb_;
         std::string p_;
+        std::string user_;
         std::unique_ptr<ceres::CostFunctionToFunctor<1,4> > compute_nearest_distance;
         pcl::KdTreeFLANN <pcl::PointXYZ> kdT_;
         pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_;

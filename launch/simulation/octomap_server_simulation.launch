@@ -1,0 +1,10 @@
+<launch>
+	<arg name="map_name" default="arco_test"/>
+    <arg name="static_map_file" default="$(find marsupial_optimizer)/maps/arco/$(arg map_name)"/>
+
+	<node pkg="octomap_server" type="octomap_server_node" name="octomap_server_full_node" output="screen" args="$(arg static_map_file).bt">
+		<param name="base_frame_id" value="arco/base_link"/>
+		<param name="frame_id" value="map"/>
+	</node>
+
+</launch>

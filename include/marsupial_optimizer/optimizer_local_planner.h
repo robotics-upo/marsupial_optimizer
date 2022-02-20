@@ -13,11 +13,14 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 
 #include <stdio.h>
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <iterator>
 #include <string>
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
+#include <yaml-cpp/yaml.h>
+#include <ctime>
 
 #include "ceres/ceres.h"
 #include "glog/logging.h"
@@ -171,6 +174,7 @@ public:
 	void cleanResidualConstraintsFile();
 	bool computeCatenary(int p_, int mode_, double &l_cat_);
 	double getPointDistanceFullMap(bool use_dist_func_, geometry_msgs::Vector3 p_);
+	void exportOptimizerPath();
 
 	upo_actions::ExecutePathResult action_result;
 
@@ -188,7 +192,7 @@ public:
 	tf::TransformListener listener;
 	geometry_msgs::TransformStamped pose_reel_global, pose_reel_local;
 
-	std::string path, files_results, files_residuals, name_output_file;
+	std::string path, files_results, files_residuals, name_output_file, user_name;
 
     double map_resolution;
 	float step , step_inv;

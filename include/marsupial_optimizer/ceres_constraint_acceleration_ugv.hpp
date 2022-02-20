@@ -19,8 +19,8 @@ using ceres::Solver;
 class AccelerationFunctorUGV {
 
 public:
-  AccelerationFunctorUGV(double weight_factor, double init_acc_ugv, double count_fix_points_ugv, bool write_data): 
-  wf_(weight_factor), ia_ugv_(init_acc_ugv), cfp_ugv(count_fix_points_ugv), w_d_(write_data) {}
+  AccelerationFunctorUGV(double weight_factor, double init_acc_ugv, double count_fix_points_ugv, bool write_data, std::string user_name): 
+  wf_(weight_factor), ia_ugv_(init_acc_ugv), cfp_ugv(count_fix_points_ugv), w_d_(write_data), user_(user_name) {}
 
 	template <typename T>
 	bool operator()(const T* const statePosUGV1, const T* const statePosUGV2, const T* const statePosUGV3,
@@ -70,7 +70,7 @@ public:
 
 		if(w_d_){
 			std::ofstream ofs;
-			std::string name_output_file = "/home/simon/residuals_optimization_data/acceleration_ugv.txt";
+			std::string name_output_file = "/home/"+user_+"/residuals_optimization_data/acceleration_ugv.txt";
 			ofs.open(name_output_file.c_str(), std::ofstream::app);
 			if (ofs.is_open()) 
 				ofs << residual[0] << "/" <<std::endl;
@@ -82,7 +82,7 @@ public:
 
  double wf_, ia_ugv_, ia_uav_ , cfp_ugv;
  bool w_d_;
-
+ std::string user_;
  private:
 };
 

@@ -3,7 +3,7 @@
 arg1="$1"
 arg2="$2"
 
-echo "Set parameter: <pc_user_name> <tree_name>"
+echo "Set parameter: <pc_user_name> <tree_name.xml>"
 echo "    pc_user_name: $arg1"
 echo "    tree_name: $arg2"
 

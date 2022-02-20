@@ -20,8 +20,8 @@ class SmoothnessFunctorUAV
 {
 
 public:
-  SmoothnessFunctorUAV(double weight_factor, double angle_bound, bool write_data)
-  : wf_(weight_factor), ang_(angle_bound), w_d_(write_data) 
+  SmoothnessFunctorUAV(double weight_factor, double angle_bound, bool write_data, std::string user_name)
+  : wf_(weight_factor), ang_(angle_bound), w_d_(write_data), user_(user_name) 
   {}
 
   	template <typename T>
@@ -69,7 +69,7 @@ public:
 		
 		if(w_d_){
 			std::ofstream ofs;
-			std::string name_output_file = "/home/simon/residuals_optimization_data/smoothness_uav.txt";
+			std::string name_output_file = "/home/"+user_+"/residuals_optimization_data/smoothness_uav.txt";
 			ofs.open(name_output_file.c_str(), std::ofstream::app);
 			if (ofs.is_open()) 
 				ofs << residual[0] << "/" <<std::endl;
@@ -81,6 +81,7 @@ public:
 
  bool w_d_;
  double wf_, ang_;
+ std::string user_;
 
  private:
 };

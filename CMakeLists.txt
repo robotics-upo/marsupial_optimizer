@@ -95,7 +95,7 @@ catkin_package(
   pcl_ros
   octomap_msgs 
   octomap_ros
-  DEPENDS system_lib octomap_msgs octomap_ros
+  DEPENDS system_lib octomap_msgs octomap_ros yaml-cpp
 )
 
 include_directories(  ${catkin_INCLUDE_DIRS}  ${PCL_INCLUDE_DIRS} )
@@ -118,26 +118,28 @@ include_directories(include)
 
 add_library(marsupial_optimizer 
 src/bisection_catenary_3D.cpp
-
-  ) 
+) 
 target_link_libraries(marsupial_optimizer
    ${EXTERNAL_LIBS}
    ${catkin_LIBRARIES}
+   yaml-cpp
 )
 
 # add_executable(optimizer_local_planner_fix_ugv src/optimizer_local_planner_fix_ugv.cc)
 # target_link_libraries(optimizer_local_planner_fix_ugv Ceres::ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES} ${EXTERNAL_LIBS})
 
-add_executable(optimizer_local_planner_fix_ugv_node src/optimizer_local_planner_fix_ugv_node.cpp src/optimizer_local_planner_fix_ugv.cc src/marker_publisher.cpp)
+add_executable(optimizer_local_planner_fix_ugv_node src/optimizer_local_planner_fix_ugv_node.cpp src/optimizer_local_planner_fix_ugv.cc src/marker_publisher.cpp )
 # add_dependencies(optimizer_local_planner_fix_ugv_node ${PROJECT_NAME}_gencfg)
-target_link_libraries(optimizer_local_planner_fix_ugv_node marsupial_optimizer  Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES})
+target_link_libraries(optimizer_local_planner_fix_ugv_node marsupial_optimizer  Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES} yaml-cpp)
 
 add_executable(region_growing_segmentation_node src/region_growing_segmentation_node.cpp)
-target_link_libraries (region_growing_segmentation_node   ${PCL_LIBRARIES} ${catkin_LIBRARIES})
+target_link_libraries (region_growing_segmentation_node ${PCL_LIBRARIES} ${catkin_LIBRARIES})
 
-add_executable(optimizer_local_planner_node src/optimizer_local_planner_node.cpp src/optimizer_local_planner.cc src/marker_publisher.cpp)
+add_executable(optimizer_local_planner_node src/optimizer_local_planner_node.cpp 
+                                            src/optimizer_local_planner.cc 
+                                            src/marker_publisher.cpp)
 # add_dependencies(optimizer_local_planner_node ${PROJECT_NAME}_gencfg)
-target_link_libraries(optimizer_local_planner_node marsupial_optimizer  Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES})
+target_link_libraries(optimizer_local_planner_node marsupial_optimizer  Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES} yaml-cpp)
 
 add_executable(optimizer_publisher_tf_node src/optimizer_publisher_tf_node.cpp src/marker_publisher.cpp) 
 # add_dependencies(optimizer_publisher_tf_node ${PROJECT_NAME}_gencfg)
@@ -147,13 +149,15 @@ add_executable(test_catenary_optimizer src/test_catenary_optimizer.cc src/marker
 # add_dependencies(optimizer_local_planner_node ${PROJECT_NAME}_gencfg)
 target_link_libraries(test_catenary_optimizer marsupial_optimizer  Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES})
 
+add_executable(test_node_yaml src/test_node_yaml.cpp) 
+target_link_libraries(test_node_yaml marsupial_optimizer yaml-cpp)
+
 # add_executable(catenary_solver_test_ceres src/catenary_solver_test_ceres.cpp )
 # # add_dependencies(optimizer_local_planner_fix_ugv_node ${PROJECT_NAME}_gencfg)
 # target_link_libraries(catenary_solver_test_ceres marsupial_optimizer  Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES})
 
 # add_executable(local_plann_optimizer_ceres_test src/local_plann_optimizer_ceres_test.cpp )
 # target_link_libraries(local_plann_optimizer_ceres_test marsupial_optimizer  Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES})
-
 
 # As this is a C file #including <math.h> we have to explicitly add the math
 # library (libm). Although some compilers (dependent upon options) will accept

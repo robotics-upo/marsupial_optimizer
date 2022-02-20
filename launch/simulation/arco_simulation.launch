@@ -1,0 +1,33 @@
+<launch>
+    <!-- Define real/simulation and controller type -->
+    <arg name="controller" value="controller" />                              <!-- Controller - joystick, move_base or controller -->
+    <arg name="simulation" value="true" />                                  <!-- Define if it will run on a robot or simulation -->
+    <arg name="config" value="lispolis" />    
+    <arg name="mapping" value="false" />
+
+    <!-- Start Gazebo environment -->
+    <param name="use_sim_time" value="true" />
+    <include file="$(find idmind_arco)/launch/empty_world.launch">
+        <arg name="world_name" default="$(find idmind_arco)/worlds/$(arg config)_simul.world" />
+        <arg name="paused" value="false" />
+        <arg name="gui" value="true" />
+        <arg name="debug" value="false" />
+        <arg name="verbose" value="false" />
+    </include>
+
+    <!-- Start Robot. Call again with different name for several robots -->
+    <include file="$(find idmind_arco)/launch/start_robot.launch">
+        <arg name="controller" value="$(arg controller)" />
+        <arg name="simulation" value="true" />
+        <arg name="config" value="$(arg config)" />
+        <arg name="robot_name" value="arco" />
+        <arg name="mapping" value="$(arg mapping)" />
+    </include>
+
+    <group if="$(arg mapping)">
+        <include file="$(find idmind_arco)/launch/arco_gmapping.launch" >
+            <arg name="robot_name" value="arco" />
+        </include>
+    </group>
+
+</launch>

@@ -1,5 +1,5 @@
 /*
-Optimizer Local Planner based in g2o for Marsupial Robotics COnfiguration 
+Optimizer Local Planner based in Ceres Solver for Marsupial Robotics COnfiguration 
 Simon Martinez Rozas, 2020 
 Service Robotics Lab, University Pablo de Olavide , Seville, Spain 
  */
@@ -97,6 +97,7 @@ OptimizerLocalPlanner::OptimizerLocalPlanner()
 	nh->param<bool>("verbose_optimizer",verbose_optimizer, true);
 	nh->param<bool>("write_data_for_analysis",write_data_for_analysis, false);
 	nh->param("path", path, (std::string) "~/");
+	nh->param("pc_user_name", user_name, (std::string) "simon");
 	nh->param("files_results", files_results, (std::string) "results/");
 	nh->param("files_residuals", files_residuals, (std::string) "residuals/");
 	nh->param("name_output_file", name_output_file, (std::string) "optimization_test");
@@ -316,7 +317,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			ROS_INFO(PRINTF_GREEN"		- Optimize Equidistance Autodiff");
 			for (int i = 0; i <  statesPosUGV.size() - 1 ; ++i) {
 				CostFunction* cost_function_ugv_1  = new AutoDiffCostFunction<EquiDistanceFunctorUGV, 1, 4, 4>
-												(new EquiDistanceFunctorUGV(w_alpha_ugv, initial_distance_states_ugv,write_data_residual)); 
+												(new EquiDistanceFunctorUGV(w_alpha_ugv, initial_distance_states_ugv,write_data_residual, user_name)); 
 				problem.AddResidualBlock(cost_function_ugv_1, NULL, statesPosUGV[i].parameter, statesPosUGV[i+1].parameter);
 				if (i < count_fix_points_initial_ugv)
 					problem.SetParameterBlockConstant(statesPosUGV[i].parameter);
@@ -348,7 +349,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			for (int i = 0; i < statesPosUGV.size(); ++i) {
 				CostFunction* cost_function_ugv_3  = new AutoDiffCostFunction<ObstacleDistanceFunctorUGV::ObstaclesFunctorUGV, 1, 4>
 												(new ObstacleDistanceFunctorUGV::ObstaclesFunctorUGV(w_beta_ugv,distance_obstacle_ugv,
-																									nn_ugv_obs.kdtree,nn_ugv_obs.obs_points,write_data_residual)); 
+																									nn_ugv_obs.kdtree,nn_ugv_obs.obs_points,write_data_residual,user_name)); 
 				problem.AddResidualBlock(cost_function_ugv_3, NULL, statesPosUGV[i].parameter);
 				if (i < count_fix_points_initial_ugv)
 					problem.SetParameterBlockConstant(statesPosUGV[i].parameter);
@@ -369,7 +370,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			ROS_INFO(PRINTF_GREEN"		- Optimize Traversability Autodiff");
 			for (int i = 0; i < statesPosUGV.size(); ++i) {
 				CostFunction* cost_function_ugv_4  = new AutoDiffCostFunction<TraversabilityDistanceFunctorUGV::TraversabilityFunctor, 1, 4>
-												(new TraversabilityDistanceFunctorUGV::TraversabilityFunctor(w_theta_ugv, nn_trav.kdtree, nn_trav.obs_points, write_data_residual)); 
+												(new TraversabilityDistanceFunctorUGV::TraversabilityFunctor(w_theta_ugv, nn_trav.kdtree, nn_trav.obs_points, write_data_residual,user_name)); 
 				problem.AddResidualBlock(cost_function_ugv_4, NULL, statesPosUGV[i].parameter);
 				if (i < count_fix_points_initial_ugv)
 					problem.SetParameterBlockConstant(statesPosUGV[i].parameter);
@@ -389,7 +390,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			ROS_INFO(PRINTF_GREEN"		- Optimize Smoothness Autodiff");
 			for (int i = 0; i < statesPosUGV.size() - 2; ++i) {
 				if ( (i >= count_fix_points_initial_ugv)  && i<(statesPosUGV.size() - (count_fix_points_final_ugv+1))){
-					CostFunction* cost_function_ugv_5  = new AutoDiffCostFunction<SmoothnessFunctorUGV, 1, 4, 4, 4>(new SmoothnessFunctorUGV(w_gamma_ugv, angle_min_traj,write_data_residual)); 
+					CostFunction* cost_function_ugv_5  = new AutoDiffCostFunction<SmoothnessFunctorUGV, 1, 4, 4, 4>(new SmoothnessFunctorUGV(w_gamma_ugv, angle_min_traj,write_data_residual,user_name)); 
 					problem.AddResidualBlock(cost_function_ugv_5, NULL, statesPosUGV[i].parameter, statesPosUGV[i+1].parameter, statesPosUGV[i+2].parameter);
 				}
 			}
@@ -415,7 +416,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		if (time_constraint){
 			ROS_INFO(PRINTF_GREEN"		- Optimize Time Autodiff");
 			for (int i = 0; i < statesTime.size(); ++i) {
-				CostFunction* cost_function_time  = new AutoDiffCostFunction<TimeFunctor, 1, 2> (new TimeFunctor(w_delta, initial_time, write_data_residual)); 
+				CostFunction* cost_function_time  = new AutoDiffCostFunction<TimeFunctor, 1, 2> (new TimeFunctor(w_delta, initial_time, write_data_residual, user_name)); 
 				problem.AddResidualBlock(cost_function_time, NULL, statesTime[i].parameter);
 				if (i < count_fix_points_initial_ugv) 
 					problem.SetParameterBlockConstant(statesTime[i].parameter);
@@ -428,7 +429,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			ROS_INFO(PRINTF_GREEN"		- Optimize Velocity Autodiff");
 			for (int i = 0; i < statesTime.size() - 1; ++i) {
 				CostFunction* cost_function_ugv_8  = new AutoDiffCostFunction<VelocityFunctorUGV, 1, 4, 4, 2>
-													(new VelocityFunctorUGV(w_epsilon_ugv, initial_velocity_ugv, count_fix_points_initial_ugv,write_data_residual)); 
+													(new VelocityFunctorUGV(w_epsilon_ugv, initial_velocity_ugv, count_fix_points_initial_ugv,write_data_residual,user_name)); 
 				problem.AddResidualBlock(cost_function_ugv_8, NULL, statesPosUGV[i].parameter, statesPosUGV[i+1].parameter, statesTime[i+1].parameter);
 			}
 		}
@@ -437,7 +438,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			ROS_INFO(PRINTF_GREEN"		- Optimize Acceleration Autodiff");
 			for (int i = 0; i < statesTime.size() - 2; ++i) {
 				CostFunction* cost_function_ugv_9  = new AutoDiffCostFunction<AccelerationFunctorUGV, 1, 4, 4, 4, 2, 2>
-													(new AccelerationFunctorUGV(w_zeta_ugv, initial_acceleration_ugv, count_fix_points_initial_ugv,write_data_residual)); 
+													(new AccelerationFunctorUGV(w_zeta_ugv, initial_acceleration_ugv, count_fix_points_initial_ugv,write_data_residual,user_name)); 
 				problem.AddResidualBlock(cost_function_ugv_9, NULL, statesPosUGV[i].parameter, statesPosUGV[i+1].parameter, statesPosUGV[i+2].parameter, 
 																statesTime[i+1].parameter, statesTime[i+2].parameter);
 			}
@@ -455,7 +456,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			ROS_INFO(PRINTF_BLUE"		- Optimize Equidistance Autodiff");
 			for (int i = 0; i <  statesPosUAV.size() - 1 ; ++i) {
 				CostFunction* cost_function_uav_1  = new AutoDiffCostFunction<EquiDistanceFunctorUAV, 1, 4 ,4>
-												(new EquiDistanceFunctorUAV(w_alpha_uav, initial_distance_states_uav, write_data_residual)); 
+												(new EquiDistanceFunctorUAV(w_alpha_uav, initial_distance_states_uav, write_data_residual, user_name)); 
 				problem.AddResidualBlock(cost_function_uav_1, NULL, statesPosUAV[i].parameter, statesPosUAV[i+1].parameter);
 				if (i < count_fix_points_uav){ 
 					problem.SetParameterBlockConstant(statesPosUAV[i].parameter);
@@ -500,7 +501,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			ROS_INFO(PRINTF_BLUE"		- Optimize Obstacles Autodiff");
 			for (int i = 0; i < statesPosUAV.size(); ++i) {
 				CostFunction* cost_function_uav_2  = new AutoDiffCostFunction<ObstacleDistanceFunctorUAV::ObstaclesFunctor , 1, 4>
-												(new ObstacleDistanceFunctorUAV::ObstaclesFunctor (w_beta_uav, distance_obstacle_uav, nn_uav.kdtree, nn_uav.obs_points, path+files_results, write_data_residual, grid_3D, use_distance_function)); 
+												(new ObstacleDistanceFunctorUAV::ObstaclesFunctor (w_beta_uav, distance_obstacle_uav, nn_uav.kdtree, nn_uav.obs_points, path+files_results, write_data_residual, grid_3D, use_distance_function, user_name)); 
 				problem.AddResidualBlock(cost_function_uav_2, NULL, statesPosUAV[i].parameter);
 				if (i == 0)
 					problem.SetParameterBlockConstant(statesPosUAV[i].parameter);
@@ -537,7 +538,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			ROS_INFO(PRINTF_BLUE"		- Optimize Smoothness Autodiff");
 			for (int i = 0; i < statesPosUAV.size() - 2; ++i) {
 				CostFunction* cost_function_uav_4  = new AutoDiffCostFunction<SmoothnessFunctorUAV, 1, 4, 4, 4>
-												 (new SmoothnessFunctorUAV(w_gamma_uav, angle_min_traj,write_data_residual)); 
+												 (new SmoothnessFunctorUAV(w_gamma_uav, angle_min_traj,write_data_residual,user_name)); 
 				problem.AddResidualBlock(cost_function_uav_4, NULL, statesPosUAV[i].parameter, statesPosUAV[i+1].parameter, statesPosUAV[i+2].parameter);
 			}
 		}	
@@ -573,7 +574,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			ROS_INFO(PRINTF_BLUE"		- Optimize Velocity Autodiff");
 			for (int i = 0; i < statesTime.size() - 1; ++i) {
 				CostFunction* cost_function_uav_7  = new AutoDiffCostFunction<VelocityFunctorUAV, 1, 4, 4, 2>
-												(new VelocityFunctorUAV(w_epsilon_uav, initial_velocity_uav,write_data_residual)); 
+												(new VelocityFunctorUAV(w_epsilon_uav, initial_velocity_uav,write_data_residual, user_name)); 
 				problem.AddResidualBlock(cost_function_uav_7, NULL, 
 										statesPosUAV[i].parameter, statesPosUAV[i+1].parameter, 
 										statesTime[i+1].parameter);
@@ -585,7 +586,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			ROS_INFO(PRINTF_BLUE"		- Optimize Acceleration Autodiff");
 			for (int i = 0; i < statesTime.size() - 2; ++i) {
 				CostFunction* cost_function_uav_8  = new AutoDiffCostFunction<AccelerationFunctorUAV, 1, 4, 4, 4, 2, 2>
-												(new AccelerationFunctorUAV(w_zeta_uav, initial_acceleration_uav,write_data_residual)); 
+												(new AccelerationFunctorUAV(w_zeta_uav, initial_acceleration_uav,write_data_residual, user_name)); 
 				problem.AddResidualBlock(cost_function_uav_8, NULL, 
 										statesPosUAV[i].parameter, statesPosUAV[i+1].parameter, statesPosUAV[i+2].parameter, 
 										statesTime[i+1].parameter, statesTime[i+2].parameter);
@@ -603,7 +604,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 				CostFunction* cost_function_cat_1  = new AutoDiffCostFunction<AutodiffCatenaryFunctor::CatenaryFunctor, 1, 4, 4, 2>
 											(new AutodiffCatenaryFunctor::CatenaryFunctor(w_eta_1, w_eta_3, distance_catenary_obstacle, vec_len_cat_init[i], length_tether_max, nn_uav.kdtree, 
 												nn_uav.obs_points, grid_3D, nn_trav.kdtree, nn_trav.obs_points, pose_reel_local.transform.translation, size_path, 
-												new_path_uav[i], nh, mapFull_msg, step, write_data_residual, use_distance_function)); 
+												new_path_uav[i], nh, mapFull_msg, step, write_data_residual, use_distance_function, user_name)); 
 				problem.AddResidualBlock(cost_function_cat_1, NULL, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesLength[i].parameter);
 				if (i == 0 || (fix_last_position_ugv && i == statesLength.size()-1))
 					problem.SetParameterBlockConstant(statesLength[i].parameter);
@@ -678,7 +679,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	finishigOptimizationAndGetDataResult(n_coll_opt_traj_ugv_, n_coll_init_path_ugv_, n_coll_opt_traj_uav_, n_coll_init_path_uav_, n_coll_opt_cat_);
 
 	cleanVectors();		//Clear vector after optimization and previus the next iteration
-	double time_sleep_ = 10.0;
+	double time_sleep_ = 2.0;
 	
 	// Inform if is a feabible Trajectory or not, and visualize traj in RVIZ
 	if (n_coll_opt_traj_ugv_ == 0 && n_coll_opt_traj_uav_ == 0 && n_coll_opt_cat_== 0 ){
@@ -764,6 +765,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		execute_path_srv_ptr->setSucceeded(action_result);
 	}
 	
+	exportOptimizerPath();
 	std::cout <<"Optimization Local Planner Proccess ended !!!!!!!!!!!!!!!!!!!!!!!" << std::endl << "==================================================="<< std::endl << std::endl << std::endl;
 	resetFlags();
 }
@@ -1268,7 +1270,6 @@ void OptimizerLocalPlanner::getReelPose()
     }catch (tf2::TransformException &ex){
         ROS_WARN("Optimizer Local Planner: Couldn't get Local Reel Pose (frame: %s), so not possible to set Tether start point; tf exception: %s", reel_base_frame.c_str(),ex.what());
     }
-
 }
 
 geometry_msgs::Vector3 OptimizerLocalPlanner::getReelPoint(const float px_, const float py_, const float pz_,const float qx_, const float qy_, const float qz_, const float qw_)
@@ -1561,101 +1562,75 @@ bool OptimizerLocalPlanner::computeCatenary(int p_, int mode_, double &l_cat_)
 
 void OptimizerLocalPlanner::cleanResidualConstraintsFile()
 {
-    std::string path_ = path+files_residuals;
+    std::string path_;
 
-	if( remove("/home/simon/residuals_optimization_data/acceleration_uav.txt") != 0 ){
+	path_ = path+files_residuals+"acceleration_uav.txt";
+	if( remove(path_.c_str()) != 0 )
     	perror( "Error deleting file: acceleration_uav.txt" );
-	}
 	// else
     // 	puts( "File successfully deleted: acceleration_uav.txt" );
 
-	if( remove( "/home/simon/residuals_optimization_data/acceleration_ugv.txt" ) != 0 ){
+	path_ = path+files_residuals+"acceleration_ugv.txt";
+	if( remove(path_.c_str()) != 0 )
     	perror( "Error deleting file: acceleration_ugv.txt" );
-  	}
 	// else
     // 	puts( "File successfully deleted: acceleration_ugv.txt" );	
 
-	if( remove( "/home/simon/residuals_optimization_data/velocity_uav.txt" ) != 0 ){
+	path_ = path+files_residuals+"velocity_uav.txt";
+	if( remove( path_.c_str()) != 0 )
     	perror( "Error deleting file: velocity_uav.txt" );
-  	}
-	// else
-    // 	puts( "File successfully deleted: velocity_uav.txt" );
 
-	if( remove( "/home/simon/residuals_optimization_data/velocity_ugv.txt" ) != 0 ){
+	path_ = path+files_residuals+"velocity_ugv.txt";
+	if( remove( path_.c_str() ) != 0 )
     	perror( "Error deleting file: velocity_ugv.txt" );
-  	}
-	// else
-    // 	puts( "File successfully deleted: velocity_ugv.txt" );	
 
-	if( remove( "/home/simon/residuals_optimization_data/equidistance_uav.txt" ) != 0 ){
+	path_ = path+files_residuals+"equidistance_uav.txt";
+	if( remove( path_.c_str() ) != 0 )
     	perror( "Error deleting file: equidistance_uav.txt" );
-  	}
-	// else
-    // 	puts( "File successfully deleted: equidistance_uav.txt" );
 
-	if( remove( "/home/simon/residuals_optimization_data/equidistance_ugv.txt" ) != 0 ){
+	path_ = path+files_residuals+"equidistance_ugv.txt";
+	if( remove( path_.c_str() ) != 0 )
     	perror( "Error deleting file: equidistance_ugv.txt" );
-  	}
-	// else
-    // 	puts( "File successfully deleted: equidistance_ugv.txt");	
 
-	if( remove( "/home/simon/residuals_optimization_data/smoothness_uav.txt" ) != 0 ){
+	path_ = path+files_residuals+"smoothness_uav.txt";
+	if( remove( path_.c_str() ) != 0 )
     	perror( "Error deleting file: smoothness_uav.txt" );
-  	}
-	// else
-    // 	puts( "File successfully deleted: smoothness_uav.txt" );
 
-	if( remove( "/home/simon/residuals_optimization_data/smoothness_ugv.txt" ) != 0 ){
+	path_ = path+files_residuals+"smoothness_ugv.txt";
+	if( remove( path_.c_str() ) != 0 )
     	perror( "Error deleting file: smoothness_ugv.txt" );
-  	}
-	// else
-    // 	puts( "File successfully deleted: smoothness_ugv.txt");	
 
-	if( remove( "/home/simon/residuals_optimization_data/obstacles_uav.txt" ) != 0 ){
+	path_ = path+files_residuals+"obstacles_uav.txt";
+	if( remove( path_.c_str() ) != 0 )
     	perror( "Error deleting file: obstacles_uav.txt");
-  	}
-	// else
-    // 	puts( "File successfully deleted: obstacles_uav.txt");
 
-	if( remove( "/home/simon/residuals_optimization_data/obstacles_ugv.txt" ) != 0 ){
+	path_ = path+files_residuals+"obstacles_ugv.txt";
+	if( remove( path_.c_str() ) != 0 )
     	perror( "Error deleting file: obstacles_ugv.txt");
-  	}
-	// else
-    	// puts( "File successfully deleted: obstacles_ugv.txt");	
 
-	if( remove( "/home/simon/residuals_optimization_data/traversability_ugv.txt" ) != 0 ){
-    	perror( "Error deleting file: traversability.txt");
-  	}
-	// else
-    	// puts( "File successfully deleted: traversability.txt");
+	path_ = path+files_residuals+"traversability_ugv.txt";
+	if( remove( path_.c_str() ) != 0 )
+    	perror( "Error deleting file: traversability_ugv.txt");
 
-	if( remove( "/home/simon/residuals_optimization_data/time.txt" ) != 0 ){
+	path_ = path+files_residuals+"time.txt";
+	if( remove( path_.c_str() ) != 0 )
     	perror( "Error deleting file: time.txt");
-  	}
-	// else
-    	// puts( "File successfully deleted: time.txt");	
 
-	if( remove( "/home/simon/residuals_optimization_data/catenary.txt" ) != 0 ){
+	path_ = path+files_residuals+"catenary.txt";
+	if( remove( path_.c_str() ) != 0 )
     	perror( "Error deleting file: catenary.txt");
-  	}
 	
-	if( remove( "/home/simon/residuals_optimization_data/catenary_length.txt" ) != 0 ){
+	path_ = path+files_residuals+"catenary_length.txt";
+	if( remove( path_.c_str() ) != 0 )
     	perror( "Error deleting file: catenary_length.txt");
-  	}
-	// else
-    	// puts( "File successfully deleted: catenary.txt");
-	if( remove( "/home/simon/residuals_optimization_data/catenary_length2.txt" ) != 0 ){
+
+	path_ = path+files_residuals+"catenary_length2.txt";
+	if( remove( path_.c_str() ) != 0 )
     	perror( "Error deleting file: catenary_length2.txt");
-  	}
-	// else
-    	// puts( "File successfully deleted: catenary.txt");
 
-
-	if( remove( "/home/simon/residuals_optimization_data/catenary2.txt" ) != 0 ){
+	path_ = path+files_residuals+"catenary2.txt";
+	if( remove( path_.c_str() ) != 0 )
     	perror( "Error deleting file: catenary2.txt");
-  	}
-	// else
-    	// puts( "File successfully deleted: catenary2.txt");	
 }
 
 double OptimizerLocalPlanner::getPointDistanceFullMap(bool use_dist_func_, geometry_msgs::Vector3 p_)
@@ -1679,4 +1654,104 @@ double OptimizerLocalPlanner::getPointDistanceFullMap(bool use_dist_func_, geome
 	}
 	
 	return dist;
+}
+
+void OptimizerLocalPlanner::exportOptimizerPath()
+{
+    time_t ttime = time(0);
+    // cout << "Number of seconds elapsed since January 1, 1990:" << ttime << endl;
+    tm *local_time = localtime(&ttime);
+    
+    // cout << "Year: "<< 1900 + local_time->tm_year << endl;
+    // cout << "Month: "<< 1 + local_time->tm_mon<< endl;
+    // cout << "Day: "<< local_time->tm_mday << endl;
+    // cout << "Time: "<< local_time->tm_hour << ":";
+    // cout << 1 + local_time->tm_min << ":";
+    // cout << 1 + local_time->tm_sec << endl;
+
+    string year_, month_, day_, hour_, min_, sec_;
+    year_ = to_string(1900 + local_time->tm_year);
+    month_ = to_string(1 + local_time->tm_mon);
+    day_ = to_string(local_time->tm_mday);
+    hour_ = to_string(local_time->tm_hour); 
+    min_ = to_string(local_time->tm_min); 
+    sec_ = to_string(1 + local_time->tm_sec);
+
+    // Root of our file
+    YAML::Node root_ugv, root_uav;
+
+    // Populate emitter
+    YAML::Emitter emitter;
+
+    // // Create a node listing some values
+    root_ugv["marsupial_ugv"] = YAML::Node(YAML::NodeType::Map);
+    // // We now will write our values under root["MyNode"]
+    YAML::Node node = root_ugv["marsupial_ugv"];
+    // YAML::Node node;
+    // Write some values
+    node["header"] = "marsupial_ugv";
+    node["seq"] = 1;
+    node["stamp"] = hour_+min_+sec_;
+    node["frame_id"] = "ugv";
+    
+	// printf("vec_pose_ugv_opt.size()=%lu , vec_pose_uav_opt.size()%lu\n",vec_pose_ugv_opt.size(),vec_pose_uav_opt.size());
+    for(int i=0 ; i < vec_pose_ugv_opt.size(); i++){
+        node["poses"+to_string(i)]["header"] = "ugv"+to_string(i);
+        node["poses"+to_string(i)]["seq"] = i;
+        // node["poses"+std::to_string(i)]["stamp"] = i;
+        node["poses"+to_string(i)]["frame_id"] = "ugv";  
+        node["poses"+to_string(i)]["pose"]["position"]["x"] = vec_pose_ugv_opt[i].x;
+        node["poses"+to_string(i)]["pose"]["position"]["y"] = vec_pose_ugv_opt[i].y;
+        node["poses"+to_string(i)]["pose"]["position"]["z"] = vec_pose_ugv_opt[i].z;
+        node["poses"+to_string(i)]["pose"]["orientation"]["x"] = vec_opt_rot_ugv[i].x;
+        node["poses"+to_string(i)]["pose"]["orientation"]["y"] = vec_opt_rot_ugv[i].y;
+        node["poses"+to_string(i)]["pose"]["orientation"]["z"] = vec_opt_rot_ugv[i].z;
+        node["poses"+to_string(i)]["pose"]["orientation"]["w"] = vec_opt_rot_ugv[i].w;
+		// printf("vec_pose_ugv_opt=[%f %f %f]\n",vec_pose_ugv_opt[i].x,vec_pose_ugv_opt[i].y,vec_pose_ugv_opt[i].z);
+    }
+
+    emitter << root_ugv;
+
+    // // Create a node listing some values
+    root_uav["marsupial_uav"] = YAML::Node(YAML::NodeType::Map);
+    // // We now will write our values under root["MyNode"]
+    node = root_uav["marsupial_uav"];
+    // YAML::Node node;
+    // Write some values
+    node["header"] = "marsupial_uav";
+    node["seq"] = 1;
+    node["stamp"] = hour_+min_+sec_ ;
+    node["frame_id"] = "uav";
+    for(int i=0 ; i < vec_pose_uav_opt.size(); i++){
+        node["poses"+to_string(i)]["header"] = "uav"+to_string(i);
+        node["poses"+to_string(i)]["seq"] = i;
+        // node["poses"+std::to_string(i)]["stamp"] = i;
+        node["poses"+to_string(i)]["frame_id"] = "uav";  
+        node["poses"+to_string(i)]["pose"]["position"]["x"] = vec_pose_uav_opt[i].x;
+        node["poses"+to_string(i)]["pose"]["position"]["y"] = vec_pose_uav_opt[i].y;
+        node["poses"+to_string(i)]["pose"]["position"]["z"] = vec_pose_uav_opt[i].z;
+        node["poses"+to_string(i)]["pose"]["orientation"]["x"] = vec_opt_rot_uav[i].x;
+        node["poses"+to_string(i)]["pose"]["orientation"]["y"] = vec_opt_rot_uav[i].y;
+        node["poses"+to_string(i)]["pose"]["orientation"]["z"] = vec_opt_rot_uav[i].z;
+        node["poses"+to_string(i)]["pose"]["orientation"]["w"] = vec_opt_rot_uav[i].w;
+        // cout << "i: " << i << " , value:" <<node["poses"+to_string(i)]["pose"]["position"]["x"] << endl;
+        // cout << "i: " << i << " , value:" <<node["poses"+to_string(i)]["pose"]["position"]["y"] << endl;
+        // cout << "i: " << i << " , value:" <<node["poses"+to_string(i)]["pose"]["position"]["z"] << endl;
+        // cout << "i: " << i << " , value:" <<node["poses"+to_string(i)]["pose"]["orientation"]["x"] << endl;
+        // cout << "i: " << i << " , value:" <<node["poses"+to_string(i)]["pose"]["orientation"]["y"] << endl;
+        // cout << "i: " << i << " , value:" <<node["poses"+to_string(i)]["pose"]["orientation"]["z"] << endl;
+        // cout << "i: " << i << " , value:" <<node["poses"+to_string(i)]["pose"]["orientation"]["w"] << endl;
+		// printf("vec_pose_uav_opt=[%f %f %f]\n",vec_pose_uav_opt[i].x,vec_pose_uav_opt[i].y,vec_pose_uav_opt[i].z);
+    }
+
+    // Populate emitter
+    emitter << root_uav;
+
+    // Write to file
+    // std::ofstream fout("./optimized_path_"+year_+"_"+month_+"_"+day_+"_"+hour_+min_+sec_ +".yaml");
+    std::ofstream fout;
+	fout.open(path+"marsupial_ws/src/marsupial_optimizer/cfg/optimized_path/optimized_path_"+year_+"_"+month_+"_"+day_+"_"+hour_+min_+sec_ +".yaml", std::ofstream::app);
+    fout << emitter.c_str();
+
+	std::cout << "Saved Path Optimized" << std::endl << std::endl;
 }

@@ -18,8 +18,8 @@ using ceres::Solver;
 class EquiDistanceFunctorUAV 
 {
   public:
-    EquiDistanceFunctorUAV(double weight_factor, double initial_distance_uav, bool write_data)
-    : wf_(weight_factor), i_d(initial_distance_uav), w_d_(write_data) 
+    EquiDistanceFunctorUAV(double weight_factor, double initial_distance_uav, bool write_data, std::string user_name)
+    : wf_(weight_factor), i_d(initial_distance_uav), w_d_(write_data), user_(user_name) 
     {}
 
     template <typename T>
@@ -49,7 +49,7 @@ class EquiDistanceFunctorUAV
 
 	    if(w_d_){
         std::ofstream ofs;
-        std::string name_output_file = "/home/simon/residuals_optimization_data/equidistance_uav.txt";
+        std::string name_output_file = "/home/"+user_+"/residuals_optimization_data/equidistance_uav.txt";
         ofs.open(name_output_file.c_str(), std::ofstream::app);
         if (ofs.is_open()) 
           ofs << residual[0] << "/" <<std::endl;
@@ -62,6 +62,7 @@ class EquiDistanceFunctorUAV
 
     bool w_d_;
     double wf_, i_d;
+    std::string user_;
 
   private:
 

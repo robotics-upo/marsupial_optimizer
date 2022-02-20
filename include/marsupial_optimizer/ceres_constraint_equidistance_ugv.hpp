@@ -18,8 +18,8 @@ using ceres::Solver;
 class EquiDistanceFunctorUGV 
 {
   public:
-    EquiDistanceFunctorUGV(double weight_factor, double initial_distance_ugv, bool write_data)
-    : wf_(weight_factor), i_d(initial_distance_ugv), w_d_(write_data) 
+    EquiDistanceFunctorUGV(double weight_factor, double initial_distance_ugv, bool write_data, std::string user_name)
+    : wf_(weight_factor), i_d(initial_distance_ugv), w_d_(write_data), user_(user_name) 
     {}
 
     template <typename T>
@@ -54,7 +54,7 @@ class EquiDistanceFunctorUGV
     
       if(w_d_){
         std::ofstream ofs;
-        std::string name_output_file = "/home/simon/residuals_optimization_data/equidistance_ugv.txt";
+        std::string name_output_file = "/home/"+user_+"/residuals_optimization_data/equidistance_ugv.txt";
         ofs.open(name_output_file.c_str(), std::ofstream::app);
         if (ofs.is_open()) 
           ofs << residual[0] << "/" <<std::endl;
@@ -67,6 +67,7 @@ class EquiDistanceFunctorUGV
 
     bool w_d_;
     double wf_, i_d;
+    std::string user_;
 
   private:
 

@@ -19,7 +19,7 @@ using ceres::Solver;
 class VelocityFunctorUAV {
 
 public:
-  VelocityFunctorUAV(double weight_factor, double init_vel_, bool write_data): wf_(weight_factor), iv_(init_vel_), w_d_(write_data) {}
+  VelocityFunctorUAV(double weight_factor, double init_vel_, bool write_data, std::string user_name): wf_(weight_factor), iv_(init_vel_), w_d_(write_data), user_(user_name) {}
 
   template <typename T>
   bool operator()(const T* const statePos1, const T* const statePos2, const T* const stateT, T* residual) const 
@@ -42,7 +42,7 @@ public:
       
 	    if(w_d_){
         std::ofstream ofs;
-        std::string name_output_file = "/home/simon/residuals_optimization_data/velocity_uav.txt";
+        std::string name_output_file = "/home/"+user_+"/residuals_optimization_data/velocity_uav.txt";
         ofs.open(name_output_file.c_str(), std::ofstream::app);
         if (ofs.is_open()) 
             ofs << residual[0] << "/" <<std::endl;
@@ -54,6 +54,7 @@ public:
 
  bool w_d_;
  double wf_, iv_;
+ std::string user_;
 
  private:
 };

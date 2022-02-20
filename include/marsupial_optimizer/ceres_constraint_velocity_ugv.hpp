@@ -19,8 +19,8 @@ using ceres::Solver;
 class VelocityFunctorUGV {
 
 public:
-  VelocityFunctorUGV(double weight_factor, double init_vel_, double count_fix_points_ugv, bool write_data)
-                    : wf_(weight_factor), iv_(init_vel_), cfp_ugv(count_fix_points_ugv), w_d_(write_data) 
+  VelocityFunctorUGV(double weight_factor, double init_vel_, double count_fix_points_ugv, bool write_data, std::string user_name)
+                    : wf_(weight_factor), iv_(init_vel_), cfp_ugv(count_fix_points_ugv), w_d_(write_data), user_(user_name) 
   {}
 
   template <typename T>
@@ -63,6 +63,7 @@ public:
 
  bool w_d_;
  double wf_, iv_, cfp_ugv;
+ std::string user_;
 
  private:
 };
