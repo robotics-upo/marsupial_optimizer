@@ -1,0 +1,34 @@
+<launch>
+	<!-- <include file="$(find drone_launchers)/launch/sdk.launch"> -->
+    <arg name="mav_name" default="firefly" />
+    <arg name="gazebo_sim" default="true"/>
+
+    <arg name="drone_type" default="false"/>
+    <arg name="arrived_th_xyz" default="0.8"/>
+    <arg name="arrived_th_yaw" default="0.1"/>
+    <arg name="control_factor" default="1"/>
+
+    <!-- TRACKER -->
+
+    <node pkg="matrice_traj_tracker" type="matrice_traj_tracker_node" name="matrice_traj_tracker_node" output="screen">
+        <param name="max_vx" type="double" value="0.5"/>
+        <param name="max_vy" type="double" value="0.5"/>
+        <param name="max_vz" type="double" value="0.5"/>
+        <param name="max_ry" type="double" value="0.06"/>
+        <param name="min_vx" type="double" value="0.2"/>
+        <param name="min_vy" type="double" value="0.2"/>
+        <param name="min_vz" type="double" value="0.2"/>
+        <param name="min_ry" type="double" value="0.01"/>
+        <param name="arrived_th_xyz" value="$(arg arrived_th_xyz)"/>
+        <param name="arrived_th_yaw" value="$(arg arrived_th_yaw)"/>
+        <param name="control_factor" value="$(arg control_factor)"/>
+        <param name="watchdog_freq" type="double" value="1.0"/>
+        <param name="testing" value="false"/>
+        <remap from="/input_trajectory" to="/local_planner_node/local_path"/>
+        <param name="drone_frame" value="$(arg mav_name)/base_link"/>
+        <param name="gazebo_sim" value="$(arg gazebo_sim)"/>
+        <param name="speed_reference_mode" value="true"/>
+	    <param name="drone_model" value="m210" if="$(arg drone_type)"/>
+    </node> 
+
+</launch>

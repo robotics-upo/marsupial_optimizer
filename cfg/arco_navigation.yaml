@@ -1,0 +1,19 @@
+world_frame: world
+#Navigation parameters
+holonomic: true
+angular_max_speed: 0.35
+linear_max_speed: 0.4 #0.6
+linear_max_speed_back: 0.4
+angle_margin: 35 #for 1,5 rad/s and 0.6 m/s 10 degress works good in no holonomic way
+dist_margin: 0.2
+traj_timeout: 0.8 #0.025
+a: 0.7 # for no holonomic 2 its okey with the 1.5 rad/s speed
+b: 0.5
+start_orientate_dist: 1.0
+
+#security margin params
+f: 2
+inner_radius: 0.1
+outer_radius: 0.15
+full_laser_topic: scan
+security_stop_topic: /security_stop

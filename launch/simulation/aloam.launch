@@ -2,7 +2,8 @@
     
     <arg name="only_odometry" default="false"/>
     <arg name="init_frame"  default="odom" />
-    <arg name="laser_odom_frame"  default="arco/base_link"/>
+    <arg name="laser_odom_frame"  default="base_link"/>
+    <arg name="robot_name" default="arco"/>
 
     <param name="scan_line" type="int" value="16" />
 
@@ -16,27 +17,27 @@
     <param name="mapping_plane_resolution" type="double" value="0.4"/>
 
     <node pkg="aloam_velodyne" type="ascanRegistration" name="ascanRegistration">
-        <remap from="imu" to="/arco/imu"/>
-        <remap from="os1_cloud_node/points_non_dense" to="/arco/os1_cloud_node/points"/>
-        <param name="init_frame" value="$(arg init_frame)" if="$(arg only_odometry)"/>
+        <remap from="imu" to="/$(arg robot_name)/imu"/>
+        <remap from="os1_cloud_node/points_non_dense" to="/$(arg robot_name)/os1_cloud_node/points"/>
+        <param name="init_frame" value="$(arg robot_name)/$(arg init_frame)" if="$(arg only_odometry)"/>
     </node>
 
     <node pkg="aloam_velodyne" type="alaserOdometry" name="alaserOdometry">
-        <param name="init_frame" value="$(arg init_frame)" if="$(arg only_odometry)"/>
-        <param name="laser_odom_frame" value="$(arg laser_odom_frame)" if="$(arg only_odometry)"/>
+        <!-- <remap from="/laser_odom_path" to="/$(arg robot_name)/odom"/> -->
+        <param name="init_frame" value="$(arg robot_name)/$(arg init_frame)" if="$(arg only_odometry)"/>
+        <param name="laser_odom_frame" value="$(arg robot_name)/$(arg laser_odom_frame)" if="$(arg only_odometry)"/>
     </node>
 
     <node pkg="aloam_velodyne" type="alaserMapping" name="alaserMapping" unless="$(arg only_odometry)"/>
 
     <node pkg="odom_to_tf" name="aloam_odom_to_tf" type="odom_to_tf.py" if="$(arg only_odometry)" output="screen">
-        <remap from="odom" to="/laser_odom_to_init"/>
-        <remap from="imu" to="/arco/imu"/>
-
-        <param name="~odom_frame_id" value="$(arg init_frame)"/>
-        <param name="~base_frame_id" value="$(arg laser_odom_frame)"/>
-        <param name="~laser_frame" value="arco/os1_sensor"/>
-
+        <!-- <remap from="odom" to="/laser_odom_to_init"/> -->
+        <remap from="odom" to="$(arg robot_name)/ground_truth/odometry"/>
+        <remap from="imu" to="/$(arg robot_name)/imu"/>
+        <param name="~odom_frame_id" value="$(arg robot_name)/$(arg init_frame)"/>
+        <param name="~base_frame_id" value="$(arg robot_name)/$(arg laser_odom_frame)"/>
+        <param name="~laser_frame" value="$(arg robot_name)/os1_sensor"/>
         <param name="overridestamp" value="false"/>
-        <param name="rotate_90" value="$(arg only_odometry)"/>
+        <param name="rotate_90" value="false"/>
     </node>
 </launch>

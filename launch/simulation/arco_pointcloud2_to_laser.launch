@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+
+<launch>
+
+    <arg name="robot_name" default="arco" />
+    
+    <group ns="$(arg robot_name)">
+        <!-- run pointcloud_to_laserscan node -->
+        <node pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" name="pointcloud_to_laserscan">
+            <remap from="cloud_in" to="os1_cloud_node/points"/> 
+            <!-- <remap from="scan" to="scan_from_os1"/> -->
+            <rosparam>
+                target_frame: arco/os1_sensor #base_link # Leave disabled to output scan in pointcloud frame
+                transform_tolerance: 0.1
+                min_height: -0.2
+                max_height: 0.2
+
+                angle_min: -3.14 # -M_PI/2
+                angle_max: 3.14 # M_PI/2
+                angle_increment: 0.0087 # M_PI/360.0
+                scan_time: 0.10
+                range_min: 0.8
+                range_max: 60.0
+                use_inf: true
+
+                # Concurrency level, affects number of pointclouds queued for processing and number of threads used
+                # 0 : Detect number of cores
+                # 1 : Single threaded
+                # 2->inf : Parallelism level
+                concurrency_level: 1
+            </rosparam>
+        </node>
+    </group>
+</launch>
