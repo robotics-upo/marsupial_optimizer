@@ -2,7 +2,9 @@
 
 read -p "Installation PACKAGES for platforms in MARSUPIAL SYSTEM. Press a ENTER to contine. (CTRL+C) to cancel"
 
-cd ~/marsupial/src/
+sudo apt-get install ros-$ROS_DISTRO-nmea-msgs
+
+cd ~/marsupial_ws/src/
 
 # For Sensors
 
