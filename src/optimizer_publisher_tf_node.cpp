@@ -169,11 +169,20 @@ void ManagerTf::trajectoryOptimizedCallBack(const marsupial_optimizer::marsupial
 		
 		br.sendTransform(tf::StampedTransform(trans_ugv, ros::Time::now(), "/map", ugv_base_frame));
 		br.sendTransform(tf::StampedTransform(trans_uav, ros::Time::now(), "/map", uav_base_frame));
-		mp_.markerPoints(catenary_marker, points_catenary_, i, size_, catenary_marker_pub_);	
+		mp_.markerPoints(catenary_marker, points_catenary_, 0, size_, catenary_marker_pub_);	
 
 		ros::Duration(1.0).sleep();
 		printf("Rviz Trajectory: [%lu/%lu]: UGV=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f] UAV=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f] length=[%.3f]\n", i,trajectory.trajectory.points.size(),
 		ugv_x ,ugv_y ,ugv_z ,ugv_rot_x ,ugv_rot_y ,ugv_rot_z ,ugv_rot_w ,uav_x ,uav_y ,uav_z ,uav_rot_x ,uav_rot_y ,uav_rot_z ,uav_rot_w,trajectory.length_catenary[i]);
+
+		std::string yy_ ;
+		yy_ = "s";
+		/********************* To obligate stop method and check Optimization result *********************/
+		std::cout << " Press key 'y': ";
+		while (yy_ != "y"){
+			std::cin >> yy_ ;
+		}
+		/*************************************************************************************************/
 	}
 	ROS_INFO(PRINTF_BLUE "FINISHED TRAJECTORY: RViz maneuver");
 	std_msgs::Bool finished_rviz_maneuver;
