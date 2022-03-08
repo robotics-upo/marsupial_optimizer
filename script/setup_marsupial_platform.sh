@@ -23,3 +23,7 @@ echo "\n Installing matrice_traj_tracker \n\n"
 git clone https://github.com/robotics-upo/matrice_traj_tracker.git
 echo "\n Installing Onboard-SDK-ROS \n\n"
 git clone -b 3.8 https://github.com/dji-sdk/Onboard-SDK-ROS.git
+
+# To get action for actionlib
+echo "\n Installing UPO Actions \n\n"
+git clone https://github.com/robotics-upo/upo_actions.git
