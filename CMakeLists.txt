@@ -129,7 +129,7 @@ target_link_libraries(marsupial_optimizer
 # target_link_libraries(optimizer_local_planner_fix_ugv Ceres::ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES} ${EXTERNAL_LIBS})
 
 add_executable(optimizer_local_planner_fix_ugv_node src/optimizer_local_planner_fix_ugv_node.cpp src/optimizer_local_planner_fix_ugv.cc src/marker_publisher.cpp )
-# add_dependencies(optimizer_local_planner_fix_ugv_node ${PROJECT_NAME}_gencfg)
+add_dependencies(optimizer_local_planner_fix_ugv_node ${PROJECT_NAME}_gencfg ${catkin_EXPORTED_TARGETS})
 target_link_libraries(optimizer_local_planner_fix_ugv_node marsupial_optimizer  Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES} yaml-cpp)
 
 add_executable(region_growing_segmentation_node src/region_growing_segmentation_node.cpp)
@@ -142,7 +142,7 @@ add_executable(optimizer_local_planner_node src/optimizer_local_planner_node.cpp
 target_link_libraries(optimizer_local_planner_node marsupial_optimizer  Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES} yaml-cpp)
 
 add_executable(optimizer_publisher_tf_node src/optimizer_publisher_tf_node.cpp src/marker_publisher.cpp) 
-# add_dependencies(optimizer_publisher_tf_node ${PROJECT_NAME}_gencfg)
+add_dependencies(optimizer_publisher_tf_node ${PROJECT_NAME}_gencfg ${PROJECT_NAME}_generate_messages_cpp)
 target_link_libraries(optimizer_publisher_tf_node marsupial_optimizer Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES} ${catkin_LIBRARIES})
 
 add_executable(test_catenary_optimizer src/test_catenary_optimizer.cc src/marker_publisher.cpp)
