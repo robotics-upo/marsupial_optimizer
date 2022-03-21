@@ -167,9 +167,9 @@ void ManagerTf::trajectoryOptimizedCallBack(const marsupial_optimizer::marsupial
 		auto size_ = points_catenary_.size();
 		mp_.clearMarkers(catenary_marker, 150, catenary_marker_pub_);
 		
+		mp_.markerPoints(catenary_marker, points_catenary_, i, size_, catenary_marker_pub_);	
 		br.sendTransform(tf::StampedTransform(trans_ugv, ros::Time::now(), "/map", ugv_base_frame));
 		br.sendTransform(tf::StampedTransform(trans_uav, ros::Time::now(), "/map", uav_base_frame));
-		mp_.markerPoints(catenary_marker, points_catenary_, i, size_, catenary_marker_pub_);	
 
 		ros::Duration(1.0).sleep();
 		printf("Rviz Trajectory: [%lu/%lu]: UGV=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f] UAV=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f] length=[%.3f]\n", i,trajectory.trajectory.points.size(),
