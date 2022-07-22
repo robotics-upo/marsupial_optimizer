@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <model name="thermal_central">
+    <static>true</static>
+    
+   <link name="link">
+      <collision name="collision">
+        <geometry>
+          <mesh>
+            <uri>model://thermal_central/mesh/thermal_central.stl</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://thermal_central/mesh/thermal_central.stl</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>

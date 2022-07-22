@@ -97,6 +97,7 @@ OptimizerLocalPlanner::OptimizerLocalPlanner()
 	nh->param<bool>("verbose_optimizer",verbose_optimizer, true);
 	nh->param<bool>("write_data_for_analysis",write_data_for_analysis, false);
 	nh->param("path", path, (std::string) "~/");
+	nh->param("path_mission_file", path_mission_file, (std::string) "~/missions/cfg/");
 	nh->param("pc_user_name", user_name, (std::string) "simon");
 	nh->param("files_results", files_results, (std::string) "results/");
 	nh->param("files_residuals", files_residuals, (std::string) "residuals/");
@@ -765,7 +766,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		execute_path_srv_ptr->setSucceeded(action_result);
 	}
 	
-	exportOptimizerPath();
+	exportOptimizedPath();
 	std::cout <<"Optimization Local Planner Proccess ended !!!!!!!!!!!!!!!!!!!!!!!" << std::endl << "==================================================="<< std::endl << std::endl << std::endl;
 	resetFlags();
 }
@@ -1656,19 +1657,11 @@ double OptimizerLocalPlanner::getPointDistanceFullMap(bool use_dist_func_, geome
 	return dist;
 }
 
-void OptimizerLocalPlanner::exportOptimizerPath()
+void OptimizerLocalPlanner::exportOptimizedPath()
 {
     time_t ttime = time(0);
-    // cout << "Number of seconds elapsed since January 1, 1990:" << ttime << endl;
     tm *local_time = localtime(&ttime);
     
-    // cout << "Year: "<< 1900 + local_time->tm_year << endl;
-    // cout << "Month: "<< 1 + local_time->tm_mon<< endl;
-    // cout << "Day: "<< local_time->tm_mday << endl;
-    // cout << "Time: "<< local_time->tm_hour << ":";
-    // cout << 1 + local_time->tm_min << ":";
-    // cout << 1 + local_time->tm_sec << endl;
-
     string year_, month_, day_, hour_, min_, sec_;
     year_ = to_string(1900 + local_time->tm_year);
     month_ = to_string(1 + local_time->tm_mon);
@@ -1689,16 +1682,17 @@ void OptimizerLocalPlanner::exportOptimizerPath()
     YAML::Node node = root_ugv["marsupial_ugv"];
     // YAML::Node node;
     // Write some values
+    int size_ = vec_pose_ugv_opt.size();
+
     node["header"] = "marsupial_ugv";
     node["seq"] = 1;
     node["stamp"] = hour_+min_+sec_;
     node["frame_id"] = "ugv";
+    node["size"] = size_;
     
-	// printf("vec_pose_ugv_opt.size()=%lu , vec_pose_uav_opt.size()%lu\n",vec_pose_ugv_opt.size(),vec_pose_uav_opt.size());
     for(int i=0 ; i < vec_pose_ugv_opt.size(); i++){
         node["poses"+to_string(i)]["header"] = "ugv"+to_string(i);
         node["poses"+to_string(i)]["seq"] = i;
-        // node["poses"+std::to_string(i)]["stamp"] = i;
         node["poses"+to_string(i)]["frame_id"] = "ugv";  
         node["poses"+to_string(i)]["pose"]["position"]["x"] = vec_pose_ugv_opt[i].x;
         node["poses"+to_string(i)]["pose"]["position"]["y"] = vec_pose_ugv_opt[i].y;
@@ -1707,7 +1701,6 @@ void OptimizerLocalPlanner::exportOptimizerPath()
         node["poses"+to_string(i)]["pose"]["orientation"]["y"] = vec_opt_rot_ugv[i].y;
         node["poses"+to_string(i)]["pose"]["orientation"]["z"] = vec_opt_rot_ugv[i].z;
         node["poses"+to_string(i)]["pose"]["orientation"]["w"] = vec_opt_rot_ugv[i].w;
-		// printf("vec_pose_ugv_opt=[%f %f %f]\n",vec_pose_ugv_opt[i].x,vec_pose_ugv_opt[i].y,vec_pose_ugv_opt[i].z);
     }
 
     emitter << root_ugv;
@@ -1716,16 +1709,17 @@ void OptimizerLocalPlanner::exportOptimizerPath()
     root_uav["marsupial_uav"] = YAML::Node(YAML::NodeType::Map);
     // // We now will write our values under root["MyNode"]
     node = root_uav["marsupial_uav"];
+	size_ = vec_pose_uav_opt.size();
     // YAML::Node node;
     // Write some values
     node["header"] = "marsupial_uav";
     node["seq"] = 1;
     node["stamp"] = hour_+min_+sec_ ;
     node["frame_id"] = "uav";
+    node["size"] = size_;
     for(int i=0 ; i < vec_pose_uav_opt.size(); i++){
         node["poses"+to_string(i)]["header"] = "uav"+to_string(i);
         node["poses"+to_string(i)]["seq"] = i;
-        // node["poses"+std::to_string(i)]["stamp"] = i;
         node["poses"+to_string(i)]["frame_id"] = "uav";  
         node["poses"+to_string(i)]["pose"]["position"]["x"] = vec_pose_uav_opt[i].x;
         node["poses"+to_string(i)]["pose"]["position"]["y"] = vec_pose_uav_opt[i].y;
@@ -1734,23 +1728,14 @@ void OptimizerLocalPlanner::exportOptimizerPath()
         node["poses"+to_string(i)]["pose"]["orientation"]["y"] = vec_opt_rot_uav[i].y;
         node["poses"+to_string(i)]["pose"]["orientation"]["z"] = vec_opt_rot_uav[i].z;
         node["poses"+to_string(i)]["pose"]["orientation"]["w"] = vec_opt_rot_uav[i].w;
-        // cout << "i: " << i << " , value:" <<node["poses"+to_string(i)]["pose"]["position"]["x"] << endl;
-        // cout << "i: " << i << " , value:" <<node["poses"+to_string(i)]["pose"]["position"]["y"] << endl;
-        // cout << "i: " << i << " , value:" <<node["poses"+to_string(i)]["pose"]["position"]["z"] << endl;
-        // cout << "i: " << i << " , value:" <<node["poses"+to_string(i)]["pose"]["orientation"]["x"] << endl;
-        // cout << "i: " << i << " , value:" <<node["poses"+to_string(i)]["pose"]["orientation"]["y"] << endl;
-        // cout << "i: " << i << " , value:" <<node["poses"+to_string(i)]["pose"]["orientation"]["z"] << endl;
-        // cout << "i: " << i << " , value:" <<node["poses"+to_string(i)]["pose"]["orientation"]["w"] << endl;
-		// printf("vec_pose_uav_opt=[%f %f %f]\n",vec_pose_uav_opt[i].x,vec_pose_uav_opt[i].y,vec_pose_uav_opt[i].z);
     }
 
     // Populate emitter
     emitter << root_uav;
 
     // Write to file
-    // std::ofstream fout("./optimized_path_"+year_+"_"+month_+"_"+day_+"_"+hour_+min_+sec_ +".yaml");
     std::ofstream fout;
-	fout.open(path+"marsupial_ws/src/marsupial_optimizer/cfg/optimized_path/optimized_path_"+year_+"_"+month_+"_"+day_+"_"+hour_+min_+sec_ +".yaml", std::ofstream::app);
+	fout.open(path_mission_file+"optimized_path_"+year_+"_"+month_+"_"+day_+"_"+hour_+min_+sec_ +".yaml", std::ofstream::app);
     fout << emitter.c_str();
 
 	std::cout << "Saved Path Optimized" << std::endl << std::endl;

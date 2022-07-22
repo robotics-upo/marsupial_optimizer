@@ -2,21 +2,21 @@
     <arg name="pi"	default="3.141592"/>
     <arg name="pi/2"	default="1.57"/>
 
-    <arg name="map" default="arco_test.bt"/>
-    <arg name="map_path" default="$(find marsupial_optimizer)/maps/arco/"/>
-    <arg name="robot_name" default="arco"/>
+    <arg name="map" default="stage_1"/>
+    <arg name="map_path" default="$(find marsupial_optimizer)/maps/"/>
+    <arg name="robot_name" default="firefly"/>
     <!-- <arg name="odom_topic" default="odom"/> -->
 
 
     <arg name="base_frame_id" default="base_link"/>
     <arg name="odom_frame_id" default="odom"/>
-    <arg name="global_frame_id" default="map"/>
+    <arg name="global_frame_id" default="world"/>
 
     # initial position
-    <arg name="initial_x" default="12.0"/>
-    <arg name="initial_y" default="20.08"/>
+    <arg name="initial_x" default="18.0"/>
+    <arg name="initial_y" default="4.0"/>
     <arg name="initial_z" default="0.3"/>
-    <arg name="initial_a" default="0.0"/> 
+    <arg name="initial_a" default="3.1415"/> 
 
     # Odom to TF
     <!-- <node pkg="odom_to_tf" type="odom_to_tf.py" name="odom_to_tf">
@@ -26,28 +26,31 @@
         <param name="rotate_90" value="false"/>
     </node> -->
 
+    # Fake odometry. You better use a good odometry estrimator as LOAM
+    <node pkg="tf" type="static_transform_publisher" name="tf_odom" args="0 0 0 0 0 0 $(arg robot_name)/odom $(arg robot_name)/base_link 10" />
+
     # Launch DLL
     <node name="dll_node" type="dll_node" pkg="dll" output="screen">
-        <remap from="/dll_node/initial_pose" to="/initialpose"/>
+        <remap from="dll_node/initial_pose" to="/initialpose"/>
+        <remap from="imu" to="/$(arg robot_name)/imu"/>
         <param name="in_cloud" value="/$(arg robot_name)/os1_cloud_node/points" />
         <param name="base_frame_id" value="$(arg robot_name)/$(arg base_frame_id)" />
         <param name="odom_frame_id" value="$(arg robot_name)/$(arg odom_frame_id)" />
         <param name="global_frame_id" value="$(arg global_frame_id)" />
 
         <param name="rate" value="10.0" />
-        <param name="map_path" value="$(arg map_path)$(arg map)" />
-        <param name="sensor_dev" value="0.02" />   
+        <param name="map_path" value="$(arg map_path)$(arg map).bt" />
+        <param name="sensor_dev" value="0.05" />   
         <param name="publish_point_cloud" value="true" />    
-        <param name="update_min_d" value="0.1" />
-        <param name="update_min_a" value="0.1" />
+        <param name="update_min_d" value="0.01" />
+        <param name="update_min_a" value="0.01" /> 
+        <param name="update_min_time" value="0.1" />
         <param name="initial_x"   value="$(arg initial_x)"/>
         <param name="initial_y"   value="$(arg initial_y)"/>
         <param name="initial_z"   value="$(arg initial_z)"/>
         <param name="initial_a"   value="$(arg initial_a)"/>
-        <param name="lidar_width" value="1024" />
-        <param name="lidar_height" value="16" />
-        <param name="lidar_fov" value="0.7854" />
-        <param name="m_lidar_fov_down" value="0.3927" />
-        <param name="use_imu" value="false" />
-    </node>
+        <param name="use_imu" value="true" />
+        <param name="align_method" value="1" />  # 1: DLL, 2: NDT, 3: ICP
+        <param name="use_yaw_increments" value="true"/>   
+  </node>
 </launch>

@@ -30,7 +30,7 @@ cd ~/marsupial_ws/src
 # sudo apt-get install ros-noetic-joy
 
 # For drone simulation
-git clone -b https://github.com/ethz-asl/rotors_simulator.git
+git clone https://github.com/ethz-asl/rotors_simulator.git
 git clone https://github.com/ethz-asl/mav_comm.git
 
 # For localization stuff

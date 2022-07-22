@@ -24,6 +24,9 @@ public:
 	void trajectoryOptimizedCallBack(const marsupial_optimizer::marsupial_trajectory_optimizedConstPtr &msg);
 	void tfBroadcaster(const double _x,const double _y,const double _z,const double _R,const double _P,const double _Y, std::string _from, std::string _to);
 	void getReelPose();
+	void markerPoints(visualization_msgs::MarkerArray &_marker, std::vector<geometry_msgs::Point> _vector, int _suffix, int _n_v, int change_marker_);
+	void clearMarkers(visualization_msgs::MarkerArray _marker, int _s, ros::Publisher c_m_pub_);
+
 	geometry_msgs::Vector3 getReelPoint(const float px_, const float py_, const float pz_,const float qx_, const float qy_, const float qz_, const float qw_);
 	
 	marsupial_optimizer::marsupial_trajectory_optimized msg;
@@ -164,25 +167,27 @@ void ManagerTf::trajectoryOptimizedCallBack(const marsupial_optimizer::marsupial
 			bool just_one_axe = bc.configBisection(trajectory.length_catenary[i], p_reel_.x, p_reel_.y, p_reel_.z, uav_x, uav_y, uav_z, false);
 			bc.getPointCatenary3D(points_catenary_);
 		
-		auto size_ = points_catenary_.size();
-		mp_.clearMarkers(catenary_marker, 150, catenary_marker_pub_);
+		int size_ = points_catenary_.size();
+		clearMarkers(catenary_marker, 150, catenary_marker_pub_);
 		
+		markerPoints(catenary_marker, points_catenary_, 0, size_, 0);	
 		br.sendTransform(tf::StampedTransform(trans_ugv, ros::Time::now(), "/map", ugv_base_frame));
 		br.sendTransform(tf::StampedTransform(trans_uav, ros::Time::now(), "/map", uav_base_frame));
-		mp_.markerPoints(catenary_marker, points_catenary_, 0, size_, catenary_marker_pub_);	
-
 		ros::Duration(1.0).sleep();
+    	catenary_marker_pub_.publish(catenary_marker);
+
+
 		printf("Rviz Trajectory: [%lu/%lu]: UGV=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f] UAV=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f] length=[%.3f]\n", i,trajectory.trajectory.points.size(),
 		ugv_x ,ugv_y ,ugv_z ,ugv_rot_x ,ugv_rot_y ,ugv_rot_z ,ugv_rot_w ,uav_x ,uav_y ,uav_z ,uav_rot_x ,uav_rot_y ,uav_rot_z ,uav_rot_w,trajectory.length_catenary[i]);
 
-		std::string yy_ ;
-		yy_ = "s";
-		/********************* To obligate stop method and check Optimization result *********************/
-		std::cout << " Press key 'y': ";
-		while (yy_ != "y"){
-			std::cin >> yy_ ;
-		}
-		/*************************************************************************************************/
+		// std::string yy_ ;
+		// yy_ = "s";
+		// /********************* To obligate stop method and check Optimization result *********************/
+		// std::cout << " Press key 'y': ";
+		// while (yy_ != "y"){
+		// 	std::cin >> yy_ ;
+		// }
+		// /*************************************************************************************************/
 	}
 	ROS_INFO(PRINTF_BLUE "FINISHED TRAJECTORY: RViz maneuver");
 	std_msgs::Bool finished_rviz_maneuver;
@@ -226,6 +231,78 @@ geometry_msgs::Vector3 ManagerTf::getReelPoint(const float px_, const float py_,
 	ret.z = pz_ + pose_reel_local.transform.translation.z ;
 
 	return ret;
+}
+
+void ManagerTf::markerPoints(visualization_msgs::MarkerArray &_marker, std::vector<geometry_msgs::Point> _vector, int _suffix, int _n_v, int change_marker_)
+{
+    std::string string_marker;
+    std::string ns_marker;
+
+    double c_color1 = (_suffix / (double)_n_v)*0.5;
+    double c_color2 = (_suffix / (double)_n_v)*0.5;
+    double c_color3;
+    if (_suffix%2 == 0)
+        c_color3 = 0.5;
+    else
+        c_color3 = 0.0;
+	
+	double _scale = 0.05;
+
+	if(change_marker_==1){
+		c_color1 = 0.0;
+		c_color2 = 1.0;
+		c_color3 = 1.0;
+		_scale = 0.045;
+	}
+	else if(change_marker_==2){
+		c_color1 = 0.0;
+		c_color2 = 0.0;
+		c_color3 = 0.0;
+		_scale = 0.045;
+	}
+            
+    string_marker = std::to_string(_suffix);
+    ns_marker = "catenary_"+string_marker;
+
+    _marker.markers.resize(_vector.size());
+            
+    for (size_t i = 0; i < _vector.size(); ++i){
+        _marker.markers[i].header.frame_id = "map";
+        _marker.markers[i].header.stamp = ros::Time::now();
+        _marker.markers[i].ns = ns_marker;
+        _marker.markers[i].id = i+1;
+        _marker.markers[i].action = visualization_msgs::Marker::ADD;
+        if (i % 5 == 0 || change_marker_!=0)
+            _marker.markers[i].type = visualization_msgs::Marker::CUBE;
+        else
+            _marker.markers[i].type = visualization_msgs::Marker::SPHERE;
+        _marker.markers[i].lifetime = ros::Duration(0);
+        _marker.markers[i].pose.position.x = _vector[i].x; 
+        _marker.markers[i].pose.position.y = _vector[i].y; 
+        _marker.markers[i].pose.position.z = _vector[i].z;
+        _marker.markers[i].pose.orientation.x = 0.0;
+        _marker.markers[i].pose.orientation.y = 0.0;
+        _marker.markers[i].pose.orientation.z = 0.0;
+        _marker.markers[i].pose.orientation.w = 1.0;
+        _marker.markers[i].scale.x = _scale;
+        _marker.markers[i].scale.y = _scale;
+        _marker.markers[i].scale.z = _scale;
+        _marker.markers[i].color.a = 1.0;
+        _marker.markers[i].color.r = 1.0 - c_color1;
+        _marker.markers[i].color.g = c_color2;
+        _marker.markers[i].color.b = c_color3;
+    }	
+}
+
+void ManagerTf::clearMarkers(visualization_msgs::MarkerArray _marker, int _s, ros::Publisher c_m_pub_)
+{
+    _marker.markers.clear();
+    _marker.markers.resize(_s);
+
+    for (int i = 0 ; i < _s; i++){
+        _marker.markers[i].action = visualization_msgs::Marker::DELETEALL;
+    }
+    c_m_pub_.publish(_marker);
 }
 
 int main(int argc, char **argv)

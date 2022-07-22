@@ -1,0 +1,7 @@
+test_1:
+  initial_pos_ugv_x: 53.962
+  initial_pos_ugv_y: 11.935
+  initial_pos_ugv_z: 2.8
+  initial_pos_ugv_yaw:  -3.040
+  initial_pos_ugv_pitch: 0.0
+  initial_pos_ugv_roll: 0.0

@@ -1,6 +1,6 @@
  <launch>
     
-    <arg name="only_odometry" default="false"/>
+    <arg name="only_odometry" default="true"/>
     <arg name="init_frame"  default="odom" />
     <arg name="laser_odom_frame"  default="base_link"/>
     <arg name="robot_name" default="arco"/>
