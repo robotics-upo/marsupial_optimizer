@@ -170,7 +170,7 @@ void ManagerTf::trajectoryOptimizedCallBack(const marsupial_optimizer::marsupial
 		int size_ = points_catenary_.size();
 		clearMarkers(catenary_marker, 150, catenary_marker_pub_);
 		
-		markerPoints(catenary_marker, points_catenary_, 0, size_, 0);	
+		mp_.markerPoints(catenary_marker, points_catenary_, i, size_, catenary_marker_pub_);	
 		br.sendTransform(tf::StampedTransform(trans_ugv, ros::Time::now(), "/map", ugv_base_frame));
 		br.sendTransform(tf::StampedTransform(trans_uav, ros::Time::now(), "/map", uav_base_frame));
 		ros::Duration(1.0).sleep();
