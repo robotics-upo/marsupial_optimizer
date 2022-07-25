@@ -1,15 +1,16 @@
 // Define Libraries
+#define nullptr NULL
 #include <ros.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/UInt16.h>
 #include <std_msgs/Float32.h>
 
+
 // Define Variables
-int startPin = 8;     // start button (reel system) connected to digital pin 8
 int opticalPin = 2;     // optical sensor connected to digital pin 2
-int resetOpticalPin = 7;     // reset button (count turn) connected to digital pin 7
 int servoPin = 6;        // servo motor connected to digital pin 6
-int start = 0;
+int ledPin = 13;        // The 13th pin is connected to a LED
+int enable = 0;
 int count = 0;
 float diameter = 0.115;
 float delta_L = 0.0;
@@ -24,15 +25,48 @@ bool controlling = false;
 unsigned long current_time,  delta_time;
 unsigned long previus_time = 0;
 
+// ROS stuff
+ros::NodeHandle  nh;
+
 std_msgs::Float32 length_msg;
-std_msgs::Bool able_to_work_msg;
 std_msgs::UInt16 count_steps_turn_motor_msg;
 
+// Callbacks
 void lengthSubCallback(const std_msgs::Float32& length_ref_msg) {
     ref_L = length_ref_msg.data;
     count = 0;
     controlling  = true;
 }
+
+void resetLengthCallback(const std_msgs::Float32& length_reset) {
+     current_L = initial_L = length_reset.data;
+}
+
+void enableCallback(const std_msgs::Bool& bool_msg) {
+    enable = bool_msg.data;
+    if (enable) {
+        nh.loginfo("Control enabled");
+    } else {
+        nh.loginfo("Control disabled");
+    }
+}
+
+
+
+// Subscriber for the length command
+ros::Subscriber<std_msgs::Float32> sub("set_length", &lengthSubCallback );
+
+// Emit the current estimated longitude of the tie
+ros::Publisher pub_length("length_status", &length_msg);
+
+// Wait for the message to start the system
+ros::Subscriber<std_msgs::Bool> sub_enable("enable", &enableCallback);
+
+// Length reset topic just in case
+ros::Subscriber<std_msgs::Float32> sub_reset("reset_length_estimation", &resetLengthCallback);
+
+// Para depurar el funcionamiento del cacharro
+ros::Publisher pub_count_steps_turn_motor("count_steps_turn_motor", &count_steps_turn_motor_msg); 
 
 void controlReel(float ref_L_){
   // put your main code here, to run repeatedly:
@@ -60,21 +94,10 @@ void controlReel(float ref_L_){
       PWM = -20 * error + 175;
     sign = -1.0;
   }
-    
   analogWrite(servoPin, PWM);
       
   delta_L = (count/total_pulses)* sign * PI * diameter;
   current_L = initial_L + delta_L;
-}
-
-void cleanCounter()
-{
-  int but = digitalRead(resetOpticalPin);     // read the input pin
-      
-  if (but == HIGH) {
-    count = 0;
-    count_steps_turn_motor_msg.data = 0;
-  }
 }
 
 void countPulse(){
@@ -86,59 +109,39 @@ void countPulse(){
   count_steps_turn_motor_msg.data = count;
 }
 
-ros::NodeHandle  nh;
-ros::Subscriber<std_msgs::Float32> sub("set_length", &lengthSubCallback );
-
-ros::Publisher pub_length("length_status", &length_msg);
-ros::Publisher pub_able_to_work("able_to_work", &able_to_work_msg);
-ros::Publisher pub_count_steps_turn_motor("count_steps_turn_motor", &count_steps_turn_motor_msg);
 
 void setup() {
     // Put your setup code here, to run once:
     //Serial.begin(115200);
-    pinMode(startPin, INPUT);        // sets the digital pin 8 as input
-    pinMode(opticalPin, INPUT);        // sets the digital pin 2 as input
-    pinMode(resetOpticalPin, INPUT);        // sets the digital pin 7 as input
+    pinMode(opticalPin, INPUT);   // sets the digital pin 2 as input
     pinMode(servoPin, OUTPUT);    // sets the digital pin 6 as output
+    pinMode(ledPin,OUTPUT);      // to light and disable the LED of 13 pin
 
     attachInterrupt(digitalPinToInterrupt(opticalPin), countPulse, RISING);
     
     // ROS Config
     nh.initNode();
     nh.advertise(pub_length);
-    nh.advertise(pub_able_to_work);
     nh.advertise(pub_count_steps_turn_motor);
     nh.subscribe(sub);
+    nh.subscribe(sub_enable);
+    nh.subscribe(sub_reset);
 }
 
 void loop() { 
-  int start_ = digitalRead(startPin);     // read the input pin
-
-  if (start_ == HIGH && start == 0){
-    start = 1;
-    delay(200);
-  }
-  else if (start_ == HIGH && start == 1){
-    start = 0;
-    delay(200);
-  } 
-  if (start == 1){ // Reel working after security check         
+  if (enable){ // Reel working after security check         
       controlReel(ref_L);
-      able_to_work_msg.data = true;
-  }
-  else if (start == 0){ // Waiting to check the system and push START button to begin workin
-      analogWrite(servoPin, 127);
-      delay(100);       
-      able_to_work_msg.data = false;
-      start = 0;
-  }
+      digitalWrite(ledPin, HIGH);
 
-  cleanCounter();
-  
+  }  else {
+      // Waiting to receive the enable topic
+      analogWrite(servoPin, 127);
+      digitalWrite(ledPin, LOW);
+      delay(10);       
+  }
   length_msg.data = current_L;
   pub_length.publish(&length_msg);
-  pub_able_to_work.publish(&able_to_work_msg);
   pub_count_steps_turn_motor.publish(&count_steps_turn_motor_msg);
   nh.spinOnce();
-  delayMicroseconds(100);
+  delayMicroseconds(100); // when using delay alone --> milliseconds
 }
