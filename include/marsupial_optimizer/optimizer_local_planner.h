@@ -174,7 +174,7 @@ public:
 	void cleanResidualConstraintsFile();
 	bool computeCatenary(int p_, int mode_, double &l_cat_);
 	double getPointDistanceFullMap(bool use_dist_func_, geometry_msgs::Vector3 p_);
-	void exportOptimizerPath();
+	void exportOptimizedPath();
 
 	upo_actions::ExecutePathResult action_result;
 
@@ -192,7 +192,7 @@ public:
 	tf::TransformListener listener;
 	geometry_msgs::TransformStamped pose_reel_global, pose_reel_local;
 
-	std::string path, files_results, files_residuals, name_output_file, user_name;
+	std::string path, files_results, files_residuals, name_output_file, user_name, path_mission_file;
 
     double map_resolution;
 	float step , step_inv;

@@ -1,9 +1,9 @@
 <launch>
 	<!-- <include file="$(find drone_launchers)/launch/sdk.launch"> -->
-    <arg name="mav_name" default="firefly" />
+    <arg name="mav_name" default="ardrone" />
     <arg name="gazebo_sim" default="true"/>
 
-    <arg name="drone_type" default="false"/>
+    <arg name="drone_type" default="true"/>
     <arg name="arrived_th_xyz" default="0.8"/>
     <arg name="arrived_th_yaw" default="0.1"/>
     <arg name="control_factor" default="1"/>

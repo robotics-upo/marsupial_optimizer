@@ -44,6 +44,7 @@ sensor_msgs::PointCloud2 data_in;
 std::shared_ptr<tf2_ros::Buffer> tfBuffer;
 std::unique_ptr<tf2_ros::TransformListener> tf2_list;
 std::unique_ptr<tf::TransformListener> tf_list_ptr;
+std::string pc_sub;
 
 bool debug_rgs, latch_topic;
 
@@ -290,6 +291,7 @@ int main(int argc, char **argv)
   
 	pn.param<std::string>("world_frame",  world_frame, "map");
   	pn.param<std::string>("ugv_base_frame", ugv_base_frame, "ugv_base_link");
+  	pn.param<std::string>("pc_sub", pc_sub, "/octomap_point_cloud_centers");
   	pn.param<bool>("debug_rgs", debug_rgs, true);
   	pn.param<bool>("latch_topic", latch_topic, true);
 	
@@ -297,7 +299,7 @@ int main(int argc, char **argv)
 	tf2_list.reset(new tf2_ros::TransformListener(*tfBuffer));
 	tf_list_ptr.reset(new tf::TransformListener(ros::Duration(5)));
 
-    new_octomap_sub = n.subscribe<sensor_msgs::PointCloud2>("/octomap_point_cloud_centers", 1000, pcCallback);
+    new_octomap_sub = n.subscribe<sensor_msgs::PointCloud2>(pc_sub, 1000, pcCallback);
 
 	segmented_traversable_pc_pub = n.advertise<sensor_msgs::PointCloud2>("region_growing_traversability_pc_map", 10,latch_topic);
 	segmented_obstacles_pc_pub = n.advertise<sensor_msgs::PointCloud2>("region_growing_obstacles_pc_map", 10,latch_topic);

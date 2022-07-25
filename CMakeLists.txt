@@ -152,6 +152,9 @@ target_link_libraries(test_catenary_optimizer marsupial_optimizer  Ceres::ceres 
 add_executable(test_node_yaml src/test_node_yaml.cpp) 
 target_link_libraries(test_node_yaml marsupial_optimizer yaml-cpp)
 
+add_executable(create_grid3d_node src/create_grid3d_node.cpp) 
+target_link_libraries(create_grid3d_node marsupial_optimizer)
+
 # add_executable(catenary_solver_test_ceres src/catenary_solver_test_ceres.cpp )
 # # add_dependencies(optimizer_local_planner_fix_ugv_node ${PROJECT_NAME}_gencfg)
 # target_link_libraries(catenary_solver_test_ceres marsupial_optimizer  Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES})
