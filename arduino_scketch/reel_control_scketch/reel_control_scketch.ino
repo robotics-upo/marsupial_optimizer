@@ -13,10 +13,7 @@ int ledPin = 13;        // The 13th pin is connected to a LED
 int enable = 0;
 int count = 0;
 float diameter = 0.15;
-float delta_L = 0.0;
 float total_pulses = 1150.0;
-float L_min = 1.0; // minimum length allowed 
-float L_max = 10.0; // maximum length allowed 
 float initial_L = 1.1; //initial length 
 float current_L = 1.1; //initial length 
 float ref_L = 0; // reference length to control  
@@ -38,6 +35,14 @@ ros::Publisher pub_length_reached("tie_controller/length_reached", &length_reach
 
 // Callbacks
 void lengthSubCallback(const std_msgs::Float32& length_ref_msg) {
+    if ( length_ref_msg.data < 0 || length_ref_msg.data > 25) {
+      nh.loginfo("Received reference length out of range");
+      return;
+    }
+    if (length_ref_msg.data < current_L && one_way) {
+      nh.loginfo("Ignoring a shrinking command in one_way mode");
+      return;
+    }
     if (fabs(ref_L - length_ref_msg.data) > 0.02) { 
       ref_L = length_ref_msg.data;
       count = 0;
@@ -98,7 +103,7 @@ ros::Subscriber<std_msgs::Bool> sub_one_way("tie_controller/one_way", &one_wayCa
 
 
 // Para depurar el funcionamiento del cacharro
-ros::Publisher pub_count_steps_turn_motor("tie_controller/count_steps_turn_motor", &count_steps_turn_motor_msg); 
+//ros::Publisher pub_count_steps_turn_motor("tie_controller/count_steps_turn_motor", &count_steps_turn_motor_msg); 
 
 ros::Publisher pub_lenth_reached("tie_controller/length_reached", &length_reached_msg);
 
@@ -112,7 +117,7 @@ void controlReel(float ref_L_){
     PWM = 0;
     controlling = false;
     initial_L = current_L;
-    sign = 0;
+    sign = 1.0; // If we are not controlling, the UAV might make the tether bigger
     count = 0;
     length_reached_msg.data = true;
     pub_length_reached.publish(&length_reached_msg);
@@ -131,13 +136,13 @@ void controlReel(float ref_L_){
       PWM = -20 * error + 175;
     sign = -1.0;
 
-    if (one_way)
+    if (one_way) {
       PWM = 0; // In one way mode the controller can only increase the length of the tie
+      sign = 1.0;
+    }
   }
   analogWrite(servoPin, PWM);
-      
-  delta_L = (count/total_pulses)* sign * PI * diameter;
-  current_L = initial_L + delta_L;
+  current_L = initial_L + (count/total_pulses)* sign * PI * diameter;
 }
 
 void countPulse(){
@@ -162,7 +167,7 @@ void setup() {
     // ROS Config
     nh.initNode();
     nh.advertise(pub_length);
-    nh.advertise(pub_count_steps_turn_motor);
+  //  nh.advertise(pub_count_steps_turn_motor);
     nh.advertise(pub_length_reached);
     nh.subscribe(sub);
     nh.subscribe(sub_enable);
@@ -183,7 +188,7 @@ void loop() {
   }
   length_msg.data = current_L;
   pub_length.publish(&length_msg);
-  pub_count_steps_turn_motor.publish(&count_steps_turn_motor_msg);
+  //pub_count_steps_turn_motor.publish(&count_steps_turn_motor_msg);
   nh.spinOnce();
   delayMicroseconds(100); // when using delay alone --> milliseconds
 }
