@@ -766,7 +766,6 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		execute_path_srv_ptr->setSucceeded(action_result);
 	}
 	
-	exportOptimizedPath();
 	std::cout <<"Optimization Local Planner Proccess ended !!!!!!!!!!!!!!!!!!!!!!!" << std::endl << "==================================================="<< std::endl << std::endl << std::endl;
 	resetFlags();
 }
@@ -888,6 +887,8 @@ void OptimizerLocalPlanner::finishigOptimizationAndGetDataResult(int &n_coll_opt
 	mp_.clearMarkers(catenary_marker, 150, catenary_marker_pub_);  //To delete possibles outliers points 
 	// Staff for fost-proccessing of catenary length
 	processingCatenary();
+	exportOptimizedPath();
+	
 	bisectionCatenary bc;
 	
 	for(size_t i = 0; i < statesPosUAV.size(); i++){
@@ -1670,8 +1671,69 @@ void OptimizerLocalPlanner::exportOptimizedPath()
     min_ = to_string(local_time->tm_min); 
     sec_ = to_string(1 + local_time->tm_sec);
 
+	double d_to_interp_, d1_, d2_, cat_inter_;
+	int r_;
+	bool interpol_;
+	vector<geometry_msgs::Vector3> v_interp_pose_ugv, v_interp_pose_uav;
+	vector<geometry_msgs::Quaternion> v_interp_rot_ugv, v_interp_rot_uav;
+	vector<float> vec_interp_len_cat;
+	geometry_msgs::Vector3 p_int_ugv_, p_int_uav_;
+
+	// Interpolate vector
+	printf("vec_pose_ugv_opt.size()=%lu , vec_pose_uav_opt.size()=%lu , vec_len_cat_opt.size()=%lu\n",vec_pose_ugv_opt.size(),vec_pose_uav_opt.size(),vec_len_cat_opt.size());
+	for (int i=0 ; i < vec_pose_ugv_opt.size()-1; i++){
+		d_to_interp_ = 0.2;
+		interpol_ = false;
+		d1_ = sqrt ( pow(vec_pose_ugv_opt[i+1].x - vec_pose_ugv_opt[i].x,2) + pow(vec_pose_ugv_opt[i+1].y - vec_pose_ugv_opt[i].y,2) + pow(vec_pose_ugv_opt[i+1].z - vec_pose_ugv_opt[i].z,2) );
+		d2_ = sqrt ( pow(vec_pose_uav_opt[i+1].x - vec_pose_uav_opt[i].x,2) + pow(vec_pose_uav_opt[i+1].y - vec_pose_uav_opt[i].y,2) + pow(vec_pose_uav_opt[i+1].z - vec_pose_uav_opt[i].z,2) );
+		if (d1_ > d_to_interp_ ){
+			if (d1_ >= d2_)
+				r_ = floor(d1_/d_to_interp_);
+			interpol_ = true;
+		}
+		if (d2_ > d_to_interp_ ){
+			if (d2_ > d1_)
+				r_ = floor(d2_/d_to_interp_);
+			interpol_ = true;
+		}
+		if (interpol_){
+			for (int j=0 ; j < r_ ; j++){
+				p_int_ugv_.x = vec_pose_ugv_opt[i].x + (j+1)*(vec_pose_ugv_opt[i+1].x - vec_pose_ugv_opt[i].x)/(r_+1);
+				p_int_ugv_.y = vec_pose_ugv_opt[i].y + (j+1)*(vec_pose_ugv_opt[i+1].y - vec_pose_ugv_opt[i].y)/(r_+1);
+				p_int_ugv_.z = vec_pose_ugv_opt[i].z + (j+1)*(vec_pose_ugv_opt[i+1].z - vec_pose_ugv_opt[i].z)/(r_+1);
+				p_int_uav_.x = vec_pose_uav_opt[i].x + (j+1)*(vec_pose_uav_opt[i+1].x - vec_pose_uav_opt[i].x)/(r_+1);
+				p_int_uav_.y = vec_pose_uav_opt[i].y + (j+1)*(vec_pose_uav_opt[i+1].y - vec_pose_uav_opt[i].y)/(r_+1);
+				p_int_uav_.z = vec_pose_uav_opt[i].z + (j+1)*(vec_pose_uav_opt[i+1].z - vec_pose_uav_opt[i].z)/(r_+1);
+				cat_inter_ = vec_len_cat_opt[i] + (j+1)*(vec_len_cat_opt[i+1] - vec_len_cat_opt[i])/(r_+1);
+				v_interp_pose_ugv.push_back(p_int_ugv_);
+				v_interp_rot_ugv.push_back(vec_opt_rot_ugv[i]);
+				v_interp_pose_uav.push_back(p_int_uav_);
+				v_interp_rot_uav.push_back(vec_opt_rot_uav[i]);
+				vec_interp_len_cat.push_back(cat_inter_);
+			}
+		}else{
+			v_interp_pose_ugv.push_back(vec_pose_ugv_opt[i]);
+			v_interp_rot_ugv.push_back(vec_opt_rot_ugv[i]);
+			v_interp_pose_uav.push_back(vec_pose_uav_opt[i]);
+			v_interp_rot_uav.push_back(vec_opt_rot_uav[i]);
+			vec_interp_len_cat.push_back(vec_len_cat_opt[i]);
+		}
+	}
+	vec_pose_ugv_opt.clear();
+	vec_opt_rot_ugv.clear();
+	vec_pose_uav_opt.clear();
+	vec_opt_rot_uav.clear();
+	vec_len_cat_opt.clear();
+	vec_pose_ugv_opt = v_interp_pose_ugv;
+	vec_opt_rot_ugv = v_interp_rot_ugv;
+	vec_pose_uav_opt = v_interp_pose_uav;
+	vec_opt_rot_uav = v_interp_rot_uav;
+	vec_len_cat_opt = vec_interp_len_cat;
+	printf("vec_pose_ugv_opt.size()=%lu , vec_pose_uav_opt.size()=%lu vec_interp_len_cat=%lu\n",
+	v_interp_pose_ugv.size(),v_interp_pose_ugv.size(),vec_interp_len_cat.size());
+
     // Root of our file
-    YAML::Node root_ugv, root_uav;
+    YAML::Node root_ugv, root_uav, root_tether;
 
     // Populate emitter
     YAML::Emitter emitter;
@@ -1691,9 +1753,9 @@ void OptimizerLocalPlanner::exportOptimizedPath()
     node["size"] = size_;
     
     for(int i=0 ; i < vec_pose_ugv_opt.size(); i++){
-        node["poses"+to_string(i)]["header"] = "ugv"+to_string(i);
+		node["poses"+to_string(i)]["header"] = "ugv"+to_string(i);
         node["poses"+to_string(i)]["seq"] = i;
-        node["poses"+to_string(i)]["frame_id"] = "ugv";  
+        node["poses"+to_string(i)]["frame_id"] = "base_link_ugv";  
         node["poses"+to_string(i)]["pose"]["position"]["x"] = vec_pose_ugv_opt[i].x;
         node["poses"+to_string(i)]["pose"]["position"]["y"] = vec_pose_ugv_opt[i].y;
         node["poses"+to_string(i)]["pose"]["position"]["z"] = vec_pose_ugv_opt[i].z;
@@ -1715,7 +1777,7 @@ void OptimizerLocalPlanner::exportOptimizedPath()
     node["header"] = "marsupial_uav";
     node["seq"] = 1;
     node["stamp"] = hour_+min_+sec_ ;
-    node["frame_id"] = "uav";
+    node["frame_id"] = "base_link_uav";
     node["size"] = size_;
     for(int i=0 ; i < vec_pose_uav_opt.size(); i++){
         node["poses"+to_string(i)]["header"] = "uav"+to_string(i);
@@ -1728,6 +1790,28 @@ void OptimizerLocalPlanner::exportOptimizedPath()
         node["poses"+to_string(i)]["pose"]["orientation"]["y"] = vec_opt_rot_uav[i].y;
         node["poses"+to_string(i)]["pose"]["orientation"]["z"] = vec_opt_rot_uav[i].z;
         node["poses"+to_string(i)]["pose"]["orientation"]["w"] = vec_opt_rot_uav[i].w;
+    }
+
+    // Populate emitter
+    emitter << root_uav;
+
+	    // // Create a node listing some values
+    root_tether["tether"] = YAML::Node(YAML::NodeType::Map);
+    // // We now will write our values under root["MyNode"]
+    node = root_tether["tether"];
+	size_ = vec_len_cat_opt.size();
+    // YAML::Node node;
+    // Write some values
+    node["header"] = "tether";
+    node["seq"] = 1;
+    node["stamp"] = hour_+min_+sec_ ;
+    node["frame_id"] = "frame_tether";
+    node["size"] = size_;
+    for(int i=0 ; i < vec_len_cat_opt.size(); i++){
+        node["length"+to_string(i)]["header"] = "tether"+to_string(i);
+        node["length"+to_string(i)]["seq"] = i;
+        node["length"+to_string(i)]["frame_id"] = "tether_length";  
+        node["length"+to_string(i)]["length"] = vec_len_cat_opt[i];
     }
 
     // Populate emitter

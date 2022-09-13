@@ -1,0 +1,10 @@
+thermal_central_pos_final_1:
+    pose:
+        x: 48.8
+        y: 18.0
+        z: 6.8
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        w: 1.0

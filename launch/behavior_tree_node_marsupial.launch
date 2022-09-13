@@ -11,6 +11,7 @@
 	<rosparam command="load" file="$(find marsupial_optimizer)/trees/resources/stage_5_goals.yaml" />
 	<rosparam command="load" file="$(find marsupial_optimizer)/trees/resources/stage_6_goals.yaml" />
 	<rosparam command="load" file="$(find marsupial_optimizer)/trees/resources/stage_7_goals.yaml" />
+	<rosparam command="load" file="$(find marsupial_optimizer)/trees/resources/thermal_central_goals.yaml" />
 
     <param name="trees_folder"       type="string" value="$(find behavior_tree_ros)/resources/trees"   />
     <param name="import_from_folder" type="bool"   value="false" />

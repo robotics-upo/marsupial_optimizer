@@ -87,13 +87,19 @@ void startRegionGrowing(sensor_msgs::PointCloud2 in_cloud_)
 	ROS_INFO_COND(debug_rgs,PRINTF_CYAN"  RegionGrowing:  Initial Pos: searchPoint=[%f %f %f]",searchPoint.x , searchPoint.y, searchPoint.z);
 
     // K nearest neighbor from initial point search 
-    int K = 1;
+    int K = 20;
     std::vector<int> pointIdxNKNSearch(K);
     std::vector<float> pointNKNSquaredDistance(K);
     kdtree.nearestKSearch (searchPoint, K, pointIdxNKNSearch, pointNKNSquaredDistance);
     init_point_.x() = cloud->points[pointIdxNKNSearch[0]].x;
 	init_point_.y() = cloud->points[pointIdxNKNSearch[0]].y;
 	init_point_.z() = cloud->points[pointIdxNKNSearch[0]].z;
+    int id_nearest1_ = pointIdxNKNSearch[0];
+    for (int i=0 ; i < K ; i++)
+    {
+	    ROS_INFO_COND(debug_rgs,PRINTF_CYAN"  RegionGrowing:  Nearest Pos: pointIdxNKNSearch[%i]= [%i]", i, pointIdxNKNSearch[i]);
+    }
+	ROS_INFO_COND(debug_rgs,PRINTF_CYAN"  RegionGrowing:  Nearest Pos: pointIdxNKNSearch[0]= [%i] , pointIdxNKNSearch[1]=[%i] , pointIdxNKNSearch[2]=[%i] ",pointIdxNKNSearch[0], pointIdxNKNSearch[1], pointIdxNKNSearch[2]);
 	ROS_INFO_COND(debug_rgs,PRINTF_CYAN"  RegionGrowing:  Nearest Pos: init_point= [%f %f %f]",init_point_.x(), init_point_.y(), init_point_.z());
 
     
@@ -119,8 +125,8 @@ void startRegionGrowing(sensor_msgs::PointCloud2 in_cloud_)
     reg.setInputCloud (cloud);
     //reg.setIndices (indices);
     reg.setInputNormals (normals);
-    reg.setSmoothnessThreshold (6.0 / 180.0 * M_PI);
-    reg.setCurvatureThreshold (2.0);
+    reg.setSmoothnessThreshold (4.0 / 180.0 * M_PI);
+    reg.setCurvatureThreshold (10.0);
 
     std::vector <pcl::PointIndices> clusters;
     reg.extract (clusters);
@@ -131,18 +137,23 @@ void startRegionGrowing(sensor_msgs::PointCloud2 in_cloud_)
 
 	
     std::vector<Eigen::Vector3f> mean_normals(clusters.size(), Eigen::Vector3f({ 0.,0.,0. }));
-    int cluster_idx_key = 0;
+    int cluster_idx_key = 93;
 
-    for (size_t cluster_idx = 0 ; cluster_idx< clusters.size () ; cluster_idx ++)
+    for (size_t cluster_idx = 0 ; cluster_idx< clusters.size() ; cluster_idx ++)
     {
         // std::cout << "Indices in cluster " << cluster_idx << " has " << clusters[cluster_idx].indices.size () << " points." << std::endl;
         int counter = 0;
         while (counter < clusters[cluster_idx].indices.size()){  
             int index_ = clusters[cluster_idx].indices[counter];
+            // if (index_ == id_nearest1_ || index_ == id_nearest2_ || index_ == id_nearest3_){
+            if (cloud->points[index_].y == init_point_.y()&& cloud->points[index_].z == init_point_.z()){
+                printf("index_=[%i] , cluster_idx=[%lu] , clusters.size()=[%lu] ,  counter=[%i]\n", index_,cluster_idx,clusters.size(), counter);
+                printf("\t cloud -> points =[%f %f %f]\n", cloud->points[index_].x, cloud->points[index_].y,cloud->points[index_].z);
+            }
             if (cloud->points[index_].x == init_point_.x() && cloud->points[index_].y == init_point_.y() && cloud->points[index_].z == init_point_.z()){
                 cluster_idx_key = cluster_idx;
-                ROS_INFO_COND(debug_rgs,PRINTF_CYAN"      RegionGrowing: Number of traversability cluster: %i.", cluster_idx_key);
-                ROS_INFO_COND(debug_rgs,PRINTF_CYAN"      RegionGrowing: Numer elements Point Cloud that belong to the first cluster: %lu .", clusters[cluster_idx_key].indices.size());
+                ROS_INFO_COND(debug_rgs,PRINTF_MAGENTA"      RegionGrowing: Number of traversability cluster: %i.", cluster_idx_key);
+                ROS_INFO_COND(debug_rgs,PRINTF_MAGENTA"      RegionGrowing: Numer elements Point Cloud that belong to the first cluster: %lu .", clusters[cluster_idx_key].indices.size());
 
             }
             // std::cout << index_ << ", ";
@@ -172,8 +183,8 @@ void startRegionGrowing(sensor_msgs::PointCloud2 in_cloud_)
     // std::cout << std::endl;
 
 
-    // std::cout << "Preparing obtacles point cloud: cloud->size()= " << cloud->size() << " , clusters[cluster_idx_key].indices.size()= " << clusters[cluster_idx_key].indices.size() << std::endl;
-    // std::cout << "Preparing obtacles point cloud: size()= " << cloud->size() - clusters[cluster_idx_key].indices.size() << std::endl;
+    std::cout << "Preparing obtacles point cloud: cloud->size()= " << cloud->size() << " , clusters[cluster_idx_key].indices.size()= " << clusters[cluster_idx_key].indices.size() << std::endl;
+    std::cout << "Preparing obtacles point cloud: size()= " << cloud->size() - clusters[cluster_idx_key].indices.size() << std::endl;
 
 
     segmented_cloud_obstacles->width = (cloud->size() - clusters[cluster_idx_key].indices.size());

@@ -77,6 +77,9 @@ void MarkerPublisher::clearMarkers(visualization_msgs::MarkerArray _marker, int 
 void MarkerPublisher::getMarkerPoints(visualization_msgs::MarkerArray &marker_, std::vector<geometry_msgs::Vector3> vector_, std::string ns_, int colour_)
 {
 	// RED: colour_ = 0 ; GREEN : colour_ = 1 ; BLUE: colour_ = 2 ; YELLOW = 3 ; PURPLE = 4; ; BLACK = 5 ; WHITE = 6
+	marker_.markers.clear();
+    marker_.markers.resize(vector_.size());
+
 	for (size_t i = 0; i < vector_.size(); i++){
 		marker_.markers[i].header.frame_id = "map";
 		marker_.markers[i].header.stamp = ros::Time::now();
@@ -140,6 +143,9 @@ void MarkerPublisher::getMarkerPoints(visualization_msgs::MarkerArray &marker_, 
 void MarkerPublisher::getMarkerLines(visualization_msgs::MarkerArray &marker_, std::vector<geometry_msgs::Vector3> _vector, std::string ns_, int colour_)
 {
 	// RED: colour_ = 0 ; GREEN : colour_ = 1 ; BLUE: colour_ = 2 ; YELLOW = 3 ; PURPLE = 4;
+	marker_.markers.clear();
+    marker_.markers.resize(_vector.size());
+
 	for (size_t i = 0; i < _vector.size()-1; i++){
 		geometry_msgs::Point _p1, _p2; 
 		marker_.markers[i].header.frame_id = "map";

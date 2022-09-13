@@ -3,7 +3,8 @@
   <!-- <arg name="map" default="octomap_full.bt"/> -->
   <arg name="global_frame_id" default="map"/>
 
-  <arg name="map_path" default="/home/simon/marsupial_ws/src/marsupial_optimizer/maps/thermal_central.bt"/>
+  <arg name="map" default="thermal_central_2022-03-14-13-05-27"/>
+  <arg name="map_path" default="/home/simon/marsupial_ws/src/marsupial_optimizer/maps/$(arg map).bt"/>
 
 
   <node name="grid3d_node" type="grid3d_node" pkg="mcl3d" output="screen" args="$(arg map_path)">
