@@ -105,12 +105,12 @@ ManagerTf::ManagerTf(ros::NodeHandlePtr nh, ros::NodeHandle pnh)
 void ManagerTf::initializationTf()
 {
 	if(publish_initial){
-		tfBroadcaster(initial_pos_ugv_x, initial_pos_ugv_y, initial_pos_ugv_z, initial_pos_ugv_roll, initial_pos_ugv_pitch, initial_pos_ugv_yaw, "/map", ugv_base_frame);
-		tfBroadcaster(initial_pos_ugv_x, initial_pos_ugv_y, initial_pos_ugv_z+pos_uav_above_ugv, initial_pos_ugv_roll, initial_pos_ugv_pitch, initial_pos_ugv_yaw, "/map", uav_base_frame);
+		tfBroadcaster(initial_pos_ugv_x, initial_pos_ugv_y, initial_pos_ugv_z, initial_pos_ugv_roll, initial_pos_ugv_pitch, initial_pos_ugv_yaw, "/world", ugv_base_frame);
+		tfBroadcaster(initial_pos_ugv_x, initial_pos_ugv_y, initial_pos_ugv_z+pos_uav_above_ugv, initial_pos_ugv_roll, initial_pos_ugv_pitch, initial_pos_ugv_yaw, "/world", uav_base_frame);
 	}
 	else{
-		br.sendTransform(tf::StampedTransform(trans_ugv, ros::Time::now(), "/map", ugv_base_frame));
-		br.sendTransform(tf::StampedTransform(trans_uav, ros::Time::now(), "/map", uav_base_frame));
+		br.sendTransform(tf::StampedTransform(trans_ugv, ros::Time::now(), "/world", ugv_base_frame));
+		br.sendTransform(tf::StampedTransform(trans_uav, ros::Time::now(), "/world", uav_base_frame));
 	}
 	mp_.clearMarkers(catenary_marker, 150, catenary_marker_pub_);
 	getReelPose();
@@ -171,8 +171,8 @@ void ManagerTf::trajectoryOptimizedCallBack(const marsupial_optimizer::marsupial
 		clearMarkers(catenary_marker, 150, catenary_marker_pub_);
 		
 		mp_.markerPoints(catenary_marker, points_catenary_, i, size_, catenary_marker_pub_);	
-		br.sendTransform(tf::StampedTransform(trans_ugv, ros::Time::now(), "/map", ugv_base_frame));
-		br.sendTransform(tf::StampedTransform(trans_uav, ros::Time::now(), "/map", uav_base_frame));
+		br.sendTransform(tf::StampedTransform(trans_ugv, ros::Time::now(), "/world", ugv_base_frame));
+		br.sendTransform(tf::StampedTransform(trans_uav, ros::Time::now(), "/world", uav_base_frame));
 		ros::Duration(1.0).sleep();
     	catenary_marker_pub_.publish(catenary_marker);
 
@@ -267,7 +267,7 @@ void ManagerTf::markerPoints(visualization_msgs::MarkerArray &_marker, std::vect
     _marker.markers.resize(_vector.size());
             
     for (size_t i = 0; i < _vector.size(); ++i){
-        _marker.markers[i].header.frame_id = "map";
+        _marker.markers[i].header.frame_id = "world";
         _marker.markers[i].header.stamp = ros::Time::now();
         _marker.markers[i].ns = ns_marker;
         _marker.markers[i].id = i+1;

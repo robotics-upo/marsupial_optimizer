@@ -1755,7 +1755,7 @@ void OptimizerLocalPlanner::exportOptimizedPath()
     for(int i=0 ; i < vec_pose_ugv_opt.size(); i++){
 		node["poses"+to_string(i)]["header"] = "ugv"+to_string(i);
         node["poses"+to_string(i)]["seq"] = i;
-        node["poses"+to_string(i)]["frame_id"] = "base_link_ugv";  
+        node["poses"+to_string(i)]["frame_id"] = "ugv";  
         node["poses"+to_string(i)]["pose"]["position"]["x"] = vec_pose_ugv_opt[i].x;
         node["poses"+to_string(i)]["pose"]["position"]["y"] = vec_pose_ugv_opt[i].y;
         node["poses"+to_string(i)]["pose"]["position"]["z"] = vec_pose_ugv_opt[i].z;
@@ -1815,7 +1815,7 @@ void OptimizerLocalPlanner::exportOptimizedPath()
     }
 
     // Populate emitter
-    emitter << root_uav;
+    emitter << root_tether;
 
     // Write to file
     std::ofstream fout;

@@ -9,13 +9,16 @@
 
 <launch>
 	<arg name="cloud_in" default="/cloud_pcd"/>
+	<arg name="cloud_out" default="octomapping_full"/>
+	<arg name="frame_id" default="world"/>
+
 
 	<node pkg="octomap_server" type="octomap_server_node" name="octomap_server">
 		<param name="resolution" value="0.05" />
 		
 		<!-- fixed map frame (set to 'map' if SLAM or localization running!) -->
 		<!-- <param name="base_frame_id" value="base_link"/> -->
-		<param name="frame_id" value="world"/>
+		<param name="frame_id" value="$(arg frame_id)"/>
 		<param name="occupancy_min_z" value="-3"/>
 		<param name="occupancy_max_z" value="30"/>
 		<param name="pointcloud_min_z" value="-3"/>
@@ -26,6 +29,8 @@
 		
 		<!-- data source to integrate (PointCloud2) -->
 		<remap from="cloud_in" to="$(arg cloud_in)" />
+		<remap from="octomap_full" to="$(arg cloud_out)" />
+		<remap from="octomap_point_cloud_centers" to="octomapping_point_cloud_centers" />
 	
 	</node>
 </launch>
