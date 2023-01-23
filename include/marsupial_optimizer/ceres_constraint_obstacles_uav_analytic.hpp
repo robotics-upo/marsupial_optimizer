@@ -10,7 +10,7 @@
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/point_types.h>
 
-#include "misc/grid3d.hpp"
+#include "catenary_checker/grid3d.hpp"
 
 using ceres::SizedCostFunction;
 using ceres::CostFunction;

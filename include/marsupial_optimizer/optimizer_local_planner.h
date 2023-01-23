@@ -56,11 +56,12 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 
 #include "marsupial_optimizer/marsupial_trajectory_optimized.h"
 
-#include "misc/catenary_solver_ceres.hpp"
-#include "misc/near_neighbor.hpp"
 #include "misc/data_management.hpp"
-#include "misc/grid3d.hpp"
-#include "misc/bisection_catenary_3D.h"
+#include "misc/catenary_solver_ceres.hpp"
+
+#include "catenary_checker/near_neighbor.hpp"
+#include "catenary_checker/grid3d.hpp"
+#include "catenary_checker/bisection_catenary_3D.h"
 // #include "misc/marker_publisher.hpp"
 
 //ROS

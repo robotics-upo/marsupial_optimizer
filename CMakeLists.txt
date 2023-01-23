@@ -35,7 +35,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(marsupial_optimizer CXX)
 
 # Set to Release in order to speed up the program significantly
-set(CMAKE_BUILD_TYPE Debug) #None, Debug, Release, RelWithDebInfo, MinSizeRel
+set(CMAKE_BUILD_TYPE Release) #None, Debug, Release, RelWithDebInfo, MinSizeRel
 
 # add_compile_options(-std=c++14)
 
@@ -49,12 +49,20 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   trajectory_msgs
   upo_actions
+  catenary_checker
   dynamic_reconfigure
   octomap_msgs
   octomap_ros
 )
 
 find_package(PCL 1.8 REQUIRED)
+
+find_package(Qt5 REQUIRED COMPONENTS
+  Charts
+  Widgets
+)
+
+find_package(Qt5Charts REQUIRED)
 
 message(STATUS "System: ${CMAKE_SYSTEM}")
 ## System dependencies are found with CMake's conventions
@@ -80,8 +88,9 @@ generate_dynamic_reconfigure_options(
 )
 
 catkin_package(
-  INCLUDE_DIRS include ${EXTERNAL_INCLUDE_DIRS}
-  LIBRARIES ${EXTERNAL_LIBS}
+  INCLUDE_DIRS include 
+  ${EXTERNAL_INCLUDE_DIRS}
+  LIBRARIES ${EXTERNAL_LIBS} yaml-cpp
   CATKIN_DEPENDS
   roscpp
   tf
@@ -91,6 +100,7 @@ catkin_package(
   message_generation 
   message_runtime
   upo_actions
+  catenary_checker
   pcl_conversions 
   pcl_ros
   octomap_msgs 
@@ -98,7 +108,16 @@ catkin_package(
   DEPENDS system_lib octomap_msgs octomap_ros yaml-cpp
 )
 
-include_directories(  ${catkin_INCLUDE_DIRS}  ${PCL_INCLUDE_DIRS} )
+# message(STATUS "OPTIMIZER_PRINT include dir: ${catkin_INCLUDE_DIRS}")
+
+include_directories(
+  include/ 
+  ${catkin_INCLUDE_DIRS}  
+  ${PCL_INCLUDE_DIRS} 
+  ${CERES_INCLUDE_DIRS}
+  ${Qt5_INCLUDE_DIRS}
+  ${Qt5Charts_INCLUDE_DIRS}
+  ${Qt5Widgets_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
@@ -109,51 +128,43 @@ if (BUILD_SHARED_LIBS)
   remove_definitions(-DCERES_BUILDING_SHARED_LIBRARY)
 endif()
 
-include_directories(
-  ${catkin_INCLUDE_DIRS}
-  ${CERES_INCLUDE_DIRS}
-)
+# add_library(marsupial_optimizer 
+# )
 
-include_directories(include)
-
-add_library(marsupial_optimizer 
-src/bisection_catenary_3D.cpp
-) 
-target_link_libraries(marsupial_optimizer
-   ${EXTERNAL_LIBS}
-   ${catkin_LIBRARIES}
-   yaml-cpp
-)
+# target_link_libraries(marsupial_optimizer
+#    ${EXTERNAL_LIBS}
+#    ${catkin_LIBRARIES}
+#    yaml-cpp
+# )
 
 # add_executable(optimizer_local_planner_fix_ugv src/optimizer_local_planner_fix_ugv.cc)
 # target_link_libraries(optimizer_local_planner_fix_ugv Ceres::ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES} ${EXTERNAL_LIBS})
 
 add_executable(optimizer_local_planner_fix_ugv_node src/optimizer_local_planner_fix_ugv_node.cpp src/optimizer_local_planner_fix_ugv.cc src/marker_publisher.cpp )
-add_dependencies(optimizer_local_planner_fix_ugv_node ${PROJECT_NAME}_gencfg ${catkin_EXPORTED_TARGETS})
-target_link_libraries(optimizer_local_planner_fix_ugv_node marsupial_optimizer  Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES} yaml-cpp)
+add_dependencies(optimizer_local_planner_fix_ugv_node ${${PROJECT_NAME}_EXPORTED_TARGETS}  ${catkin_EXPORTED_TARGETS} )
+target_link_libraries(optimizer_local_planner_fix_ugv_node  catenary_checker Ceres::ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES} )
 
-add_executable(region_growing_segmentation_node src/region_growing_segmentation_node.cpp)
-target_link_libraries (region_growing_segmentation_node ${PCL_LIBRARIES} ${catkin_LIBRARIES})
+# add_executable(region_growing_segmentation_node src/region_growing_segmentation_node.cpp)
+# target_link_libraries (region_growing_segmentation_node ${PCL_LIBRARIES} ${catkin_LIBRARIES})
 
-add_executable(optimizer_local_planner_node src/optimizer_local_planner_node.cpp 
-                                            src/optimizer_local_planner.cc 
-                                            src/marker_publisher.cpp)
-# add_dependencies(optimizer_local_planner_node ${PROJECT_NAME}_gencfg)
-target_link_libraries(optimizer_local_planner_node marsupial_optimizer  Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES} yaml-cpp)
+add_executable(optimizer_local_planner_node src/optimizer_local_planner_node.cpp src/optimizer_local_planner.cc src/marker_publisher.cpp)
+add_dependencies(optimizer_local_planner_node ${${PROJECT_NAME}_EXPORTED_TARGETS}  ${catkin_EXPORTED_TARGETS} )
+target_link_libraries(optimizer_local_planner_node catenary_checker Ceres::ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES} yaml-cpp Qt5::Charts
+Qt5::Widgets dbscan_line)
 
 add_executable(optimizer_publisher_tf_node src/optimizer_publisher_tf_node.cpp src/marker_publisher.cpp) 
-add_dependencies(optimizer_publisher_tf_node ${PROJECT_NAME}_gencfg ${PROJECT_NAME}_generate_messages_cpp)
-target_link_libraries(optimizer_publisher_tf_node marsupial_optimizer Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES} ${catkin_LIBRARIES})
+add_dependencies(optimizer_publisher_tf_node ${${PROJECT_NAME}_EXPORTED_TARGETS}  ${catkin_EXPORTED_TARGETS} )
+target_link_libraries(optimizer_publisher_tf_node catenary_checker Ceres::ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES} Qt5::Charts
+Qt5::Widgets dbscan_line)
 
 add_executable(test_catenary_optimizer src/test_catenary_optimizer.cc src/marker_publisher.cpp)
-# add_dependencies(optimizer_local_planner_node ${PROJECT_NAME}_gencfg)
-target_link_libraries(test_catenary_optimizer marsupial_optimizer  Ceres::ceres ${catkin_LIBRARIES} ${EXTERNAL_LIBS} ${CERES_LIBRARIES})
+add_dependencies(test_catenary_optimizer  ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
+target_link_libraries(test_catenary_optimizer catenary_checker Ceres::ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES} Qt5::Charts
+Qt5::Widgets dbscan_line)
 
-add_executable(test_node_yaml src/test_node_yaml.cpp) 
-target_link_libraries(test_node_yaml marsupial_optimizer yaml-cpp)
-
-add_executable(create_grid3d_node src/create_grid3d_node.cpp) 
-target_link_libraries(create_grid3d_node marsupial_optimizer)
+# add_executable(test_node_yaml src/test_node_yaml.cpp) 
+# add_dependencies(test_node_yaml  ${PROJECT_NAME}_gencfg)
+# target_link_libraries(test_node_yaml marsupial_optimizer ${EXTERNAL_LIBS} ${catkin_LIBRARIES} yaml-cpp)
 
 # add_executable(catenary_solver_test_ceres src/catenary_solver_test_ceres.cpp )
 # # add_dependencies(optimizer_local_planner_fix_ugv_node ${PROJECT_NAME}_gencfg)

@@ -8,10 +8,11 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "marsupial_optimizer/test_ceres_constraint_catenary_length.hpp"
 
 #include "misc/catenary_solver_ceres.hpp"
-#include "misc/near_neighbor.hpp"
 #include "misc/data_management.hpp"
-#include "misc/grid3d.hpp"
-#include "misc/bisection_catenary_3D.h"
+	
+#include "catenary_checker/grid3d.hpp"
+#include "catenary_checker/bisection_catenary_3D.h"
+#include "catenary_checker/near_neighbor.hpp"
 
 #include <octomap_msgs/Octomap.h>
 #include <octomap/OcTree.h>

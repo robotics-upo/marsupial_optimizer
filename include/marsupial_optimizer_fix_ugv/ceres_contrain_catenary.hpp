@@ -15,7 +15,7 @@
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/point_types.h>
 
-#include "misc/near_neighbor.hpp"
+#include "catenary_checker/near_neighbor.hpp"
 #include "misc/marker_publisher.h"
 #include "misc/catenary_solver_ceres.hpp"
 

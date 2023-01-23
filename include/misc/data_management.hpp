@@ -5,9 +5,7 @@
 #include <fstream>
 #include <vector>
 #include <string>
-#include "near_neighbor.hpp"
 #include "catenary_solver_ceres.hpp"
-#include "bisection_catenary_3D.h"
 
 #include <ros/ros.h>
 #include <geometry_msgs/Point.h> 
@@ -22,7 +20,9 @@
 #include <octomap_msgs/Octomap.h> 
 #include <octomap/OcTree.h>
 
-#include "misc/grid3d.hpp"
+#include "catenary_checker/grid3d.hpp"
+#include "catenary_checker/bisection_catenary_3D.h"
+#include "catenary_checker/near_neighbor.hpp"
 
 class DataManagement
 {

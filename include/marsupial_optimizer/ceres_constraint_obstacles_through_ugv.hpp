@@ -13,7 +13,7 @@
 #include <octomap_msgs/Octomap.h> 
 #include <octomap/OcTree.h>
 
-#include "misc/near_neighbor.hpp"
+#include "catenary_checker/near_neighbor.hpp"
 
 using ceres::AutoDiffCostFunction;
 using ceres::CostFunction;

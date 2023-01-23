@@ -15,9 +15,10 @@
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/point_types.h>
 
-#include "misc/near_neighbor.hpp"
-#include "misc/bisection_catenary_3D.h"
+#include "catenary_checker/near_neighbor.hpp"
 #include "misc/marker_publisher.h"
+
+#include "catenary_checker/bisection_catenary_3D.h"
 
 #include <octomap_msgs/Octomap.h> 
 #include <octomap/OcTree.h>

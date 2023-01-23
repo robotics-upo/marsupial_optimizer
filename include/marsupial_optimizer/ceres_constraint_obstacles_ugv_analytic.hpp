@@ -10,7 +10,7 @@
 #include <pcl/kdtree/kdtree_flann.h>
 #include <pcl/point_types.h>
 
-#include "misc/near_neighbor.hpp"
+#include "catenary_checker/near_neighbor.hpp"
 
 using ceres::SizedCostFunction;
 using ceres::CostFunction;
