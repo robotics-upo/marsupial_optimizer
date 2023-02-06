@@ -140,11 +140,11 @@ lns2_2 = axs2.plot(count_all, list_average_time_op, '-', color='cyan', label = '
 lns1 = lns1_2+lns2_2    #For label
 labs2 = [l.get_label() for l in lns1]   #For label
 axs[0,0].legend(lns1, labs2, loc=0)    #For label
-axs[0,0].set_ylim(ymin=(min_value_time_gp-min_value_time_gp*0.2), ymax=(max_value_time_gp+min_value_time_gp*0.2))
+axs[0,0].set_xlabel('Test Number', fontsize=12)
 axs[0,0].tick_params(axis='y', labelcolor='red')
 axs[0,0].grid(color='pink')
 axs[0,0].set_ylabel('Global Planner Time[sec]',color="red", fontsize=12)
-axs[0,0].set_xlabel('Test Number', fontsize=12)
+axs[0,0].set_ylim(ymin=(min_value_time_gp-min_value_time_gp*0.2), ymax=(max_value_time_gp+min_value_time_gp*0.2))
 axs2.tick_params(axis='y', labelcolor='blue')
 axs2.grid(color='gray')
 axs2.set_ylabel("Optimization Time[sec]",color="blue",fontsize=12)

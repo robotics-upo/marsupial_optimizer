@@ -185,13 +185,10 @@ void OptimizerLocalPlanner::cleanVectors()
 
 void OptimizerLocalPlanner::configServices()
 {
-    printf("!!!!!!!!!!!!!!!!!!!!!!!! ENTRO: Actions OPTIMIZER !!!!!!!!!!!!!!!!!!!!!!\n");
     execute_path_srv_ptr.reset(new ExecutePathServer(*nh, "/Execute_Plan", false));
     execute_path_srv_ptr->registerGoalCallback(boost::bind(&OptimizerLocalPlanner::executeOptimizerPathGoalCB, this));
     execute_path_srv_ptr->registerPreemptCallback(boost::bind(&OptimizerLocalPlanner::executeOptimizerPathPreemptCB, this));
     execute_path_srv_ptr->start();
-    printf("!!!!!!!!!!!!!!!!!!!!!!!! SALGO: Actions OPTIMIZER !!!!!!!!!!!!!!!!!!!!!!\n");
-
 }
 
 void OptimizerLocalPlanner::setupOptimizer()

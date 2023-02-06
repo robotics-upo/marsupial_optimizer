@@ -107,7 +107,7 @@ void ManagerTf::initializationTf()
 {
 	if(publish_initial){
 		tfBroadcaster(initial_pos_ugv_x, initial_pos_ugv_y, initial_pos_ugv_z, initial_pos_ugv_roll, initial_pos_ugv_pitch, initial_pos_ugv_yaw, "/world", ugv_base_frame);
-		tfBroadcaster(initial_pos_ugv_x, initial_pos_ugv_y, initial_pos_ugv_z+pos_uav_above_ugv, initial_pos_ugv_roll, initial_pos_ugv_pitch, initial_pos_ugv_yaw, "/world", uav_base_frame);
+		tfBroadcaster(initial_pos_uav_x, initial_pos_uav_y, initial_pos_uav_z, initial_pos_uav_roll, initial_pos_uav_pitch, initial_pos_uav_yaw, "/world", uav_base_frame);
 	}
 	else{
 		br.sendTransform(tf::StampedTransform(trans_ugv, ros::Time::now(), "/world", ugv_base_frame));
