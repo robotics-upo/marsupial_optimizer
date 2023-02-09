@@ -144,9 +144,6 @@ add_executable(optimizer_local_planner_fix_ugv_node src/optimizer_local_planner_
 add_dependencies(optimizer_local_planner_fix_ugv_node ${${PROJECT_NAME}_EXPORTED_TARGETS}  ${catkin_EXPORTED_TARGETS} )
 target_link_libraries(optimizer_local_planner_fix_ugv_node  catenary_checker Ceres::ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES} )
 
-# add_executable(region_growing_segmentation_node src/region_growing_segmentation_node.cpp)
-# target_link_libraries (region_growing_segmentation_node ${PCL_LIBRARIES} ${catkin_LIBRARIES})
-
 add_executable(optimizer_local_planner_node src/optimizer_local_planner_node.cpp src/optimizer_local_planner.cc src/marker_publisher.cpp)
 add_dependencies(optimizer_local_planner_node ${${PROJECT_NAME}_EXPORTED_TARGETS}  ${catkin_EXPORTED_TARGETS} )
 target_link_libraries(optimizer_local_planner_node catenary_checker Ceres::ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES} yaml-cpp Qt5::Charts
@@ -161,6 +158,7 @@ add_executable(test_catenary_optimizer src/test_catenary_optimizer.cc src/marker
 add_dependencies(test_catenary_optimizer  ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
 target_link_libraries(test_catenary_optimizer catenary_checker Ceres::ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES} Qt5::Charts
 Qt5::Widgets dbscan_line)
+
 
 # add_executable(test_node_yaml src/test_node_yaml.cpp) 
 # add_dependencies(test_node_yaml  ${PROJECT_NAME}_gencfg)
