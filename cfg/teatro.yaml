@@ -1,0 +1,13 @@
+test_1:
+  initial_pos_ugv_x: 7.0
+  initial_pos_ugv_y: 7.7
+  initial_pos_ugv_z: 0.5
+  initial_pos_ugv_yaw:  0.0
+  initial_pos_ugv_pitch: 0.0
+  initial_pos_ugv_roll: 1.042
+  initial_pos_uav_x: 7.0
+  initial_pos_uav_y: 7.7
+  initial_pos_uav_z: 3.0
+  initial_pos_uav_yaw:  0.0
+  initial_pos_uav_pitch: 0.0
+  initial_pos_uav_roll: 1.042

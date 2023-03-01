@@ -1,0 +1,10 @@
+teatro_pos_final_1:
+    pose:
+        x: 4.0
+        y: 22.0
+        z: 4.4
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
