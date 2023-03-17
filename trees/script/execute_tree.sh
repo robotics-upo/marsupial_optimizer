@@ -1,9 +1,9 @@
 #!/bin/bash
 
-arg1="$1"
+arg1="$USER"
 arg2="$2"
 
-echo "Set parameter: <pc_user_name> <tree_name.xml>"
+echo "Set parameter: <tree_name.xml>"
 echo "    pc_user_name: $arg1"
 echo "    tree_name: $arg2"
 
