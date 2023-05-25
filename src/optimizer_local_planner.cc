@@ -196,6 +196,7 @@ void OptimizerLocalPlanner::setupOptimizer()
 	options.max_num_iterations = n_iter_opt;
 	options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
 	options.minimizer_progress_to_stdout = true;
+	options.num_threads = 8;
 }
 
 void OptimizerLocalPlanner::dynRecCb(marsupial_optimizer::OptimizationParamsConfig &config, uint32_t level)
@@ -940,7 +941,7 @@ void OptimizerLocalPlanner::finishigOptimizationAndGetDataResult(int &n_coll_opt
 		double opt_compute_time_ = (final_time_opt - start_time_opt).toSec(); //Compute Time Optimization
 		dm_.getDataForOptimizerAnalysis(nn_ugv_obs.kdtree, nn_uav.kdtree, nn_ugv_obs.obs_points, nn_uav.obs_points, opt_compute_time_, "UGV", n_coll_init_path_ugv, n_coll_opt_traj_ugv);
 		dm_.getDataForOptimizerAnalysis(nn_uav.kdtree, nn_uav.kdtree, nn_uav.obs_points, nn_uav.obs_points, opt_compute_time_, "UAV", n_coll_init_path_uav, n_coll_opt_traj_uav);
-		dm_.feasibilityAnalisysTrajectory(initial_cost, final_cost, successful_steps, unsuccessful_steps, time_optimazation, n_coll_opt_cat_);
+		// dm_.feasibilityAnalisysTrajectory(initial_cost, final_cost, successful_steps, unsuccessful_steps, time_optimazation, n_coll_opt_cat_);
 		
 		std::cout << "... data for analysis saved in txt file." << std::endl << std::endl;
 	}

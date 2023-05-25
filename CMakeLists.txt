@@ -35,7 +35,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(marsupial_optimizer CXX)
 
 # Set to Release in order to speed up the program significantly
-set(CMAKE_BUILD_TYPE Release) #None, Debug, Release, RelWithDebInfo, MinSizeRel
+set(CMAKE_BUILD_TYPE Debug) #None, Debug, Release, RelWithDebInfo, MinSizeRel
 
 # add_compile_options(-std=c++14)
 
