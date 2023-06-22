@@ -4,11 +4,17 @@
 	<arg name="map_file" default="thermal_central_2022-03-14-13-05-27"/>
     <arg name="static_map_file" default="$(find marsupial_optimizer)/maps/$(arg map_file).bt"/>
     <arg name="published_pc" default="/octomap_point_cloud_centers"/>
+    <arg name="root" default=""/>
 
 	<node pkg="octomap_server" type="octomap_server_node" name="$(arg node_name)_node" output="screen" args="$(arg static_map_file)">
 		<param name="base_frame_id" value="base_link"/>
 		<param name="frame_id" value="world"/>
         <remap from="/octomap_point_cloud_centers" to="$(arg published_pc)"/>
+        <remap from="/octomap_binary" to="/$(arg root)/octomap_binary"/>
+        <remap from="/occupied_cells_vis_array" to="/$(arg root)/occupied_cells_vis_array"/>
+        <remap from="/free_cells_vis_array" to="/$(arg root)/free_cells_vis_array"/>
+        <remap from="/octomap_full" to="/$(arg root)/octomap_full"/>
+        <remap from="/projected_map" to="/$(arg root)/projected_map"/>
 	</node>
 
 	<!-- <group ns="oct_trav">

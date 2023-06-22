@@ -89,6 +89,9 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include <upo_actions/Navigate3DAction.h>
 #include "marsupial_optimizer/OptimizationParamsConfig.h"
 
+#include "misc/import_path.hpp"
+
+
 #define PRINTF_REGULAR "\x1B[0m"
 #define PRINTF_RED "\x1B[31m"
 #define PRINTF_GREEN "\x1B[32m"
@@ -138,12 +141,11 @@ class OptimizerLocalPlanner
 {
     typedef actionlib::SimpleActionServer<upo_actions::ExecutePathAction> ExecutePathServer;
     typedef actionlib::SimpleActionClient<upo_actions::NavigateAction> NavigateClient;
-    typedef actionlib::SimpleActionClient<upo_actions::Navigate3DAction> Navigate3DClient;
 
 public:
 
 	// =========== Function declarations =============
-	OptimizerLocalPlanner();
+	OptimizerLocalPlanner(bool get_path_from_file_);
 	// OptimizerLocalPlanner(tf2_ros::Buffer tfBuffer_);
 	// ~OptimizerLocalPlanner();
 	void setupOptimizer();
@@ -160,6 +162,7 @@ public:
 	void traversableMapCallBack(const octomap_msgs::OctomapConstPtr &msg);
 	void deleteMarkersCallBack(const std_msgs::BoolConstPtr &msg);
 	void finishedRvizManeuverCallBack(const std_msgs::BoolConstPtr &msg);
+	void initializeOptimizerProcessCallBack(const std_msgs::BoolConstPtr &msg);
 	void interpolateFixedPointsPath(vector<geometry_msgs::Vector3> &v_inter_ , int mode_);
 	void calculateDistanceVertices(vector<double> &_v_D_ugv,vector<double> &_v_D_uav);
 	void getTemporalState(vector<double> &_time);
@@ -210,7 +213,7 @@ public:
 	double w_alpha_uav, w_alpha_ugv, w_beta_uav, w_beta_ugv, w_theta_ugv, w_gamma_uav, w_gamma_ugv, w_kappa_ugv, w_kappa_uav, w_delta; 
 	double w_epsilon_uav, w_epsilon_ugv, w_zeta_uav , w_zeta_ugv, w_eta_1, w_eta_2, w_eta_3, w_lambda, w_mu_uav, w_nu_ugv;
 
-	bool optimize_ugv , optimize_uav, optimize_cat, fix_last_position_ugv, use_distance_function;
+	bool optimize_ugv , optimize_uav, optimize_cat, fix_last_position_ugv, use_distance_function, get_path_from_file;
 
 	NearNeighbor nn_uav; // Kdtree used for Catenary and UAV
 	NearNeighbor nn_trav, nn_ugv_obs;
@@ -220,7 +223,6 @@ public:
 
 	//! Manage Data Vertices and Edges
     std::unique_ptr<ExecutePathServer> execute_path_srv_ptr;
-    std::unique_ptr<Navigate3DClient> navigation3DClient;
     std::unique_ptr<tf::TransformListener> tf_list;
     std::unique_ptr<tf::TransformListener> tf_list_ptr;
 	bool use3d;
@@ -242,7 +244,7 @@ public:
 	std::string action_name_;
 	std::string ugv_base_frame, uav_base_frame, reel_base_frame, world_frame;
 
-	ros::Subscriber octomap_ws_sub_,point_cloud_ugv_traversability_sub_, point_cloud_ugv_obstacles_sub_, clean_markers_sub_, local_map_sub, local_trav_map_sub, finished_rviz_maneuver_sub_ 	;
+	ros::Subscriber octomap_ws_sub_,point_cloud_ugv_traversability_sub_, point_cloud_ugv_obstacles_sub_, clean_markers_sub_, local_map_sub, local_trav_map_sub, finished_rviz_maneuver_sub_, star_optimizer_process_sub_;
 	ros::Publisher traj_marker_ugv_pub_, post_traj_marker_ugv_pub_, post_traj_marker_uav_pub_, traj_marker_uav_pub_;
 
 	ros::Publisher catenary_marker_pub_, clean_nodes_marker_gp_pub_, clean_catenary_marker_gp_pub_, trajectory_pub_;

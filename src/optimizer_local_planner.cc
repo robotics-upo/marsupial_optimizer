@@ -6,7 +6,7 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 
 #include "marsupial_optimizer/optimizer_local_planner.h"
 
-OptimizerLocalPlanner::OptimizerLocalPlanner()
+OptimizerLocalPlanner::OptimizerLocalPlanner(bool get_path_from_file_)
 {
 	nh.reset(new ros::NodeHandle("~"));
 
@@ -125,12 +125,19 @@ OptimizerLocalPlanner::OptimizerLocalPlanner()
 	ROS_INFO(PRINTF_BLUE"Optimizer_Local_Planner: alpha_uav=[%f] alpha_ugv=[%f] beta_uav=[%f] beta_ugv=[%f] theta_ugv=[%f] gamma_uav=[%f] gamma_ugv=[%f] kappa_ugv=[%f] kappa_uav=[%f] delta=[%f] epsilon=[%f] zeta=[%f] eta_1=[%f] eta_2=[%f]",
 						 w_alpha_uav, w_alpha_ugv, w_beta_uav, w_beta_ugv, w_theta_ugv,w_gamma_uav, w_gamma_ugv, w_kappa_ugv, 
 						 w_kappa_uav, w_delta, w_epsilon_uav, w_zeta_uav, w_eta_1, w_eta_2);
-	ROS_INFO(PRINTF_BLUE"Optimizer_Local_Planner: Parameters loaded, ready for Optimization Process. Waiting for Action!!");
-	configServices();
-
+	
 	std::string node_name_ = "grid3D_optimizer_node";
 	grid_3D = new Grid3d(node_name_);
 	grid_3D->computeTrilinearInterpolation();
+
+	get_path_from_file = get_path_from_file_;
+	if (!get_path_from_file){
+		ROS_INFO(PRINTF_BLUE"Optimizer_Local_Planner: Parameters loaded, ready for Optimization Process. Waiting for Action!!");
+		configServices();
+	}
+	else{
+		ROS_INFO(PRINTF_BLUE"Optimizer_Local_Planner: Parameters loaded, ready for Optimization Process. Waiting for read path!!");
+	}
 }
 
 void OptimizerLocalPlanner::initializeSubscribers()
@@ -142,6 +149,7 @@ void OptimizerLocalPlanner::initializeSubscribers()
     point_cloud_ugv_traversability_sub_ = nh->subscribe( "/region_growing_traversability_pc_map", 1,  &OptimizerLocalPlanner::readPointCloudTraversabilityUGVCallback, this);
     clean_markers_sub_ = nh->subscribe( "/clean_marker_optimizer", 1,  &OptimizerLocalPlanner::deleteMarkersCallBack, this);
     finished_rviz_maneuver_sub_ = nh->subscribe( "/finished_rviz_maneuver", 1,  &OptimizerLocalPlanner::finishedRvizManeuverCallBack, this);
+    star_optimizer_process_sub_ = nh->subscribe( "/star_optimizer_process", 1,  &OptimizerLocalPlanner::initializeOptimizerProcessCallBack, this);
 
 	ROS_INFO(PRINTF_BLUE"Optimizer_Local_Planner: Subscribers Initialized");
 }
@@ -196,7 +204,7 @@ void OptimizerLocalPlanner::setupOptimizer()
 	options.max_num_iterations = n_iter_opt;
 	options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
 	options.minimizer_progress_to_stdout = true;
-	options.num_threads = 8;
+	options.num_threads = 1;
 }
 
 void OptimizerLocalPlanner::dynRecCb(marsupial_optimizer::OptimizationParamsConfig &config, uint32_t level)
@@ -266,13 +274,30 @@ void OptimizerLocalPlanner::executeOptimizerPathPreemptCB()
 	mp_.clearMarkersPointLines(post_points_uav_marker, post_lines_uav_marker, post_traj_marker_uav_pub_,0);
 }
 
+void OptimizerLocalPlanner::initializeOptimizerProcessCallBack(const std_msgs::BoolConstPtr &msg)
+{
+	bool start_optimizer_process = msg->data;
+	if (start_optimizer_process == true){
+		executeOptimizerPathGoalCB();
+	}
+	start_optimizer_process = false;
+}
+
 void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 {
   	ROS_INFO_COND(debug, PRINTF_GREEN "Optimizer Local Planner : Path received in action server mode");
-	
-	auto path_shared_ptr = execute_path_srv_ptr->acceptNewGoal();
-  	globalTrajectory = path_shared_ptr->path;
-	vec_len_cat_init = path_shared_ptr->length_catenary; 
+
+	if (!get_path_from_file){
+		auto path_shared_ptr = execute_path_srv_ptr->acceptNewGoal();
+		globalTrajectory = path_shared_ptr->path;
+		vec_len_cat_init = path_shared_ptr->length_catenary; 
+	} else{
+		upo_actions::ExecutePathGoal path_shared_	;
+		ImportPath ip_(path+"results_marsupial_optimizer/rrt_path_2023_6_20_234860.yaml", path_shared_);
+		globalTrajectory = path_shared_.path;
+		vec_len_cat_init = path_shared_.length_catenary; 
+	}
+  	
 
 	if(write_data_residual)
 		cleanResidualConstraintsFile();
@@ -723,7 +748,9 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			}
 		}
 		action_result.arrived = true;
-		execute_path_srv_ptr->setSucceeded(action_result);
+
+		if (!get_path_from_file)
+			execute_path_srv_ptr->setSucceeded(action_result);
 	}
 	else{
 		if (initial_cost==final_cost)
@@ -764,7 +791,9 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		}	
 		finished_rviz_maneuver = false;
 		action_result.arrived = false;
-		execute_path_srv_ptr->setSucceeded(action_result);
+
+		if (!get_path_from_file)
+			execute_path_srv_ptr->setSucceeded(action_result);
 	}
 	
 	std::cout <<"Optimization Local Planner Proccess ended !!!!!!!!!!!!!!!!!!!!!!!" << std::endl << "==================================================="<< std::endl << std::endl << std::endl;
@@ -1273,6 +1302,9 @@ void OptimizerLocalPlanner::getReelPose()
     }catch (tf2::TransformException &ex){
         ROS_WARN("Optimizer Local Planner: Couldn't get Local Reel Pose (frame: %s), so not possible to set Tether start point; tf exception: %s", reel_base_frame.c_str(),ex.what());
     }
+	std::cout << "Local reel pose : [" << pose_reel_local.transform.translation.x << ","
+									   << pose_reel_local.transform.translation.y << ","
+									   << pose_reel_local.transform.translation.z << "]" << std::endl;
 }
 
 geometry_msgs::Vector3 OptimizerLocalPlanner::getReelPoint(const float px_, const float py_, const float pz_,const float qx_, const float qy_, const float qz_, const float qw_)

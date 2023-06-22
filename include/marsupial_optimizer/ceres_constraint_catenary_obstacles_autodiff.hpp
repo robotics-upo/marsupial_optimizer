@@ -91,7 +91,7 @@ public:
 
 			points_catenary.clear();  dist_obst_cat.clear(); pos_cat_in_coll.clear(); cat_between_obs.clear(); 
 			bc.readDataForCollisionAnalisys(g_3D, sb, o_full, kdT_trav, pc_trav);
-			bool just_one_axe = bc.configBisection(Length[1], state1[1], state1[2], state1[3], state2[1], state2[2], state2[3], true);
+			bool just_one_axe = bc.configBisection(Length[1], state1[1], state1[2], state1[3], state2[1], state2[2], state2[3], false);
 			bc.getPointCatenary3D(points_catenary);
 			bc.getStatusCollisionCat(dist_obst_cat, pos_cat_in_coll, cat_between_obs, first_coll, last_coll);
 			double min_distance_cat_obs_ = bc.min_distance_cat_obs;
@@ -169,33 +169,10 @@ public:
 				cost_cat = cost_cat + cost_;
 			}
 
-			// if (is_collision==1){
-			// 	for(int k = 0 ; k < bc.dist_obst_cat.size(); k++){
-			// 		printf("dist_obst_cat[%i/%lu]= %f \n", k,dist_obst_cat.size(),dist_obst_cat[k]);
-			// 	}
-			// 	std::string yy_ ;
-			// 	yy_ = "s";
-			// 	std::cout << "Cat[" << state1[0] <<"] in collision["<<first_coll << "-"<<last_coll  << "] cost="<< cost_cat <<". Press key 'y': ";
-			// 	while (yy_ != "y"){
-			// 		std::cin >> yy_ ;
-			// 	}
-			// }
-			// if (is_collision==2){
-			// 	for(int k = 0 ; k < bc.dist_obst_cat.size(); k++){
-			// 		printf("dist_obst_cat[%i/%lu]= %f \n", k,dist_obst_cat.size(),dist_obst_cat[k]);
-			// 	}
-			// 	std::string yy_ ;
-			// 	yy_ = "s";
-			// 	std::cout << "Cat[" << state1[0] <<"] close obstacle["<<first_coll << "-"<<last_coll  << "] cost="<< cost_cat <<". Press key 'y': ";
-			// 	while (yy_ != "y"){
-			// 		std::cin >> yy_ ;
-			// 	}
-			// }
 
 			Catenary[0] = cost_cat;
 			Catenary[1] = first_coll;
 			Catenary[2] = last_coll;
-			// Catenary[3] = last_coll-first_coll;
 			Catenary[3] = count_coll;
 			Catenary[4] = points_catenary.size();
 			Catenary[5] = bc.num_point_per_unit_length;
@@ -273,8 +250,6 @@ public:
 			/********************************   Compute Residual   ********************************/
 
 			T cost_cat_ = catenary[0];
-			// residual[0] = wf_1 * (cost_cat_/(catenary[4]-catenary[3]));
-			// residual[0] = wf_1 * (cost_cat_/(L_-catenary[3]/catenary[5]));
 			residual[0] = wf_1 * (cost_cat_);
 
 			if(w_d_){

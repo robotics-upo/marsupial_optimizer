@@ -140,11 +140,7 @@ endif()
 # add_executable(optimizer_local_planner_fix_ugv src/optimizer_local_planner_fix_ugv.cc)
 # target_link_libraries(optimizer_local_planner_fix_ugv Ceres::ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES} ${EXTERNAL_LIBS})
 
-add_executable(optimizer_local_planner_fix_ugv_node src/optimizer_local_planner_fix_ugv_node.cpp src/optimizer_local_planner_fix_ugv.cc src/marker_publisher.cpp )
-add_dependencies(optimizer_local_planner_fix_ugv_node ${${PROJECT_NAME}_EXPORTED_TARGETS}  ${catkin_EXPORTED_TARGETS} )
-target_link_libraries(optimizer_local_planner_fix_ugv_node  catenary_checker Ceres::ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES} )
-
-add_executable(optimizer_local_planner_node src/optimizer_local_planner_node.cpp src/optimizer_local_planner.cc src/marker_publisher.cpp)
+add_executable(optimizer_local_planner_node src/optimizer_local_planner_node.cpp src/optimizer_local_planner.cc src/marker_publisher.cpp src/import_path.cpp)
 add_dependencies(optimizer_local_planner_node ${${PROJECT_NAME}_EXPORTED_TARGETS}  ${catkin_EXPORTED_TARGETS} )
 target_link_libraries(optimizer_local_planner_node catenary_checker Ceres::ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES} yaml-cpp Qt5::Charts
 Qt5::Widgets dbscan_line)
@@ -152,11 +148,6 @@ Qt5::Widgets dbscan_line)
 add_executable(optimizer_publisher_tf_node src/optimizer_publisher_tf_node.cpp src/marker_publisher.cpp) 
 add_dependencies(optimizer_publisher_tf_node ${${PROJECT_NAME}_EXPORTED_TARGETS}  ${catkin_EXPORTED_TARGETS} )
 target_link_libraries(optimizer_publisher_tf_node catenary_checker Ceres::ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES} Qt5::Charts
-Qt5::Widgets dbscan_line)
-
-add_executable(test_catenary_optimizer src/test_catenary_optimizer.cc src/marker_publisher.cpp)
-add_dependencies(test_catenary_optimizer  ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
-target_link_libraries(test_catenary_optimizer catenary_checker Ceres::ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES} Qt5::Charts
 Qt5::Widgets dbscan_line)
 
 

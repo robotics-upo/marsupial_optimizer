@@ -1,8 +1,0 @@
-<launch>
-	<arg name="map_name"	default="thermica_edited"/>
-	<arg name="proj_map_topic" default="/map"/>
-
-	<node pkg="octomap_server" type="octomap_saver" name="octomap_saver" args=" -f $(arg map_name).bt" output="screen"/>
-	<node pkg="map_server" type="map_saver" name="map_saver" args="-f $(arg map_name) map:=$(arg proj_map_topic)" output="screen"/>
-
-</launch>
