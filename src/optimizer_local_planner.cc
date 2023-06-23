@@ -16,8 +16,6 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(bool get_path_from_file_)
 
 	resetFlags();
 
-    // tf_list.reset(new tf::TransformListener);
-
 	nh->param<double>("map_resolution", map_resolution,0.05);
 	nh->param<double>("ws_x_max", ws_x_max, 10.0);
     nh->param<double>("ws_y_max", ws_y_max, 10.0);
@@ -176,8 +174,6 @@ void OptimizerLocalPlanner::resetFlags()
 
 void OptimizerLocalPlanner::cleanVectors()
 {
-	new_path_ugv.clear();
-	new_path_uav.clear();	
 	vec_init_rot_ugv.clear(); 
 	vec_init_rot_uav.clear();
 	vec_len_cat_init.clear();
@@ -289,27 +285,31 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 
 	if (!get_path_from_file){
 		auto path_shared_ptr = execute_path_srv_ptr->acceptNewGoal();
-		globalTrajectory = path_shared_ptr->path;
+		globalPath = path_shared_ptr->path;
 		vec_len_cat_init = path_shared_ptr->length_catenary; 
 	} else{
 		upo_actions::ExecutePathGoal path_shared_	;
 		ImportPath ip_(path+"results_marsupial_optimizer/rrt_path_2023_6_20_234860.yaml", path_shared_);
-		globalTrajectory = path_shared_.path;
+		globalPath = path_shared_.path;
 		vec_len_cat_init = path_shared_.length_catenary; 
 	}
   	
-
 	if(write_data_residual)
 		cleanResidualConstraintsFile();
     getReelPose(); // To get init pos reel for optimization process
 
-	vec_fix_status_ugv_prepross.clear();
-	vec_fix_status_ugv_prepross.assign(globalTrajectory.points.size(),0);
-	getInitialGlobalPath(globalTrajectory, new_path_ugv, new_path_uav);
-	
-	size_path = new_path_uav.size();
+	// Stage to interpolate path
+	InterpolatePath ip_(vec_len_cat_init);
+	ip_.initInterpolatePath(count_fix_points_initial_ugv,count_fix_points_final_ugv,count_fix_points_uav, fix_last_position_ugv, distance_catenary_obstacle,
+							use_distance_function, globalPath.points.size(), length_tether_max, ws_z_min, map_resolution, 
+							pose_reel_local, grid_3D);
+	ip_.getInitialGlobalPath(globalPath, vec_pose_init_ugv, vec_pose_init_uav, vec_init_rot_ugv, vec_init_rot_uav);
+	size_path = vec_pose_init_uav.size();
 
-	//Clear optimized Markers
+	// Stage to get parable
+
+
+	// Clear optimized Markers
 	mp_.clearMarkers(catenary_marker, 150, catenary_marker_pub_);
   	mp_.clearMarkersPointLines(points_ugv_marker, lines_ugv_marker,traj_marker_ugv_pub_,size_path);
   	mp_.clearMarkersPointLines(points_uav_marker, lines_uav_marker,traj_marker_uav_pub_,size_path);
@@ -322,8 +322,8 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	dm_.initDataManagement(path+files_results, name_output_file, scenario_number, num_pos_initial, initial_velocity_ugv, initial_velocity_uav, 
 							initial_acceleration_ugv, initial_acceleration_uav, distance_catenary_obstacle, pose_reel_local.transform.translation, vec_pose_init_ugv, 
 							vec_pose_init_uav, vec_len_cat_init, vec_init_rot_ugv, vec_init_rot_uav, mapFull_msg, mapTrav_msg, grid_3D);			   
-	getSmoothnessTrajectory(vec_pose_init_ugv, vec_pose_init_uav, v_init_angles_smooth_ugv, v_init_angles_smooth_uav);
 	if(write_data_for_analysis)
+		getSmoothnessTrajectory(vec_pose_init_ugv, vec_pose_init_uav, v_init_angles_smooth_ugv, v_init_angles_smooth_uav);
 		dm_.writeTemporalDataBeforeOptimization(vec_dist_init_ugv, vec_dist_init_uav, vec_time_init, v_init_angles_smooth_ugv, v_init_angles_smooth_uav);
 
 	std::cout << std::endl <<  "==================================================="  << std::endl << "\tPreparing to execute Optimization: Creating Parameter Blocks!!" << std::endl;
@@ -631,7 +631,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 				CostFunction* cost_function_cat_1  = new AutoDiffCostFunction<AutodiffCatenaryFunctor::CatenaryFunctor, 1, 4, 4, 2>
 											(new AutodiffCatenaryFunctor::CatenaryFunctor(w_eta_1, w_eta_3, distance_catenary_obstacle, vec_len_cat_init[i], length_tether_max, nn_uav.kdtree, 
 												nn_uav.obs_points, grid_3D, nn_trav.kdtree, nn_trav.obs_points, pose_reel_local.transform.translation, size_path, 
-												new_path_uav[i], nh, mapFull_msg, step, write_data_residual, use_distance_function, user_name)); 
+												vec_pose_init_uav[i], nh, mapFull_msg, step, write_data_residual, use_distance_function, user_name)); 
 				problem.AddResidualBlock(cost_function_cat_1, NULL, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesLength[i].parameter);
 				if (i == 0 || (fix_last_position_ugv && i == statesLength.size()-1))
 					problem.SetParameterBlockConstant(statesLength[i].parameter);
@@ -647,7 +647,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 				CostFunction* cost_function_cat_1  = new NumericDiffCostFunction<CatenaryFunctor, RIDDERS, 1, 4, 4, 2>
 											(new CatenaryFunctor(w_eta_1, w_eta_3, distance_catenary_obstacle, vec_len_cat_init[i], length_tether_max, nn_uav.kdtree, 
 												nn_uav.obs_points, grid_3D, nn_trav.kdtree, nn_trav.obs_points, pose_reel_local.transform.translation, size_path, 
-												new_path_uav[i], nh, mapFull_msg, write_data_residual)); 
+												vec_pose_init_uav[i], nh, mapFull_msg, write_data_residual)); 
 				problem.AddResidualBlock(cost_function_cat_1, NULL, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesLength[i].parameter);
 				if (i == 0 || (fix_last_position_ugv && i == statesLength.size()-1))
 					problem.SetParameterBlockConstant(statesLength[i].parameter);
@@ -806,7 +806,7 @@ void OptimizerLocalPlanner::initializingParametersblock()
 	statesPosUGV.clear(); statesPosUAV.clear(); statesRotUGV.clear(); statesRotUAV.clear(); statesTime.clear(); statesLength.clear();
 	
 	printf("Initial States.Parameter[____]:  [  pos_x  pos_y  pos_z  rot_r  trot_p  rot_y pos_x  pos_y  pos_z  rot_x  rot_y  rot_z  rot_w  time_ugv  time_uav  length ]\n");
-	for (size_t i = 0 ; i < new_path_uav.size(); i ++){
+	for (size_t i = 0 ; i < vec_pose_init_uav.size(); i ++){
 		parameterBlockPos parameter_block_pos_ugv;
 		parameterBlockPos parameter_block_pos_uav;
 		parameterBlockRot parameter_block_rot_ugv;
@@ -860,7 +860,7 @@ void OptimizerLocalPlanner::initializingParametersblock()
 		tf::Matrix3x3 M_ugv_init_(q_ugv_init_);	
 		M_ugv_init_.getRPY(roll_ugv_init_, pitch_ugv_init_, yaw_ugv_init_);
 
-		printf("Initial States.Parameter[%lu/%lu]: UGV=[%.3f %.3f %.3f / %.3f %.3f %.3f]",i,new_path_uav.size(),parameter_block_pos_ugv.parameter[1],
+		printf("Initial States.Parameter[%lu/%lu]: UGV=[%.3f %.3f %.3f / %.3f %.3f %.3f]",i,vec_pose_init_uav.size(),parameter_block_pos_ugv.parameter[1],
 				parameter_block_pos_ugv.parameter[2],parameter_block_pos_ugv.parameter[3], roll_ugv_init_, pitch_ugv_init_, yaw_ugv_init_);
 		printf(" UAV=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f] / [%.3f %.3f] / %.3f]\n", parameter_block_pos_uav.parameter[1],parameter_block_pos_uav.parameter[2],
 				parameter_block_pos_uav.parameter[3], parameter_block_rot_uav.parameter[1],parameter_block_rot_uav.parameter[2],parameter_block_rot_uav.parameter[3],
@@ -876,8 +876,6 @@ void OptimizerLocalPlanner::finishigOptimizationAndGetDataResult(int &n_coll_opt
 	vec_len_cat_opt.clear();
 	vec_opt_rot_ugv.clear();
 	vec_opt_rot_uav.clear();
-	new_path_ugv.clear(); //clear the old path to set the optimizer solution as a new path
-	new_path_uav.clear(); //clear the old path to set the optimizer solution as a new path
 	double new_equi_dist = 0; 
 	double distance_ = 0;
   	for (size_t i = 0; i < size_path; i++){
@@ -905,13 +903,6 @@ void OptimizerLocalPlanner::finishigOptimizationAndGetDataResult(int &n_coll_opt
 		rot_angle_uav_.w = statesRotUAV[i].parameter[4];
 		vec_opt_rot_uav.push_back(rot_angle_uav_);
 		
-		// if ( i != 0){
-		// 	distance_ = sqrt( (position_uav_.x()-vec_pose_uav_opt[i-1].x() ) * ( position_uav_.x()-vec_pose_uav_opt[i-1].x() ) + 
-		// 	 				  (position_uav_.y()-vec_pose_uav_opt[i-1].y() ) * ( position_uav_.y()-vec_pose_uav_opt[i-1].y() ) + 
-		// 					  (position_uav_.z()-vec_pose_uav_opt[i-1].z() ) * ( position_uav_.z()-vec_pose_uav_opt[i-1].z() ) );	
-		// 	new_equi_dist = new_equi_dist + distance_;
-		// }
-		// printf("new_equi_dist = [%f/%f] \n", distance_, new_equi_dist);
 	}
 	
 	mp_.clearMarkers(catenary_marker, 150, catenary_marker_pub_);  //To delete possibles outliers points 
@@ -929,8 +920,8 @@ void OptimizerLocalPlanner::finishigOptimizationAndGetDataResult(int &n_coll_opt
 		geometry_msgs::Vector3 p_reel_ =  getReelPoint(statesPosUGV[i].parameter[1],statesPosUGV[i].parameter[2],statesPosUGV[i].parameter[3],statesRotUGV[i].parameter[1],statesRotUGV[i].parameter[2],statesRotUGV[i].parameter[3], statesRotUGV[i].parameter[4]);
 		
 		bc.configBisection(statesLength[i].parameter[1], p_reel_.x, p_reel_.y, p_reel_.z, 
-							statesPosUAV[i].parameter[1], statesPosUAV[i].parameter[2], statesPosUAV[i].parameter[3], false);
-		bc.getPointCatenary3D(points_catenary_final);
+							statesPosUAV[i].parameter[1], statesPosUAV[i].parameter[2], statesPosUAV[i].parameter[3]);
+		bc.getPointCatenary3D(points_catenary_final, false);
 		
 		double _d_ = sqrt(pow(p_reel_.x - statesPosUAV[i].parameter[1],2) + 
 						  pow(p_reel_.y - statesPosUAV[i].parameter[2],2) + 
@@ -960,8 +951,8 @@ void OptimizerLocalPlanner::finishigOptimizationAndGetDataResult(int &n_coll_opt
 	traj_marker_uav_pub_.publish(points_uav_marker);
 	traj_marker_uav_pub_.publish(lines_uav_marker);
 
-	getSmoothnessTrajectory(vec_pose_ugv_opt, vec_pose_uav_opt, v_opt_angles_smooth_ugv, v_opt_angles_smooth_uav);
 	if (write_data_for_analysis){
+		getSmoothnessTrajectory(vec_pose_ugv_opt, vec_pose_uav_opt, v_opt_angles_smooth_ugv, v_opt_angles_smooth_uav);
 		dm_.writeTemporalDataAfterOptimization(size_path, vec_pose_ugv_opt, vec_pose_uav_opt, vec_time_opt, vec_len_cat_opt, vec_opt_rot_ugv, 
 											   vec_opt_rot_uav, v_opt_angles_smooth_ugv, v_opt_angles_smooth_uav);
 		std::cout << "...Temporal data saved in txt file." << std::endl << std::endl;
@@ -976,251 +967,6 @@ void OptimizerLocalPlanner::finishigOptimizationAndGetDataResult(int &n_coll_opt
 	}
 }
 
-void OptimizerLocalPlanner::getInitialGlobalPath(trajectory_msgs::MultiDOFJointTrajectory _path, vector<geometry_msgs::Vector3> &v_ugv_, vector<geometry_msgs::Vector3> &v_uav_)
-{
-	float x_ugv_, y_ugv_, z_ugv_, x_uav_, y_uav_, z_uav_;
-	int aux_cont_ugv_, aux_cont_uav_;
-	double D_ugv_, D_uav_;
-	geometry_msgs::Vector3 p_uav_ , p_ugv_;
-	geometry_msgs::Quaternion qt_;
-
-	count_fix_points_initial_ugv = count_fix_points_final_ugv = count_fix_points_uav = 1;
-	aux_cont_ugv_ = aux_cont_uav_ = 0;
-    D_ugv_ = D_uav_ = 0.0;
-	v_ugv_.clear();	v_uav_.clear();
-
-    for (size_t i = 0; i < _path.points.size()-1; i++)
-    {
-		// Get position and rotation vector for UGV
-		x_ugv_ = _path.points.at(i+1).transforms[0].translation.x - _path.points.at(i).transforms[0].translation.x;
-		y_ugv_ = _path.points.at(i+1).transforms[0].translation.y - _path.points.at(i).transforms[0].translation.y;
-		z_ugv_ = _path.points.at(i+1).transforms[0].translation.z - _path.points.at(i).transforms[0].translation.z;
-		
-		// Fallowing lines to count the number of UAV initial nodes in the same position 
-        D_ugv_ = sqrt(x_ugv_ * x_ugv_ + y_ugv_ * y_ugv_ + z_ugv_ * z_ugv_);
-		if (D_ugv_ < 0.001){
-			if(aux_cont_ugv_ == i){  // To count the consecutive points that keep stable in the start point
-				count_fix_points_initial_ugv = count_fix_points_initial_ugv + 1;
-				aux_cont_ugv_++;
-			}
-			count_fix_points_final_ugv = count_fix_points_final_ugv + 1;
-		}else // To make count = 1 in case is not fix point
-			count_fix_points_final_ugv = 1;
-
-		// Get position and rotation vector for UAV
-		x_uav_ = _path.points.at(i+1).transforms[1].translation.x - _path.points.at(i).transforms[1].translation.x;
-		y_uav_ = _path.points.at(i+1).transforms[1].translation.y - _path.points.at(i).transforms[1].translation.y;
-		z_uav_ = _path.points.at(i+1).transforms[1].translation.z - _path.points.at(i).transforms[1].translation.z;
-		
-		// Fallowing lines to count the number of UAV initial nodes in the same position 
-        D_uav_ = sqrt(x_uav_ * x_uav_ + y_uav_ * y_uav_ + z_uav_ * z_uav_);
-		if (D_uav_ < 0.001){
-			if(aux_cont_uav_ == i){  // To count the consecutive points that keep stable in the start point
-				count_fix_points_uav = count_fix_points_uav + 1;
-				aux_cont_uav_++;
-			}
-		}
-		// Get position and rotation vector for UGV
-		p_ugv_.x = _path.points.at(i).transforms[0].translation.x;
-		p_ugv_.y = _path.points.at(i).transforms[0].translation.y;
-		p_ugv_.z = _path.points.at(i).transforms[0].translation.z;
-		v_ugv_.push_back(p_ugv_);
-		qt_.x = _path.points.at(i).transforms[0].rotation.x;
-		qt_.y = _path.points.at(i).transforms[0].rotation.y;
-		qt_.z = _path.points.at(i).transforms[0].rotation.z;
-		qt_.w = _path.points.at(i).transforms[0].rotation.w;
-		vec_init_rot_ugv.push_back(qt_);
-		// Get position and rotation vector for UAV
-		p_uav_.x = _path.points.at(i).transforms[1].translation.x;
-		p_uav_.y = _path.points.at(i).transforms[1].translation.y;
-		p_uav_.z = _path.points.at(i).transforms[1].translation.z;
-		v_uav_.push_back(p_uav_);
-		qt_.x = _path.points.at(i).transforms[1].rotation.x;
-		qt_.y = _path.points.at(i).transforms[1].rotation.y;
-		qt_.z = _path.points.at(i).transforms[1].rotation.z;
-		qt_.w = _path.points.at(i).transforms[1].rotation.w;
-		vec_init_rot_uav.push_back(qt_);
-    }
-
-	// Get position and rotation vector for UGV
-	p_ugv_.x = _path.points.at(_path.points.size()-1).transforms[0].translation.x;
-	p_ugv_.y = _path.points.at(_path.points.size()-1).transforms[0].translation.y;
-	p_ugv_.z = _path.points.at(_path.points.size()-1).transforms[0].translation.z;
-	v_ugv_.push_back(p_ugv_);
-	qt_.x = _path.points.at(_path.points.size()-1).transforms[0].rotation.x;
-	qt_.y = _path.points.at(_path.points.size()-1).transforms[0].rotation.y;
-	qt_.z = _path.points.at(_path.points.size()-1).transforms[0].rotation.z;
-	qt_.w = _path.points.at(_path.points.size()-1).transforms[0].rotation.w;
-	vec_init_rot_ugv.push_back(qt_);
-	// Get position and rotation vector for UAV
-	p_uav_.x = _path.points.at(_path.points.size()-1).transforms[1].translation.x;
-	p_uav_.y = _path.points.at(_path.points.size()-1).transforms[1].translation.y;
-	p_uav_.z = _path.points.at(_path.points.size()-1).transforms[1].translation.z;
-	v_uav_.push_back(p_uav_);
-	qt_.x = _path.points.at(_path.points.size()-1).transforms[1].rotation.x;
-	qt_.y = _path.points.at(_path.points.size()-1).transforms[1].rotation.y;
-	qt_.z = _path.points.at(_path.points.size()-1).transforms[1].rotation.z;
-	qt_.w = _path.points.at(_path.points.size()-1).transforms[1].rotation.w;
-	vec_init_rot_uav.push_back(qt_);
-
-	if(!fix_last_position_ugv)
-		count_fix_points_final_ugv = 0;
-
-	for (size_t i = 0 ; i <  v_ugv_.size() ; i++){
-		vec_pose_init_ugv.push_back(v_ugv_[i]);
-	}
-	for (size_t i = 0 ; i <  v_uav_.size() ; i++){
-		vec_pose_init_uav.push_back(v_uav_[i]);
-	}
-
-	interpolateFixedPointsPath(v_ugv_,0);
-	interpolateFixedPointsPath(v_uav_,1);
-}
-
-void OptimizerLocalPlanner::interpolateFixedPointsPath(vector<geometry_msgs::Vector3> &v_inter_ , int mode_)
-{
-	// mode_==0 for UGV , mode_==1 for UAV
-	vector<geometry_msgs::Vector3> vec_pose_init_aux_;
-	vector<geometry_msgs::Vector3> vec_pose_init_;
-	vector<bool> is_pos_interpolated_;
-	vector<float> vec_length_aux_;
-	vec_pose_init_aux_.clear();
-	v_inter_.clear(); is_pos_interpolated_.clear();
-	int count_fix_points_;
-
-	if (mode_==0){
-		vec_pose_init_ = vec_pose_init_ugv;
-		count_fix_points_ = count_fix_points_initial_ugv;
-	}else if(mode_==1){
-		vec_pose_init_ = vec_pose_init_uav;
-		count_fix_points_ = count_fix_points_uav;
-	}else
-		ROS_ERROR("WARNNING : In method interpolateFixedPointsPath from optimizer was not set the MODE, this is going to run into trouble");
-
-	geometry_msgs::Vector3 pos_ugv_;
-	int count_ = 1;
-	int init_pos_ = 0;
-	int final_pos_ = 0;
-	int final_pos_aux = -1;
-	int group_ = 1;
-	for (size_t i = 0; i < vec_pose_init_.size()-1; i++)
-    {
-		// "if" make two task: First, in case there are some points in the same first position, they are keeped fix. Second, for points after first 
-		// position fixed, they are interpolated
-		if(i>=count_fix_points_ && i < (vec_pose_init_.size()-count_fix_points_final_ugv) ){
-			double x_ugv_ = vec_pose_init_[i+1].x - vec_pose_init_[i].x;
-			double y_ugv_ = vec_pose_init_[i+1].y - vec_pose_init_[i].y;
-			double z_ugv_ = vec_pose_init_[i+1].z - vec_pose_init_[i].z;
-			double D_ugv_ = sqrt(x_ugv_ * x_ugv_ + y_ugv_ * y_ugv_ + z_ugv_ * z_ugv_);
-			group_ = 1;
-
-			if (D_ugv_ < 0.001){ // Counts points that are in the same position
-				if (count_ == 1)	// Check if first position has more than one point
-					init_pos_ = i ;
-				count_++;
-			}
-			else if (D_ugv_ > 0.001 && count_ > 1){ // Points, that are not in the first position but they share position, are interpolated  	
-				final_pos_ = i +1 ;
-				double x_ = vec_pose_init_[final_pos_].x - vec_pose_init_[init_pos_].x;
-				double y_ = vec_pose_init_[final_pos_].y - vec_pose_init_[init_pos_].y;
-				double z_ = vec_pose_init_[final_pos_].z - vec_pose_init_[init_pos_].z;
-				for(int j = 0; j < count_; j++){
-					pos_ugv_.x = vec_pose_init_[init_pos_].x + (x_/count_)*j;
-					pos_ugv_.y = vec_pose_init_[init_pos_].y + (y_/count_)*j;
-					pos_ugv_.z = vec_pose_init_[init_pos_].z + (z_/count_)*j;
-					vec_pose_init_aux_.push_back(pos_ugv_);
-					is_pos_interpolated_.push_back(true);
-					if (mode_==0){
-						if (final_pos_aux != final_pos_){
-							final_pos_aux = final_pos_;
-							group_++;
-						}
-						vec_fix_status_ugv_prepross[init_pos_+j]=group_;
-					}
-				}
-				count_ = 1;
-			}
-			else{
-				vec_pose_init_aux_.push_back(vec_pose_init_[i]);
-				is_pos_interpolated_.push_back(false);
-			}
-		}
-		else{
-			vec_pose_init_aux_.push_back(vec_pose_init_[i]);
-			is_pos_interpolated_.push_back(false);
-			if(i < count_fix_points_){
-				vec_fix_status_ugv_prepross[i]=group_;
-				group_++;
-			}
-		}
-
-		if ((i== vec_pose_init_.size()-2 )&& (count_ > 1)){ // Interpolates the last position 
-			double x_ugv_ = vec_pose_init_[vec_pose_init_.size()-1].x - vec_pose_init_[vec_pose_init_.size()-(1+count_)].x;
-			double y_ugv_ = vec_pose_init_[vec_pose_init_.size()-1].y - vec_pose_init_[vec_pose_init_.size()-(1+count_)].y;
-			double z_ugv_ = vec_pose_init_[vec_pose_init_.size()-1].z - vec_pose_init_[vec_pose_init_.size()-(1+count_)].z;
-			group_ = 0;
-			for(int j = 1; j < count_; j++){
-				pos_ugv_.x = vec_pose_init_[vec_pose_init_.size()-(1+count_)].x + (x_ugv_/count_)*j;
-				pos_ugv_.y = vec_pose_init_[vec_pose_init_.size()-(1+count_)].y + (y_ugv_/count_)*j;
-				pos_ugv_.z = vec_pose_init_[vec_pose_init_.size()-(1+count_)].z + (z_ugv_/count_)*j;
-				vec_pose_init_aux_.push_back(pos_ugv_);
-				is_pos_interpolated_.push_back(true);
-				vec_fix_status_ugv_prepross[vec_pose_init_.size()-(j)]= count_- group_;
-				group_++;
-			}
-				vec_fix_status_ugv_prepross[vec_pose_init_.size()-count_]= count_- group_;
-		}
-    }
-	
-	int num_pos_ = vec_pose_init_.size()-1;
-	vec_pose_init_aux_.push_back(vec_pose_init_[num_pos_]);
-	is_pos_interpolated_.push_back(false); // always false because is the last point
-
-	//Set new values in vec_pos_init_ugv or vec_pos_init_ugv
-	if (mode_==0){
-		vec_pose_init_ugv.clear();
-		vec_pose_init_ugv = vec_pose_init_aux_;
-		v_inter_ = vec_pose_init_aux_;
-		int s_ = vec_pose_init_ugv.size();
-		mp_.clearMarkersPointLines(post_points_ugv_marker, post_lines_ugv_marker, post_traj_marker_ugv_pub_,s_);
-		mp_.getMarkerPoints(post_points_ugv_marker, vec_pose_init_ugv, "post_points_ugv_m", 5);	// RED: colour_ = 0 ; GREEN : colour_ = 1 ; BLUE: colour_ = 2 ; YELLOW = 3 ; PURPLE = 4 ; BLACK = 5 ; WHITE = 6;
-		mp_.getMarkerLines(post_lines_ugv_marker, vec_pose_init_ugv, "post_lines_ugv_m", 5);
-		post_traj_marker_ugv_pub_.publish(post_points_ugv_marker);
-		post_traj_marker_ugv_pub_.publish(post_lines_ugv_marker);
-	}
-	else if(mode_==1){
-		vec_pose_init_uav.clear();
-		vec_pose_init_uav = vec_pose_init_aux_;
-		v_inter_ = vec_pose_init_aux_;
-		int s_ = vec_pose_init_uav.size();
-		mp_.clearMarkersPointLines(post_points_uav_marker, post_lines_uav_marker, post_traj_marker_uav_pub_,s_);
-		mp_.getMarkerPoints(post_points_uav_marker, vec_pose_init_uav, "post_points_uav_m", 6);	// RED: colour_ = 0 ; GREEN : colour_ = 1 ; BLUE: colour_ = 2 ; YELLOW = 3 ; PURPLE = 4 ; BLACK = 5 ; WHITE = 6;
-		mp_.getMarkerLines(post_lines_uav_marker, vec_pose_init_uav, "post_lines_uav_m", 6);
-		post_traj_marker_uav_pub_.publish(post_points_uav_marker);
-		post_traj_marker_uav_pub_.publish(post_lines_uav_marker);
-	}
-	else
-		ROS_ERROR("WARNNING : In method interpolateFixedPointsPath from optimizer was not set the MODE, this is going to run into trouble");
-
-	for (int m=0 ; m < is_pos_interpolated_.size(); m++){
-		// printf("[%i]is_pos_interpolated_=%s \n", m, is_pos_interpolated_[m]? "true":"false");
-		if(is_pos_interpolated_[m]){
-			double length_;
-			if ( computeCatenary(m, mode_,length_)){
-				vec_length_aux_.push_back(length_);
-				}
-			else{
-				vec_length_aux_.push_back(vec_len_cat_init[m]);
-				ROS_ERROR("not catenary interpolated : length[%i]=%f",m,length_);
-			}
-		}
-		else
-			vec_length_aux_.push_back(vec_len_cat_init[m]);
-	}
-	vec_len_cat_init.clear();
-	vec_len_cat_init = vec_length_aux_;
-}
-
 void OptimizerLocalPlanner::calculateDistanceVertices(vector<double> &_v_D_ugv,vector<double> &_v_D_uav)
 {
 	float x, y, z;
@@ -1229,18 +975,17 @@ void OptimizerLocalPlanner::calculateDistanceVertices(vector<double> &_v_D_ugv,v
     double pL = 0.0;
 	double sum_distance_ = 0.0;
 
-    for (size_t i = 0; i < new_path_ugv.size()-1; i++)
+    for (size_t i = 0; i < vec_pose_init_ugv.size()-1; i++)
     {
-    	x = new_path_ugv[i+1].x - new_path_ugv[i].x;
-		y = new_path_ugv[i+1].y - new_path_ugv[i].y;
-		z = new_path_ugv[i+1].z - new_path_ugv[i].z;
+    	x = vec_pose_init_ugv[i+1].x - vec_pose_init_ugv[i].x;
+		y = vec_pose_init_ugv[i+1].y - vec_pose_init_ugv[i].y;
+		z = vec_pose_init_ugv[i+1].z - vec_pose_init_ugv[i].z;
         pL= sqrt(x * x + y * y + z * z);
 		sum_distance_ = sum_distance_ + pL;
 
 		_v_D_ugv.push_back(pL);
     }
-	// double den_ = new_path_ugv.size()-(count_fix_points_initial_ugv + count_fix_points_final_ugv + 1);
-	double den_ = new_path_ugv.size()-(count_fix_points_initial_ugv );
+	double den_ = vec_pose_init_ugv.size()-(count_fix_points_initial_ugv );
 	if (den_ <= 0.000001)
 		initial_distance_states_ugv = 0.0;
 	else
@@ -1248,19 +993,19 @@ void OptimizerLocalPlanner::calculateDistanceVertices(vector<double> &_v_D_ugv,v
 
 	pL = 0.0;
 	sum_distance_ = 0.0;
-	for (size_t i = 0; i < new_path_uav.size()-1; i++)
+	for (size_t i = 0; i < vec_pose_init_uav.size()-1; i++)
     {
-    	x = new_path_uav[i+1].x - new_path_uav[i].x;
-		y = new_path_uav[i+1].y - new_path_uav[i].y;
-		z = new_path_uav[i+1].z - new_path_uav[i].z;
+    	x = vec_pose_init_uav[i+1].x - vec_pose_init_uav[i].x;
+		y = vec_pose_init_uav[i+1].y - vec_pose_init_uav[i].y;
+		z = vec_pose_init_uav[i+1].z - vec_pose_init_uav[i].z;
         pL= sqrt(x * x + y * y + z * z);
 		
 		sum_distance_ = sum_distance_ + pL;
 		_v_D_uav.push_back(pL);
     }
-	// initial_distance_states_uav = sum_distance_ / (new_path_uav.size()-1);
-	int aux_n_p = round(new_path_uav.size()*0.1);
-	initial_distance_states_uav = sum_distance_ / (new_path_uav.size()+aux_n_p);
+	// initial_distance_states_uav = sum_distance_ / (vec_pose_init_uav.size()-1);
+	int aux_n_p = round(vec_pose_init_uav.size()*0.1);
+	initial_distance_states_uav = sum_distance_ / (vec_pose_init_uav.size()+aux_n_p);
 }
 
 void OptimizerLocalPlanner::getTemporalState(vector<double> &_time) 
@@ -1270,7 +1015,7 @@ void OptimizerLocalPlanner::getTemporalState(vector<double> &_time)
 	double _dT = 0;
 	int count_=0;
 	min_T = 1000.0;
-	for (size_t i= 0 ; i < new_path_uav.size(); i++){
+	for (size_t i= 0 ; i < vec_pose_init_uav.size(); i++){
 		if (i == 0){
 			_time.push_back(0.0);
 		}
@@ -1286,7 +1031,7 @@ void OptimizerLocalPlanner::getTemporalState(vector<double> &_time)
 		}
 		sum_T = sum_T + _dT;
 	}
-	initial_time = sum_T/ (new_path_uav.size() - 1.0);
+	initial_time = sum_T/ (vec_pose_init_uav.size() - 1.0);
 }
 
 void OptimizerLocalPlanner::getReelPose()
@@ -1506,95 +1251,6 @@ void OptimizerLocalPlanner::publishOptimizedTraj()
     trajectory_pub_.publish(msg);
 }
 
-bool OptimizerLocalPlanner::computeCatenary(int p_, int mode_, double &l_cat_)
-{
-    geometry_msgs::Point p_final_;
-	geometry_msgs::Vector3 p_reel_;
-    std::vector<geometry_msgs::Point> p_catenary_;
-
-	bisectionCatenary bc;
-
-    p_reel_ = getReelPoint(vec_pose_init_ugv[p_].x , vec_pose_init_ugv[p_].y , vec_pose_init_ugv[p_].z,
-                           vec_init_rot_uav[p_].x, vec_init_rot_uav[p_].y, vec_init_rot_uav[p_].z, vec_init_rot_uav[p_].w);
-                    
-    double dist_ = sqrt(pow(p_reel_.x - vec_pose_init_uav[p_].x,2) + 
-                                   pow(p_reel_.y - vec_pose_init_uav[p_].y,2) + 
-                                   pow(p_reel_.z - vec_pose_init_uav[p_].z,2));
-	double dist_init_final_;
-	if (dist_ < 4.0)
-		dist_init_final_ = 1.010 * dist_;
-	else
-		dist_init_final_ = 1.005 * dist_;
-    double delta_ = 0.0;	//Initial Value
-    bool check_catenary = true;
-    bool hard_collision_ = false;
-	bool increase_catenary;
-    double security_dis_ca_ = distance_catenary_obstacle;
-                    
-	do{
-		increase_catenary = false;
-	    p_catenary_.clear();
-		
-	    l_cat_ = dist_init_final_* (1.0 + delta_);
-	    if (l_cat_ > length_tether_max){
-	        check_catenary = false;
-			printf("interpolated_cat bigger than maximum length\n");
-			hard_collision_ = true;
-	        break;
-	    }
-
-		// printf("pose[%i] dist_init_final_=[%f] L=[%f] p_reel=[%f %f %f] p_uav=[%f %f %f] \n", p_, dist_init_final_, l_cat_, p_reel_.x, p_reel_.y, p_reel_.z, vec_pose_init_uav[p_].x,vec_pose_init_uav[p_].y, vec_pose_init_uav[p_].z);	
-
-	    bool just_one_axe = bc.configBisection(l_cat_, p_reel_.x, p_reel_.y, p_reel_.z, vec_pose_init_uav[p_].x, vec_pose_init_uav[p_].y, vec_pose_init_uav[p_].z, false);
-		bc.getPointCatenary3D(p_catenary_);
-		double d_min_point_cat = 100000;
-		if (p_catenary_.size() > 2){
-		    for (size_t i = 0 ; i < p_catenary_.size() ; i++){
-		        geometry_msgs::Vector3 point_cat, p_in_cat_;
-		        if (p_catenary_[i].z < ws_z_min*map_resolution + ((1*map_resolution)+security_dis_ca_)){
-		            check_catenary = false;
-					printf("interpolated_cat_collison in the floor\n");
-					hard_collision_ = true;
-		            break;
-		        }
-		        p_in_cat_.x = p_catenary_[i].x;
-		        p_in_cat_.y = p_catenary_[i].y;
-		        p_in_cat_.z = p_catenary_[i].z;
-				double dist_cat_obs = getPointDistanceFullMap(use_distance_function, p_in_cat_);
-		        // double dist_cat_obs;
-		        // bool is_into_ = grid_3D->isIntoMap(p_in_cat_.x,p_in_cat_.y,p_in_cat_.z);
-		        // if(is_into_)
-		        //     dist_cat_obs =  grid_3D->getPointDist((double)p_in_cat_.x,(double)p_in_cat_.y,(double)p_in_cat_.z) ;
-	            // else
-	            //     dist_cat_obs = -1.0;
-
-	            if (d_min_point_cat > dist_cat_obs){
-	                d_min_point_cat = dist_cat_obs;
-	            }
-	            if (dist_cat_obs < security_dis_ca_){
-	                delta_ = delta_ + 0.001;
-	                increase_catenary = true;
-	                break;
-	            }
-	            point_cat.x = p_catenary_[i].x;
-	            point_cat.y = p_catenary_[i].y;
-	            point_cat.z = p_catenary_[i].z;
-	        }
-	        if (check_catenary && !increase_catenary){
-	            check_catenary = false;
-	        }
-	    }
-	    else{
-	        check_catenary = false;
-	    }
-	}while (check_catenary);
-
-	if (!check_catenary && !hard_collision_)
-		return true;
-	else
-		return false;
-}
-
 void OptimizerLocalPlanner::cleanResidualConstraintsFile()
 {
     std::string path_;
@@ -1666,29 +1322,6 @@ void OptimizerLocalPlanner::cleanResidualConstraintsFile()
 	path_ = path+files_residuals+"catenary2.txt";
 	if( remove( path_.c_str() ) != 0 )
     	perror( "Error deleting file: catenary2.txt");
-}
-
-double OptimizerLocalPlanner::getPointDistanceFullMap(bool use_dist_func_, geometry_msgs::Vector3 p_)
-{
-	double dist;
-
-	if(use_dist_func_){
-		bool is_into_ = grid_3D->isIntoMap(p_.x,p_.y,p_.z);
-		if(is_into_)
-			dist =  grid_3D->getPointDist((double)p_.x,(double)p_.y,(double)p_.z) ;
-		else
-			dist = -1.0;
-	}
-	else{
-		Eigen::Vector3d obs_, pos_;
-		pos_.x() = p_.x;
-		pos_.y() = p_.y; 
-		pos_.z() = p_.z; 
-		obs_ = nn_uav.nearestObstacleMarsupial(nn_uav.kdtree, pos_, nn_uav.obs_points);
-		dist = sqrt(pow(obs_.x()-pos_.x(),2) + pow(obs_.y()-pos_.y(),2) + pow(obs_.z()-pos_.z(),2));
-	}
-	
-	return dist;
 }
 
 void OptimizerLocalPlanner::exportOptimizedPath()
@@ -1857,3 +1490,7 @@ void OptimizerLocalPlanner::exportOptimizedPath()
 
 	std::cout << "Saved Path Optimized" << std::endl << std::endl;
 }
+
+// void OptimizerLocalPlanner::getParableParameter(){
+
+// }

@@ -57,6 +57,7 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "marsupial_optimizer/marsupial_trajectory_optimized.h"
 
 #include "misc/data_management.hpp"
+#include "misc/interpolate_path.hpp"
 #include "misc/catenary_solver_ceres.hpp"
 
 #include "catenary_checker/near_neighbor.hpp"
@@ -163,10 +164,10 @@ public:
 	void deleteMarkersCallBack(const std_msgs::BoolConstPtr &msg);
 	void finishedRvizManeuverCallBack(const std_msgs::BoolConstPtr &msg);
 	void initializeOptimizerProcessCallBack(const std_msgs::BoolConstPtr &msg);
-	void interpolateFixedPointsPath(vector<geometry_msgs::Vector3> &v_inter_ , int mode_);
+	// void interpolateFixedPointsPath(vector<geometry_msgs::Vector3> &v_inter_ , int mode_);
 	void calculateDistanceVertices(vector<double> &_v_D_ugv,vector<double> &_v_D_uav);
 	void getTemporalState(vector<double> &_time);
-	void getInitialGlobalPath(trajectory_msgs::MultiDOFJointTrajectory _path, vector<geometry_msgs::Vector3> &v_ugv_, vector<geometry_msgs::Vector3> &v_uav_);
+	// void getInitialGlobalPath(trajectory_msgs::MultiDOFJointTrajectory _path, vector<geometry_msgs::Vector3> &v_ugv_, vector<geometry_msgs::Vector3> &v_uav_);
 	void initializingParametersblock();
 	void finishigOptimizationAndGetDataResult(int &n_coll_opt_traj_ugv, int &n_coll_init_path_ugv, int &n_coll_opt_traj_uav, int &n_coll_init_path_uav, int &n_coll_opt_cat_);
 	void getDataForOptimizerAnalysis();
@@ -176,8 +177,8 @@ public:
 	void processingCatenary();
 	void publishOptimizedTraj();
 	void cleanResidualConstraintsFile();
-	bool computeCatenary(int p_, int mode_, double &l_cat_);
-	double getPointDistanceFullMap(bool use_dist_func_, geometry_msgs::Vector3 p_);
+	// bool computeCatenary(int p_, int mode_, double &l_cat_);
+	// double getPointDistanceFullMap(bool use_dist_func_, geometry_msgs::Vector3 p_);
 	void exportOptimizedPath();
 
 	upo_actions::ExecutePathResult action_result;
@@ -234,7 +235,7 @@ public:
     octomap_msgs::OctomapConstPtr mapFull, mapTrav;
 	octomap::OcTree *mapFull_msg , *mapTrav_msg;
 
-    trajectory_msgs::MultiDOFJointTrajectory globalTrajectory, localTrajectory;
+    trajectory_msgs::MultiDOFJointTrajectory globalPath, localTrajectory;
     ros::Time start_time;
 
 	visualization_msgs::MarkerArray points_uav_marker, lines_uav_marker, points_ugv_marker, lines_ugv_marker, 
@@ -256,7 +257,6 @@ public:
 
 	void setStraightTrajectory(double x1, double y1, double z1, double x2, double y2, double z2, int n_v_u_);	//Function to create a straight line from point A to B
 
-	vector<geometry_msgs::Vector3> new_path_ugv, new_path_uav;
 	vector<parameterBlockPos> statesPosUGV;
 	vector<parameterBlockPos> statesPosUAV;
 	vector<parameterBlockRot> statesRotUGV;
@@ -274,7 +274,6 @@ public:
 	vector<geometry_msgs::Vector3> vec_pose_ugv_opt, vec_pose_uav_opt; 
 	vector<geometry_msgs::Vector3> vec_pose_init_ugv, vec_pose_init_uav;
 	vector<double> vec_time_opt;
-	vector<int> vec_fix_status_ugv_prepross;
 
 	vector<int> v_id_point_not_fix_ugv, v_id_point_not_fix_uav; // save the id number of position no fix , from vector vec_pose_init_uav
 	
@@ -283,7 +282,7 @@ public:
 	int scenario_number, num_pos_initial, num_goal;
 	bool write_data_for_analysis;
 	double length_tether_max;
-	int count_fix_points_initial_ugv, count_fix_points_final_ugv, count_not_fix_points_ugv, count_not_fix_points_uav, count_fix_points_uav;
+	int count_fix_points_initial_ugv, count_fix_points_final_ugv, count_fix_points_uav;
 
 	int equidistance_uav_constraint, obstacles_uav_constraint, smoothness_uav_constraint;
 	bool velocity_uav_constraint,acceleration_uav_constraint;

@@ -165,8 +165,8 @@ void ManagerTf::trajectoryOptimizedCallBack(const marsupial_optimizer::marsupial
 		//Solve through Ceres
 			// cSX_.solve(p_reel_.x, p_reel_.y, p_reel_.z, uav_x, uav_y, uav_z, trajectory.length_catenary[i], points_catenary_);
 		//Solver through Bisection
-			bool just_one_axe = bc.configBisection(trajectory.length_catenary[i], p_reel_.x, p_reel_.y, p_reel_.z, uav_x, uav_y, uav_z, false);
-			bc.getPointCatenary3D(points_catenary_);
+			bool just_one_axe = bc.configBisection(trajectory.length_catenary[i], p_reel_.x, p_reel_.y, p_reel_.z, uav_x, uav_y, uav_z);
+			bc.getPointCatenary3D(points_catenary_, false);
 		
 		int size_ = points_catenary_.size();
 		clearMarkers(catenary_marker, 150, catenary_marker_pub_);

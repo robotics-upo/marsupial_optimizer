@@ -515,7 +515,7 @@ inline void DataManagement::getDataForOptimizerAnalysis(pcl::KdTreeFLANN <pcl::P
 	std::string pos_coll_between_init_;
 	
 	bisectionCatenary bc1;
-	bisectionCatenary bc2;
+	bisectionCatenary bc2(g_3D_, bound_cat_obs, octree_full, kdt_, obstacles_points_);
 
 	// Initial Catenary analisys 
 	for(size_t i = 0 ; i < vec_pose_init_.size(); i ++){
@@ -526,10 +526,10 @@ inline void DataManagement::getDataForOptimizerAnalysis(pcl::KdTreeFLANN <pcl::P
 		// cS_.setMaxNumIterations(100);
 		// cS_.solve(p_reel_ugv.x, p_reel_ugv.y, p_reel_ugv.z, vec_pose_init_uav[i].x(), vec_pose_init_uav[i].y(), vec_pose_init_uav[i].z(), vec_len_cat_init[i], v_points_catenary_init_);
 		bc1.configBisection(vec_len_cat_init[i], p_reel_ugv.x, p_reel_ugv.y, p_reel_ugv.z, 
-							vec_pose_init_uav[i].x, vec_pose_init_uav[i].y, vec_pose_init_uav[i].z, false);
+							vec_pose_init_uav[i].x, vec_pose_init_uav[i].y, vec_pose_init_uav[i].z);
 		if (bc1.L_minor_than_D == true)
 			printf("Before optimization , position[%lu/%lu]: L < D \n",i,vec_pose_opt_.size());		
-		bc1.getPointCatenary3D(v_points_catenary_init_);
+		bc1.getPointCatenary3D(v_points_catenary_init_, false);
 		
 		for (size_t j= 0 ; j < v_points_catenary_init_.size() ; j++){
 			count_cat_p_init_++;
@@ -608,11 +608,10 @@ inline void DataManagement::getDataForOptimizerAnalysis(pcl::KdTreeFLANN <pcl::P
 		p_reel_ugv = getReelPos(vec_pose_ugv_opt[i].x,vec_pose_ugv_opt[i].y,vec_pose_ugv_opt[i].z,vec_opt_rot_ugv[i].x,vec_opt_rot_ugv[i].y,vec_opt_rot_ugv[i].z,vec_opt_rot_ugv[i].w, pos_reel_ugv);
 		// cS_.setMaxNumIterations(100);
 		// cS_.solve(p_reel_ugv.x, p_reel_ugv.y, p_reel_ugv.z, vec_pose_uav_opt[i].x(), vec_pose_uav_opt[i].y(), vec_pose_uav_opt[i].z(), vec_len_cat_opt[i], v_points_catenary_opt_);
-		bc2.readDataForCollisionAnalisys(g_3D_, bound_cat_obs, octree_full, kdt_, obstacles_points_);
-		bc2.configBisection(vec_len_cat_opt[i], p_reel_ugv.x, p_reel_ugv.y, p_reel_ugv.z,vec_pose_uav_opt[i].x,vec_pose_uav_opt[i].y,vec_pose_uav_opt[i].z,true);
+		bc2.configBisection(vec_len_cat_opt[i], p_reel_ugv.x, p_reel_ugv.y, p_reel_ugv.z,vec_pose_uav_opt[i].x,vec_pose_uav_opt[i].y,vec_pose_uav_opt[i].z);
 		if (bc2.L_minor_than_D == true)
 			printf("After optimization , position[%lu/%lu]: L < D \n",i,vec_pose_opt_.size());		
-		bc2.getPointCatenary3D(v_points_catenary_opt_);
+		bc2.getPointCatenary3D(v_points_catenary_opt_,true);
 		bc2.getStatusCollisionCat(dist_obst_cat, pos_cat_in_coll, cat_between_obs, first_coll_, last_coll_);
 		
 		num_points_coll_cat = 0;

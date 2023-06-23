@@ -74,7 +74,7 @@ public:
 		bool operator()(const double *state1,const double *state2, const double *state2f,const double *Length, double *Catenary) const 
 		{
 			MarkerPublisher mP_;
-			bisectionCatenary bc(nhP);
+			bisectionCatenary bc(nhP, g_3D, sb, o_full, kdT_trav, pc_trav);
 			NearNeighbor nn;
 
 			visualization_msgs::MarkerArray catenary_marker_, plane_marker_, obs_plane_marker_;
@@ -90,9 +90,8 @@ public:
 			int first_coll, last_coll;
 
 			points_catenary.clear();  dist_obst_cat.clear(); pos_cat_in_coll.clear(); cat_between_obs.clear(); 
-			bc.readDataForCollisionAnalisys(g_3D, sb, o_full, kdT_trav, pc_trav);
-			bool just_one_axe = bc.configBisection(Length[1], state1[1], state1[2], state1[3], state2[1], state2[2], state2[3], false);
-			bc.getPointCatenary3D(points_catenary);
+			bool just_one_axe = bc.configBisection(Length[1], state1[1], state1[2], state1[3], state2[1], state2[2], state2[3]);
+			bc.getPointCatenary3D(points_catenary, false);
 			bc.getStatusCollisionCat(dist_obst_cat, pos_cat_in_coll, cat_between_obs, first_coll, last_coll);
 			double min_distance_cat_obs_ = bc.min_distance_cat_obs;
 
