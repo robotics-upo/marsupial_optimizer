@@ -177,13 +177,10 @@ void OptimizerLocalPlanner::cleanVectors()
 	vec_init_rot_ugv.clear(); 
 	vec_init_rot_uav.clear();
 	vec_len_cat_init.clear();
-	
 	vec_pose_init_ugv.clear();
 	vec_pose_init_uav.clear();
-	
 	vec_dist_init_ugv.clear();
 	vec_dist_init_uav.clear();
-
 	vec_time_init.clear();
 }
 
@@ -299,15 +296,12 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
     getReelPose(); // To get init pos reel for optimization process
 
 	// Stage to interpolate path
-	InterpolatePath ip_(vec_len_cat_init);
+	InterpolatePath ip_;
 	ip_.initInterpolatePath(count_fix_points_initial_ugv,count_fix_points_final_ugv,count_fix_points_uav, fix_last_position_ugv, distance_catenary_obstacle,
 							use_distance_function, globalPath.points.size(), length_tether_max, ws_z_min, map_resolution, 
 							pose_reel_local, grid_3D);
-	ip_.getInitialGlobalPath(globalPath, vec_pose_init_ugv, vec_pose_init_uav, vec_init_rot_ugv, vec_init_rot_uav);
+	ip_.getInitialGlobalPath(globalPath, vec_len_cat_init, vec_pose_init_ugv, vec_pose_init_uav, vec_init_rot_ugv, vec_init_rot_uav);
 	size_path = vec_pose_init_uav.size();
-
-	// Stage to get parable
-
 
 	// Clear optimized Markers
 	mp_.clearMarkers(catenary_marker, 150, catenary_marker_pub_);
@@ -326,6 +320,9 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		getSmoothnessTrajectory(vec_pose_init_ugv, vec_pose_init_uav, v_init_angles_smooth_ugv, v_init_angles_smooth_uav);
 		dm_.writeTemporalDataBeforeOptimization(vec_dist_init_ugv, vec_dist_init_uav, vec_time_init, v_init_angles_smooth_ugv, v_init_angles_smooth_uav);
 
+	// Stage to get parable
+	getParableParameter(vec_pose_init_ugv, vec_pose_init_uav, vec_len_cat_init);
+
 	std::cout << std::endl <<  "==================================================="  << std::endl << "\tPreparing to execute Optimization: Creating Parameter Blocks!!" << std::endl;
 
   	// Initialize optimizer
@@ -334,7 +331,6 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	// Initializing parameters block to optimization
     initializingParametersblock();
 
-	printf("initial_distance_states_ugv=%f , initial_distance_states_uav= %f \n", initial_distance_states_ugv, initial_distance_states_uav);
 	// Initializing Contraints for optimization	
 	/****************************   UGV Constraints  ****************************/	
 	if (optimize_ugv){
@@ -1047,9 +1043,6 @@ void OptimizerLocalPlanner::getReelPose()
     }catch (tf2::TransformException &ex){
         ROS_WARN("Optimizer Local Planner: Couldn't get Local Reel Pose (frame: %s), so not possible to set Tether start point; tf exception: %s", reel_base_frame.c_str(),ex.what());
     }
-	std::cout << "Local reel pose : [" << pose_reel_local.transform.translation.x << ","
-									   << pose_reel_local.transform.translation.y << ","
-									   << pose_reel_local.transform.translation.z << "]" << std::endl;
 }
 
 geometry_msgs::Vector3 OptimizerLocalPlanner::getReelPoint(const float px_, const float py_, const float pz_,const float qx_, const float qy_, const float qz_, const float qw_)
@@ -1154,9 +1147,6 @@ void OptimizerLocalPlanner::processingCatenary()
 				printf(PRINTF_ORANGE"processingCatenary()\n");
 			first_++;
 			parameter_block_post_length.parameter[1] = _d_ * 1.005;	// 1.02 in catenary constraint
-			// parameter_block_post_length.parameter[1] = vec_len_cat_init[i];	// 1.02 in catenary constraint
-			// count_cat_fail ++;
-			// printf(PRINTF_RED"	Catenary number = %lu  [L=%f/d=%f]\n",i,statesLength[i].parameter[1],_d_);
 			printf(PRINTF_RED"UGV[%f %f %f] UAV[%f %f %f] reel[%f %f %f] Catenary number = %lu  [d=%f/L_o=%f/L_i=%f]\n",
 			statesPosUGV[i].parameter[1],statesPosUGV[i].parameter[2],statesPosUGV[i].parameter[3], statesPosUAV[i].parameter[1],statesPosUAV[i].parameter[2],
 			statesPosUAV[i].parameter[3],p_reel_.x, p_reel_.y, p_reel_.z,i,_d_,statesLength[i].parameter[1],vec_len_cat_init[i]);
@@ -1491,6 +1481,9 @@ void OptimizerLocalPlanner::exportOptimizedPath()
 	std::cout << "Saved Path Optimized" << std::endl << std::endl;
 }
 
-// void OptimizerLocalPlanner::getParableParameter(){
+void OptimizerLocalPlanner::getParableParameter(vector<geometry_msgs::Vector3> v_p_init_ugv_, vector<geometry_msgs::Vector3> v_p_init_uav_, vector<float> v_l_cat_init_){
 
-// }
+    GetParableParameter GPP(v_p_init_ugv_, v_p_init_uav_, v_l_cat_init_, vec_init_rot_ugv);
+	GPP.ComputeParableArea(pose_reel_local);
+
+}

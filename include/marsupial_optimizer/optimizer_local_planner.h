@@ -60,6 +60,7 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "misc/interpolate_path.hpp"
 #include "misc/catenary_solver_ceres.hpp"
 
+#include "catenary_checker/get_parable_parameter.hpp"
 #include "catenary_checker/near_neighbor.hpp"
 #include "catenary_checker/grid3d.hpp"
 #include "catenary_checker/bisection_catenary_3D.h"
@@ -177,6 +178,7 @@ public:
 	void processingCatenary();
 	void publishOptimizedTraj();
 	void cleanResidualConstraintsFile();
+	void getParableParameter(vector<geometry_msgs::Vector3> v_p_init_ugv_, vector<geometry_msgs::Vector3> v_p_init_uav_, vector<float> v_l_cat_init_);
 	// bool computeCatenary(int p_, int mode_, double &l_cat_);
 	// double getPointDistanceFullMap(bool use_dist_func_, geometry_msgs::Vector3 p_);
 	void exportOptimizedPath();

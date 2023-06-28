@@ -24,12 +24,12 @@ using namespace std;
 class InterpolatePath
 {
 	public:
-		InterpolatePath(vector<float> vl_init_);
+		InterpolatePath();
 		// ~InterpolatePath(){};
 		virtual void initInterpolatePath(int c_f_i_ugv_, int c_f_f_ugv_, int c_f_uav_, bool f_l_p_ugv_, double d_c_o_, 
 										 bool u_d_f_, int s_, double l_max_, double ws_z_min_, double map_r_, 
 										 geometry_msgs::TransformStamped p_r_l_, Grid3d* grid_3D_);
-		virtual void getInitialGlobalPath(trajectory_msgs::MultiDOFJointTrajectory _path, 
+		virtual void getInitialGlobalPath(trajectory_msgs::MultiDOFJointTrajectory _path, vector<float> &vl_init_,
 										  vector<geometry_msgs::Vector3> &v_ugv_, vector<geometry_msgs::Vector3> &v_uav_,
 										  vector<geometry_msgs::Quaternion> &v_q_ugv_, vector<geometry_msgs::Quaternion> &v_q_uav_);
 		virtual void interpolateFixedPointsPath(vector<geometry_msgs::Vector3> &v_inter_ , int mode_);
@@ -55,10 +55,8 @@ class InterpolatePath
 
 };
 
-inline InterpolatePath::InterpolatePath(vector<float> vl_init_)
+inline InterpolatePath::InterpolatePath()
 {
-	vec_len_cat_init.clear();
-	vec_len_cat_init = vl_init_;
 }
 
 inline void InterpolatePath::initInterpolatePath(int c_f_i_ugv_, int c_f_f_ugv_, int c_f_uav_, bool f_l_p_ugv_, double d_c_o_, 
@@ -81,7 +79,7 @@ inline void InterpolatePath::initInterpolatePath(int c_f_i_ugv_, int c_f_f_ugv_,
 	vec_fix_status_ugv_prepross.assign(s_,0);
 }
 
-inline void InterpolatePath::getInitialGlobalPath(trajectory_msgs::MultiDOFJointTrajectory _path, 
+inline void InterpolatePath::getInitialGlobalPath(trajectory_msgs::MultiDOFJointTrajectory _path, vector<float> &vl_init_,
 										   vector<geometry_msgs::Vector3> &v_ugv_, vector<geometry_msgs::Vector3> &v_uav_,
 										   vector<geometry_msgs::Quaternion> &v_q_ugv_, vector<geometry_msgs::Quaternion> &v_q_uav_)
 {
@@ -94,9 +92,13 @@ inline void InterpolatePath::getInitialGlobalPath(trajectory_msgs::MultiDOFJoint
 	// count_fix_points_initial_ugv = count_fix_points_final_ugv = count_fix_points_uav = 1;
 	aux_cont_ugv_ = aux_cont_uav_ = 0;
     D_ugv_ = D_uav_ = 0.0;
-	v_ugv_.clear();	v_uav_.clear();
+	vec_len_cat_init.clear();
+	v_ugv_.clear();	v_uav_.clear(); 
 	v_q_ugv_.clear(); v_q_uav_.clear();
 	vec_pose_init_ugv.clear(); vec_pose_init_uav.clear();
+
+	vec_len_cat_init = vl_init_;
+
 
     for (size_t i = 0; i < _path.points.size()-1; i++)
     {
@@ -186,6 +188,8 @@ inline void InterpolatePath::getInitialGlobalPath(trajectory_msgs::MultiDOFJoint
 
 	interpolateFixedPointsPath(v_ugv_,0);
 	interpolateFixedPointsPath(v_uav_,1);
+	vl_init_.clear();
+	vl_init_ = vec_len_cat_init;
 }
 
 inline void InterpolatePath::interpolateFixedPointsPath(vector<geometry_msgs::Vector3> &v_inter_ , int mode_)

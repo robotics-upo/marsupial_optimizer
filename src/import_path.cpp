@@ -112,5 +112,4 @@ ImportPath::ImportPath(const std::string &path_and_name_file_, upo_actions::Exec
     for(int i= 0; i<tether_length_vector.size() ; i++){
         g_.length_catenary.push_back(tether_length_vector[i]);
     }
-
 }

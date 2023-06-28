@@ -1,6 +1,8 @@
 <launch>
     <arg name="map_file"        default="teatro_wall"/>
     
+    <arg name="get_path_from_file"    default="true"/>     
+
     <arg name="graph_traj_in_rviz" default="false"/>
     <arg name="pause_execution" default="false"/>
     <arg name="write_data_files" default="false"/>
@@ -30,7 +32,6 @@
     <arg name="name_output_file"    default="method"/>     
     <arg name="files_results"    default="results_marsupial_optimizer/"/>     
     <arg name="files_residuals"    default="residuals_optimization_data/"/>     
-    <arg name="get_path_from_file"    default="true"/>     
  
     <arg name="rviz"    default="true"/> 
     <arg name="viz_file"    default="optimizer_process"/>
@@ -50,12 +51,15 @@
 
 
     <!-- Local Planner: Optimizer Ceres-->
-    <node pkg="marsupial_optimizer" type="optimizer_local_planner_node" name="optimizer_process_node" output="screen" launch-prefix="gdb -ex run --args"> 
+    <node pkg="marsupial_optimizer" type="optimizer_local_planner_node" name="optimizer_process_node" output="screen"> #launch-prefix="gdb -ex run --args"> 
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/3d_local_params.yaml"/>
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/$(arg map_file)_ws.yaml"/>
+        
         <remap from="/Execute_Plan" to="Execute_Plan"/>
         <remap from="/Navigation" to="Navigation"/>
         <remap from="/octomap_binary_local" to="/octomap_binary"/>
+        
+        <param name="get_path_from_file"    value="$(arg get_path_from_file)"/>     
         <param name="world_frame" value="$(arg world_frame)"/> 
         <param name="ugv_base_frame" value="$(arg ugv_frame)"/> 
         <param name="uav_base_frame" value="$(arg uav_frame)"/>
@@ -144,9 +148,7 @@
         <!-- For Grid3D -->
         <param name="map_path"   value="$(find marsupial_optimizer)/maps/$(arg map_file).bt"/>
         <param name="global_frame_id"   value="map"/>
-    
-        <param name="get_path_from_file"    value="$(arg get_path_from_file)"/>     
-        <!-- <param name="sensor_dev "   value="0.2"/> # Gaussian error -->
+            <!-- <param name="sensor_dev "   value="0.2"/> # Gaussian error -->
     </node>
    
     <!-- Robot Marker -->
