@@ -1,4 +1,4 @@
-# marsupial_g2o
+# marsupial_optimizer based on cerec-solver
 
 Testing 
 
