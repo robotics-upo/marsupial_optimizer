@@ -10,9 +10,9 @@ OptimizerLocalPlanner::OptimizerLocalPlanner()
 {
 	nh.reset(new ros::NodeHandle("~"));
 
-    tfBuffer.reset(new tf2_ros::Buffer);
-    tf2_list.reset(new tf2_ros::TransformListener(*tfBuffer));
-    tf_list_ptr.reset(new tf::TransformListener(ros::Duration(5)));
+  tfBuffer.reset(new tf2_ros::Buffer);
+  tf2_list.reset(new tf2_ros::TransformListener(*tfBuffer));
+  tf_list_ptr.reset(new tf::TransformListener(ros::Duration(5)));
 
 	resetFlags();
 
@@ -20,16 +20,16 @@ OptimizerLocalPlanner::OptimizerLocalPlanner()
 
 	nh->param<double>("map_resolution", map_resolution,0.05);
 	nh->param<double>("ws_x_max", ws_x_max, 10.0);
-    nh->param<double>("ws_y_max", ws_y_max, 10.0);
-    nh->param<double>("ws_z_max", ws_z_max, 20.0);
-    nh->param<double>("ws_x_min", ws_x_min, -10.0);
-    nh->param<double>("ws_y_min", ws_y_min, -10.0);
-    nh->param<double>("ws_z_min", ws_z_min, 0.00);
+  nh->param<double>("ws_y_max", ws_y_max, 10.0);
+  nh->param<double>("ws_z_max", ws_z_max, 20.0);
+  nh->param<double>("ws_x_min", ws_x_min, -10.0);
+  nh->param<double>("ws_y_min", ws_y_min, -10.0);
+  nh->param<double>("ws_z_min", ws_z_min, 0.00);
 
-    nh->param("world_frame", world_frame, (string) "/map");
+  nh->param("world_frame", world_frame, (string) "/map");
 	nh->param("ugv_base_frame", ugv_base_frame, (std::string) "ugv_base_link");
-    nh->param("uav_base_frame", uav_base_frame, (std::string) "uav_base_link");
-    nh->param("reel_base_frame", reel_base_frame, (std::string) "reel_base_link");
+  nh->param("uav_base_frame", uav_base_frame, (std::string) "uav_base_link");
+  nh->param("reel_base_frame", reel_base_frame, (std::string) "reel_base_link");
 
 	nh->param<bool>("optimize_ugv",optimize_ugv, true);
 	nh->param<bool>("optimize_uav",optimize_uav, true);
@@ -72,7 +72,6 @@ OptimizerLocalPlanner::OptimizerLocalPlanner()
 
 	nh->param<double>("w_kappa_ugv", w_kappa_ugv,0.1);
 	nh->param<double>("w_kappa_uav", w_kappa_uav,0.1);
-	
 	
 	nh->param<double>("w_mu_uav", w_mu_uav,0.1);
 	nh->param<double>("w_nu_ugv", w_nu_ugv,0.1);
@@ -136,28 +135,28 @@ OptimizerLocalPlanner::OptimizerLocalPlanner()
 void OptimizerLocalPlanner::initializeSubscribers()
 {
 	octomap_ws_sub_ = nh->subscribe( "/octomap_point_cloud_centers", 1,  &OptimizerLocalPlanner::readOctomapCallback, this);
-    local_map_sub = nh->subscribe<octomap_msgs::Octomap>("/octomap_binary_local", 1, &OptimizerLocalPlanner::collisionMapCallBack, this);
-    local_trav_map_sub = nh->subscribe<octomap_msgs::Octomap>("/oct_trav/octomap_binary", 1, &OptimizerLocalPlanner::traversableMapCallBack, this);
-    point_cloud_ugv_obstacles_sub_ = nh->subscribe( "/region_growing_obstacles_pc_map", 1,  &OptimizerLocalPlanner::readPointCloudObstaclesUGVCallback, this);
-    point_cloud_ugv_traversability_sub_ = nh->subscribe( "/region_growing_traversability_pc_map", 1,  &OptimizerLocalPlanner::readPointCloudTraversabilityUGVCallback, this);
-    clean_markers_sub_ = nh->subscribe( "/clean_marker_optimizer", 1,  &OptimizerLocalPlanner::deleteMarkersCallBack, this);
-    finished_rviz_maneuver_sub_ = nh->subscribe( "/finished_rviz_maneuver", 1,  &OptimizerLocalPlanner::finishedRvizManeuverCallBack, this);
+  local_map_sub = nh->subscribe<octomap_msgs::Octomap>("/octomap_binary_local", 1, &OptimizerLocalPlanner::collisionMapCallBack, this);
+  local_trav_map_sub = nh->subscribe<octomap_msgs::Octomap>("/oct_trav/octomap_binary", 1, &OptimizerLocalPlanner::traversableMapCallBack, this);
+  point_cloud_ugv_obstacles_sub_ = nh->subscribe( "/region_growing_obstacles_pc_map", 1,  &OptimizerLocalPlanner::readPointCloudObstaclesUGVCallback, this);
+  point_cloud_ugv_traversability_sub_ = nh->subscribe( "/region_growing_traversability_pc_map", 1,  &OptimizerLocalPlanner::readPointCloudTraversabilityUGVCallback, this);
+  clean_markers_sub_ = nh->subscribe( "/clean_marker_optimizer", 1,  &OptimizerLocalPlanner::deleteMarkersCallBack, this);
+  finished_rviz_maneuver_sub_ = nh->subscribe( "/finished_rviz_maneuver", 1,  &OptimizerLocalPlanner::finishedRvizManeuverCallBack, this);
 
 	ROS_INFO(PRINTF_BLUE"Optimizer_Local_Planner: Subscribers Initialized");
 }
 
 void OptimizerLocalPlanner::initializePublishers()
 {
-  	post_traj_marker_ugv_pub_ = nh->advertise<visualization_msgs::MarkerArray>("post_init_trajectory_ugv_marker", 2);
+  post_traj_marker_ugv_pub_ = nh->advertise<visualization_msgs::MarkerArray>("post_init_trajectory_ugv_marker", 2);
 	post_traj_marker_uav_pub_ = nh->advertise<visualization_msgs::MarkerArray>("post_init_trajectory_uav_marker", 2);
-  	traj_marker_ugv_pub_ = nh->advertise<visualization_msgs::MarkerArray>("opt_trajectory_ugv_marker", 2);
-  	traj_marker_uav_pub_ = nh->advertise<visualization_msgs::MarkerArray>("opt_trajectory_uav_marker", 2);
+  traj_marker_ugv_pub_ = nh->advertise<visualization_msgs::MarkerArray>("opt_trajectory_ugv_marker", 2);
+  traj_marker_uav_pub_ = nh->advertise<visualization_msgs::MarkerArray>("opt_trajectory_uav_marker", 2);
 	catenary_marker_pub_ = nh->advertise<visualization_msgs::MarkerArray>("catenary_marker", 100);
-    clean_nodes_marker_gp_pub_ = nh->advertise<std_msgs::Bool>("/clean_nodes_marker_gp", 1);
-    clean_catenary_marker_gp_pub_ = nh->advertise<std_msgs::Bool>("/clean_catenary_marker_gp", 1);
+  clean_nodes_marker_gp_pub_ = nh->advertise<std_msgs::Bool>("/clean_nodes_marker_gp", 1);
+  clean_catenary_marker_gp_pub_ = nh->advertise<std_msgs::Bool>("/clean_catenary_marker_gp", 1);
 	trajectory_pub_ = nh->advertise<marsupial_optimizer::marsupial_trajectory_optimized>("/trajectory_optimized", 200);
-
-  	ROS_INFO(PRINTF_BLUE"Optimizer_Local_Planner: Publishers Initialized");
+  
+  ROS_INFO(PRINTF_BLUE"Optimizer_Local_Planner: Publishers Initialized");
 }
 
 void OptimizerLocalPlanner::resetFlags()
@@ -185,10 +184,10 @@ void OptimizerLocalPlanner::cleanVectors()
 
 void OptimizerLocalPlanner::configServices()
 {
-    execute_path_srv_ptr.reset(new ExecutePathServer(*nh, "/Execute_Plan", false));
-    execute_path_srv_ptr->registerGoalCallback(boost::bind(&OptimizerLocalPlanner::executeOptimizerPathGoalCB, this));
-    execute_path_srv_ptr->registerPreemptCallback(boost::bind(&OptimizerLocalPlanner::executeOptimizerPathPreemptCB, this));
-    execute_path_srv_ptr->start();
+  execute_path_srv_ptr.reset(new ExecutePathServer(*nh, "/Execute_Plan", false));
+  execute_path_srv_ptr->registerGoalCallback(boost::bind(&OptimizerLocalPlanner::executeOptimizerPathGoalCB, this));
+  execute_path_srv_ptr->registerPreemptCallback(boost::bind(&OptimizerLocalPlanner::executeOptimizerPathPreemptCB, this));
+  execute_path_srv_ptr->start();
 }
 
 void OptimizerLocalPlanner::setupOptimizer()
@@ -196,11 +195,6 @@ void OptimizerLocalPlanner::setupOptimizer()
 	options.max_num_iterations = n_iter_opt;
 	options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
 	options.minimizer_progress_to_stdout = true;
-}
-
-void OptimizerLocalPlanner::dynRecCb(marsupial_optimizer::OptimizationParamsConfig &config, uint32_t level)
-{
-    // ROS_INFO("Reconfigure Request: pause_end:%s , traj_in_rviz: %s",  pause_end_optimization.bool_param?"True":"False", traj_in_rviz.bool_param?"True":"False");
 }
 
 void OptimizerLocalPlanner::readOctomapCallback(const sensor_msgs::PointCloud2::ConstPtr& msg)
@@ -214,7 +208,7 @@ void OptimizerLocalPlanner::readPointCloudTraversabilityUGVCallback(const sensor
 {
 	ROS_INFO(PRINTF_MAGENTA "KDTree : Preparing KDTree UGV Traversability");
 	nn_trav.setInput(*msg);
-  	ROS_INFO_COND(debug, PRINTF_BLUE "Local Planner: Received Point Cloud for KDTree traversability UGV");
+  ROS_INFO_COND(debug, PRINTF_BLUE "Local Planner: Received Point Cloud for KDTree traversability UGV");
 }
 
 void OptimizerLocalPlanner::readPointCloudObstaclesUGVCallback(const sensor_msgs::PointCloud2::ConstPtr& msg)
@@ -226,13 +220,13 @@ void OptimizerLocalPlanner::readPointCloudObstaclesUGVCallback(const sensor_msgs
 
 void OptimizerLocalPlanner::collisionMapCallBack(const octomap_msgs::OctomapConstPtr &msg)
 {
-    mapReceivedFull = true;
+  mapReceivedFull = true;
 	mapFull_msg = (octomap::OcTree *)octomap_msgs::binaryMsgToMap(*msg);
 }
 
 void OptimizerLocalPlanner::traversableMapCallBack(const octomap_msgs::OctomapConstPtr &msg)
 {
-    mapReceivedTrav = true;
+  mapReceivedTrav = true;
 	mapTrav_msg = (octomap::OcTree *)octomap_msgs::binaryMsgToMap(*msg);
 }
 
@@ -241,9 +235,9 @@ void OptimizerLocalPlanner::deleteMarkersCallBack(const std_msgs::BoolConstPtr &
 	if (msg->data == true){
 		mp_.clearMarkers(catenary_marker, 150, catenary_marker_pub_);
 		mp_.clearMarkersPointLines(points_ugv_marker, lines_ugv_marker,traj_marker_ugv_pub_,30);
-  		mp_.clearMarkersPointLines(points_uav_marker, lines_uav_marker,traj_marker_uav_pub_,30);
-  		mp_.clearMarkersPointLines(post_points_ugv_marker, post_lines_ugv_marker, post_traj_marker_ugv_pub_,30);
-  		mp_.clearMarkersPointLines(post_points_uav_marker, post_lines_uav_marker, post_traj_marker_uav_pub_,30);
+    mp_.clearMarkersPointLines(points_uav_marker, lines_uav_marker,traj_marker_uav_pub_,30);
+    mp_.clearMarkersPointLines(post_points_ugv_marker, post_lines_ugv_marker, post_traj_marker_ugv_pub_,30);
+    mp_.clearMarkersPointLines(post_points_uav_marker, post_lines_uav_marker, post_traj_marker_uav_pub_,30);
 	}
 }
 
@@ -255,22 +249,22 @@ void OptimizerLocalPlanner::finishedRvizManeuverCallBack(const std_msgs::BoolCon
 
 void OptimizerLocalPlanner::executeOptimizerPathPreemptCB()
 {
-    ROS_INFO_COND(debug, "Goal Preempted");
-    execute_path_srv_ptr->setPreempted(); // set the action state to preempted
+  ROS_INFO_COND(debug, "Goal Preempted");
+  execute_path_srv_ptr->setPreempted(); // set the action state to preempted
 
-    resetFlags();
-    mp_.clearMarkersPointLines(points_ugv_marker, lines_ugv_marker, traj_marker_ugv_pub_, 0);
-    mp_.clearMarkersPointLines(points_uav_marker, lines_uav_marker, traj_marker_uav_pub_, 0);
+  resetFlags();
+  mp_.clearMarkersPointLines(points_ugv_marker, lines_ugv_marker, traj_marker_ugv_pub_, 0);
+  mp_.clearMarkersPointLines(points_uav_marker, lines_uav_marker, traj_marker_uav_pub_, 0);
 	mp_.clearMarkersPointLines(post_points_ugv_marker, post_lines_ugv_marker, post_traj_marker_ugv_pub_,0);
 	mp_.clearMarkersPointLines(post_points_uav_marker, post_lines_uav_marker, post_traj_marker_uav_pub_,0);
 }
 
 void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 {
-  	ROS_INFO_COND(debug, PRINTF_GREEN "Optimizer Local Planner : Path received in action server mode");
+  ROS_INFO_COND(debug, PRINTF_GREEN "Optimizer Local Planner : Path received in action server mode");
 	
 	auto path_shared_ptr = execute_path_srv_ptr->acceptNewGoal();
-  	globalTrajectory = path_shared_ptr->path;
+  globalTrajectory = path_shared_ptr->path;
 	vec_len_cat_init = path_shared_ptr->length_catenary; 
 
 	if(write_data_residual)
@@ -285,8 +279,8 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 
 	//Clear optimized Markers
 	mp_.clearMarkers(catenary_marker, 150, catenary_marker_pub_);
-  	mp_.clearMarkersPointLines(points_ugv_marker, lines_ugv_marker,traj_marker_ugv_pub_,size_path);
-  	mp_.clearMarkersPointLines(points_uav_marker, lines_uav_marker,traj_marker_uav_pub_,size_path);
+  mp_.clearMarkersPointLines(points_ugv_marker, lines_ugv_marker,traj_marker_ugv_pub_,size_path);
+  mp_.clearMarkersPointLines(points_uav_marker, lines_uav_marker,traj_marker_uav_pub_,size_path);
 	mp_.clearMarkersPointLines(post_points_ugv_marker, post_lines_ugv_marker, post_traj_marker_ugv_pub_,size_path);
 	mp_.clearMarkersPointLines(post_points_uav_marker, post_lines_uav_marker, post_traj_marker_uav_pub_,size_path);
 	
@@ -294,480 +288,487 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
  	getTemporalState(vec_time_init);
 
 	dm_.initDataManagement(path+files_results, name_output_file, scenario_number, num_pos_initial, initial_velocity_ugv, initial_velocity_uav, 
-							initial_acceleration_ugv, initial_acceleration_uav, distance_catenary_obstacle, pose_reel_local.transform.translation, vec_pose_init_ugv, 
-							vec_pose_init_uav, vec_len_cat_init, vec_init_rot_ugv, vec_init_rot_uav, mapFull_msg, mapTrav_msg, grid_3D);			   
+                         initial_acceleration_ugv, initial_acceleration_uav, distance_catenary_obstacle, pose_reel_local.transform.translation, vec_pose_init_ugv, 
+                         vec_pose_init_uav, vec_len_cat_init, vec_init_rot_ugv, vec_init_rot_uav, mapFull_msg, mapTrav_msg, grid_3D);			   
 	getSmoothnessTrajectory(vec_pose_init_ugv, vec_pose_init_uav, v_init_angles_smooth_ugv, v_init_angles_smooth_uav);
 	if(write_data_for_analysis)
 		dm_.writeTemporalDataBeforeOptimization(vec_dist_init_ugv, vec_dist_init_uav, vec_time_init, v_init_angles_smooth_ugv, v_init_angles_smooth_uav);
 
 	std::cout << std::endl <<  "==================================================="  << std::endl << "\tPreparing to execute Optimization: Creating Parameter Blocks!!" << std::endl;
 
-  	// Initialize optimizer
-  	Problem problem;
+  // Initialize optimizer
+  Problem problem;
 
-	// Initializing parameters block to optimization
-    initializingParametersblock();
+  // Initializing parameters block to optimization
+  initializingParametersblock();
 
-	printf("initial_distance_states_ugv=%f , initial_distance_states_uav= %f \n", initial_distance_states_ugv, initial_distance_states_uav);
-	// Initializing Contraints for optimization	
-	/****************************   UGV Constraints  ****************************/	
-	if (optimize_ugv){
-		ROS_INFO(PRINTF_GREEN" PREPARING  UGV  PARAMETER  BLOCKS  TO  OPTIMIZE:");
-		/*** Cost Function UGV I : Equidistance constraint UGV ***/
-		if (equidistance_ugv_constraint==1){
-			ROS_INFO(PRINTF_GREEN"		- Optimize Equidistance Autodiff");
-			for (int i = 0; i <  statesPosUGV.size() - 1 ; ++i) {
-				CostFunction* cost_function_ugv_1  = new AutoDiffCostFunction<EquiDistanceFunctorUGV, 1, 4, 4>
-												(new EquiDistanceFunctorUGV(w_alpha_ugv, initial_distance_states_ugv,write_data_residual, user_name)); 
-				problem.AddResidualBlock(cost_function_ugv_1, NULL, statesPosUGV[i].parameter, statesPosUGV[i+1].parameter);
-				if (i < count_fix_points_initial_ugv)
-					problem.SetParameterBlockConstant(statesPosUGV[i].parameter);
-				if (i > (statesPosUGV.size() - (count_fix_points_final_ugv+2)))
-					problem.SetParameterBlockConstant(statesPosUGV[i+1].parameter);
-				if (i == (statesPosUGV.size() - 2)) //To make fixed last UGV position
-					problem.SetParameterBlockConstant(statesPosUGV[i+1].parameter);
-				problem.SetParameterLowerBound(statesPosUGV[i].parameter, 1, ws_x_min);
-				problem.SetParameterLowerBound(statesPosUGV[i].parameter, 2, ws_y_min);
-				problem.SetParameterLowerBound(statesPosUGV[i].parameter, 3, ws_z_min);
-				problem.SetParameterUpperBound(statesPosUGV[i].parameter, 1, ws_x_max);
-				problem.SetParameterUpperBound(statesPosUGV[i].parameter, 2, ws_y_max);
-				problem.SetParameterUpperBound(statesPosUGV[i].parameter, 3, ws_z_max);
-			}
-		}
-		if (equidistance_ugv_constraint==0){
-			ROS_INFO(PRINTF_GREEN"		- Optimize Equidistance Analytic");
-			for (int i = 0; i <  statesPosUGV.size() - 1 ; ++i) {
-				CostFunction* cost_function_ugv_1 = new EquiDistanceFunctorUGVAnalytic(w_alpha_ugv, initial_distance_states_ugv);
-				problem.AddResidualBlock(cost_function_ugv_1, new ceres::CauchyLoss(0.1), statesPosUGV[i].parameter, statesPosUGV[i+1].parameter);
-				if (i < count_fix_points_initial_ugv)
-					problem.SetParameterBlockConstant(statesPosUGV[i].parameter);
-				problem.SetParameterLowerBound(statesPosUGV[i].parameter, 3, 0.0); 
-			}
-		}
-		/*** Cost Function UGV II : Obstacles constraint UGV***/
-		if (obstacles_ugv_constraint==1){
-			ROS_INFO(PRINTF_GREEN"		- Optimize Obstacles Autodiff");
-			for (int i = 0; i < statesPosUGV.size(); ++i) {
-				CostFunction* cost_function_ugv_3  = new AutoDiffCostFunction<ObstacleDistanceFunctorUGV::ObstaclesFunctorUGV, 1, 4>
-												(new ObstacleDistanceFunctorUGV::ObstaclesFunctorUGV(w_beta_ugv,distance_obstacle_ugv,
-																									nn_ugv_obs.kdtree,nn_ugv_obs.obs_points,write_data_residual,user_name)); 
-				problem.AddResidualBlock(cost_function_ugv_3, NULL, statesPosUGV[i].parameter);
-				if (i < count_fix_points_initial_ugv)
-					problem.SetParameterBlockConstant(statesPosUGV[i].parameter);
-				if (i > (statesPosUGV.size() - (count_fix_points_final_ugv+1)))
-					problem.SetParameterBlockConstant(statesPosUGV[i].parameter);
-			}	
-		}
-		if (obstacles_ugv_constraint==0){
-			ROS_INFO(PRINTF_GREEN"		- Optimize Obstacles Analytic");
-			for (int i = 0; i < statesPosUGV.size(); ++i) {
-				CostFunction* cost_function_ugv_3 = new ObstacleDistanceFunctorUGVAnalytic(w_beta_ugv, distance_obstacle_ugv, count_fix_points_initial_ugv, 
-																				nn_ugv_obs.kdtree,nn_ugv_obs.obs_points);
-				problem.AddResidualBlock(cost_function_ugv_3, new ceres::CauchyLoss(0.1), statesPosUGV[i].parameter); 
-			}
-		}
-		/*** Cost Function UGV III : Traversability constraint UGV***/
-		if (traversability_ugv_constraint == 1){
-			ROS_INFO(PRINTF_GREEN"		- Optimize Traversability Autodiff");
-			for (int i = 0; i < statesPosUGV.size(); ++i) {
-				CostFunction* cost_function_ugv_4  = new AutoDiffCostFunction<TraversabilityDistanceFunctorUGV::TraversabilityFunctor, 1, 4>
-												(new TraversabilityDistanceFunctorUGV::TraversabilityFunctor(w_theta_ugv, nn_trav.kdtree, nn_trav.obs_points, write_data_residual,user_name)); 
-				problem.AddResidualBlock(cost_function_ugv_4, NULL, statesPosUGV[i].parameter);
-				if (i < count_fix_points_initial_ugv)
-					problem.SetParameterBlockConstant(statesPosUGV[i].parameter);
-				if (i > (statesPosUGV.size() - (count_fix_points_final_ugv+1)))
-					problem.SetParameterBlockConstant(statesPosUGV[i].parameter);
-			}
-		}
-		if (traversability_ugv_constraint == 0){
-			ROS_INFO(PRINTF_GREEN"		- Optimize Traversability Analytic");
-			for (int i = 0; i < statesPosUGV.size(); ++i) {
-				CostFunction* cost_function_ugv_4 = new TraversabilityDistanceFunctorUGVAnalytic(w_theta_ugv, count_fix_points_initial_ugv, nn_trav.kdtree, nn_trav.obs_points);
-				problem.AddResidualBlock(cost_function_ugv_4, new ceres::CauchyLoss(0.1), statesPosUGV[i].parameter); 
-			}
-		}
-		/*** Cost Function UGV IV : Smoothness constrain UGV ***/
-		if (smoothness_ugv_constraint == 1){
-			ROS_INFO(PRINTF_GREEN"		- Optimize Smoothness Autodiff");
-			for (int i = 0; i < statesPosUGV.size() - 2; ++i) {
-				if ( (i >= count_fix_points_initial_ugv)  && i<(statesPosUGV.size() - (count_fix_points_final_ugv+1))){
-					CostFunction* cost_function_ugv_5  = new AutoDiffCostFunction<SmoothnessFunctorUGV, 1, 4, 4, 4>(new SmoothnessFunctorUGV(w_gamma_ugv, angle_min_traj,write_data_residual,user_name)); 
-					problem.AddResidualBlock(cost_function_ugv_5, NULL, statesPosUGV[i].parameter, statesPosUGV[i+1].parameter, statesPosUGV[i+2].parameter);
-				}
-			}
-		}
-		if (smoothness_ugv_constraint == 0){
-			ROS_INFO(PRINTF_GREEN"		- Optimize Smoothness Analytic");
-			for (int i = 0; i < statesPosUGV.size() - 2; ++i) {
-				CostFunction* cost_function_ugv_5 = new smoothnessFunctorUGVAnalytic(w_gamma_ugv, angle_min_traj, count_fix_points_initial_ugv);
-				problem.AddResidualBlock(cost_function_ugv_5, new ceres::CauchyLoss(0.1), statesPosUGV[i].parameter, statesPosUGV[i+1].parameter, statesPosUGV[i+2].parameter); 
-			}
-		}
-		/*** Cost Function UGV V : Rotation constraint UGV ***/
-		// for (int i = 0; i < statesRotUGV.size() - 1; ++i) {
-		// 	double _roll, _pitch, _yaw;
-		// 	tf::Quaternion _q(statesRotUGV[i+1].parameter[1],statesRotUGV[i+1].parameter[2],statesRotUGV[i+1].parameter[3],statesRotUGV[i+1].parameter[4]);
-		// 	tf::Matrix3x3 _M(_q);	
-		// 	_M.getRPY(_roll, _pitch, _yaw);
-		// 	CostFunction* cost_function_ugv_6  = new NumericDiffCostFunction<RotationFunctorUGV, CENTRAL, 1, 4, 4, 5>(new RotationFunctorUGV(w_kappa_ugv,_yaw)); 
-		// 	problem.AddResidualBlock(cost_function_ugv_6, NULL, statesPosUGV[i].parameter, statesPosUGV[i+1].parameter, statesRotUGV[i+1].parameter);
-		// }
+  printf("initial_distance_states_ugv=%f , initial_distance_states_uav= %f \n", initial_distance_states_ugv, initial_distance_states_uav);
+  // Initializing Contraints for optimization
 
-		/*** Cost Function UGV VI : Time constraint UGV***/
-		if (time_constraint){
-			ROS_INFO(PRINTF_GREEN"		- Optimize Time Autodiff");
-			for (int i = 0; i < statesTime.size(); ++i) {
-				CostFunction* cost_function_time  = new AutoDiffCostFunction<TimeFunctor, 1, 2> (new TimeFunctor(w_delta, initial_time, write_data_residual, user_name)); 
-				problem.AddResidualBlock(cost_function_time, NULL, statesTime[i].parameter);
-				if (i < count_fix_points_initial_ugv) 
-					problem.SetParameterBlockConstant(statesTime[i].parameter);
-				else
-					problem.SetParameterLowerBound(statesTime[i].parameter, 1, min_T);
-			}
-		}	
-		/*** Cost Function UGV VII : Velocity constraint UGV***/
-		if (velocity_ugv_constraint){
-			ROS_INFO(PRINTF_GREEN"		- Optimize Velocity Autodiff");
-			for (int i = 0; i < statesTime.size() - 1; ++i) {
-				CostFunction* cost_function_ugv_8  = new AutoDiffCostFunction<VelocityFunctorUGV, 1, 4, 4, 2>
-													(new VelocityFunctorUGV(w_epsilon_ugv, initial_velocity_ugv, count_fix_points_initial_ugv,write_data_residual,user_name)); 
-				problem.AddResidualBlock(cost_function_ugv_8, NULL, statesPosUGV[i].parameter, statesPosUGV[i+1].parameter, statesTime[i+1].parameter);
-			}
-		}
-		/*** Cost Function UGV VIII : Acceleration constraint UGV***/
-		if (acceleration_ugv_constraint){
-			ROS_INFO(PRINTF_GREEN"		- Optimize Acceleration Autodiff");
-			for (int i = 0; i < statesTime.size() - 2; ++i) {
-				CostFunction* cost_function_ugv_9  = new AutoDiffCostFunction<AccelerationFunctorUGV, 1, 4, 4, 4, 2, 2>
-													(new AccelerationFunctorUGV(w_zeta_ugv, initial_acceleration_ugv, count_fix_points_initial_ugv,write_data_residual,user_name)); 
-				problem.AddResidualBlock(cost_function_ugv_9, NULL, statesPosUGV[i].parameter, statesPosUGV[i+1].parameter, statesPosUGV[i+2].parameter, 
-																statesTime[i+1].parameter, statesTime[i+2].parameter);
-			}
-		}
-	}
-	
-	/****************************   UAV Constraints  ****************************/	
-	if (optimize_uav){
-		ROS_INFO(PRINTF_BLUE" PREPARING  UAV  PARAMETER  BLOCKS  TO  OPTIMIZE:");
-		int fix_pos_init_uav = -1;
-		int fix_pos_final_uav = 1000;
+  /****************************   UGV Constraints  ****************************/	
+  {
+    ROS_INFO(PRINTF_GREEN" PREPARING  UGV  PARAMETER  BLOCKS  TO  OPTIMIZE:");
+    /*** Cost Function UGV I : Equidistance constraint UGV ***/
+    if (equidistance_ugv_constraint==1){
+      ROS_INFO(PRINTF_GREEN"		- Optimize Equidistance Autodiff");
+      for (int i = 0; i <  statesPosUGV.size() - 1 ; ++i) {
+        CostFunction* cost_function_ugv_1  = new AutoDiffCostFunction<EquiDistanceFunctorUGV, 1, 4, 4>
+          (new EquiDistanceFunctorUGV(w_alpha_ugv, initial_distance_states_ugv,write_data_residual, user_name)); 
+        problem.AddResidualBlock(cost_function_ugv_1, NULL, statesPosUGV[i].parameter, statesPosUGV[i+1].parameter);
+        if (i < count_fix_points_initial_ugv)
+          problem.SetParameterBlockConstant(statesPosUGV[i].parameter);
+        if (i > (statesPosUGV.size() - (count_fix_points_final_ugv+2)))
+          problem.SetParameterBlockConstant(statesPosUGV[i+1].parameter);
+        if (i == (statesPosUGV.size() - 2)) //To make fixed last UGV position
+          problem.SetParameterBlockConstant(statesPosUGV[i+1].parameter);
+        problem.SetParameterLowerBound(statesPosUGV[i].parameter, 1, ws_x_min);
+        problem.SetParameterLowerBound(statesPosUGV[i].parameter, 2, ws_y_min);
+        problem.SetParameterLowerBound(statesPosUGV[i].parameter, 3, ws_z_min);
+        problem.SetParameterUpperBound(statesPosUGV[i].parameter, 1, ws_x_max);
+        problem.SetParameterUpperBound(statesPosUGV[i].parameter, 2, ws_y_max);
+        problem.SetParameterUpperBound(statesPosUGV[i].parameter, 3, ws_z_max);
+      }
+    }
+    if (equidistance_ugv_constraint==0){
+      ROS_INFO(PRINTF_GREEN"		- Optimize Equidistance Analytic");
+      for (int i = 0; i <  statesPosUGV.size() - 1 ; ++i) {
+        CostFunction* cost_function_ugv_1 = new EquiDistanceFunctorUGVAnalytic(w_alpha_ugv, initial_distance_states_ugv);
+        problem.AddResidualBlock(cost_function_ugv_1, new ceres::CauchyLoss(0.1), statesPosUGV[i].parameter, statesPosUGV[i+1].parameter);
+        if (i < count_fix_points_initial_ugv)
+          problem.SetParameterBlockConstant(statesPosUGV[i].parameter);
+        problem.SetParameterLowerBound(statesPosUGV[i].parameter, 3, 0.0); 
+      }
+    }
+    /*** Cost Function UGV II : Obstacles constraint UGV***/
+    if (obstacles_ugv_constraint==1){
+      ROS_INFO(PRINTF_GREEN"		- Optimize Obstacles Autodiff");
+      for (int i = 0; i < statesPosUGV.size(); ++i) {
+        CostFunction* cost_function_ugv_3  = new AutoDiffCostFunction<ObstacleDistanceFunctorUGV::ObstaclesFunctorUGV, 1, 4>
+          (new ObstacleDistanceFunctorUGV::ObstaclesFunctorUGV(w_beta_ugv,distance_obstacle_ugv,
+                                                               nn_ugv_obs.kdtree,nn_ugv_obs.obs_points,write_data_residual,user_name)); 
+        problem.AddResidualBlock(cost_function_ugv_3, NULL, statesPosUGV[i].parameter);
+        if (i < count_fix_points_initial_ugv)
+          problem.SetParameterBlockConstant(statesPosUGV[i].parameter);
+        if (i > (statesPosUGV.size() - (count_fix_points_final_ugv+1)))
+          problem.SetParameterBlockConstant(statesPosUGV[i].parameter);
+      }	
+    }
+    if (obstacles_ugv_constraint==0){
+      ROS_INFO(PRINTF_GREEN"		- Optimize Obstacles Analytic");
+      for (int i = 0; i < statesPosUGV.size(); ++i) {
+        CostFunction* cost_function_ugv_3 = new ObstacleDistanceFunctorUGVAnalytic(w_beta_ugv, distance_obstacle_ugv, count_fix_points_initial_ugv, 
+                                                                                   nn_ugv_obs.kdtree,nn_ugv_obs.obs_points);
+        problem.AddResidualBlock(cost_function_ugv_3, new ceres::CauchyLoss(0.1), statesPosUGV[i].parameter); 
+      }
+    }
+    /*** Cost Function UGV III : Traversability constraint UGV***/
+    if (traversability_ugv_constraint == 1){
+      ROS_INFO(PRINTF_GREEN"		- Optimize Traversability Autodiff");
+      for (int i = 0; i < statesPosUGV.size(); ++i) {
+        CostFunction* cost_function_ugv_4  = new AutoDiffCostFunction<TraversabilityDistanceFunctorUGV::TraversabilityFunctor, 1, 4>
+          (new TraversabilityDistanceFunctorUGV::TraversabilityFunctor(w_theta_ugv, nn_trav.kdtree, nn_trav.obs_points, write_data_residual,user_name)); 
+        problem.AddResidualBlock(cost_function_ugv_4, NULL, statesPosUGV[i].parameter);
+        if (i < count_fix_points_initial_ugv)
+          problem.SetParameterBlockConstant(statesPosUGV[i].parameter);
+        if (i > (statesPosUGV.size() - (count_fix_points_final_ugv+1)))
+          problem.SetParameterBlockConstant(statesPosUGV[i].parameter);
+      }
+    }
+    if (traversability_ugv_constraint == 0){
+      ROS_INFO(PRINTF_GREEN"		- Optimize Traversability Analytic");
+      for (int i = 0; i < statesPosUGV.size(); ++i) {
+        CostFunction* cost_function_ugv_4 = new TraversabilityDistanceFunctorUGVAnalytic(w_theta_ugv, count_fix_points_initial_ugv, nn_trav.kdtree, nn_trav.obs_points);
+        problem.AddResidualBlock(cost_function_ugv_4, new ceres::CauchyLoss(0.1), statesPosUGV[i].parameter); 
+      }
+    }
+    /*** Cost Function UGV IV : Smoothness constrain UGV ***/
+    if (smoothness_ugv_constraint == 1){
+      ROS_INFO(PRINTF_GREEN"		- Optimize Smoothness Autodiff");
+      for (int i = 0; i < statesPosUGV.size() - 2; ++i) {
+        if ( (i >= count_fix_points_initial_ugv)  && i<(statesPosUGV.size() - (count_fix_points_final_ugv+1))){
+          CostFunction* cost_function_ugv_5  = new AutoDiffCostFunction<SmoothnessFunctorUGV, 1, 4, 4, 4>(new SmoothnessFunctorUGV(w_gamma_ugv, angle_min_traj,write_data_residual,user_name)); 
+          problem.AddResidualBlock(cost_function_ugv_5, NULL, statesPosUGV[i].parameter, statesPosUGV[i+1].parameter, statesPosUGV[i+2].parameter);
+        }
+      }
+    }
+    if (smoothness_ugv_constraint == 0){
+      ROS_INFO(PRINTF_GREEN"		- Optimize Smoothness Analytic");
+      for (int i = 0; i < statesPosUGV.size() - 2; ++i) {
+        CostFunction* cost_function_ugv_5 = new smoothnessFunctorUGVAnalytic(w_gamma_ugv, angle_min_traj, count_fix_points_initial_ugv);
+        problem.AddResidualBlock(cost_function_ugv_5, new ceres::CauchyLoss(0.1), statesPosUGV[i].parameter, statesPosUGV[i+1].parameter, statesPosUGV[i+2].parameter); 
+      }
+    }
+    /*** Cost Function UGV V : Rotation constraint UGV ***/
+    // for (int i = 0; i < statesRotUGV.size() - 1; ++i) {
+    // 	double _roll, _pitch, _yaw;
+    // 	tf::Quaternion _q(statesRotUGV[i+1].parameter[1],statesRotUGV[i+1].parameter[2],statesRotUGV[i+1].parameter[3],statesRotUGV[i+1].parameter[4]);
+    // 	tf::Matrix3x3 _M(_q);	
+    // 	_M.getRPY(_roll, _pitch, _yaw);
+    // 	CostFunction* cost_function_ugv_6  = new NumericDiffCostFunction<RotationFunctorUGV, CENTRAL, 1, 4, 4, 5>(new RotationFunctorUGV(w_kappa_ugv,_yaw)); 
+    // 	problem.AddResidualBlock(cost_function_ugv_6, NULL, statesPosUGV[i].parameter, statesPosUGV[i+1].parameter, statesRotUGV[i+1].parameter);
+    // }
 
-		/*** Cost Function UAV I : Equidistance constraint UAV ***/
-		if (equidistance_uav_constraint==1){
-			ROS_INFO(PRINTF_BLUE"		- Optimize Equidistance Autodiff");
-			for (int i = 0; i <  statesPosUAV.size() - 1 ; ++i) {
-				CostFunction* cost_function_uav_1  = new AutoDiffCostFunction<EquiDistanceFunctorUAV, 1, 4 ,4>
-												(new EquiDistanceFunctorUAV(w_alpha_uav, initial_distance_states_uav, write_data_residual, user_name)); 
-				problem.AddResidualBlock(cost_function_uav_1, NULL, statesPosUAV[i].parameter, statesPosUAV[i+1].parameter);
-				if (i < count_fix_points_uav){ 
-					problem.SetParameterBlockConstant(statesPosUAV[i].parameter);
-					fix_pos_init_uav=i;
-				}
-				if (i == (statesPosUAV.size() - 2)){
-					problem.SetParameterBlockConstant(statesPosUAV[i+1].parameter);
-					fix_pos_final_uav=i+1;
-				}
-				problem.SetParameterLowerBound(statesPosUAV[i].parameter, 1, ws_x_min);
-				problem.SetParameterLowerBound(statesPosUAV[i].parameter, 2, ws_y_min);
-				problem.SetParameterLowerBound(statesPosUAV[i].parameter, 3, ws_z_min);
-				problem.SetParameterUpperBound(statesPosUAV[i].parameter, 1, ws_x_max);
-				problem.SetParameterUpperBound(statesPosUAV[i].parameter, 2, ws_y_max);
-				problem.SetParameterUpperBound(statesPosUAV[i].parameter, 3, ws_z_max);
-			}
-		}
-		if (equidistance_uav_constraint==0){
-			ROS_INFO(PRINTF_BLUE"		- Optimize Equidistance Analytic");
-			for (int i = 0; i <  statesPosUAV.size() - 1 ; ++i) {
-				CostFunction* cost_function_uav_1 = new EquiDistanceFunctorUAVAnalytic(w_alpha_uav, initial_distance_states_uav, size_path );
-				problem.AddResidualBlock(cost_function_uav_1, new ceres::CauchyLoss(0.1), statesPosUAV[i].parameter, statesPosUAV[i+1].parameter);
-				if (i < count_fix_points_uav){ 
-					problem.SetParameterBlockConstant(statesPosUAV[i].parameter);
-					fix_pos_init_uav=i;
-				}
-				if (i == (statesPosUAV.size() - 2)){
-					problem.SetParameterBlockConstant(statesPosUAV[i+1].parameter);
-					fix_pos_final_uav=i+1;
-				}
-				problem.SetParameterLowerBound(statesPosUAV[i].parameter, 1, ws_x_min);
-				problem.SetParameterLowerBound(statesPosUAV[i].parameter, 2, ws_y_min);
-				problem.SetParameterLowerBound(statesPosUAV[i].parameter, 3, ws_z_min);
-				problem.SetParameterUpperBound(statesPosUAV[i].parameter, 1, ws_x_max);
-				problem.SetParameterUpperBound(statesPosUAV[i].parameter, 2, ws_y_max);
-				problem.SetParameterUpperBound(statesPosUAV[i].parameter, 3, ws_z_max);
-			}
-		}
+    /*** Cost Function UGV VI : Time constraint UGV***/
+    if (time_constraint){
+      ROS_INFO(PRINTF_GREEN"		- Optimize Time Autodiff");
+      for (int i = 0; i < statesTime.size(); ++i) {
+        CostFunction* cost_function_time  = new AutoDiffCostFunction<TimeFunctor, 1, 2> (new TimeFunctor(w_delta, initial_time, write_data_residual, user_name)); 
+        problem.AddResidualBlock(cost_function_time, NULL, statesTime[i].parameter);
+        if (i < count_fix_points_initial_ugv) 
+          problem.SetParameterBlockConstant(statesTime[i].parameter);
+        else
+          problem.SetParameterLowerBound(statesTime[i].parameter, 1, min_T);
+      }
+    }	
+    /*** Cost Function UGV VII : Velocity constraint UGV***/
+    if (velocity_ugv_constraint){
+      ROS_INFO(PRINTF_GREEN"		- Optimize Velocity Autodiff");
+      for (int i = 0; i < statesTime.size() - 1; ++i) {
+        CostFunction* cost_function_ugv_8  = new AutoDiffCostFunction<VelocityFunctorUGV, 1, 4, 4, 2>
+          (new VelocityFunctorUGV(w_epsilon_ugv, initial_velocity_ugv, count_fix_points_initial_ugv,write_data_residual,user_name)); 
+        problem.AddResidualBlock(cost_function_ugv_8, NULL, statesPosUGV[i].parameter, statesPosUGV[i+1].parameter, statesTime[i+1].parameter);
+      }
+    }
+    /*** Cost Function UGV VIII : Acceleration constraint UGV***/
+    if (acceleration_ugv_constraint){
+      ROS_INFO(PRINTF_GREEN"		- Optimize Acceleration Autodiff");
+      for (int i = 0; i < statesTime.size() - 2; ++i) {
+        CostFunction* cost_function_ugv_9  = new AutoDiffCostFunction<AccelerationFunctorUGV, 1, 4, 4, 4, 2, 2>
+          (new AccelerationFunctorUGV(w_zeta_ugv, initial_acceleration_ugv, count_fix_points_initial_ugv,write_data_residual,user_name)); 
+        problem.AddResidualBlock(cost_function_ugv_9, NULL, statesPosUGV[i].parameter, statesPosUGV[i+1].parameter, statesPosUGV[i+2].parameter, 
+                                 statesTime[i+1].parameter, statesTime[i+2].parameter);
+      }
+    }
+  }
 
-		/*** Cost Function UAV II : Obstacles constraint UAV***/
-		if(obstacles_uav_constraint==1){
-			ROS_INFO(PRINTF_BLUE"		- Optimize Obstacles Autodiff");
-			for (int i = 0; i < statesPosUAV.size(); ++i) {
-				CostFunction* cost_function_uav_2  = new AutoDiffCostFunction<ObstacleDistanceFunctorUAV::ObstaclesFunctor , 1, 4>
-												(new ObstacleDistanceFunctorUAV::ObstaclesFunctor (w_beta_uav, distance_obstacle_uav, nn_uav.kdtree, nn_uav.obs_points, path+files_results, write_data_residual, grid_3D, use_distance_function, user_name)); 
-				problem.AddResidualBlock(cost_function_uav_2, NULL, statesPosUAV[i].parameter);
-				if (i == 0)
-					problem.SetParameterBlockConstant(statesPosUAV[i].parameter);
-				if (i == (statesPosUAV.size() - 1))
-					problem.SetParameterBlockConstant(statesPosUAV[i].parameter);
-				problem.SetParameterLowerBound(statesPosUAV[i].parameter, 1, ws_x_min);
-				problem.SetParameterLowerBound(statesPosUAV[i].parameter, 2, ws_y_min);
-				problem.SetParameterLowerBound(statesPosUAV[i].parameter, 3, ws_z_min);
-				problem.SetParameterUpperBound(statesPosUAV[i].parameter, 1, ws_x_max);
-				problem.SetParameterUpperBound(statesPosUAV[i].parameter, 2, ws_y_max);
-				problem.SetParameterUpperBound(statesPosUAV[i].parameter, 3, ws_z_max);
-			}
-		}
-		if(obstacles_uav_constraint==0){
-			ROS_INFO(PRINTF_BLUE"		- Optimize Obstacles Analytic");
-			for (int i = 0; i < statesPosUAV.size(); ++i) {
-				CostFunction* cost_function_uav_2 = new ObstacleDistanceFunctorUAVAnalytic(w_beta_uav, distance_obstacle_uav, grid_3D);
-				problem.AddResidualBlock(cost_function_uav_2, new ceres::CauchyLoss(0.1), statesPosUAV[i].parameter); 
-				if (i == 0)
-					problem.SetParameterBlockConstant(statesPosUAV[i].parameter);
-				if (i == (statesPosUAV.size() - 1))
-					problem.SetParameterBlockConstant(statesPosUAV[i].parameter);
-				problem.SetParameterLowerBound(statesPosUAV[i].parameter, 1, ws_x_min);
-				problem.SetParameterLowerBound(statesPosUAV[i].parameter, 2, ws_y_min);
-				problem.SetParameterLowerBound(statesPosUAV[i].parameter, 3, ws_z_min);
-				problem.SetParameterUpperBound(statesPosUAV[i].parameter, 1, ws_x_max);
-				problem.SetParameterUpperBound(statesPosUAV[i].parameter, 2, ws_y_max);
-				problem.SetParameterUpperBound(statesPosUAV[i].parameter, 3, ws_z_max);
-			}
-		}
+  if (!optimize_ugv) {
+    for (int i = 0; i <  statesPosUGV.size() - 1 ; ++i) {
+      problem.SetParameterBlockConstant(statesPosUGV[i].parameter);
+    }
+  }
+
+  /****************************   UAV Constraints  ****************************/	
+  if (optimize_uav){
+    ROS_INFO(PRINTF_BLUE" PREPARING  UAV  PARAMETER  BLOCKS  TO  OPTIMIZE:");
+    int fix_pos_init_uav = -1;
+    int fix_pos_final_uav = 1000;
+
+    /*** Cost Function UAV I : Equidistance constraint UAV ***/
+    if (equidistance_uav_constraint==1){
+      ROS_INFO(PRINTF_BLUE"		- Optimize Equidistance Autodiff");
+      for (int i = 0; i <  statesPosUAV.size() - 1 ; ++i) {
+        CostFunction* cost_function_uav_1  = new AutoDiffCostFunction<EquiDistanceFunctorUAV, 1, 4 ,4>
+          (new EquiDistanceFunctorUAV(w_alpha_uav, initial_distance_states_uav, write_data_residual, user_name)); 
+        problem.AddResidualBlock(cost_function_uav_1, NULL, statesPosUAV[i].parameter, statesPosUAV[i+1].parameter);
+        if (i < count_fix_points_uav){ 
+          problem.SetParameterBlockConstant(statesPosUAV[i].parameter);
+          fix_pos_init_uav=i;
+        }
+        if (i == (statesPosUAV.size() - 2)){
+          problem.SetParameterBlockConstant(statesPosUAV[i+1].parameter);
+          fix_pos_final_uav=i+1;
+        }
+        problem.SetParameterLowerBound(statesPosUAV[i].parameter, 1, ws_x_min);
+        problem.SetParameterLowerBound(statesPosUAV[i].parameter, 2, ws_y_min);
+        problem.SetParameterLowerBound(statesPosUAV[i].parameter, 3, ws_z_min);
+        problem.SetParameterUpperBound(statesPosUAV[i].parameter, 1, ws_x_max);
+        problem.SetParameterUpperBound(statesPosUAV[i].parameter, 2, ws_y_max);
+        problem.SetParameterUpperBound(statesPosUAV[i].parameter, 3, ws_z_max);
+      }
+    }
+    if (equidistance_uav_constraint==0){
+      ROS_INFO(PRINTF_BLUE"		- Optimize Equidistance Analytic");
+      for (int i = 0; i <  statesPosUAV.size() - 1 ; ++i) {
+        CostFunction* cost_function_uav_1 = new EquiDistanceFunctorUAVAnalytic(w_alpha_uav, initial_distance_states_uav, size_path );
+        problem.AddResidualBlock(cost_function_uav_1, new ceres::CauchyLoss(0.1), statesPosUAV[i].parameter, statesPosUAV[i+1].parameter);
+        if (i < count_fix_points_uav){ 
+          problem.SetParameterBlockConstant(statesPosUAV[i].parameter);
+          fix_pos_init_uav=i;
+        }
+        if (i == (statesPosUAV.size() - 2)){
+          problem.SetParameterBlockConstant(statesPosUAV[i+1].parameter);
+          fix_pos_final_uav=i+1;
+        }
+        problem.SetParameterLowerBound(statesPosUAV[i].parameter, 1, ws_x_min);
+        problem.SetParameterLowerBound(statesPosUAV[i].parameter, 2, ws_y_min);
+        problem.SetParameterLowerBound(statesPosUAV[i].parameter, 3, ws_z_min);
+        problem.SetParameterUpperBound(statesPosUAV[i].parameter, 1, ws_x_max);
+        problem.SetParameterUpperBound(statesPosUAV[i].parameter, 2, ws_y_max);
+        problem.SetParameterUpperBound(statesPosUAV[i].parameter, 3, ws_z_max);
+      }
+    }
+
+    /*** Cost Function UAV II : Obstacles constraint UAV***/
+    if(obstacles_uav_constraint==1){
+      ROS_INFO(PRINTF_BLUE"		- Optimize Obstacles Autodiff");
+      for (int i = 0; i < statesPosUAV.size(); ++i) {
+        CostFunction* cost_function_uav_2  = new AutoDiffCostFunction<ObstacleDistanceFunctorUAV::ObstaclesFunctor , 1, 4>
+          (new ObstacleDistanceFunctorUAV::ObstaclesFunctor (w_beta_uav, distance_obstacle_uav, nn_uav.kdtree, nn_uav.obs_points, path+files_results, write_data_residual, grid_3D, use_distance_function, user_name)); 
+        problem.AddResidualBlock(cost_function_uav_2, NULL, statesPosUAV[i].parameter);
+        if (i == 0)
+          problem.SetParameterBlockConstant(statesPosUAV[i].parameter);
+        if (i == (statesPosUAV.size() - 1))
+          problem.SetParameterBlockConstant(statesPosUAV[i].parameter);
+        problem.SetParameterLowerBound(statesPosUAV[i].parameter, 1, ws_x_min);
+        problem.SetParameterLowerBound(statesPosUAV[i].parameter, 2, ws_y_min);
+        problem.SetParameterLowerBound(statesPosUAV[i].parameter, 3, ws_z_min);
+        problem.SetParameterUpperBound(statesPosUAV[i].parameter, 1, ws_x_max);
+        problem.SetParameterUpperBound(statesPosUAV[i].parameter, 2, ws_y_max);
+        problem.SetParameterUpperBound(statesPosUAV[i].parameter, 3, ws_z_max);
+      }
+    }
+    if(obstacles_uav_constraint==0){
+      ROS_INFO(PRINTF_BLUE"		- Optimize Obstacles Analytic");
+      for (int i = 0; i < statesPosUAV.size(); ++i) {
+        CostFunction* cost_function_uav_2 = new ObstacleDistanceFunctorUAVAnalytic(w_beta_uav, distance_obstacle_uav, grid_3D);
+        problem.AddResidualBlock(cost_function_uav_2, new ceres::CauchyLoss(0.1), statesPosUAV[i].parameter); 
+        if (i == 0)
+          problem.SetParameterBlockConstant(statesPosUAV[i].parameter);
+        if (i == (statesPosUAV.size() - 1))
+          problem.SetParameterBlockConstant(statesPosUAV[i].parameter);
+        problem.SetParameterLowerBound(statesPosUAV[i].parameter, 1, ws_x_min);
+        problem.SetParameterLowerBound(statesPosUAV[i].parameter, 2, ws_y_min);
+        problem.SetParameterLowerBound(statesPosUAV[i].parameter, 3, ws_z_min);
+        problem.SetParameterUpperBound(statesPosUAV[i].parameter, 1, ws_x_max);
+        problem.SetParameterUpperBound(statesPosUAV[i].parameter, 2, ws_y_max);
+        problem.SetParameterUpperBound(statesPosUAV[i].parameter, 3, ws_z_max);
+      }
+    }
 		
-		/*** Cost Function UAV III : Smoothness constraint UAV ***/
-		if(smoothness_uav_constraint==1){
-			ROS_INFO(PRINTF_BLUE"		- Optimize Smoothness Autodiff");
-			for (int i = 0; i < statesPosUAV.size() - 2; ++i) {
-				CostFunction* cost_function_uav_4  = new AutoDiffCostFunction<SmoothnessFunctorUAV, 1, 4, 4, 4>
-												 (new SmoothnessFunctorUAV(w_gamma_uav, angle_min_traj,write_data_residual,user_name)); 
-				problem.AddResidualBlock(cost_function_uav_4, NULL, statesPosUAV[i].parameter, statesPosUAV[i+1].parameter, statesPosUAV[i+2].parameter);
-			}
-		}	
-		if(smoothness_uav_constraint==0){
-			ROS_INFO(PRINTF_BLUE"		- Optimize Smoothness Analytic");
-			for (int i = 0; i < statesPosUAV.size() - 2; ++i) {
-				CostFunction* cost_function_uav_4 = new smoothnessFunctorUAVAnalytic(w_gamma_uav, angle_min_traj, fix_pos_init_uav, fix_pos_final_uav);
-				problem.AddResidualBlock(cost_function_uav_4, new ceres::CauchyLoss(0.1), statesPosUAV[i].parameter, statesPosUAV[i+1].parameter, statesPosUAV[i+2].parameter);
-			}
-		}	
+    /*** Cost Function UAV III : Smoothness constraint UAV ***/
+    if(smoothness_uav_constraint==1){
+      ROS_INFO(PRINTF_BLUE"		- Optimize Smoothness Autodiff");
+      for (int i = 0; i < statesPosUAV.size() - 2; ++i) {
+        CostFunction* cost_function_uav_4  = new AutoDiffCostFunction<SmoothnessFunctorUAV, 1, 4, 4, 4>
+          (new SmoothnessFunctorUAV(w_gamma_uav, angle_min_traj,write_data_residual,user_name)); 
+        problem.AddResidualBlock(cost_function_uav_4, NULL, statesPosUAV[i].parameter, statesPosUAV[i+1].parameter, statesPosUAV[i+2].parameter);
+      }
+    }	
+    if(smoothness_uav_constraint==0){
+      ROS_INFO(PRINTF_BLUE"		- Optimize Smoothness Analytic");
+      for (int i = 0; i < statesPosUAV.size() - 2; ++i) {
+        CostFunction* cost_function_uav_4 = new smoothnessFunctorUAVAnalytic(w_gamma_uav, angle_min_traj, fix_pos_init_uav, fix_pos_final_uav);
+        problem.AddResidualBlock(cost_function_uav_4, new ceres::CauchyLoss(0.1), statesPosUAV[i].parameter, statesPosUAV[i+1].parameter, statesPosUAV[i+2].parameter);
+      }
+    }	
 
-		/*** Cost Function UAV IV : Rotation constraint UAV ***/
-		// for (int i = 0; i < statesRotUAV.size() - 1; ++i) {
-		// 	CostFunction* cost_function_uav_5  = new NumericDiffCostFunction<RotationFunctorUAV, CENTRAL, 1, 5, 5>(new RotationFunctorUAV(w_kappa_uav)); 
-		// 	problem.AddResidualBlock(cost_function_uav_5, NULL, statesRotUAV[i].parameter, statesRotUAV[i+1].parameter);
-		// }
-		// if(time_constraint){
-		// 	ROS_INFO(PRINTF_BLUE"		- Optimize Time Autodiff");
-		// 	/*** Cost Function UAV VI : Time constraint UAV***/
-		// 	for (int i = 0; i < statesTimeUAV.size(); ++i) {
-		// 		CostFunction* cost_function_uav_6  = new AutoDiffCostFunction<TimeFunctor, 1, 2>
-		// 										(new TimeFunctor(w_delta, initial_time_uav)); 
-		// 		problem.AddResidualBlock(cost_function_uav_6, NULL, statesTimeUAV[i].parameter);
-		// 		if (i == 0)
-		// 			problem.SetParameterBlockConstant(statesTimeUAV[i].parameter);
-		// 		else
-		// 			problem.SetParameterLowerBound(statesTimeUAV[i].parameter, 1, min_T_uav);
-		// 	}
-		// }
+    /*** Cost Function UAV IV : Rotation constraint UAV ***/
+    // for (int i = 0; i < statesRotUAV.size() - 1; ++i) {
+    // 	CostFunction* cost_function_uav_5  = new NumericDiffCostFunction<RotationFunctorUAV, CENTRAL, 1, 5, 5>(new RotationFunctorUAV(w_kappa_uav)); 
+    // 	problem.AddResidualBlock(cost_function_uav_5, NULL, statesRotUAV[i].parameter, statesRotUAV[i+1].parameter);
+    // }
+    // if(time_constraint){
+    // 	ROS_INFO(PRINTF_BLUE"		- Optimize Time Autodiff");
+    // 	/*** Cost Function UAV VI : Time constraint UAV***/
+    // 	for (int i = 0; i < statesTimeUAV.size(); ++i) {
+    // 		CostFunction* cost_function_uav_6  = new AutoDiffCostFunction<TimeFunctor, 1, 2>
+    // 										(new TimeFunctor(w_delta, initial_time_uav)); 
+    // 		problem.AddResidualBlock(cost_function_uav_6, NULL, statesTimeUAV[i].parameter);
+    // 		if (i == 0)
+    // 			problem.SetParameterBlockConstant(statesTimeUAV[i].parameter);
+    // 		else
+    // 			problem.SetParameterLowerBound(statesTimeUAV[i].parameter, 1, min_T_uav);
+    // 	}
+    // }
 
-		/*** Cost Function UAV V : Velocity constraint UAV ***/
-		if(velocity_uav_constraint){
-			ROS_INFO(PRINTF_BLUE"		- Optimize Velocity Autodiff");
-			for (int i = 0; i < statesTime.size() - 1; ++i) {
-				CostFunction* cost_function_uav_7  = new AutoDiffCostFunction<VelocityFunctorUAV, 1, 4, 4, 2>
-												(new VelocityFunctorUAV(w_epsilon_uav, initial_velocity_uav,write_data_residual, user_name)); 
-				problem.AddResidualBlock(cost_function_uav_7, NULL, 
-										statesPosUAV[i].parameter, statesPosUAV[i+1].parameter, 
-										statesTime[i+1].parameter);
-			}	
-		}
+    /*** Cost Function UAV V : Velocity constraint UAV ***/
+    if(velocity_uav_constraint){
+      ROS_INFO(PRINTF_BLUE"		- Optimize Velocity Autodiff");
+      for (int i = 0; i < statesTime.size() - 1; ++i) {
+        CostFunction* cost_function_uav_7  = new AutoDiffCostFunction<VelocityFunctorUAV, 1, 4, 4, 2>
+          (new VelocityFunctorUAV(w_epsilon_uav, initial_velocity_uav,write_data_residual, user_name)); 
+        problem.AddResidualBlock(cost_function_uav_7, NULL, 
+                                 statesPosUAV[i].parameter, statesPosUAV[i+1].parameter, 
+                                 statesTime[i+1].parameter);
+      }	
+    }
 
-		/*** Cost Function UAV VI : Acceleration constraint UAV ***/
-		if(acceleration_uav_constraint){
-			ROS_INFO(PRINTF_BLUE"		- Optimize Acceleration Autodiff");
-			for (int i = 0; i < statesTime.size() - 2; ++i) {
-				CostFunction* cost_function_uav_8  = new AutoDiffCostFunction<AccelerationFunctorUAV, 1, 4, 4, 4, 2, 2>
-												(new AccelerationFunctorUAV(w_zeta_uav, initial_acceleration_uav,write_data_residual, user_name)); 
-				problem.AddResidualBlock(cost_function_uav_8, NULL, 
-										statesPosUAV[i].parameter, statesPosUAV[i+1].parameter, statesPosUAV[i+2].parameter, 
-										statesTime[i+1].parameter, statesTime[i+2].parameter);
-			}
-		}
-	}
+    /*** Cost Function UAV VI : Acceleration constraint UAV ***/
+    if(acceleration_uav_constraint){
+      ROS_INFO(PRINTF_BLUE"		- Optimize Acceleration Autodiff");
+      for (int i = 0; i < statesTime.size() - 2; ++i) {
+        CostFunction* cost_function_uav_8  = new AutoDiffCostFunction<AccelerationFunctorUAV, 1, 4, 4, 4, 2, 2>
+          (new AccelerationFunctorUAV(w_zeta_uav, initial_acceleration_uav,write_data_residual, user_name)); 
+        problem.AddResidualBlock(cost_function_uav_8, NULL, 
+                                 statesPosUAV[i].parameter, statesPosUAV[i+1].parameter, statesPosUAV[i+2].parameter, 
+                                 statesTime[i+1].parameter, statesTime[i+2].parameter);
+      }
+    }
+  }
 	
-	/****************************   Catenary Constraints  ****************************/	
-	if (optimize_cat){
-		ROS_INFO(PRINTF_ORANGE" PREPARING  CATENARY  PARAMETER  BLOCKS  TO  OPTIMIZE:");
-		/*** Cost Function Cable I : Catenary constrain  ***/
-		if(catenary_constraint==1){
-			ROS_INFO(PRINTF_ORANGE"		- Optimize Catenary Obstacles Autodiff");
-			for (int i = 0; i < statesLength.size(); ++i) {
-				CostFunction* cost_function_cat_1  = new AutoDiffCostFunction<AutodiffCatenaryFunctor::CatenaryFunctor, 1, 4, 4, 2>
-											(new AutodiffCatenaryFunctor::CatenaryFunctor(w_eta_1, w_eta_3, distance_catenary_obstacle, vec_len_cat_init[i], length_tether_max, nn_uav.kdtree, 
-												nn_uav.obs_points, grid_3D, nn_trav.kdtree, nn_trav.obs_points, pose_reel_local.transform.translation, size_path, 
-												new_path_uav[i], nh, mapFull_msg, step, write_data_residual, use_distance_function, user_name)); 
-				problem.AddResidualBlock(cost_function_cat_1, NULL, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesLength[i].parameter);
-				if (i == 0 || (fix_last_position_ugv && i == statesLength.size()-1))
-					problem.SetParameterBlockConstant(statesLength[i].parameter);
-				else{
-					problem.SetParameterLowerBound(statesLength[i].parameter, 1, 0.1);
-					problem.SetParameterUpperBound(statesLength[i].parameter, 1, length_tether_max);
-				}
-			}
-		}
-		if(catenary_constraint==0){
-			ROS_INFO(PRINTF_ORANGE"		- Optimize Catenary Obstacles Numeric");
-			for (int i = 0; i < statesLength.size(); ++i) {
-				CostFunction* cost_function_cat_1  = new NumericDiffCostFunction<CatenaryFunctor, RIDDERS, 1, 4, 4, 2>
-											(new CatenaryFunctor(w_eta_1, w_eta_3, distance_catenary_obstacle, vec_len_cat_init[i], length_tether_max, nn_uav.kdtree, 
-												nn_uav.obs_points, grid_3D, nn_trav.kdtree, nn_trav.obs_points, pose_reel_local.transform.translation, size_path, 
-												new_path_uav[i], nh, mapFull_msg, write_data_residual)); 
-				problem.AddResidualBlock(cost_function_cat_1, NULL, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesLength[i].parameter);
-				if (i == 0 || (fix_last_position_ugv && i == statesLength.size()-1))
-					problem.SetParameterBlockConstant(statesLength[i].parameter);
-				else{
-					problem.SetParameterLowerBound(statesLength[i].parameter, 1, 0.1);
-					problem.SetParameterUpperBound(statesLength[i].parameter, 1, length_tether_max);
-				}
-			}
-		}
-		if(catenary_length_constraint){
-			ROS_INFO(PRINTF_ORANGE"		- Optimize Catenary Lentgh Autodiff");
-			for (int i = 0; i < statesLength.size(); ++i) {
-				CostFunction* cost_function_cat_2  = new AutoDiffCostFunction<CatenaryLengthFunctor::CatenaryLength, 1, 4, 4, 2>
-											(new CatenaryLengthFunctor::CatenaryLength(w_eta_2, vec_len_cat_init[i], pose_reel_local.transform.translation, write_data_residual, user_name)); 
-				problem.AddResidualBlock(cost_function_cat_2, NULL, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesLength[i].parameter);
-				if (i == 0 || (fix_last_position_ugv && i == statesLength.size()-1))
-					problem.SetParameterBlockConstant(statesLength[i].parameter);
-				else{
-					problem.SetParameterLowerBound(statesLength[i].parameter, 1, vec_len_cat_init[i]*0.73);
-					problem.SetParameterUpperBound(statesLength[i].parameter, 1, length_tether_max);			
-				}
-			}		
-		}
-		/*** Cost Function Cable II : Dynamic Catenary constrain  ***/
-		// for (int i = 0; i < statesLength.size() - 1; ++i) {
-		// 	CostFunction* cost_function_cat_2  = new AutoDiffCostFunction<DynamicCatenaryFunctor, 1, 2, 2>(new DynamicCatenaryFunctor(w_lambda, dynamic_catenary)); 
-		// 	problem.AddResidualBlock(cost_function_cat_2, NULL, statesLength[i].parameter, statesLength[i+1].parameter);
-		// }
-	}
+  /****************************   Catenary Constraints  ****************************/	
+  if (optimize_cat){
+    ROS_INFO(PRINTF_ORANGE" PREPARING  CATENARY  PARAMETER  BLOCKS  TO  OPTIMIZE:");
+    /*** Cost Function Cable I : Catenary constrain  ***/
+    if(catenary_constraint==1){
+      ROS_INFO(PRINTF_ORANGE"		- Optimize Catenary Obstacles Autodiff");
+      for (int i = 0; i < statesLength.size(); ++i) {
+        CostFunction* cost_function_cat_1  = new AutoDiffCostFunction<AutodiffCatenaryFunctor::CatenaryFunctor, 1, 4, 4, 2>
+          (new AutodiffCatenaryFunctor::CatenaryFunctor(w_eta_1, w_eta_3, distance_catenary_obstacle, vec_len_cat_init[i], length_tether_max, nn_uav.kdtree, 
+                                                        nn_uav.obs_points, grid_3D, nn_trav.kdtree, nn_trav.obs_points, pose_reel_local.transform.translation, size_path, 
+                                                        new_path_uav[i], nh, mapFull_msg, step, write_data_residual, use_distance_function, user_name)); 
+        problem.AddResidualBlock(cost_function_cat_1, NULL, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesLength[i].parameter);
+        if (i == 0 || (fix_last_position_ugv && i == statesLength.size()-1))
+          problem.SetParameterBlockConstant(statesLength[i].parameter);
+        else{
+          problem.SetParameterLowerBound(statesLength[i].parameter, 1, 0.1);
+          problem.SetParameterUpperBound(statesLength[i].parameter, 1, length_tether_max);
+        }
+      }
+    }
+    if(catenary_constraint==0){
+      ROS_INFO(PRINTF_ORANGE"		- Optimize Catenary Obstacles Numeric");
+      for (int i = 0; i < statesLength.size(); ++i) {
+        CostFunction* cost_function_cat_1  = new NumericDiffCostFunction<CatenaryFunctor, RIDDERS, 1, 4, 4, 2>
+          (new CatenaryFunctor(w_eta_1, w_eta_3, distance_catenary_obstacle, vec_len_cat_init[i], length_tether_max, nn_uav.kdtree, 
+                               nn_uav.obs_points, grid_3D, nn_trav.kdtree, nn_trav.obs_points, pose_reel_local.transform.translation, size_path, 
+                               new_path_uav[i], nh, mapFull_msg, write_data_residual)); 
+        problem.AddResidualBlock(cost_function_cat_1, NULL, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesLength[i].parameter);
+        if (i == 0 || (fix_last_position_ugv && i == statesLength.size()-1))
+          problem.SetParameterBlockConstant(statesLength[i].parameter);
+        else{
+          problem.SetParameterLowerBound(statesLength[i].parameter, 1, 0.1);
+          problem.SetParameterUpperBound(statesLength[i].parameter, 1, length_tether_max);
+        }
+      }
+    }
+    if(catenary_length_constraint){
+      ROS_INFO(PRINTF_ORANGE"		- Optimize Catenary Lentgh Autodiff");
+      for (int i = 0; i < statesLength.size(); ++i) {
+        CostFunction* cost_function_cat_2  = new AutoDiffCostFunction<CatenaryLengthFunctor::CatenaryLength, 1, 4, 4, 2>
+          (new CatenaryLengthFunctor::CatenaryLength(w_eta_2, vec_len_cat_init[i], pose_reel_local.transform.translation, write_data_residual, user_name)); 
+        problem.AddResidualBlock(cost_function_cat_2, NULL, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesLength[i].parameter);
+        if (i == 0 || (fix_last_position_ugv && i == statesLength.size()-1))
+          problem.SetParameterBlockConstant(statesLength[i].parameter);
+        else{
+          problem.SetParameterLowerBound(statesLength[i].parameter, 1, vec_len_cat_init[i]*0.73);
+          problem.SetParameterUpperBound(statesLength[i].parameter, 1, length_tether_max);			
+        }
+      }		
+    }
+    /*** Cost Function Cable II : Dynamic Catenary constrain  ***/
+    // for (int i = 0; i < statesLength.size() - 1; ++i) {
+    // 	CostFunction* cost_function_cat_2  = new AutoDiffCostFunction<DynamicCatenaryFunctor, 1, 2, 2>(new DynamicCatenaryFunctor(w_lambda, dynamic_catenary)); 
+    // 	problem.AddResidualBlock(cost_function_cat_2, NULL, statesLength[i].parameter, statesLength[i+1].parameter);
+    // }
+  }
 	
-	//Clean Nodes Markers Global Planner
-	std_msgs::Bool clean_markers_gp_;
-    clean_markers_gp_.data = true;
-    clean_nodes_marker_gp_pub_.publish(clean_markers_gp_); 
-    clean_catenary_marker_gp_pub_.publish(clean_markers_gp_); 
+  //Clean Nodes Markers Global Planner
+  std_msgs::Bool clean_markers_gp_;
+  clean_markers_gp_.data = true;
+  clean_nodes_marker_gp_pub_.publish(clean_markers_gp_); 
+  clean_catenary_marker_gp_pub_.publish(clean_markers_gp_); 
+    
+  std::cout <<  "==================================================="  << std::endl << "Optimization  started !!" << std::endl;
 
-	std::cout <<  "==================================================="  << std::endl << "Optimization  started !!" << std::endl;
+  start_time_opt = ros::Time::now();
+  ceres::Solve(options, &problem, &summary);
+  std::cout << summary.FullReport() << "\n";
+  final_time_opt = ros::Time::now();
+  initial_cost = summary.initial_cost;
+  final_cost = summary.final_cost;
+  successful_steps = summary.num_successful_steps;
+  unsuccessful_steps = summary.num_unsuccessful_steps;
+  time_optimazation = summary.total_time_in_seconds;
 
-	start_time_opt = ros::Time::now();
-	ceres::Solve(options, &problem, &summary);
-	std::cout << summary.FullReport() << "\n";
-	final_time_opt = ros::Time::now();
-	initial_cost = summary.initial_cost;
-	final_cost = summary.final_cost;
-	successful_steps = summary.num_successful_steps;
-	unsuccessful_steps = summary.num_unsuccessful_steps;
-	time_optimazation = summary.total_time_in_seconds;
+  std::cout << std::endl <<"Optimization Proccess Completed !!!" << std::endl << "===================================================" << std::endl << "Saving Temporal data in txt file ..." << std::endl;
 
-	std::cout << std::endl <<"Optimization Proccess Completed !!!" << std::endl << "===================================================" << std::endl << "Saving Temporal data in txt file ..." << std::endl;
+  // Initializing Contraints for optimization
+  int n_coll_opt_traj_ugv_, n_coll_init_path_ugv_, n_coll_opt_traj_uav_, n_coll_init_path_uav_;
+  int n_coll_opt_cat_;
+  n_coll_opt_traj_ugv_ = n_coll_init_path_ugv_ = n_coll_opt_traj_uav_ = n_coll_init_path_uav_ = 0;
 
-	// Initializing Contraints for optimization	
-	int n_coll_opt_traj_ugv_, n_coll_init_path_ugv_, n_coll_opt_traj_uav_, n_coll_init_path_uav_;
-	int n_coll_opt_cat_;
-	n_coll_opt_traj_ugv_ = n_coll_init_path_ugv_ = n_coll_opt_traj_uav_ = n_coll_init_path_uav_ = 0;
-
-	finishigOptimizationAndGetDataResult(n_coll_opt_traj_ugv_, n_coll_init_path_ugv_, n_coll_opt_traj_uav_, n_coll_init_path_uav_, n_coll_opt_cat_);
-
-	cleanVectors();		//Clear vector after optimization and previus the next iteration
-	double time_sleep_ = 2.0;
+  finishigOptimizationAndGetDataResult(n_coll_opt_traj_ugv_, n_coll_init_path_ugv_, n_coll_opt_traj_uav_, n_coll_init_path_uav_, n_coll_opt_cat_);
+    
+  cleanVectors();		//Clear vector after optimization and previus the next iteration
+  double time_sleep_ = 2.0;
 	
-	// Inform if is a feabible Trajectory or not, and visualize traj in RVIZ
-	if (n_coll_opt_traj_ugv_ == 0 && n_coll_opt_traj_uav_ == 0 && n_coll_opt_cat_== 0 ){
-		if (initial_cost==final_cost)
-			ROS_INFO(PRINTF_ORANGE"\n		Optimizer Local Planner: Final Cost equal than Initial Cost");
-		ROS_INFO(PRINTF_GREEN"\n\n\n		Optimizer Local Planner: Goal position successfully achieved through optimization trajectory\n\n\n");
+  // Inform if is a feabible Trajectory or not, and visualize traj in RVIZ
+  if (n_coll_opt_traj_ugv_ == 0 && n_coll_opt_traj_uav_ == 0 && n_coll_opt_cat_== 0 ){
+    if (initial_cost==final_cost)
+      ROS_INFO(PRINTF_ORANGE"\n		Optimizer Local Planner: Final Cost equal than Initial Cost");
+    ROS_INFO(PRINTF_GREEN"\n\n\n		Optimizer Local Planner: Goal position successfully achieved through optimization trajectory\n\n\n");
 
-		if (traj_in_rviz){
-			if(pause_end_optimization){
-				/********************* To obligate stop method and check Optimization result *********************/
-				std::string y_ ;
-				std::cout << " *** Press key to continue: " << std::endl;
-				std::cin >> y_ ;
-				/*************************************************************************************************/
-			}
-			publishOptimizedTraj();
-			while(!finished_rviz_maneuver){
-				ros::spinOnce();
-				// printf("Waiting to finish maneuver in Rviz\n");
-			};
-			ros::Duration(time_sleep_).sleep();
-			if(pause_end_optimization){
-				/********************* To obligate stop method and check Optimization result *********************/
-				std::string y_ ;
-				std::cout << " *** Press key to continue: " << std::endl;
-				std::cin >> y_ ;
-				/*************************************************************************************************/
-			}
-			finished_rviz_maneuver = false;
-		}
-		else{
-			ros::Duration(time_sleep_).sleep();
-			if(pause_end_optimization){
-				/********************* To obligate stop method and check Optimization result *********************/
-				std::string y_ ;
-				std::cout << " *** Press key to continue: " << std::endl;
-				std::cin >> y_ ;
-				/*************************************************************************************************/
-			}
-		}
-		action_result.arrived = true;
-		execute_path_srv_ptr->setSucceeded(action_result);
-	}
-	else{
-		if (initial_cost==final_cost)
-				ROS_INFO(PRINTF_ORANGE"\n		Optimizer Local Planner: Final Cost equal than Initial Cost");
-		ROS_INFO(PRINTF_RED"\n\n\n\n		Optimizer Local Planner: Goal position Not achieved through optimization trajectory\n\n\n");
-		if (traj_in_rviz){
-			if(pause_end_optimization){
-				/********************* To obligate stop method and check Optimization result *********************/
-				std::string y_ ;
-				std::cout << " *** Press key to continue: " << std::endl;
-				std::cin >> y_ ;
-				/*************************************************************************************************/
-			}
-			publishOptimizedTraj();
-			ros::Duration(time_sleep_).sleep();
-			while(!finished_rviz_maneuver){
-				ros::spinOnce();
-				// printf("Waiting to finish maneuver in Rviz\n");
-			};
-			ros::Duration(time_sleep_).sleep();
-			if(pause_end_optimization){
-				/********************* To obligate stop method and check Optimization result *********************/
-				std::string y_ ;
-				std::cout << " *** Press key to continue: " << std::endl;
-				std::cin >> y_ ;
-				/*************************************************************************************************/
-			}
-		}
-		else{
-			ros::Duration(time_sleep_).sleep();
-			if(pause_end_optimization){
-				/********************* To obligate stop method and check Optimization result *********************/
-				std::string y_ ;
-				std::cout << " *** Press key to continue: " << std::endl;
-				std::cin >> y_ ;
-				/*************************************************************************************************/
-			}
-		}	
-		finished_rviz_maneuver = false;
-		action_result.arrived = false;
-		execute_path_srv_ptr->setSucceeded(action_result);
-	}
-	
-	std::cout <<"Optimization Local Planner Proccess ended !!!!!!!!!!!!!!!!!!!!!!!" << std::endl << "==================================================="<< std::endl << std::endl << std::endl;
-	resetFlags();
+    if (traj_in_rviz){
+      if(pause_end_optimization){
+        /********************* To obligate stop method and check Optimization result *********************/
+        std::string y_ ;
+        std::cout << " *** Press key to continue: " << std::endl;
+        std::cin >> y_ ;
+        /*************************************************************************************************/
+      }
+      publishOptimizedTraj();
+      while(!finished_rviz_maneuver){
+        ros::spinOnce();
+        // printf("Waiting to finish maneuver in Rviz\n");
+      };
+      ros::Duration(time_sleep_).sleep();
+      if(pause_end_optimization){
+        /********************* To obligate stop method and check Optimization result *********************/
+        std::string y_ ;
+        std::cout << " *** Press key to continue: " << std::endl;
+        std::cin >> y_ ;
+        /*************************************************************************************************/
+      }
+      finished_rviz_maneuver = false;
+    }
+    else{
+      ros::Duration(time_sleep_).sleep();
+      if(pause_end_optimization){
+        /********************* To obligate stop method and check Optimization result *********************/
+        std::string y_ ;
+        std::cout << " *** Press key to continue: " << std::endl;
+        std::cin >> y_ ;
+        /*************************************************************************************************/
+      }
+    }
+    action_result.arrived = true;
+    execute_path_srv_ptr->setSucceeded(action_result);
+  }
+  else{
+    if (initial_cost==final_cost)
+      ROS_INFO(PRINTF_ORANGE"\n		Optimizer Local Planner: Final Cost equal than Initial Cost");
+    ROS_INFO(PRINTF_RED"\n\n\n\n		Optimizer Local Planner: Goal position Not achieved through optimization trajectory\n\n\n");
+    if (traj_in_rviz){
+      if(pause_end_optimization){
+        /********************* To obligate stop method and check Optimization result *********************/
+        std::string y_ ;
+        std::cout << " *** Press key to continue: " << std::endl;
+        std::cin >> y_ ;
+        /*************************************************************************************************/
+      }
+      publishOptimizedTraj();
+      ros::Duration(time_sleep_).sleep();
+      while(!finished_rviz_maneuver){
+        ros::spinOnce();
+        // printf("Waiting to finish maneuver in Rviz\n");
+      };
+      ros::Duration(time_sleep_).sleep();
+      if(pause_end_optimization){
+        /********************* To obligate stop method and check Optimization result *********************/
+        std::string y_ ;
+        std::cout << " *** Press key to continue: " << std::endl;
+        std::cin >> y_ ;
+        /*************************************************************************************************/
+      }
+    }
+    else{
+      ros::Duration(time_sleep_).sleep();
+      if(pause_end_optimization){
+        /********************* To obligate stop method and check Optimization result *********************/
+        std::string y_ ;
+        std::cout << " *** Press key to continue: " << std::endl;
+        std::cin >> y_ ;
+        /*************************************************************************************************/
+      }
+    }	
+    finished_rviz_maneuver = false;
+    action_result.arrived = false;
+    execute_path_srv_ptr->setSucceeded(action_result);
+  }
+    
+  std::cout <<"Optimization Local Planner Proccess ended !!!!!!!!!!!!!!!!!!!!!!!" << std::endl << "==================================================="<< std::endl << std::endl << std::endl;
+  resetFlags();
 }
 
 void OptimizerLocalPlanner::initializingParametersblock()
@@ -786,56 +787,56 @@ void OptimizerLocalPlanner::initializingParametersblock()
 		
 		/*** Parameters for UGV ***/
 		// Position Parameters
-		parameter_block_pos_ugv.parameter[0] = i; //id parameter
-		parameter_block_pos_ugv.parameter[1] = vec_pose_init_ugv[i].x;
-		parameter_block_pos_ugv.parameter[2] = vec_pose_init_ugv[i].y; 
-		parameter_block_pos_ugv.parameter[3] = vec_pose_init_ugv[i].z; 
-		// Rotation Parameters
-		parameter_block_rot_ugv.parameter[0] = i; //id parameter 
-		parameter_block_rot_ugv.parameter[1] = vec_init_rot_ugv[i].x;
-		parameter_block_rot_ugv.parameter[2] = vec_init_rot_ugv[i].y; 
-		parameter_block_rot_ugv.parameter[3] = vec_init_rot_ugv[i].z; 
-		parameter_block_rot_ugv.parameter[4] = vec_init_rot_ugv[i].w;
-		// Time Parameters
-		parameter_block_time.parameter[0] = i; //id parameter 
-		parameter_block_time.parameter[1] = vec_time_init[i];
+    parameter_block_pos_ugv.parameter[0] = i; //id parameter
+    parameter_block_pos_ugv.parameter[1] = vec_pose_init_ugv[i].x;
+    parameter_block_pos_ugv.parameter[2] = vec_pose_init_ugv[i].y; 
+    parameter_block_pos_ugv.parameter[3] = vec_pose_init_ugv[i].z; 
+    // Rotation Parameters
+    parameter_block_rot_ugv.parameter[0] = i; 
+    parameter_block_rot_ugv.parameter[1] = vec_init_rot_ugv[i].x;
+    parameter_block_rot_ugv.parameter[2] = vec_init_rot_ugv[i].y; 
+    parameter_block_rot_ugv.parameter[3] = vec_init_rot_ugv[i].z; 
+    parameter_block_rot_ugv.parameter[4] = vec_init_rot_ugv[i].w;
+    // Time Parameters
+    parameter_block_time.parameter[0] = i;
+    parameter_block_time.parameter[1] = vec_time_init[i];
 
-		/*** Parameters for UAV ***/
-		// Position Parameters
-		parameter_block_pos_uav.parameter[0] = i; //id parameter
-		parameter_block_pos_uav.parameter[1] = vec_pose_init_uav[i].x;
-		parameter_block_pos_uav.parameter[2] = vec_pose_init_uav[i].y; 
-		parameter_block_pos_uav.parameter[3] = vec_pose_init_uav[i].z; 
-		//Rotation Parameters
-		parameter_block_rot_uav.parameter[0] = i; //id parameter 
-		parameter_block_rot_uav.parameter[1] = vec_init_rot_uav[i].x;
-		parameter_block_rot_uav.parameter[2] = vec_init_rot_uav[i].y; 
-		parameter_block_rot_uav.parameter[3] = vec_init_rot_uav[i].z; 
-		parameter_block_rot_uav.parameter[4] = vec_init_rot_uav[i].w; 
-			
-		/*** Length Cable Parameters ***/
-		parameter_block_length.parameter[0] = i; 
-		parameter_block_length.parameter[1] = vec_len_cat_init[i];
+    /*** Parameters for UAV ***/
+    // Position Parameters
+    parameter_block_pos_uav.parameter[0] = i; //id parameter
+    parameter_block_pos_uav.parameter[1] = vec_pose_init_uav[i].x;
+    parameter_block_pos_uav.parameter[2] = vec_pose_init_uav[i].y; 
+    parameter_block_pos_uav.parameter[3] = vec_pose_init_uav[i].z; 
+    //Rotation Parameters
+    parameter_block_rot_uav.parameter[0] = i; 
+    parameter_block_rot_uav.parameter[1] = vec_init_rot_uav[i].x;
+    parameter_block_rot_uav.parameter[2] = vec_init_rot_uav[i].y; 
+    parameter_block_rot_uav.parameter[3] = vec_init_rot_uav[i].z; 
+    parameter_block_rot_uav.parameter[4] = vec_init_rot_uav[i].w;
 
-		statesPosUGV.push_back(parameter_block_pos_ugv);
-		statesPosUAV.push_back(parameter_block_pos_uav);
-		statesRotUGV.push_back(parameter_block_rot_ugv);
-		statesRotUAV.push_back(parameter_block_rot_uav);
-		statesTime.push_back(parameter_block_time);
-		statesLength.push_back(parameter_block_length);
+    /*** Length Cable Parameters ***/
+    parameter_block_length.parameter[0] = i; 
+    parameter_block_length.parameter[1] = vec_len_cat_init[i];
 
-		//Convert quaternion to euler angles
-		double roll_ugv_init_, pitch_ugv_init_, yaw_ugv_init_;
-		tf::Quaternion q_ugv_init_(parameter_block_rot_ugv.parameter[1],parameter_block_rot_ugv.parameter[2],parameter_block_rot_ugv.parameter[3],parameter_block_rot_ugv.parameter[4]);
-		tf::Matrix3x3 M_ugv_init_(q_ugv_init_);	
-		M_ugv_init_.getRPY(roll_ugv_init_, pitch_ugv_init_, yaw_ugv_init_);
+    statesPosUGV.push_back(parameter_block_pos_ugv);
+    statesPosUAV.push_back(parameter_block_pos_uav);
+    statesRotUGV.push_back(parameter_block_rot_ugv);
+    statesRotUAV.push_back(parameter_block_rot_uav);
+    statesTime.push_back(parameter_block_time);
+    statesLength.push_back(parameter_block_length);
 
-		printf("Initial States.Parameter[%lu/%lu]: UGV=[%.3f %.3f %.3f / %.3f %.3f %.3f]",i,new_path_uav.size(),parameter_block_pos_ugv.parameter[1],
-				parameter_block_pos_ugv.parameter[2],parameter_block_pos_ugv.parameter[3], roll_ugv_init_, pitch_ugv_init_, yaw_ugv_init_);
-		printf(" UAV=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f] / [%.3f %.3f] / %.3f]\n", parameter_block_pos_uav.parameter[1],parameter_block_pos_uav.parameter[2],
-				parameter_block_pos_uav.parameter[3], parameter_block_rot_uav.parameter[1],parameter_block_rot_uav.parameter[2],parameter_block_rot_uav.parameter[3],
-				parameter_block_rot_uav.parameter[4], parameter_block_time.parameter[1],parameter_block_time.parameter[1],parameter_block_length.parameter[1]);
-	}
+    //Convert quaternion to euler angles
+    double roll_ugv_init_, pitch_ugv_init_, yaw_ugv_init_;
+    tf::Quaternion q_ugv_init_(parameter_block_rot_ugv.parameter[1],parameter_block_rot_ugv.parameter[2],parameter_block_rot_ugv.parameter[3],parameter_block_rot_ugv.parameter[4]);
+    tf::Matrix3x3 M_ugv_init_(q_ugv_init_);	
+    M_ugv_init_.getRPY(roll_ugv_init_, pitch_ugv_init_, yaw_ugv_init_);
+
+    printf("Initial States.Parameter[%lu/%lu]: UGV=[%.3f %.3f %.3f / %.3f %.3f %.3f]",i,new_path_uav.size(),parameter_block_pos_ugv.parameter[1],
+           parameter_block_pos_ugv.parameter[2],parameter_block_pos_ugv.parameter[3], roll_ugv_init_, pitch_ugv_init_, yaw_ugv_init_);
+    printf(" UAV=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f] / [%.3f %.3f] / %.3f]\n", parameter_block_pos_uav.parameter[1],parameter_block_pos_uav.parameter[2],
+           parameter_block_pos_uav.parameter[3], parameter_block_rot_uav.parameter[1],parameter_block_rot_uav.parameter[2],parameter_block_rot_uav.parameter[3],
+           parameter_block_rot_uav.parameter[4], parameter_block_time.parameter[1],parameter_block_time.parameter[1],parameter_block_length.parameter[1]);
+  }
 }
 
 void OptimizerLocalPlanner::finishigOptimizationAndGetDataResult(int &n_coll_opt_traj_ugv, int &n_coll_init_path_ugv, int &n_coll_opt_traj_uav, int &n_coll_init_path_uav, int &n_coll_opt_cat_)
@@ -956,11 +957,11 @@ void OptimizerLocalPlanner::getInitialGlobalPath(trajectory_msgs::MultiDOFJointT
 
 	count_fix_points_initial_ugv = count_fix_points_final_ugv = count_fix_points_uav = 1;
 	aux_cont_ugv_ = aux_cont_uav_ = 0;
-    D_ugv_ = D_uav_ = 0.0;
+  D_ugv_ = D_uav_ = 0.0;
 	v_ugv_.clear();	v_uav_.clear();
 
-    for (size_t i = 0; i < _path.points.size()-1; i++)
-    {
+  for (size_t i = 0; i < _path.points.size()-1; i++)
+  {
 		// Get position and rotation vector for UGV
 		x_ugv_ = _path.points.at(i+1).transforms[0].translation.x - _path.points.at(i).transforms[0].translation.x;
 		y_ugv_ = _path.points.at(i+1).transforms[0].translation.y - _path.points.at(i).transforms[0].translation.y;
@@ -974,7 +975,7 @@ void OptimizerLocalPlanner::getInitialGlobalPath(trajectory_msgs::MultiDOFJointT
 				aux_cont_ugv_++;
 			}
 			count_fix_points_final_ugv = count_fix_points_final_ugv + 1;
-		}else // To make count = 1 in case is not fix point
+		} else // To make count = 1 in case is not fix point
 			count_fix_points_final_ugv = 1;
 
 		// Get position and rotation vector for UAV
@@ -983,7 +984,7 @@ void OptimizerLocalPlanner::getInitialGlobalPath(trajectory_msgs::MultiDOFJointT
 		z_uav_ = _path.points.at(i+1).transforms[1].translation.z - _path.points.at(i).transforms[1].translation.z;
 		
 		// Fallowing lines to count the number of UAV initial nodes in the same position 
-        D_uav_ = sqrt(x_uav_ * x_uav_ + y_uav_ * y_uav_ + z_uav_ * z_uav_);
+    D_uav_ = sqrt(x_uav_ * x_uav_ + y_uav_ * y_uav_ + z_uav_ * z_uav_);
 		if (D_uav_ < 0.001){
 			if(aux_cont_uav_ == i){  // To count the consecutive points that keep stable in the start point
 				count_fix_points_uav = count_fix_points_uav + 1;
@@ -1010,7 +1011,7 @@ void OptimizerLocalPlanner::getInitialGlobalPath(trajectory_msgs::MultiDOFJointT
 		qt_.z = _path.points.at(i).transforms[1].rotation.z;
 		qt_.w = _path.points.at(i).transforms[1].rotation.w;
 		vec_init_rot_uav.push_back(qt_);
-    }
+  }
 
 	// Get position and rotation vector for UGV
 	p_ugv_.x = _path.points.at(_path.points.size()-1).transforms[0].translation.x;
@@ -1036,10 +1037,10 @@ void OptimizerLocalPlanner::getInitialGlobalPath(trajectory_msgs::MultiDOFJointT
 	if(!fix_last_position_ugv)
 		count_fix_points_final_ugv = 0;
 
-	for (size_t i = 0 ; i <  v_ugv_.size() ; i++){
+	for (size_t i = 0 ; i < v_ugv_.size() ; i++){
 		vec_pose_init_ugv.push_back(v_ugv_[i]);
 	}
-	for (size_t i = 0 ; i <  v_uav_.size() ; i++){
+	for (size_t i = 0 ; i < v_uav_.size() ; i++){
 		vec_pose_init_uav.push_back(v_uav_[i]);
 	}
 
@@ -1058,14 +1059,14 @@ void OptimizerLocalPlanner::interpolateFixedPointsPath(vector<geometry_msgs::Vec
 	v_inter_.clear(); is_pos_interpolated_.clear();
 	int count_fix_points_;
 
-	if (mode_==0){
+	if (mode_ == 0) {
 		vec_pose_init_ = vec_pose_init_ugv;
 		count_fix_points_ = count_fix_points_initial_ugv;
-	}else if(mode_==1){
+	}else if (mode_ == 1) {
 		vec_pose_init_ = vec_pose_init_uav;
 		count_fix_points_ = count_fix_points_uav;
-	}else
-		ROS_ERROR("WARNNING : In method interpolateFixedPointsPath from optimizer was not set the MODE, this is going to run into trouble");
+	} else
+		ROS_ERROR("WARNING : In method interpolateFixedPointsPath from optimizer was not set the MODE, this is going to run into trouble");
 
 	geometry_msgs::Vector3 pos_ugv_;
 	int count_ = 1;
@@ -1074,22 +1075,23 @@ void OptimizerLocalPlanner::interpolateFixedPointsPath(vector<geometry_msgs::Vec
 	int final_pos_aux = -1;
 	int group_ = 1;
 	for (size_t i = 0; i < vec_pose_init_.size()-1; i++)
-    {
+  {
 		// "if" make two task: First, in case there are some points in the same first position, they are keeped fix. Second, for points after first 
 		// position fixed, they are interpolated
-		if(i>=count_fix_points_ && i < (vec_pose_init_.size()-count_fix_points_final_ugv) ){
+		if(i >= count_fix_points_ && i < (vec_pose_init_.size() - count_fix_points_final_ugv) ) {
 			double x_ugv_ = vec_pose_init_[i+1].x - vec_pose_init_[i].x;
 			double y_ugv_ = vec_pose_init_[i+1].y - vec_pose_init_[i].y;
 			double z_ugv_ = vec_pose_init_[i+1].z - vec_pose_init_[i].z;
 			double D_ugv_ = sqrt(x_ugv_ * x_ugv_ + y_ugv_ * y_ugv_ + z_ugv_ * z_ugv_);
 			group_ = 1;
 
-			if (D_ugv_ < 0.001){ // Counts points that are in the same position
+			if (D_ugv_ < 0.001) { // Counts points that are in the same position
 				if (count_ == 1)	// Check if first position has more than one point
-					init_pos_ = i ;
+					init_pos_ = i;
 				count_++;
 			}
-			else if (D_ugv_ > 0.001 && count_ > 1){ // Points, that are not in the first position but they share position, are interpolated  	
+			else if (D_ugv_ > 0.001 && count_ > 1) {
+        // Points, that are not in the first position but they share position, are interpolated
 				final_pos_ = i +1 ;
 				double x_ = vec_pose_init_[final_pos_].x - vec_pose_init_[init_pos_].x;
 				double y_ = vec_pose_init_[final_pos_].y - vec_pose_init_[init_pos_].y;
@@ -1100,8 +1102,9 @@ void OptimizerLocalPlanner::interpolateFixedPointsPath(vector<geometry_msgs::Vec
 					pos_ugv_.z = vec_pose_init_[init_pos_].z + (z_/count_)*j;
 					vec_pose_init_aux_.push_back(pos_ugv_);
 					is_pos_interpolated_.push_back(true);
-					if (mode_==0){
-						if (final_pos_aux != final_pos_){
+					if (mode_==0) {
+						if (final_pos_aux != final_pos_)
+            {
 							final_pos_aux = final_pos_;
 							group_++;
 						}
@@ -1109,45 +1112,43 @@ void OptimizerLocalPlanner::interpolateFixedPointsPath(vector<geometry_msgs::Vec
 					}
 				}
 				count_ = 1;
-			}
-			else{
+			} else {
 				vec_pose_init_aux_.push_back(vec_pose_init_[i]);
 				is_pos_interpolated_.push_back(false);
 			}
-		}
-		else{
+		}	else {
 			vec_pose_init_aux_.push_back(vec_pose_init_[i]);
 			is_pos_interpolated_.push_back(false);
-			if(i < count_fix_points_){
-				vec_fix_status_ugv_prepross[i]=group_;
+			if(i < count_fix_points_) {
+				vec_fix_status_ugv_prepross[i] = group_;
 				group_++;
 			}
 		}
 
-		if ((i== vec_pose_init_.size()-2 )&& (count_ > 1)){ // Interpolates the last position 
+		if ((i == vec_pose_init_.size()-2) && (count_ > 1)) { // Interpolates the last position 
 			double x_ugv_ = vec_pose_init_[vec_pose_init_.size()-1].x - vec_pose_init_[vec_pose_init_.size()-(1+count_)].x;
 			double y_ugv_ = vec_pose_init_[vec_pose_init_.size()-1].y - vec_pose_init_[vec_pose_init_.size()-(1+count_)].y;
 			double z_ugv_ = vec_pose_init_[vec_pose_init_.size()-1].z - vec_pose_init_[vec_pose_init_.size()-(1+count_)].z;
 			group_ = 0;
-			for(int j = 1; j < count_; j++){
-				pos_ugv_.x = vec_pose_init_[vec_pose_init_.size()-(1+count_)].x + (x_ugv_/count_)*j;
-				pos_ugv_.y = vec_pose_init_[vec_pose_init_.size()-(1+count_)].y + (y_ugv_/count_)*j;
-				pos_ugv_.z = vec_pose_init_[vec_pose_init_.size()-(1+count_)].z + (z_ugv_/count_)*j;
+			for (int j = 1; j < count_; j++) {
+				pos_ugv_.x = vec_pose_init_[vec_pose_init_.size() - (1+count_)].x + (x_ugv_/count_)*j;
+				pos_ugv_.y = vec_pose_init_[vec_pose_init_.size() - (1+count_)].y + (y_ugv_/count_)*j;
+				pos_ugv_.z = vec_pose_init_[vec_pose_init_.size() - (1+count_)].z + (z_ugv_/count_)*j;
 				vec_pose_init_aux_.push_back(pos_ugv_);
 				is_pos_interpolated_.push_back(true);
 				vec_fix_status_ugv_prepross[vec_pose_init_.size()-(j)]= count_- group_;
 				group_++;
 			}
-				vec_fix_status_ugv_prepross[vec_pose_init_.size()-count_]= count_- group_;
+      vec_fix_status_ugv_prepross[vec_pose_init_.size()-count_]= count_- group_;
 		}
-    }
+  }
 	
-	int num_pos_ = vec_pose_init_.size()-1;
+	int num_pos_ = vec_pose_init_.size() - 1;
 	vec_pose_init_aux_.push_back(vec_pose_init_[num_pos_]);
 	is_pos_interpolated_.push_back(false); // always false because is the last point
 
 	//Set new values in vec_pos_init_ugv or vec_pos_init_ugv
-	if (mode_==0){
+	if (mode_ == 0) {
 		vec_pose_init_ugv.clear();
 		vec_pose_init_ugv = vec_pose_init_aux_;
 		v_inter_ = vec_pose_init_aux_;
@@ -1158,7 +1159,7 @@ void OptimizerLocalPlanner::interpolateFixedPointsPath(vector<geometry_msgs::Vec
 		post_traj_marker_ugv_pub_.publish(post_points_ugv_marker);
 		post_traj_marker_ugv_pub_.publish(post_lines_ugv_marker);
 	}
-	else if(mode_==1){
+	else if(mode_ == 1){
 		vec_pose_init_uav.clear();
 		vec_pose_init_uav = vec_pose_init_aux_;
 		v_inter_ = vec_pose_init_aux_;
@@ -1170,7 +1171,7 @@ void OptimizerLocalPlanner::interpolateFixedPointsPath(vector<geometry_msgs::Vec
 		post_traj_marker_uav_pub_.publish(post_lines_uav_marker);
 	}
 	else
-		ROS_ERROR("WARNNING : In method interpolateFixedPointsPath from optimizer was not set the MODE, this is going to run into trouble");
+		ROS_ERROR("WARNING : In method interpolateFixedPointsPath from optimizer was not set the MODE, this is going to run into trouble");
 
 	for (int m=0 ; m < is_pos_interpolated_.size(); m++){
 		// printf("[%i]is_pos_interpolated_=%s \n", m, is_pos_interpolated_[m]? "true":"false");
@@ -1185,7 +1186,7 @@ void OptimizerLocalPlanner::interpolateFixedPointsPath(vector<geometry_msgs::Vec
 			}
 		}
 		else
-			vec_length_aux_.push_back(vec_len_cat_init[m]);
+ 			vec_length_aux_.push_back(vec_len_cat_init[m]);
 	}
 	vec_len_cat_init.clear();
 	vec_len_cat_init = vec_length_aux_;
@@ -1824,3 +1825,4 @@ void OptimizerLocalPlanner::exportOptimizedPath()
 
 	std::cout << "Saved Path Optimized" << std::endl << std::endl;
 }
+

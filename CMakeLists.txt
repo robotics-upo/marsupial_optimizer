@@ -35,7 +35,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(marsupial_optimizer CXX)
 
 # Set to Release in order to speed up the program significantly
-set(CMAKE_BUILD_TYPE Release) #None, Debug, Release, RelWithDebInfo, MinSizeRel
+set(CMAKE_BUILD_TYPE Debug) #None, Debug, Release, RelWithDebInfo, MinSizeRel
 
 # add_compile_options(-std=c++14)
 
@@ -159,6 +159,10 @@ add_dependencies(test_catenary_optimizer  ${${PROJECT_NAME}_EXPORTED_TARGETS} ${
 target_link_libraries(test_catenary_optimizer catenary_checker Ceres::ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES} Qt5::Charts
 Qt5::Widgets dbscan_line)
 
+add_executable(region_growing_segmentation_node src/region_growing_segmentation_node.cpp)
+add_dependencies(region_growing_segmentation_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
+target_link_libraries(region_growing_segmentation_node catenary_checker Ceres::ceres ${catkin_LIBRARIES}
+${CERES_LIBRARIES} Qt5::Charts Qt5::Widgets dbscan_line)
 
 # add_executable(test_node_yaml src/test_node_yaml.cpp) 
 # add_dependencies(test_node_yaml  ${PROJECT_NAME}_gencfg)

@@ -86,11 +86,22 @@ stage_2_pos_final_8:
         z: 0.0
         w: 1.0
 
-stage_2_pos_final_9:
+stage_2_pos_final_comparison_1:
     pose:
         x: -2.0
         y: -3.0
         z: 4.6
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        w: 1.0
+
+stage_2_pos_final_comparison_2:
+    pose:
+        x: 1.0
+        y: -3.0
+        z: 3.6
     orientation:
         x: 0.0
         y: 0.0

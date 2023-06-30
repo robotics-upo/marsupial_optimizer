@@ -14,12 +14,6 @@ int main(int argc, char** argv)
   
   ros::Rate loop_rate(5);
 
-  dynamic_reconfigure::Server<marsupial_optimizer::OptimizationParamsConfig> server_;
-  dynamic_reconfigure::Server<marsupial_optimizer::OptimizationParamsConfig>::CallbackType f_;
-
-  f_ = boost::bind(&OptimizerLocalPlanner::dynRecCb,&OLPlanner_,  _1, _2);  
-  server_.setCallback(f_);
-
   while (ros::ok()) 
   {
     ros::spinOnce();  

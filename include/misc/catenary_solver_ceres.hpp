@@ -26,7 +26,7 @@ class LengthCostFunctor
         // printf("value _k = [%f]\n",_k);
     }
 
-    ~LengthCostFunctor(void) 
+    ~LengthCostFunctor() 
     {
     }
 
@@ -146,11 +146,16 @@ class CatenarySolver
       _div_res = 1.0/_resolution;
     }
 
-    inline void getNumberPointsCatenary(double _length){num_point_catenary = ceil( (double)_num_point_per_unit_length * _length);}  
+    inline void getNumberPointsCatenary(double _length){
+      num_point_catenary = ceil( (double)_num_point_per_unit_length * _length);
+    }
 
-    inline double evaluteCatenaryChain(double _x, double _xc, double _yc, double _a){return (_a * cosh((_x- _xc)/_a)+ (_yc-_a)); }
+    inline double evaluteCatenaryChain(double _x, double _xc, double _yc, double _a) {
+      return (_a * cosh((_x- _xc)/_a)+ (_yc-_a));
+    }
 
-    void convert2DTo3D(double _x1, double _y1, double _z1, double _x2, double _y2, double _z2, std::vector<geometry_msgs::Point> &_vector3D, double _xc, double _yc, double _a)
+    void convert2DTo3D(double _x1, double _y1, double _z1, double _x2, double _y2, double _z2,
+                       std::vector<geometry_msgs::Point> &_vector3D, double _xc, double _yc, double _a)
     {
       if (x_const && y_const){
         double _dist_3d = sqrt(pow(_x2-_x1,2)+pow(_y2-_y1,2)+pow(_z2-_z1,2)); 
@@ -185,7 +190,8 @@ class CatenarySolver
       }
     }
 
-    void getPointCatenaryStraight(double _x1, double _y1, double _z1, double _dis3D, std::vector<geometry_msgs::Point> &_v_p)
+    void getPointCatenaryStraight(double _x1, double _y1, double _z1, double _dis3D,
+                                  std::vector<geometry_msgs::Point> &_v_p)
     {
       double _step = _dis3D / (double) num_point_catenary;
 
@@ -227,7 +233,8 @@ class CatenarySolver
           _direc_y = 0;    
     }
 
-    bool solve(double x1, double y1, double z1, double x2, double y2, double z2, double length, std::vector<geometry_msgs::Point> &_vector3D)
+    bool solve(double x1, double y1, double z1, double x2, double y2, double z2,
+               double length, std::vector<geometry_msgs::Point> &_vector3D)
     {
       //variables to compute optimization
       double _xB = sqrt(pow(x2 - x1,2)+pow(y2 - y1,2));
@@ -280,7 +287,8 @@ class CatenarySolver
         Problem prob2;
 
         // Set up a cost funtion per point into the cloud
-        CostFunction* cf1 = new ceres::AutoDiffCostFunction<PointCostFunctor, 2, 2>( new PointCostFunctor(_xB, _yB, _a) );
+        CostFunction* cf1 = new ceres::AutoDiffCostFunction<PointCostFunctor, 2, 2>
+          ( new PointCostFunctor(_xB, _yB, _a) );
         prob2.AddResidualBlock(cf1, NULL, x);
 
         // Run the solver!
@@ -296,18 +304,14 @@ class CatenarySolver
         // Get the solution
         a = _a; x0 = x[0]; y0 = x[1]; 
 
-        // std::cout << std::endl <<"a_: " << a << " , x0: " << x0 << " , y0: "<< y0 << std::endl;
-
         double _h = fabs(y0)- a;
         double _xc = x0;
         double _yc = z1 - _h;  
-        // std::cout <<"h: " << _h << " , xc: " << _xc << " , yc: "<< _yc << std::endl;
 
         /***Thirs Part: Get points Catenary***/
         getNumberPointsCatenary(length);
         convert2DTo3D(x1, y1, z1, x2, y2, z2, _vector3D, _xc, _yc, a);   
-      }
-      else{
+      } else {
         getNumberPointsCatenary(length);
         double _dist_3d = sqrt(pow(x2-x1,2)+pow(y2-y1,2)+pow(z2-z1,2)); 
         _vector3D.clear();

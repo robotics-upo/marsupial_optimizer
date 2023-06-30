@@ -26,6 +26,7 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "glog/logging.h"
 #include "Eigen/Core"
 
+/// Constraints
 #include "marsupial_optimizer/ceres_constraint_equidistance_ugv.hpp"
 #include "marsupial_optimizer/ceres_constraint_equidistance_ugv_analytic.hpp"
 #include "marsupial_optimizer/ceres_constraint_equidistance_uav.hpp"
@@ -34,21 +35,18 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "marsupial_optimizer/ceres_constraint_obstacles_ugv_analytic.hpp"
 #include "marsupial_optimizer/ceres_constraint_obstacles_uav.hpp"
 #include "marsupial_optimizer/ceres_constraint_obstacles_uav_analytic.hpp"
-// #include "marsupial_optimizer/ceres_constraint_obstacles_through_uav.hpp"
-// #include "marsupial_optimizer/ceres_constraint_obstacles_through_ugv.hpp"
 #include "marsupial_optimizer/ceres_constraint_traversability_ugv.hpp"
 #include "marsupial_optimizer/ceres_constraint_traversability_ugv_analytic.hpp"
 #include "marsupial_optimizer/ceres_constraint_smoothness_ugv.hpp"
 #include "marsupial_optimizer/ceres_constraint_smoothness_ugv_analytic.hpp"
 #include "marsupial_optimizer/ceres_constraint_smoothness_uav.hpp"
 #include "marsupial_optimizer/ceres_constraint_smoothness_uav_analytic.hpp"
-// #include "marsupial_optimizer/ceres_constraint_rotation_ugv.hpp"
 #include "marsupial_optimizer/ceres_constraint_time.hpp"
 #include "marsupial_optimizer/ceres_constraint_velocity_ugv.hpp"
 #include "marsupial_optimizer/ceres_constraint_velocity_uav.hpp"
 #include "marsupial_optimizer/ceres_constraint_acceleration_ugv.hpp"
 #include "marsupial_optimizer/ceres_constraint_acceleration_uav.hpp"
-
+// Catenary ones
 #include "marsupial_optimizer/ceres_constraint_catenary_obstacles_numeric.hpp"
 #include "marsupial_optimizer/ceres_constraint_catenary_obstacles_autodiff.hpp"
 #include "marsupial_optimizer/ceres_constraint_catenary_length.hpp"
@@ -62,7 +60,6 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "catenary_checker/near_neighbor.hpp"
 #include "catenary_checker/grid3d.hpp"
 #include "catenary_checker/bisection_catenary_3D.h"
-// #include "misc/marker_publisher.hpp"
 
 //ROS
 #include <ros/ros.h>
@@ -136,9 +133,9 @@ struct parameterBlockLength{
 
 class OptimizerLocalPlanner
 {
-    typedef actionlib::SimpleActionServer<upo_actions::ExecutePathAction> ExecutePathServer;
-    typedef actionlib::SimpleActionClient<upo_actions::NavigateAction> NavigateClient;
-    typedef actionlib::SimpleActionClient<upo_actions::Navigate3DAction> Navigate3DClient;
+  typedef actionlib::SimpleActionServer<upo_actions::ExecutePathAction> ExecutePathServer;
+  typedef actionlib::SimpleActionClient<upo_actions::NavigateAction> NavigateClient;
+  typedef actionlib::SimpleActionClient<upo_actions::Navigate3DAction> Navigate3DClient;
 
 public:
 

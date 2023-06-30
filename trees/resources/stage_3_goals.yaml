@@ -41,3 +41,14 @@ stage_3_pos_final_4:
         y: 0.0
         z: 0.0
         w: 1.0
+
+stage_3_pos_comparison_1:
+    pose:
+        x: -3.0
+        y: -0.5
+        z: 1.1
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        w: 1.0

@@ -34,8 +34,6 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 
 #include "misc/catenary_solver_ceres.hpp"
 #include "catenary_checker/near_neighbor.hpp"
-// #include "misc/bisection_catenary_3D.h"
-// #include "misc/marker_publisher.hpp"
 
 //ROS
 #include <ros/ros.h>

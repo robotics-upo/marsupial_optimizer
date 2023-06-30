@@ -1,6 +1,6 @@
 /*
-Optimizer Local Planner based in g2o for Marsupial Robotics COnfiguration 
-Simon Martinez Rozas, 2020 
+Optimizer Local Planner based on CERES for Marsupial Robotics COnfiguration 
+Simon Martinez Rozas, David Alejo 2020-2023 
 Service Robotics Lab, University Pablo de Olavide , Seville, Spain 
  */
 
@@ -27,7 +27,7 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(tf2_ros::Buffer *tfBuffer_)
 	nh->param<double>("w_eta", w_eta,0.1);
 	nh->param<double>("w_lambda", w_lambda,0.1);
 
-  	nh->param<double>("initial_multiplicative_factor_length_catenary", initial_multiplicative_factor_length_catenary,1.0); //Can't be lower than 1.0 or "catenary < distance between UGV and state" 	
+  nh->param<double>("initial_multiplicative_factor_length_catenary", initial_multiplicative_factor_length_catenary,1.0); //Can't be lower than 1.0 or "catenary < distance between UGV and state" 	
 
 	nh->param<int>("n_iter_opt", n_iter_opt,200);
 	nh->param<double>("distance_obstacle", distance_obstacle,2.0);
@@ -54,7 +54,7 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(tf2_ros::Buffer *tfBuffer_)
 	nh->param<int>("num_goal", num_goal, 0);
 		
 	nh->param("debug", debug, (bool)0);
- 	 nh->param("show_config", showConfig, (bool)0);
+  nh->param("show_config", showConfig, (bool)0);
 
 	ROS_INFO_COND(showConfig, PRINTF_GREEN "Optimizer Local Planner 3D Node Configuration:\n");
 	// ROS_INFO_COND(showConfig, PRINTF_GREEN "\t Trajectory Position Increments = [%.2f], Tolerance: [%.2f]", traj_dxy_max, traj_pos_tol);
@@ -160,35 +160,31 @@ void OptimizerLocalPlanner::executeOptimizerPathPreemptCB()
 
 void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 {
-  	ROS_INFO_COND(debug, PRINTF_GREEN "Optimizer Local Planner Goal received in action server mode");
-  	auto path_shared_ptr = execute_path_srv_ptr->acceptNewGoal();
-  	globalTrajectory = path_shared_ptr->path;
+  ROS_INFO_COND(debug, PRINTF_GREEN "Optimizer Local Planner Goal received in action server mode");
+  auto path_shared_ptr = execute_path_srv_ptr->acceptNewGoal();
+  globalTrajectory = path_shared_ptr->path;
 	vector<float> length_catenary_initial;
 	// length_catenary_initial = path_shared_ptr->length_catenary;
 	printf("length_catenary_initial.size=[%lu]\n",length_catenary_initial.size());
 
 	for (size_t i = 0; i < globalTrajectory.points.size(); i++){
 		printf("point=[%lu/%lu] GlobalTrayectoryPointTranslation=[%f %f %f]\n",i+1, globalTrajectory.points.size(),
-		globalTrajectory.points.at(i).transforms[0].translation.x, globalTrajectory.points.at(i).transforms[0].translation.y, globalTrajectory.points.at(i).transforms[0].translation.z);
+           globalTrajectory.points.at(i).transforms[0].translation.x, globalTrajectory.points.at(i).transforms[0].translation.y, globalTrajectory.points.at(i).transforms[0].translation.z);
 	}
 		
 	getPointsFromGlobalPath(globalTrajectory,new_path);
-    int size = new_path.size();
-    ROS_INFO_COND(debug, PRINTF_GREEN "Number of Vertices to optimize = [%i] = size",size);
+  int size = new_path.size();
+  ROS_INFO_COND(debug, PRINTF_GREEN "Number of Vertices to optimize = [%i] = size",size);
 
-	// setInitialLengthCatenaryAndPosUGV(vec_len_cat_init[i].length, size);
-	// ros::Duration(4.0).sleep();
+
 	preComputeLengthCatenary(v_pre_initial_length_catenary, size);
 	printf("ugv_pos_reel_catenary=[%f %f %f]\n",ugv_pos_catenary.x,ugv_pos_catenary.y,ugv_pos_catenary.z);
 	checkObstaclesBetweenCatenaries(v_pre_initial_length_catenary,size);
-	ros::Duration(1.0).sleep();
-	// mp_.clearMarkers(catenary_marker, 150, catenary_marker_pub_);
+
 	ros::Duration(2.0).sleep();
 
 	count_edges = 0;
 
-	// resetFlags();
-  	// mp_.clearMarkersPointLines(points_marker, lines_marker,traj_marker_pub_,size);
 	calculateDistanceVertices(new_path,vec_dist_init);
  	getTemporalState(vec_time_init,vec_dist_init,initial_velocity);
 
@@ -199,7 +195,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		<< "Preparing to execute Optimization: Creating Vertices and Edges!!" << std::endl;
 	}
 
-  	Problem problem;
+  Problem problem;
 
 	statesPos.clear();
 	statesTime.clear();
@@ -210,9 +206,6 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		parameterBlockTime parameter_block_time;
 		parameterBlockLength parameter_block_length;
 		parameter_block_pos.parameter[0] = i;
-		// parameter_block_pos.parameter[1] = new_path[i].x();
-		// parameter_block_pos.parameter[2] = new_path[i].y(); 
-		// parameter_block_pos.parameter[3] = new_path[i].z(); 
 		parameter_block_pos.parameter[1] = vec_pose_init[i].x();
 		parameter_block_pos.parameter[2] = vec_pose_init[i].y(); 
 		parameter_block_pos.parameter[3] = vec_pose_init[i].z(); 
@@ -251,13 +244,13 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	}
 
 	/*** Cost Function IV : Time constrain ***/
-	for (int i = 0; i < statesTime.size(); ++i) {
-		CostFunction* cost_function4  = new AutoDiffCostFunction<TimeFunctor, 1, 2>(new TimeFunctor(w_delta, vec_time_init[i].time)); 
-		problem.AddResidualBlock(cost_function4, NULL, statesTime[i].parameter);
-		if (i == 0)
-			problem.SetParameterBlockConstant(statesTime[i].parameter);
-		problem.SetParameterLowerBound(statesTime[i].parameter, 1, 0.0);
-	}
+	//for (int i = 0; i < statesTime.size(); ++i) {
+	//	CostFunction* cost_function4  = new AutoDiffCostFunction<TimeFunctor, 1, 2>(new TimeFunctor(w_delta, vec_time_init[i].time)); 
+	//	problem.AddResidualBlock(cost_function4, NULL, statesTime[i].parameter);
+	//	if (i == 0)
+	//		problem.SetParameterBlockConstant(statesTime[i].parameter);
+	//	problem.SetParameterLowerBound(statesTime[i].parameter, 1, 0.0);
+	//}
 
 	/*** Cost Function V : Velocity constrain ***/
 	for (int i = 0; i < statesTime.size() - 1; ++i) {
@@ -283,10 +276,10 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	}
 
 	/*** Cost Function VIII : Dynamic Catenary constrain  ***/
-	for (int i = 0; i < statesLength.size() - 1; ++i) {
-		CostFunction* cost_function8  = new AutoDiffCostFunction<DynamicCatenaryFunctor, 1, 2, 2>(new DynamicCatenaryFunctor(w_lambda, dynamic_catenary)); 
-		problem.AddResidualBlock(cost_function8, NULL, statesLength[i].parameter, statesLength[i+1].parameter);
-	}
+  //	for (int i = 0; i < statesLength.size() - 1; ++i) {
+	//	CostFunction* cost_function8  = new AutoDiffCostFunction<DynamicCatenaryFunctor, 1, 2, 2>(new DynamicCatenaryFunctor(w_lambda, dynamic_catenary)); 
+	//	problem.AddResidualBlock(cost_function8, NULL, statesLength[i].parameter, statesLength[i+1].parameter);
+	//}
 
 	if (!continue_optimizing)
 		std::cout <<  "==================================================="  << std::endl << "Optimization  started !!" << std::endl;
@@ -326,7 +319,9 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	  	cSX_.solve(ugv_pos_catenary.x, ugv_pos_catenary.y, ugv_pos_catenary.z, statesPos[i].parameter[1], statesPos[i].parameter[2], statesPos[i].parameter[3], statesLength[i].parameter[1], points_catenary_final);
 		// mp_.markerPoints(catenary_marker, points_catenary_final, i, size, catenary_marker_pub_);
 		double _d_ = sqrt(pow(ugv_pos_catenary.x -statesPos[i].parameter[1],2) + pow(ugv_pos_catenary.y - statesPos[i].parameter[2],2) + pow(ugv_pos_catenary.z-statesPos[i].parameter[3],2));
-		printf("points_catenary_final.size()=[%lu] ugv_reel_pos[%lu] = [%f %f %f] , statesPos[%lu]=[%f %f %f] , l=[%f] d=[%f]\n",points_catenary_final.size(),i,ugv_pos_catenary.x, ugv_pos_catenary.y, ugv_pos_catenary.z,i,statesPos[i].parameter[1], statesPos[i].parameter[2], statesPos[i].parameter[3],statesLength[i].parameter[1],_d_);
+		printf("points_catenary_final.size()=[%lu] ugv_reel_pos[%lu] = [%f %f %f] , statesPos[%lu]=[%f %f %f] , l=[%f] d=[%f]\n",
+           points_catenary_final.size(),i,ugv_pos_catenary.x, ugv_pos_catenary.y, ugv_pos_catenary.z,i,statesPos[i].parameter[1],
+           statesPos[i].parameter[2], statesPos[i].parameter[3],statesLength[i].parameter[1],_d_);
 		points_catenary_final.clear();
 	}
 
@@ -608,50 +603,50 @@ void OptimizerLocalPlanner::getPointsFromGlobalPath(trajectory_msgs::MultiDOFJoi
 {
 	float x, y, z;
 	Eigen::Vector3d _p;
-    double D = 0.0;
+  double D = 0.0;
 	int n = 0;
 	_v_gp.clear();
 	int _count = 1; 
 	
-    for (size_t i = 0; i < _path.points.size()-1; i++)
-    {
-        x = _path.points.at(i+1).transforms[0].translation.x - _path.points.at(i).transforms[0].translation.x;
-		y = _path.points.at(i+1).transforms[0].translation.y - _path.points.at(i).transforms[0].translation.y;
-		z = _path.points.at(i+1).transforms[0].translation.z - _path.points.at(i).transforms[0].translation.z;
-        D = sqrt(x * x + y * y + z * z);
+  for (size_t i = 0; i < _path.points.size()-1; i++)
+  {
+    x = _path.points.at(i+1).transforms[1].translation.x - _path.points.at(i).transforms[1].translation.x;
+		y = _path.points.at(i+1).transforms[1].translation.y - _path.points.at(i).transforms[1].translation.y;
+		z = _path.points.at(i+1).transforms[1].translation.z - _path.points.at(i).transforms[1].translation.z;
+    D = sqrt(x * x + y * y + z * z);
 		if (D > min_distance_add_new_point){
 			n = floor(D / min_distance_add_new_point);
 			double xp = x/((double)n+1.0);
 			double yp = y/((double)n+1.0);
 			double zp = z/((double)n+1.0);
-			_p.x() = _path.points.at(i).transforms[0].translation.x;
-			_p.y() = _path.points.at(i).transforms[0].translation.y;
-			_p.z() = _path.points.at(i).transforms[0].translation.z;
+			_p.x() = _path.points.at(i).transforms[1].translation.x;
+			_p.y() = _path.points.at(i).transforms[1].translation.y;
+			_p.z() = _path.points.at(i).transforms[1].translation.z;
 			_v_gp.push_back(_p);
 			printf("point =[%i] getPointsFromGlobalPath = [%f %f %f]\n",_count,_p.x(),_p.y(),_p.z());
 			_count++;
 			for (int j=0; j< n ; j++){
 				_p = Eigen::Vector3d(0.0,0.0,0.0);
-				_p.x() = _path.points.at(i).transforms[0].translation.x + xp*(1.0+(double)j);
-				_p.y() = _path.points.at(i).transforms[0].translation.y + yp*(1.0+(double)j);
-				_p.z() = _path.points.at(i).transforms[0].translation.z + zp*(1.0+(double)j);
+				_p.x() = _path.points.at(i).transforms[1].translation.x + xp*(1.0+(double)j);
+				_p.y() = _path.points.at(i).transforms[1].translation.y + yp*(1.0+(double)j);
+				_p.z() = _path.points.at(i).transforms[1].translation.z + zp*(1.0+(double)j);
 				_v_gp.push_back(_p);
 				printf("point =[%i] getPointsFromGlobalPath = [%f %f %f]\n",_count,_p.x(),_p.y(),_p.z());
 				_count++;
 			}
 		}
 		else{
-			_p.x() = _path.points.at(i).transforms[0].translation.x;
-			_p.y() = _path.points.at(i).transforms[0].translation.y;
-			_p.z() = _path.points.at(i).transforms[0].translation.z;
+			_p.x() = _path.points.at(i).transforms[1].translation.x;
+			_p.y() = _path.points.at(i).transforms[1].translation.y;
+			_p.z() = _path.points.at(i).transforms[1].translation.z;
 			_v_gp.push_back(_p);
 			printf("point =[%i] getPointsFromGlobalPath = [%f %f %f]\n",_count,_p.x(),_p.y(),_p.z());
 			_count++;
 		}
     }
-	_p.x() = _path.points.at(_path.points.size()-1).transforms[0].translation.x;
-	_p.y() = _path.points.at(_path.points.size()-1).transforms[0].translation.y;
-	_p.z() = _path.points.at(_path.points.size()-1).transforms[0].translation.z;
+	_p.x() = _path.points.at(_path.points.size()-1).transforms[1].translation.x;
+	_p.y() = _path.points.at(_path.points.size()-1).transforms[1].translation.y;
+	_p.z() = _path.points.at(_path.points.size()-1).transforms[1].translation.z;
 	_v_gp.push_back(_p);
 	printf("point =[%i] getPointsFromGlobalPath = [%f %f %f]\n",_count,_p.x(),_p.y(),_p.z());
 	_count++;
