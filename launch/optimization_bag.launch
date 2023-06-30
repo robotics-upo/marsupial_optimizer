@@ -1,0 +1,25 @@
+<launch>
+
+  <node pkg="rosbag" type="record" name="rosbag_record_rrt_and_optimization" args="record
+    /tf_static
+    /tf
+    /random_planner_node/path_ugv_rrt_star
+    /random_planner_node/path_uav_rrt_star
+    /optimizer_local_planner_node/post_init_trajectory_ugv_marker
+    /optimizer_local_planner_node/post_init_trajectory_uav_marker
+    /optimizer_local_planner_node/opt_trajectory_ugv_marker
+    /optimizer_local_planner_node/opt_trajectory_uav_marker
+    /optimizer_local_planner_node/catenary_marker
+    /random_planner_node/tree_rrt_star_ugv
+    /random_planner_node/tree_rrt_star_uav
+    /siar_marker_node/siar_model
+    /m100/marker
+    /random_planner_node/rand_point
+    /random_planner_node/new_point
+    /random_planner_node/nearest_point
+    /random_planner_node/points_marker
+    /region_growing_traversability_pc_map
+    /region_growing_obstacles_pc_map
+  " />
+
+</launch>

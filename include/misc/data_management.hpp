@@ -539,7 +539,8 @@ inline void DataManagement::getDataForOptimizerAnalysis(pcl::KdTreeFLANN <pcl::P
 			if(distance_obs_cat_init_min_ > (p_cat_init_- nearest_obs_p).norm() )
 				distance_obs_cat_init_min_ = (p_cat_init_- nearest_obs_p).norm();
 		}
-		if ( (i < vec_pose_init_.size()-1) && (isObstacleBetweenTwoPoints(vec_pose_init_[i], vec_pose_init_[i+1], use_oct_full)) ){
+		// if ( (i < vec_pose_init_.size()-1) && (isObstacleBetweenTwoPoints(vec_pose_init_[i], vec_pose_init_[i+1], use_oct_full)) ){
+		if ( (i < vec_pose_init_.size()-1) ){
 			count_coll_between_init_++;
 			pos_coll_between_init_ = pos_coll_between_init_+"["+std::to_string(i)+"-"+std::to_string(i+1)+"]";
 		}
@@ -627,8 +628,8 @@ inline void DataManagement::getDataForOptimizerAnalysis(pcl::KdTreeFLANN <pcl::P
 				distance_obs_cat_opt_min_ = d_diff;
 			if( d_diff < bound_cat_obs || (j >= first_coll_ && j <= last_coll_) && j!= 0){
 				num_points_coll_cat++; 
-				if(mode_ == "UAV")
-					printf("Catenary= %lu , d_diff=[%.2f/%.2f] , position_Catenary=[%lu-%lu]/[%lu] vec_len_cat_opt=[%f] first_coll=[%i] last_coll=[%i]\n",i,d_diff,bound_cat_obs ,j,j-1,v_points_catenary_opt_.size(),vec_len_cat_opt[i], first_coll_, last_coll_);
+				// if(mode_ == "UAV")
+					// printf("Catenary= %lu , d_diff=[%.2f/%.2f] , position_Catenary=[%lu-%lu]/[%lu] vec_len_cat_opt=[%f] first_coll=[%i] last_coll=[%i]\n",i,d_diff,bound_cat_obs ,j,j-1,v_points_catenary_opt_.size(),vec_len_cat_opt[i], first_coll_, last_coll_);
 			}
 		}
 		// Next to count how many catenary are in collision in the trajectory
@@ -637,14 +638,15 @@ inline void DataManagement::getDataForOptimizerAnalysis(pcl::KdTreeFLANN <pcl::P
 			pos_coll_cat = pos_coll_cat+std::to_string(i)+"-";
 		} 
 		// Next to count the number of consecutive states in collision depending on mode (UAV or UGV)
-		if ( (i < vec_pose_opt_.size()-1) && (isObstacleBetweenTwoPoints(vec_pose_opt_[i], vec_pose_opt_[i+1], use_oct_full)) ){
+		// if ( (i < vec_pose_opt_.size()-1) && (isObstacleBetweenTwoPoints(vec_pose_opt_[i], vec_pose_opt_[i+1], use_oct_full)) ){
+		if ( (i < vec_pose_opt_.size()-1)  ){
 			count_coll_between_opt_++;
 			pos_coll_between_opt_ = pos_coll_between_opt_+"["+std::to_string(i)+"-"+std::to_string(i+1)+"]";
 			if (mode_ == "UGV")
 				num_coll_ugv_traj = count_coll_between_opt_;
 			if (mode_ == "UAV"){ 
 				num_coll_uav_traj = count_coll_between_opt_;
-				printf("Collision en nodo num=[%lu]\n",i);
+				// printf("Collision en nodo num=[%lu]\n",i);
 			}
 		}
 	}
@@ -734,8 +736,8 @@ inline bool DataManagement::isObstacleBetweenTwoPoints(geometry_msgs::Vector3 po
 {
 	octomap::point3d r_;
 
-	octomap::point3d s_(pose_opt_1.x , pose_opt_1.y , pose_opt_1.z ); //start for rayCast
-	octomap::point3d d_(pose_opt_2.x-pose_opt_1.x , pose_opt_2.y-pose_opt_1.y , pose_opt_2.z-pose_opt_1.z ); //direction for rayCast
+	octomap::point3d s_(pose_opt_1.x , pose_opt_1.y , pose_opt_1.z +0.3); //start for rayCast
+	octomap::point3d d_(pose_opt_2.x-s_.x() , pose_opt_2.y-s_.y() , pose_opt_2.z-s_.z() ); //direction for rayCast
 
 	if(d_.x()== 0 && d_.y()== 0 && d_.z()==0)
 		return false;
