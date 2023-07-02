@@ -300,6 +300,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	ip_.initInterpolatePath(count_fix_points_initial_ugv,count_fix_points_final_ugv,count_fix_points_uav, fix_last_position_ugv, distance_catenary_obstacle,
 							use_distance_function, globalPath.points.size(), length_tether_max, ws_z_min, map_resolution, 
 							pose_reel_local, grid_3D);
+
 	ip_.getInitialGlobalPath(globalPath, vec_len_cat_init, vec_pose_init_ugv, vec_pose_init_uav, vec_init_rot_ugv, vec_init_rot_uav);
 	size_path = vec_pose_init_uav.size();
 
@@ -1481,9 +1482,11 @@ void OptimizerLocalPlanner::exportOptimizedPath()
 	std::cout << "Saved Path Optimized" << std::endl << std::endl;
 }
 
-void OptimizerLocalPlanner::getParableParameter(vector<geometry_msgs::Vector3> v_p_init_ugv_, vector<geometry_msgs::Vector3> v_p_init_uav_, vector<float> v_l_cat_init_){
+void OptimizerLocalPlanner::getParableParameter(vector<geometry_msgs::Vector3> v_p_init_ugv_, vector<geometry_msgs::Vector3> v_p_init_uav_, vector<float> &v_l_cat_init_){
 
-    GetParableParameter GPP(v_p_init_ugv_, v_p_init_uav_, v_l_cat_init_, vec_init_rot_ugv);
-	GPP.ComputeParableArea(pose_reel_local);
+    GetParableParameter GPP(v_p_init_ugv_, v_p_init_uav_, v_l_cat_init_, vec_init_rot_ugv, pose_reel_local);
+	GPP.ParametersParable();
+	v_l_cat_init_.clear();                    //Check This two lines, should be fixed in a previous method the length
+	v_l_cat_init_ = GPP.vec_len_cat_init;     //Check This two lines, should be fixed in a previous method the length
 
 }

@@ -96,15 +96,6 @@ public:
 			double min_distance_cat_obs_ = bc.min_distance_cat_obs;
 
 			mP_.markerPoints(catenary_marker_, points_catenary, id_marker_, size, catenary_marker_pub_);
-			if (bc.L_minor_than_D == true){
-				std::string yy_ ;
-				yy_ = "s";
-				/********************* To obligate stop method and check Optimization result *********************/
-				std::cout << " Press key 'y': ";
-				while (yy_ != "y"){
-					std::cin >> yy_ ;
-				}
-			}
 
 			if (( (state2f[1]-state2[1]) != 0.0 || (state2f[2]-state2[2]) != 0.0 || (state2f[3]-state2[3]) != 0.0) && first_coll!= 0){
 				octomap::point3d r_;
