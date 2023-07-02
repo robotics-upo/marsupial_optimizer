@@ -1,4 +1,6 @@
-# marsupial_g2o
+# marsupial_optimizer based on ceres-solver
+
+Testing 
 
 This package provides a framework to solve non-linear optimization problem for 3D trajectory planning in a marsupial robot configuration. Specifically, the configuration consists of an unmanned aerial vehicle (UAV) tied to an unmanned ground vehicle (UGV). The result is a collision-free trajectory for UAV and tether.
 
@@ -18,13 +20,7 @@ In this section you will find the installation instructions for making it work. 
 
 ### Prerrequisites and dependencies
 
-This package has been designed and tested in a x86_64 machine under a Ubuntu 18.04 operating system and ROS Melodic distribution. Besides, the scripts provided lets you easily install the following dependencies:
 
-- G2O
-- PCL
-- lazy_theta_star
-- upo_actions
-- upo_markers
 
 ### Installation steps:
 
