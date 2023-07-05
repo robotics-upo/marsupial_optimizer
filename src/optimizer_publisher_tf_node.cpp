@@ -131,7 +131,7 @@ void ManagerTf::trajectoryOptimizedCallBack(const marsupial_optimizer::marsupial
 	bisectionCatenary bc;
 
 	// cSX_.setMaxNumIterations(100);
-	std::vector<geometry_msgs::Point> points_catenary_;
+	std::vector<geometry_msgs::Vector3> points_catenary_;
 
 	for (size_t i= 0; i < trajectory.trajectory.points.size() ; i++){
 		double ugv_x = trajectory.trajectory.points.at(i).transforms[0].translation.x;

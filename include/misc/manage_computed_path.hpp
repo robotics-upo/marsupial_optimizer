@@ -1,5 +1,5 @@
-#ifndef _IMPORT_PATH_HPP_
-#define _IMPORT_PATH_HPP_
+#ifndef _MANAGE_COMPUTED_PATH_HPP_
+#define _MANAGE_COMPUTED_PATH_HPP_
 
 
 #include <ctime>
@@ -19,12 +19,15 @@
 
 using namespace std;
 
-class ImportPath
+class ManagePath
 {
 
 public:
-    ImportPath();
-    ImportPath(const std::string &path_and_name_file_, upo_actions::ExecutePathGoal &g_);
+    ManagePath();
+    ManagePath(const std::string &path_and_name_file_, upo_actions::ExecutePathGoal &g_);
+    void exportOptimizedPath(vector<geometry_msgs::Vector3> &v_ugv_, vector<geometry_msgs::Vector3> &v_uav_, 
+									 vector<geometry_msgs::Quaternion> &v_r_ugv_, vector<geometry_msgs::Quaternion> &v_r_uav_, vector<float> &v_l_,
+									 string path_mission_file_);
 
     trajectory_msgs::MultiDOFJointTrajectory trajectory;
     std::vector<float> tether_length_vector;

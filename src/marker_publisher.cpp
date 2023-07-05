@@ -1,6 +1,6 @@
 #include "misc/marker_publisher.h"
 
-void MarkerPublisher::markerPoints(visualization_msgs::MarkerArray _marker, std::vector<geometry_msgs::Point> _vector, int _suffix, int _n_v, ros::Publisher c_m_pub_, int change_marker_)
+void MarkerPublisher::markerPoints(visualization_msgs::MarkerArray _marker, std::vector<geometry_msgs::Vector3> _vector, int _suffix, int _n_v, ros::Publisher c_m_pub_, int change_marker_)
 {
     std::string string_marker;
     std::string ns_marker;
@@ -19,13 +19,13 @@ void MarkerPublisher::markerPoints(visualization_msgs::MarkerArray _marker, std:
 		c_color1 = 0.0;
 		c_color2 = 1.0;
 		c_color3 = 1.0;
-		_scale = 0.045;
+		_scale = 0.025;
 	}
 	else if(change_marker_==2){
-		c_color1 = 0.0;
+		c_color1 = 1.0;
 		c_color2 = 0.0;
 		c_color3 = 0.0;
-		_scale = 0.045;
+		_scale = 0.035;
 	}
             
     string_marker = std::to_string(_suffix);
@@ -39,7 +39,7 @@ void MarkerPublisher::markerPoints(visualization_msgs::MarkerArray _marker, std:
         _marker.markers[i].ns = ns_marker;
         _marker.markers[i].id = i+1;
         _marker.markers[i].action = visualization_msgs::Marker::ADD;
-        if (i % 5 == 0 || change_marker_!=0)
+        if (i % 5 == 0 )
             _marker.markers[i].type = visualization_msgs::Marker::CUBE;
         else
             _marker.markers[i].type = visualization_msgs::Marker::SPHERE;

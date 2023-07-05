@@ -325,9 +325,8 @@ inline void InterpolatePath::interpolateFixedPointsPath(vector<geometry_msgs::Ve
 
 inline bool InterpolatePath::computeInitialCatenary(int p_, int mode_, double &l_cat_)
 {
-    geometry_msgs::Point p_final_;
 	geometry_msgs::Vector3 p_reel_;
-    std::vector<geometry_msgs::Point> p_catenary_;
+    std::vector<geometry_msgs::Vector3> p_catenary_;
 
 	bisectionCatenary bc;
 

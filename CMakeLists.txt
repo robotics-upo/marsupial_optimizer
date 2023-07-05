@@ -140,7 +140,7 @@ endif()
 # add_executable(optimizer_local_planner_fix_ugv src/optimizer_local_planner_fix_ugv.cc)
 # target_link_libraries(optimizer_local_planner_fix_ugv Ceres::ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES} ${EXTERNAL_LIBS})
 
-add_executable(optimizer_local_planner_node src/optimizer_local_planner_node.cpp src/optimizer_local_planner.cc src/marker_publisher.cpp src/import_path.cpp)
+add_executable(optimizer_local_planner_node src/optimizer_local_planner_node.cpp src/optimizer_local_planner.cc src/marker_publisher.cpp src/manage_computed_path.cpp)
 add_dependencies(optimizer_local_planner_node ${${PROJECT_NAME}_EXPORTED_TARGETS}  ${catkin_EXPORTED_TARGETS} )
 target_link_libraries(optimizer_local_planner_node catenary_checker Ceres::ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES} yaml-cpp Qt5::Charts
 Qt5::Widgets dbscan_line)

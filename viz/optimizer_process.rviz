@@ -334,6 +334,14 @@ Visualization Manager:
         {}
       Queue Size: 100
       Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /optimizer_process_node/parable_marker
+      Name: parable_Marker
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 46; 52; 54
@@ -378,9 +386,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.3447957932949066
+      Pitch: 0.23979580402374268
       Target Frame: <Fixed Frame>
-      Yaw: 5.435723781585693
+      Yaw: 5.3457231521606445
     Saved: ~
 Window Geometry:
   Displays:

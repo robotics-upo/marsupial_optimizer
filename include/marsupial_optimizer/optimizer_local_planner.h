@@ -34,8 +34,6 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "marsupial_optimizer/ceres_constraint_obstacles_ugv_analytic.hpp"
 #include "marsupial_optimizer/ceres_constraint_obstacles_uav.hpp"
 #include "marsupial_optimizer/ceres_constraint_obstacles_uav_analytic.hpp"
-// #include "marsupial_optimizer/ceres_constraint_obstacles_through_uav.hpp"
-// #include "marsupial_optimizer/ceres_constraint_obstacles_through_ugv.hpp"
 #include "marsupial_optimizer/ceres_constraint_traversability_ugv.hpp"
 #include "marsupial_optimizer/ceres_constraint_traversability_ugv_analytic.hpp"
 #include "marsupial_optimizer/ceres_constraint_smoothness_ugv.hpp"
@@ -49,10 +47,8 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "marsupial_optimizer/ceres_constraint_acceleration_ugv.hpp"
 #include "marsupial_optimizer/ceres_constraint_acceleration_uav.hpp"
 
-#include "marsupial_optimizer/ceres_constraint_catenary_obstacles_numeric.hpp"
-#include "marsupial_optimizer/ceres_constraint_catenary_obstacles_autodiff.hpp"
-#include "marsupial_optimizer/ceres_constraint_catenary_length.hpp"
-#include "marsupial_optimizer/ceres_constraint_dynamic_catenary.hpp"
+#include "marsupial_optimizer/ceres_constraint_parable_obstacles.hpp"
+#include "marsupial_optimizer/ceres_constraint_parable_length.hpp"
 
 #include "marsupial_optimizer/marsupial_trajectory_optimized.h"
 
@@ -91,7 +87,7 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include <upo_actions/Navigate3DAction.h>
 #include "marsupial_optimizer/OptimizationParamsConfig.h"
 
-#include "misc/import_path.hpp"
+#include "misc/manage_computed_path.hpp"
 
 
 #define PRINTF_REGULAR "\x1B[0m"
@@ -139,6 +135,10 @@ struct parameterBlockLength{
 	double parameter[2];
 };
 
+struct parameterBlockParable{
+	double parameter[4];
+};
+
 class OptimizerLocalPlanner
 {
     typedef actionlib::SimpleActionServer<upo_actions::ExecutePathAction> ExecutePathServer;
@@ -179,9 +179,12 @@ public:
 	void publishOptimizedTraj();
 	void cleanResidualConstraintsFile();
 	void getParableParameter(vector<geometry_msgs::Vector3> v_p_init_ugv_, vector<geometry_msgs::Vector3> v_p_init_uav_, vector<float> &v_l_cat_init_);
+	void graphCatenaryAndPathMarker(vector<geometry_msgs::Vector3> v_ugv_, vector<geometry_msgs::Vector3> v_uav_, vector<geometry_msgs::Quaternion> v_rot_ugv, vector<float> v_cat_);
+	void graphParableAndPathMarker(vector<geometry_msgs::Vector3> v_ugv_, vector<geometry_msgs::Vector3> v_uav_, vector<geometry_msgs::Quaternion> v_rot_ugv, vector <parable_parameters> v_p_);
+	void checkCatenaryLength(vector<geometry_msgs::Vector3> v_p_ugv, vector<geometry_msgs::Vector3>  v_p_uav, vector<geometry_msgs::Quaternion> v_r_ugv, vector<float> &v_l_in);
+
 	// bool computeCatenary(int p_, int mode_, double &l_cat_);
 	// double getPointDistanceFullMap(bool use_dist_func_, geometry_msgs::Vector3 p_);
-	void exportOptimizedPath();
 
 	upo_actions::ExecutePathResult action_result;
 
@@ -220,7 +223,7 @@ public:
 
 	NearNeighbor nn_uav; // Kdtree used for Catenary and UAV
 	NearNeighbor nn_trav, nn_ugv_obs;
-	MarkerPublisher mp_;
+	MarkerPublisher MP;
 	DataManagement dm_;
 	Grid3d* grid_3D;
 
@@ -250,10 +253,8 @@ public:
 	ros::Subscriber octomap_ws_sub_,point_cloud_ugv_traversability_sub_, point_cloud_ugv_obstacles_sub_, clean_markers_sub_, local_map_sub, local_trav_map_sub, finished_rviz_maneuver_sub_, star_optimizer_process_sub_;
 	ros::Publisher traj_marker_ugv_pub_, post_traj_marker_ugv_pub_, post_traj_marker_uav_pub_, traj_marker_uav_pub_;
 
-	ros::Publisher catenary_marker_pub_, clean_nodes_marker_gp_pub_, clean_catenary_marker_gp_pub_, trajectory_pub_;
-	visualization_msgs::MarkerArray catenary_marker;
-
-	// geometry_msgs::Point obs_oct;
+	ros::Publisher catenary_marker_pub_, clean_nodes_marker_gp_pub_, clean_catenary_marker_gp_pub_, trajectory_pub_, parable_marker_pub_;
+	visualization_msgs::MarkerArray catenary_marker, parable_marker;
 
 	bool verbose_optimizer;
 
@@ -267,6 +268,7 @@ public:
 	// vector<parameterBlockTime> statesTimeUAV;
 	vector<parameterBlockTime> statesTime;
 	vector<parameterBlockLength> statesLength , statesPostLength;
+	vector<parameterBlockParable> statesParableParams;
 	vector<geometry_msgs::Quaternion> vec_init_rot_ugv, vec_init_rot_uav, vec_opt_rot_ugv, vec_opt_rot_uav;
 
 	vector<double> vec_dist_init_ugv, vec_dist_init_uav;
@@ -276,6 +278,8 @@ public:
 	vector<geometry_msgs::Vector3> vec_pose_ugv_opt, vec_pose_uav_opt; 
 	vector<geometry_msgs::Vector3> vec_pose_init_ugv, vec_pose_init_uav;
 	vector<double> vec_time_opt;
+	vector <parable_parameters> v_parable_params;
+
 
 	vector<int> v_id_point_not_fix_ugv, v_id_point_not_fix_uav; // save the id number of position no fix , from vector vec_pose_init_uav
 	

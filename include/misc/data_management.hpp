@@ -46,7 +46,8 @@ class DataManagement
  		virtual geometry_msgs::Vector3 getReelPos(const float px_, const float py_, const float pz_,const float qx_, const float qy_, const float qz_, const float qw_, geometry_msgs::Vector3 p_reel_);
 		virtual geometry_msgs::Vector3 getEulerAngles(const float qx_, const float qy_, const float qz_, const float qw_);
 		virtual bool isObstacleBetweenTwoPoints(geometry_msgs::Vector3 pose_opt_1, geometry_msgs::Vector3 pose_opt_2, bool oct_full_);
-		virtual inline void feasibilityAnalisysTrajectory(float init_cost, float final_cost, float succes_steps, float unsuccess_step, float time_opt, int &n_coll_opt_cat_);
+		virtual void feasibilityAnalisysTrajectory(float init_cost, float final_cost, float succes_steps, float unsuccess_step, float time_opt, int &n_coll_opt_cat_);
+		virtual void cleanResidualConstraintsFile(std::string path_, std::string files_residuals_);
 		// virtual void writeCatenaryFailData(int num_cat_fail_, double pos_node_, double old_length_, double dist_, double new_length_);
 		// virtual void openWriteCatenaryFailData();
 		// virtual void closeWriteCatenaryFailData();
@@ -75,7 +76,7 @@ class DataManagement
 
 	    NearNeighbor nn_;
 
-		geometry_msgs::Point ugv_pos_catenary;
+		geometry_msgs::Vector3 ugv_pos_catenary;
 		geometry_msgs::Vector3 pos_reel_ugv;
 
 		octomap::OcTree* octree_full;
@@ -399,7 +400,7 @@ inline void DataManagement::getDataForOptimizerAnalysis(pcl::KdTreeFLANN <pcl::P
 					double opt_compute_time_ , std::string mode_, int &n_coll_init_path_, int &n_coll_opt_traj_)
 {
 	//mode = 1 , UGV  - mode = 2 , UAV
-	std::vector<geometry_msgs::Point> v_points_catenary_opt_,v_points_catenary_init_;
+	std::vector<geometry_msgs::Vector3> v_points_catenary_opt_,v_points_catenary_init_;
 	std::vector<double> vec_time_init_, vec_time_opt_; 
 	std::vector<double> vec_dist_init_, vec_dist_opt_;
 	std::vector<double> vec_vel_opt_;
@@ -803,6 +804,79 @@ inline void DataManagement::feasibilityAnalisysTrajectory(float init_cost, float
 	else 
 		std::cout << "Couldn't be open result_feasibility_analisys_for_trajectory.txt "<< std::endl;
 	feasibility.close();
+}
+
+inline void DataManagement::cleanResidualConstraintsFile(std::string path_, std::string files_residuals_)
+{
+
+
+	path_ = path+files_residuals_+"acceleration_uav.txt";
+	if( remove(path_.c_str()) != 0 )
+    	perror( "Error deleting file: acceleration_uav.txt" );
+	// else
+    // 	puts( "File successfully deleted: acceleration_uav.txt" );
+
+	path_ = path+files_residuals_+"acceleration_ugv.txt";
+	if( remove(path_.c_str()) != 0 )
+    	perror( "Error deleting file: acceleration_ugv.txt" );
+	// else
+    // 	puts( "File successfully deleted: acceleration_ugv.txt" );	
+
+	path_ = path+files_residuals_+"velocity_uav.txt";
+	if( remove( path_.c_str()) != 0 )
+    	perror( "Error deleting file: velocity_uav.txt" );
+
+	path_ = path+files_residuals_+"velocity_ugv.txt";
+	if( remove( path_.c_str() ) != 0 )
+    	perror( "Error deleting file: velocity_ugv.txt" );
+
+	path_ = path+files_residuals_+"equidistance_uav.txt";
+	if( remove( path_.c_str() ) != 0 )
+    	perror( "Error deleting file: equidistance_uav.txt" );
+
+	path_ = path+files_residuals_+"equidistance_ugv.txt";
+	if( remove( path_.c_str() ) != 0 )
+    	perror( "Error deleting file: equidistance_ugv.txt" );
+
+	path_ = path+files_residuals_+"smoothness_uav.txt";
+	if( remove( path_.c_str() ) != 0 )
+    	perror( "Error deleting file: smoothness_uav.txt" );
+
+	path_ = path+files_residuals_+"smoothness_ugv.txt";
+	if( remove( path_.c_str() ) != 0 )
+    	perror( "Error deleting file: smoothness_ugv.txt" );
+
+	path_ = path+files_residuals_+"obstacles_uav.txt";
+	if( remove( path_.c_str() ) != 0 )
+    	perror( "Error deleting file: obstacles_uav.txt");
+
+	path_ = path+files_residuals_+"obstacles_ugv.txt";
+	if( remove( path_.c_str() ) != 0 )
+    	perror( "Error deleting file: obstacles_ugv.txt");
+
+	path_ = path+files_residuals_+"traversability_ugv.txt";
+	if( remove( path_.c_str() ) != 0 )
+    	perror( "Error deleting file: traversability_ugv.txt");
+
+	path_ = path+files_residuals_+"time.txt";
+	if( remove( path_.c_str() ) != 0 )
+    	perror( "Error deleting file: time.txt");
+
+	path_ = path+files_residuals_+"catenary.txt";
+	if( remove( path_.c_str() ) != 0 )
+    	perror( "Error deleting file: catenary.txt");
+	
+	path_ = path+files_residuals_+"catenary_length.txt";
+	if( remove( path_.c_str() ) != 0 )
+    	perror( "Error deleting file: catenary_length.txt");
+
+	path_ = path+files_residuals_+"catenary_length2.txt";
+	if( remove( path_.c_str() ) != 0 )
+    	perror( "Error deleting file: catenary_length2.txt");
+
+	path_ = path+files_residuals_+"catenary2.txt";
+	if( remove( path_.c_str() ) != 0 )
+    	perror( "Error deleting file: catenary2.txt");
 }
 
 
