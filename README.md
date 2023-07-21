@@ -23,7 +23,7 @@ This package has been designed and tested in a x86_64 machine under a Ubuntu 20.
 - ceres-solver
 - PCL
 - yaml-cpp
-- rrt-planner
+- rrt-planner ( , branch: )
 - catenary_checker (https://github.com/robotics-upo/catenary_checker , branch: master) 
 - upo_actions (https://github.com/robotics-upo/upo_actions, branch: master)
 - upo_markers (https://github.com/robotics-upo/upo_markers, branch: master)
@@ -35,13 +35,13 @@ This package has been designed and tested in a x86_64 machine under a Ubuntu 20.
 2- Call marsupial_setup.sh script from ```marsupial_g2o/script``` directory to install package dependencies.
 
 ```
-rosrun marsupial_g2o marsupial_setup.sh
+rosrun marsupial_optimizer marsupial_setup.sh
 ```
 
-3- Call the g2o_installation.sh script to install G2O required dependencies (will be install in ```/home/$user/```).
+3- Call the ceres_installation.sh script to install Ceres-Solver required dependencies (will be install in ```/home/$user/```).
 
 ```
-rosrun marsupial_g2o g2o_installation.sh
+rosrun marsupial_optimizer ceres_installation.sh
 ```
 
 4- Finally compile your workspace using ```catkin_make``` 
