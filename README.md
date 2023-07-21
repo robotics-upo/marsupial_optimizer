@@ -1,16 +1,16 @@
-# marsupial_g2o
+# marsupial_optimizer
 
-This package provides a framework to solve non-linear optimization problem for 3D trajectory planning in a marsupial robot configuration. Specifically, the configuration consists of an unmanned aerial vehicle (UAV) tied to an unmanned ground vehicle (UGV). The result is a collision-free trajectory for UAV and tether.
+This package provides a framework to solve non-linear optimization problem for 3D trajectory planning in a marsupial robotic system consisting of an unmanned aerial vehicle (UAV) linked to an unmanned ground vehicle (UGV) through a non-taut tether with controllable length. The objective is to determine a synchronized collision-free trajectory for the three marsupial system agents: UAV, UGV, and tether. 
 
 <p align="center">
     <img src="worlds/scenario_2.gif" width="400">
 </p>
 
-The optimization assumes static UGV position ,and estimates the problem states such as UAV and tether related with: UAV  position,  tether length, and UAV trajectory time. 
+To the best of our knowledge, this is the first method that addresses  the trajectory planning of a marsupial UGV-UAV with a non-taut tether. The optimizer input is  a trajectory calculated adding temporal aspect to a path, wihich is computing using a planner based on optimal Rapidly-exploring Random Trees (RRT*) algorithm with novel sampling and steering techniques to speed up the computation. This algorithm is able to obtain collision-free paths for the UAV and the UGV, taking into account the 3D environment and the tether.
 
-Different components such as UAV and tether positions, distance obstacles and temporal aspects of the motion (velocities and accelerations) are encoded as constraint and objective function. In consequence, the problem determining the values of the states optimizing a weighted multi-objective function.
+The trajectory optimization is based on non-linear least squares. The optimizer takes into account  aspects not considered in the path planning, like temporal constraints of the motion imposed by limits on the velocities and accelerations of the robots, trajectory smoothness, obstacles-free, or raising the tether's clearance. 
 
-The components encoded as constraint and objective function are local with respect to the problem states. Thus, the optimization is solved by formulating the problem as a sparse factor graph. For that g2o is used as the engine for graph optimization [https://github.com/RainerKuemmerle/g2o].
+The optimization process is based on framework ceres-solver (http://ceres-solver.org/)
 
 ## Installation
 
@@ -18,13 +18,15 @@ In this section you will find the installation instructions for making it work. 
 
 ### Prerrequisites and dependencies
 
-This package has been designed and tested in a x86_64 machine under a Ubuntu 18.04 operating system and ROS Melodic distribution. Besides, the scripts provided lets you easily install the following dependencies:
+This package has been designed and tested in a x86_64 machine under a Ubuntu 20.04 operating system and ROS Noetic distribution. Besides, the scripts provided lets you easily install the following dependencies:
 
-- G2O
+- ceres-solver
 - PCL
-- lazy_theta_star
-- upo_actions
-- upo_markers
+- yaml-cpp
+- rrt-planner
+- catenary_checker (https://github.com/robotics-upo/catenary_checker , branch: master) 
+- upo_actions (https://github.com/robotics-upo/upo_actions, branch: master)
+- upo_markers (https://github.com/robotics-upo/upo_markers, branch: master)
 
 ### Installation steps:
 
