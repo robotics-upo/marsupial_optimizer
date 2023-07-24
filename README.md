@@ -3,7 +3,10 @@
 This package provides a framework to solve non-linear optimization problem for 3D trajectory planning in a marsupial robotic system consisting of an unmanned aerial vehicle (UAV) linked to an unmanned ground vehicle (UGV) through a non-taut tether with controllable length. The objective is to determine a synchronized collision-free trajectory for the three marsupial system agents: UAV, UGV, and tether. 
 
 <p align="center">
-    <img src="worlds/scenario_2.gif" width="400">
+    <img src="worlds/repo_marsupial-optimizer.gif" width="400">
+</p>
+<p align="center">
+    <img src="worlds/repo_marsupial-optimizer2.gif" width="400">
 </p>
 
 To the best of our knowledge, this is the first method that addresses  the trajectory planning of a marsupial UGV-UAV with a non-taut tether. The optimizer input is  a trajectory calculated adding temporal aspect to a path, wihich is computing using a planner based on optimal Rapidly-exploring Random Trees (RRT*) algorithm with novel sampling and steering techniques to speed up the computation. This algorithm is able to obtain collision-free paths for the UAV and the UGV, taking into account the 3D environment and the tether.
