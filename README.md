@@ -1,6 +1,6 @@
 # marsupial_optimizer
 
-This package provides a framework to solve non-linear optimization problem for 3D trajectory planning in a marsupial robotic system consisting of an unmanned aerial vehicle (UAV) linked to an unmanned ground vehicle (UGV) through a non-taut tether with controllable length. The objective is to determine a synchronized collision-free trajectory for the three marsupial system agents: UAV, UGV, and tether. 
+This package provides a framework to solve non-linear optimization problem for 3D trajectory planning in a marsupial robotic system consisting of an unmanned aerial vehicle (UAV) linked to an unmanned ground vehicle (UGV) through a non-taut tether with controllable length. The objective is to determine a synchronized collision-free trajectory for the three marsupial system agents: UAV, UGV, and tether (https://youtu.be/N-K3yT8Tsxw).
 
 <p align="center">
     <img src="worlds/repo_marsupial-optimizer.gif" width="400">
