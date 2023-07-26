@@ -27,19 +27,12 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "Eigen/Core"
 
 #include "marsupial_optimizer/ceres_constraint_equidistance_ugv.hpp"
-#include "marsupial_optimizer/ceres_constraint_equidistance_ugv_analytic.hpp"
 #include "marsupial_optimizer/ceres_constraint_equidistance_uav.hpp"
-#include "marsupial_optimizer/ceres_constraint_equidistance_uav_analytic.hpp"
 #include "marsupial_optimizer/ceres_constraint_obstacles_ugv.hpp"
-#include "marsupial_optimizer/ceres_constraint_obstacles_ugv_analytic.hpp"
 #include "marsupial_optimizer/ceres_constraint_obstacles_uav.hpp"
-#include "marsupial_optimizer/ceres_constraint_obstacles_uav_analytic.hpp"
 #include "marsupial_optimizer/ceres_constraint_traversability_ugv.hpp"
-#include "marsupial_optimizer/ceres_constraint_traversability_ugv_analytic.hpp"
 #include "marsupial_optimizer/ceres_constraint_smoothness_ugv.hpp"
-#include "marsupial_optimizer/ceres_constraint_smoothness_ugv_analytic.hpp"
 #include "marsupial_optimizer/ceres_constraint_smoothness_uav.hpp"
-#include "marsupial_optimizer/ceres_constraint_smoothness_uav_analytic.hpp"
 // #include "marsupial_optimizer/ceres_constraint_rotation_ugv.hpp"
 #include "marsupial_optimizer/ceres_constraint_time.hpp"
 #include "marsupial_optimizer/ceres_constraint_velocity_ugv.hpp"
@@ -117,6 +110,9 @@ using ceres::CostFunction;
 using ceres::Problem;
 using ceres::Solve;
 using ceres::Solver;
+using ceres::LossFunction;
+using ceres::CauchyLoss;
+
 
 
 struct parameterBlockPos{
@@ -175,12 +171,14 @@ public:
 	void getSmoothnessTrajectory(vector<geometry_msgs::Vector3> v_pos2kin_ugv, vector<geometry_msgs::Vector3> v_pos2kin_uav, vector<double> &v_angles_kin_ugv, vector<double> &v_angles_kin_uav);
 	geometry_msgs::Vector3 getReelPoint(const float px_, const float py_, const float pz_,const float qx_, const float qy_, const float qz_, const float qw_);
 	void getReelPose();
-	void processingCatenary();
-	void publishOptimizedTraj();
+	// void publishOptimizedTraj();
 	void cleanResidualConstraintsFile();
 	void getParableParameter(vector<geometry_msgs::Vector3> v_p_init_ugv_, vector<geometry_msgs::Vector3> v_p_init_uav_, vector<float> &v_l_cat_init_);
-	void graphCatenaryAndPathMarker(vector<geometry_msgs::Vector3> v_ugv_, vector<geometry_msgs::Vector3> v_uav_, vector<geometry_msgs::Quaternion> v_rot_ugv, vector<float> v_cat_);
-	void graphParableAndPathMarker(vector<geometry_msgs::Vector3> v_ugv_, vector<geometry_msgs::Vector3> v_uav_, vector<geometry_msgs::Quaternion> v_rot_ugv, vector <parable_parameters> v_p_);
+	void graphCatenary(vector<geometry_msgs::Vector3> v_ugv_, vector<geometry_msgs::Vector3> v_uav_, vector<geometry_msgs::Quaternion> v_rot_ugv, vector<float> v_cat_);
+	void graphParableAndPathMarker(vector<geometry_msgs::Vector3> v_ugv_, vector<geometry_msgs::Vector3> v_uav_, 
+								   vector<geometry_msgs::Quaternion> v_rot_ugv, vector <parable_parameters> v_p_, 
+									int c_ugv_, int c_uav_, int c_parable_, ros::Publisher p_ugv_, ros::Publisher p_uav_, 
+									ros::Publisher p_parable_, visualization_msgs::MarkerArray m_);
 	void checkCatenaryLength(vector<geometry_msgs::Vector3> v_p_ugv, vector<geometry_msgs::Vector3>  v_p_uav, vector<geometry_msgs::Quaternion> v_r_ugv, vector<float> &v_l_in);
 
 	// bool computeCatenary(int p_, int mode_, double &l_cat_);
@@ -217,7 +215,7 @@ public:
 	int size_path;
 	double distance_catenary_obstacle, dynamic_catenary, initial_distance_states_ugv, initial_distance_states_uav;
 	double w_alpha_uav, w_alpha_ugv, w_beta_uav, w_beta_ugv, w_theta_ugv, w_gamma_uav, w_gamma_ugv, w_kappa_ugv, w_kappa_uav, w_delta; 
-	double w_epsilon_uav, w_epsilon_ugv, w_zeta_uav , w_zeta_ugv, w_eta_1, w_eta_2, w_eta_3, w_lambda, w_mu_uav, w_nu_ugv;
+	double w_epsilon_uav, w_epsilon_ugv, w_zeta_uav , w_zeta_ugv, w_eta_1, w_eta_2, w_lambda, w_mu_uav, w_nu_ugv;
 
 	bool optimize_ugv , optimize_uav, optimize_cat, fix_last_position_ugv, use_distance_function, get_path_from_file;
 
@@ -251,10 +249,11 @@ public:
 	std::string ugv_base_frame, uav_base_frame, reel_base_frame, world_frame;
 
 	ros::Subscriber octomap_ws_sub_,point_cloud_ugv_traversability_sub_, point_cloud_ugv_obstacles_sub_, clean_markers_sub_, local_map_sub, local_trav_map_sub, finished_rviz_maneuver_sub_, star_optimizer_process_sub_;
-	ros::Publisher traj_marker_ugv_pub_, post_traj_marker_ugv_pub_, post_traj_marker_uav_pub_, traj_marker_uav_pub_;
+	ros::Publisher traj_marker_ugv_pub_, traj_marker_uav_pub_,traj_opt_marker_ugv_pub_,traj_opt_marker_uav_pub_;
 
-	ros::Publisher catenary_marker_pub_, clean_nodes_marker_gp_pub_, clean_catenary_marker_gp_pub_, trajectory_pub_, parable_marker_pub_;
-	visualization_msgs::MarkerArray catenary_marker, parable_marker;
+	ros::Publisher catenary_marker_pub_, clean_nodes_marker_gp_pub_, clean_catenary_marker_gp_pub_, trajectory_pub_;
+	ros::Publisher  parable_marker_init_pub_, parable_marker_opt_pub_;
+	visualization_msgs::MarkerArray catenary_marker, parable_marker_init, parable_marker_opt;
 
 	bool verbose_optimizer;
 
@@ -267,18 +266,19 @@ public:
 	// vector<parameterBlockTime> statesTimeUGV;
 	// vector<parameterBlockTime> statesTimeUAV;
 	vector<parameterBlockTime> statesTime;
-	vector<parameterBlockLength> statesLength , statesPostLength;
+	vector<parameterBlockLength> statesLength ;
 	vector<parameterBlockParable> statesParableParams;
-	vector<geometry_msgs::Quaternion> vec_init_rot_ugv, vec_init_rot_uav, vec_opt_rot_ugv, vec_opt_rot_uav;
+	vector<geometry_msgs::Quaternion> vec_rot_ugv_init, vec_rot_uav_init, vec_rot_ugv_opt, vec_rot_uav_opt;
 
 	vector<double> vec_dist_init_ugv, vec_dist_init_uav;
 	vector<double> vec_time_init;
-	vector<double> v_init_angles_smooth_ugv, v_init_angles_smooth_uav, v_opt_angles_smooth_ugv, v_opt_angles_smooth_uav;
+	vector<double> v_angles_smooth_ugv_init, v_angles_smooth_uav_init, v_angles_smooth_ugv_opt, v_angles_smooth_uav_opt;
 	vector<float> vec_len_cat_init, vec_len_cat_opt;
 	vector<geometry_msgs::Vector3> vec_pose_ugv_opt, vec_pose_uav_opt; 
-	vector<geometry_msgs::Vector3> vec_pose_init_ugv, vec_pose_init_uav;
+	vector<geometry_msgs::Vector3> vec_pose_ugv_init, vec_pose_uav_init;
+	vector <parable_parameters> v_parable_params_init, v_parable_params_opt;
 	vector<double> vec_time_opt;
-	vector <parable_parameters> v_parable_params;
+	
 
 
 	vector<int> v_id_point_not_fix_ugv, v_id_point_not_fix_uav; // save the id number of position no fix , from vector vec_pose_init_uav
@@ -286,16 +286,16 @@ public:
     double pos_reel_x, pos_reel_y, pos_reel_z;
 	ros::Time start_time_opt, final_time_opt;
 	int scenario_number, num_pos_initial, num_goal;
-	bool write_data_for_analysis;
+	bool write_data_for_analysis, use_loss_function;
 	double length_tether_max;
 	int count_fix_points_initial_ugv, count_fix_points_final_ugv, count_fix_points_uav;
 
-	int equidistance_uav_constraint, obstacles_uav_constraint, smoothness_uav_constraint;
+	bool equidistance_uav_constraint, obstacles_uav_constraint, smoothness_uav_constraint;
 	bool velocity_uav_constraint,acceleration_uav_constraint;
 	bool time_constraint, velocity_ugv_constraint, acceleration_ugv_constraint;
-	bool catenary_length_constraint;
+	bool parable_length_constraint, parable_obstacle_constraint;
 	bool finished_rviz_maneuver;
-	int equidistance_ugv_constraint, obstacles_ugv_constraint,traversability_ugv_constraint, smoothness_ugv_constraint, catenary_constraint;
+	bool equidistance_ugv_constraint, obstacles_ugv_constraint,traversability_ugv_constraint, smoothness_ugv_constraint;
 	bool write_data_residual;
 
 private:

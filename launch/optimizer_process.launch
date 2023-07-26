@@ -26,6 +26,8 @@
 
     <arg name="length_tether_max"    default="20.0"/>   
     <arg name="pos_uav_above_ugv"     default="3.0"/> #meters UAV above UGV
+    <arg name="use_loss_function"   default="false"/> 
+
 
     <!-- To wirte Files -->
     <arg name="num_pos_initial"         default="1"/>
@@ -64,48 +66,51 @@
         <param name="ugv_base_frame" value="$(arg ugv_frame)"/> 
         <param name="uav_base_frame" value="$(arg uav_frame)"/>
         <param name="reel_base_frame" value="$(arg reel_frame)"/>
-        <param name="debug" value="$(arg debug_msgs)"/>
-        <param name="show_config" value="$(arg show_config_msgs)"/>
-        <param name="traj_dest_frame" value="uav_base_link"/>
+        <param name="debug"             value="$(arg debug_msgs)"/>
+        <param name="show_config"       value="$(arg show_config_msgs)"/>
+        <param name="traj_dest_frame"   value="uav_base_link"/>
 
-        <param name="traj_in_rviz" value="$(arg graph_traj_in_rviz)"/>
-        <param name="pause_end_optimization" value="$(arg pause_execution)"/>
+        <param name="traj_in_rviz"              value="$(arg graph_traj_in_rviz)"/>
+        <param name="pause_end_optimization"    value="$(arg pause_execution)"/>
         <!-- <param name="pause_end_optimization" value="true"/> -->
-        <param name="write_data_residual" value="$(arg write_data_residual)"/>
-        <param name="use_distance_function"    value="$(arg use_distance_function)"/>     
+        <param name="write_data_residual"       value="$(arg write_data_residual)"/>
+        <param name="use_distance_function"     value="$(arg use_distance_function)"/>     
             
         <param name="verbose_optimizer" value="$(arg verbose_optimizer)"/>
+
+        <param name="n_iter_opt"        value="500"/>   <!-- number max. of iterations per optimization --> 
        
         <param name="fix_last_position_ugv"   value="false"/> 
+        <param name="use_loss_function"   value="$(arg use_loss_function)"/> 
         <param name="optimize_ugv"   value="true"/>  # UGV
         <param name="optimize_uav"   value="true"/>  # UAV
-        <param name="optimize_cat"   value="false"/>  # CAT
+        <param name="optimize_cat"   value="true"/>  # CAT
 
-        <param name="equidistance_ugv_constraint"   value="1"/>   # equidistance_ugv_constraint
-        <param name="obstacles_ugv_constraint"      value="1"/>   # obstacles_ugv_constraint
-        <param name="traversability_ugv_constraint" value="1"/>   # traversability_ugv_constraint
-        <param name="kinematic_ugv_constraint"      value="1"/>   # kinematic_ugv_constraint
-        <param name="time_constraint"               value="true"/>   # time_ugv_constraint
-        <param name="velocity_ugv_constraint"       value="true"/>   # velocity_ugv_constraint
-        <param name="acceleration_ugv_constraint"   value="true"/>   # acceleration_ugv_constraint
+        <param name="equidistance_ugv_constraint"   value="true"/>   # equidistance_ugv_constraint
+        <param name="obstacles_ugv_constraint"      value="true"/>   # obstacles_ugv_constraint
+        <param name="traversability_ugv_constraint" value="true"/>   # traversability_ugv_constraint
+        <param name="smoothness_ugv_constraint"     value="true"/>   # smoothness_ugv_constraint
 
-        <param name="equidistance_uav_constraint"   value="1"/>    # equidistance_uav_constraint    // 1 = autodiff ; 0 = analytic  
-        <param name="obstacles_uav_constraint"      value="1"/>    # obstacles_uav_constraint    // 1 = autodiff ; 0 = analytic
-        <param name="kinematics_uav_constraint"     value="1"/>    # kinematics_uav_constraint    // 1 = autodiff ; 0 = analytic
-        <param name="velocity_uav_constraint"       value="true"/>    # velocity_uav_constraint
-        <param name="acceleration_uav_constraint"   value="true"/>    # acceleration_uav_constraint
+        <param name="equidistance_uav_constraint"   value="false"/>    # equidistance_uav_constraint    // 1 = autodiff ; 0 = analytic  
+        <param name="obstacles_uav_constraint"      value="false"/>    # obstacles_uav_constraint    // 1 = autodiff ; 0 = analytic
+        <param name="smoothness_uav_constraint"     value="false"/>    # smoothness_uav_constraint    // 1 = autodiff ; 0 = analytic
 
-        <param name="catenary_constraint"   value="1"/>    # catenary_constraint // 1= autodiff ; 0= numeric
-        <param name="catenary_length_constraint"   value="false"/>    # catenary_length_constraint // true = autodiff ; false = numeric
+        <param name="time_constraint"               value="false"/>   # time_ugv_constraint
+        <param name="velocity_ugv_constraint"       value="false"/>   # velocity_ugv_constraint
+        <param name="acceleration_ugv_constraint"   value="false"/>   # acceleration_ugv_constraint
+        <param name="velocity_uav_constraint"       value="false"/>    # velocity_uav_constraint
+        <param name="acceleration_uav_constraint"   value="false"/>    # acceleration_uav_constraint
+
+        <param name="parable_obstacle_constraint"   value="false"/>    # catenary_constraint // 1= autodiff ; 0= numeric
+        <param name="parable_length_constraint"     value="false"/>    # parable_length_constraint // true = autodiff ; false = numeric
 
         <!-- UGV Constraint Parameters -->
-        <param name="w_alpha_ugv"   value="0.200"/>   # Equi-distance ugv
+        <param name="w_alpha_ugv"   value="0.180"/>   # Equi-distance ugv
         <param name="w_beta_ugv"    value="0.080"/>   # Obstacles ugv
-        <param name="w_gamma_ugv"   value="0.120"/>   # Smoothness ugv 
+        <param name="w_theta_ugv"   value="0.5000"/>   # Traversability ugv
+        <param name="w_gamma_ugv"   value="0.100"/>   # Smoothness ugv 
         <param name="w_epsilon_ugv"   value="0.05"/>   # Velocity 
         <param name="w_zeta_ugv"      value="0.005"/>   # Acceleration 
-
-        <param name="w_theta_ugv"   value="0.5000"/>   # Traversability ugv
         
         <!-- UAV Constraint Parameters -->
         <param name="w_alpha_uav"   value="0.250"/>   # Equi-distance uav 
@@ -118,11 +123,8 @@
         <param name="w_delta"     value="0.001"/>  # time 
 
         <!-- Catenary Constraint Parameters -->
-        <!-- <param name="w_eta_1"    value="0.0075"/>   # catenary Obstacles collision  -->
-        <param name="w_eta_1"    value="0.0250"/>   # catenary Obstacles collision 
-        <param name="w_eta_2"    value="0.1000"/>   # catenary length 0.00150
-        <param name="w_eta_3"    value="0.0120"/>   # catenary Z collision 0.00105
-        <param name="n_iter_opt"    value="100"/>   <!-- number max. of iterations per optimization --> 
+        <param name="w_eta_1"           value="0.0250"/>   # catenary Obstacles collision 
+        <param name="w_eta_2"           value="0.1000"/>   # catenary length 0.00150
         <param name="length_tether_max" value="$(arg length_tether_max)"/>  
         <param name="distance_obstacle_ugv"         value="1.2"/> <!-- bound distance UGV to obstacles [m]-->
         <param name="distance_obstacle_uav"         value="2.0"/> <!-- bound distance UAV to obstacles [m]-->
@@ -130,7 +132,7 @@
         <param name="initial_velocity_uav"  value="0.25"/> <!-- [m/seg]  Constant velocity UAV during trajectory-->
         <param name="initial_acceleration_ugv"  value="0.0"/> <!-- [m/seg^2] 0 acceleration UAV during trajectory-->
         <param name="initial_acceleration_uav"  value="0.0"/> <!-- [m/seg^2] 0 acceleration UGV during trajectory-->
-        <param name="angle_min_traj"  value="$(eval 3.1415 / 9.0)"/> <!-- [rad] max smooth angles UGV and UAV in trajectory-->
+        <param name="angle_min_traj"        value="$(eval 3.1415 / 9.0)"/> <!-- [rad] max smooth angles UGV and UAV in trajectory-->
         #Parameter for Catenary
         <param name="distance_catenary_obstacle"  value="0.10"/> <!--bound distance catenary to obstacles [m] -->   
         <param name="dynamic_catenary"  value="0.5"/> <!-- [m/seg] Max. Vel. that reel can folding and unfolding tether-->    

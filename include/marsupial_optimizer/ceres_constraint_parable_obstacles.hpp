@@ -50,14 +50,12 @@ public:
 		template <typename T>
 		bool operator()(const T* const stateUGV, const T* const stateUAV, const T* const stateParable, T* residual) const 
 		{
-
 			T xA[1], xB[1]; 
 			T yA[1] = {stateUGV[3] + T{pos_reel_ugv_.z}};
 			T yB[1] = {stateUAV[3]};
 			T dX[1] = {sqrt(pow(stateUAV[1] - stateUGV[1],2) + pow(stateUAV[2] - stateUGV[2],2))};
 			T dY[1] = {stateUAV[3] - stateUGV[3]};
 			T cross_P[3];
-
 
 			//Compute Direction Vector for plane
 			// T vd[3] = {stateUAV[0]-stateUGV[0], stateUAV[1]-stateUGV[1], stateUAV[2]-stateUGV[2]};

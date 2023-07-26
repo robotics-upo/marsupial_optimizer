@@ -1,5 +1,5 @@
-#ifndef CERES_CONSTRAINS_PARABLE_LENGTH_AUTODIFF_HPP
-#define CERES_CONSTRAINS_PARABLE_LENGTH_AUTODIFF_HPP
+#ifndef CERES_CONSTRAINS_PARABLE_PARAMETERS_AUTODIFF_HPP
+#define CERES_CONSTRAINS_PARABLE_PARAMETERS_AUTODIFF_HPP
 
 #include "ceres/ceres.h"
 #include "glog/logging.h"
@@ -16,14 +16,14 @@ using ceres::Problem;
 using ceres::Solve;
 using ceres::Solver;
 
-class AutodiffParableLengthFunctor {
+class AutodiffParableParametersFunctor {
 
 public:
-    AutodiffParableLengthFunctor(){}
+    AutodiffParableParametersFunctor(){}
 
-	struct ParableLengthFunctor 
+	struct ParableParametersFunctor 
 	{
-	ParableLengthFunctor(double weight_factor, geometry_msgs::Vector3 pos_reel_ugv_, double max_L_, bool write_data, std::string user_name)
+	ParableParametersFunctor(double weight_factor, geometry_msgs::Vector3 pos_reel_ugv_, double max_L_, bool write_data, std::string user_name)
 					: wf(weight_factor), pos_reel_ugv(pos_reel_ugv_), max_L(max_L_),w_d(write_data), user(user_name)
 		{}
 
@@ -38,7 +38,7 @@ public:
 			T X = T{0.0};
 			T val = T{2.0}*param[1]*X+param[2];
 			T L1 = (log( sqrt((sqrt(pow(val,2)+ T{1.0} ))*(sqrt(pow(val,2)+ T{1.0} ))) + val * sqrt(val + T{1.0})))/ (T{4.0}*param[1]);
-			X = {sqrt(pow(pUAV[1]-ugv_reel[1],2)+pow(pUAV[2]-ugv_reel[2],2))};
+			X = sqrt(pow(pUAV[1]-ugv_reel[1],2)+pow(pUAV[2]-ugv_reel[2],2));
 			val = T{2.0}*param[1]*X+param[2];
 			T L2 = (log( sqrt((sqrt(pow(val,2)+ T{1.0} ))*(sqrt(pow(val,2)+ T{1.0} ))) + val * sqrt(val + T{1.0})))/ (T{4.0}*param[1]);
 			T L = L2 - L1;

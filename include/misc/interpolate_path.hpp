@@ -66,6 +66,7 @@ inline void InterpolatePath::initInterpolatePath(int c_f_i_ugv_, int c_f_f_ugv_,
 	count_fix_points_initial_ugv = c_f_i_ugv_;
 	count_fix_points_final_ugv = c_f_f_ugv_;
 	count_fix_points_uav = c_f_uav_;
+
 	fix_last_position_ugv = f_l_p_ugv_;
 	distance_catenary_obstacle = d_c_o_;
 	use_distance_function = u_d_f_;
@@ -89,7 +90,6 @@ inline void InterpolatePath::getInitialGlobalPath(trajectory_msgs::MultiDOFJoint
 	geometry_msgs::Vector3 p_uav_ , p_ugv_;
 	geometry_msgs::Quaternion qt_;
 
-	// count_fix_points_initial_ugv = count_fix_points_final_ugv = count_fix_points_uav = 1;
 	aux_cont_ugv_ = aux_cont_uav_ = 0;
     D_ugv_ = D_uav_ = 0.0;
 	vec_len_cat_init.clear();

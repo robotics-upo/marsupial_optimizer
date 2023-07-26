@@ -27,6 +27,12 @@ void MarkerPublisher::markerPoints(visualization_msgs::MarkerArray _marker, std:
 		c_color3 = 0.0;
 		_scale = 0.035;
 	}
+	else if(change_marker_==3){
+		c_color1 = 0.0;
+		c_color2 = 0.0;
+		c_color3 = 0.0;
+		_scale = 0.035;
+	}
             
     string_marker = std::to_string(_suffix);
     ns_marker = "catenary_"+string_marker;

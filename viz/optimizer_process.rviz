@@ -141,11 +141,28 @@ Visualization Manager:
       Value: true
     - Class: rviz/MarkerArray
       Enabled: true
-      Marker Topic: /optimizer_process_node/opt_trajectory_ugv_marker
-      Name: Optimized_trajectory_ugv
+      Marker Topic: /optimizer_process_node/init_trajectory_ugv_marker
+      Name: Init_trajectory_ugv
       Namespaces:
         lines_ugv_m: true
         points_ugv_m: true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /optimizer_process_node/init_trajectory_uav_marker
+      Name: Init_trajectory_uav
+      Namespaces:
+        lines_uav_m: true
+        points_uav_m: true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /optimizer_process_node/opt_trajectory_ugv_marker
+      Name: Optimized_trajectory_ugv
+      Namespaces:
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -155,6 +172,7 @@ Visualization Manager:
       Namespaces:
         lines_uav_m: true
         points_uav_m: true
+        points_ugv_m: true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -320,24 +338,16 @@ Visualization Manager:
       Value: true
     - Class: rviz/MarkerArray
       Enabled: true
-      Marker Topic: /optimizer_process_node/post_init_trajectory_ugv_marker
-      Name: Init_Trajectory_ugv
+      Marker Topic: /optimizer_process_node/init_parable_marker
+      Name: Init_parable_Marker
       Namespaces:
         {}
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
       Enabled: true
-      Marker Topic: /optimizer_process_node/post_init_trajectory_uav_marker
-      Name: Init_trajectory_uav
-      Namespaces:
-        {}
-      Queue Size: 100
-      Value: true
-    - Class: rviz/MarkerArray
-      Enabled: true
-      Marker Topic: /optimizer_process_node/parable_marker
-      Name: parable_Marker
+      Marker Topic: /optimizer_process_node/opt_parable_marker
+      Name: Opt_parable_Marker
       Namespaces:
         {}
       Queue Size: 100
@@ -386,9 +396,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.23979580402374268
+      Pitch: 0.2497958242893219
       Target Frame: <Fixed Frame>
-      Yaw: 5.3457231521606445
+      Yaw: 5.675722122192383
     Saved: ~
 Window Geometry:
   Displays:

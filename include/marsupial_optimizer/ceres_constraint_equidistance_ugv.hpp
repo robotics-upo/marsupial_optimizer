@@ -50,7 +50,7 @@ class EquiDistanceFunctorUGV
 
       residual[0] = wf_ *( m *(d_pos - init_d) + min_value_residual)*f_;  
 
-      // std::cout<< "EquiDistance UGV: residual[0]= "<<residual[0]<<" , i_d= "<< i_d << " , d_pos= "<< d_pos <<" , init_d= ["<<init_d1<<"/"<<init_d2<<"]"<<std::endl;
+      // std::cout<< "EquiDistance UGV: residual[0]= "<<residual[0]<<" , i_d= "<< i_d << " , d_pos= "<< d_pos <<" , init_d= ["<<init_d<<"]"<<std::endl;
     
       if(w_d_){
         std::ofstream ofs;
