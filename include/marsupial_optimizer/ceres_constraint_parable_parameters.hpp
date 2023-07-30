@@ -23,41 +23,31 @@ public:
 
 	struct ParableParametersFunctor 
 	{
-	ParableParametersFunctor(double weight_factor, geometry_msgs::Vector3 pos_reel_ugv_, double max_L_, bool write_data, std::string user_name)
-					: wf(weight_factor), pos_reel_ugv(pos_reel_ugv_), max_L(max_L_),w_d(write_data), user(user_name)
+	ParableParametersFunctor(double weight_factor, geometry_msgs::Vector3 pos_reel_ugv_, bool write_data, std::string user_name)
+					: wf(weight_factor), pos_reel_ugv(pos_reel_ugv_), w_d(write_data), user(user_name)
 		{}
 
 		template <typename T>
 		bool operator()(const T* const pUGV, const T* const pUAV, const T* const param, T* residual) const 
 		{
 			T ugv_reel[4] = {pUGV[0], pUGV[1], pUGV[2], pUGV[3] + T{pos_reel_ugv.z}}; // Set first parable point on the reel position
-			T dist = T{1.005} * sqrt(pow(pUAV[1]-ugv_reel[1],2)+pow(pUAV[2]-ugv_reel[2],2)+pow(pUAV[3]-ugv_reel[3],2)); 
-			T maxL = T{max_L};
 		
-			// Compute parable L : [ ln{ abs[ sqrt((2px + q)^²+1) + (2px + q) * sqrt((2px + q)^²+1) ] } ]/ (4p) , x = xA and xB
-			T X = T{0.0};
-			T val = T{2.0}*param[1]*X+param[2];
-			T L1 = (log( sqrt((sqrt(pow(val,2)+ T{1.0} ))*(sqrt(pow(val,2)+ T{1.0} ))) + val * sqrt(val + T{1.0})))/ (T{4.0}*param[1]);
-			X = sqrt(pow(pUAV[1]-ugv_reel[1],2)+pow(pUAV[2]-ugv_reel[2],2));
-			val = T{2.0}*param[1]*X+param[2];
-			T L2 = (log( sqrt((sqrt(pow(val,2)+ T{1.0} ))*(sqrt(pow(val,2)+ T{1.0} ))) + val * sqrt(val + T{1.0})))/ (T{4.0}*param[1]);
-			T L = L2 - L1;
+			T Xa = T{0.0};
+			T Xb = sqrt(pow(pUAV[1]-ugv_reel[1],2)+pow(pUAV[2]-ugv_reel[2],2)); 
 
-			T diff_;
-			if (L < dist )
-				diff_ = (dist - L);
-			else if (L > maxL)
-				diff_ = (L - maxL);
-			else
-				diff_ = T{0.0};
+			// For Residual, is consider that reel_pos is the origin in the parable plane
+			// residual[0] = (wf * 100.0 )* (param[1] * Xa*Xa + param[2] * Xa+ param[3] - ugv_reel[3]);  
+			// residual[1] = (wf * 100.0 )* (param[1] * Xb*Xb + param[2] * Xb+ param[3] - pUAV[3]    );  	 
+			T pow_a = sqrt((param[1]*Xa*Xa + param[2]*Xa + param[3] - ugv_reel[3])*(param[1]*Xa*Xa + param[2]*Xa+ param[3] - ugv_reel[3]));// residual = p*xa² + q*xa + r - ya
+			T pow_b = sqrt((param[1]*Xb*Xb + param[2]*Xb + param[3] - pUAV[3]    )*(param[1]*Xb*Xb + param[2]*Xb+ param[3] - pUAV[3]    ));// residual = p*xb² + q*xb + r - yb
+			residual[0] = (wf * 10.0 )* (exp(pow_a) - 1.0);
+			residual[1] = (wf * 10.0 )* (exp(pow_b) - 1.0);
 
-			residual[0] = wf *  (exp(diff_)-1.0) ;
-					
 			return true;
 		}
 		
 		bool w_d;
-		double wf, max_L;
+		double wf;
 		geometry_msgs::Vector3 pos_reel_ugv;
 		std::string user;
 	};

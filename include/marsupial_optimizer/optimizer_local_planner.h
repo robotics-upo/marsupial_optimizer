@@ -42,6 +42,7 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 
 #include "marsupial_optimizer/ceres_constraint_parable_obstacles.hpp"
 #include "marsupial_optimizer/ceres_constraint_parable_length.hpp"
+#include "marsupial_optimizer/ceres_constraint_parable_parameters.hpp"
 
 #include "marsupial_optimizer/marsupial_trajectory_optimized.h"
 
@@ -215,7 +216,7 @@ public:
 	int size_path;
 	double distance_catenary_obstacle, dynamic_catenary, initial_distance_states_ugv, initial_distance_states_uav;
 	double w_alpha_uav, w_alpha_ugv, w_beta_uav, w_beta_ugv, w_theta_ugv, w_gamma_uav, w_gamma_ugv, w_kappa_ugv, w_kappa_uav, w_delta; 
-	double w_epsilon_uav, w_epsilon_ugv, w_zeta_uav , w_zeta_ugv, w_eta_1, w_eta_2, w_lambda, w_mu_uav, w_nu_ugv;
+	double w_epsilon_uav, w_epsilon_ugv, w_zeta_uav , w_zeta_ugv, w_eta_1, w_eta_2, w_eta_3, w_lambda, w_mu_uav, w_nu_ugv;
 
 	bool optimize_ugv , optimize_uav, optimize_cat, fix_last_position_ugv, use_distance_function, get_path_from_file;
 
@@ -293,7 +294,7 @@ public:
 	bool equidistance_uav_constraint, obstacles_uav_constraint, smoothness_uav_constraint;
 	bool velocity_uav_constraint,acceleration_uav_constraint;
 	bool time_constraint, velocity_ugv_constraint, acceleration_ugv_constraint;
-	bool parable_length_constraint, parable_obstacle_constraint;
+	bool parable_length_constraint, parable_obstacle_constraint, parable_parameters_constraint;
 	bool finished_rviz_maneuver;
 	bool equidistance_ugv_constraint, obstacles_ugv_constraint,traversability_ugv_constraint, smoothness_ugv_constraint;
 	bool write_data_residual;

@@ -55,6 +55,7 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(bool get_path_from_file_)
 
 	nh->param<bool>("parable_obstacle_constraint",parable_obstacle_constraint, false);
 	nh->param<bool>("parable_length_constraint",parable_length_constraint, false);
+	nh->param<bool>("parable_parameters_constraint",parable_parameters_constraint, false);
 
 	nh->param<double>("w_alpha_ugv", w_alpha_ugv,0.1);
 	nh->param<double>("w_alpha_uav", w_alpha_uav,0.1);
@@ -77,6 +78,7 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(bool get_path_from_file_)
 	
 	nh->param<double>("w_eta_1", w_eta_1,0.1);
 	nh->param<double>("w_eta_2", w_eta_2,0.1);
+	nh->param<double>("w_eta_3", w_eta_3,0.1);
 
 	nh->param<int>("count_fix_points_initial_ugv", count_fix_points_initial_ugv,1);
 	nh->param<int>("n_iter_opt", n_iter_opt,200);
@@ -122,9 +124,9 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(bool get_path_from_file_)
 	MP.clearMarkersPointLines(points_ugv_marker, lines_ugv_marker,traj_marker_ugv_pub_,20);
   	MP.clearMarkersPointLines(points_uav_marker, lines_uav_marker,traj_marker_uav_pub_,20);
 	ROS_INFO(PRINTF_BLUE"Optimizer_Local_Planner: use_distance_function: %s",use_distance_function?"true":"false");
-	ROS_INFO(PRINTF_BLUE"Optimizer_Local_Planner: alpha_uav=[%f] alpha_ugv=[%f] beta_uav=[%f] beta_ugv=[%f] theta_ugv=[%f] gamma_uav=[%f] gamma_ugv=[%f] kappa_ugv=[%f] kappa_uav=[%f] delta=[%f] epsilon=[%f] zeta=[%f] eta_1=[%f] eta_2=[%f]",
+	ROS_INFO(PRINTF_BLUE"Optimizer_Local_Planner: alpha_uav=[%f] alpha_ugv=[%f] beta_uav=[%f] beta_ugv=[%f] theta_ugv=[%f] gamma_uav=[%f] gamma_ugv=[%f] kappa_ugv=[%f] kappa_uav=[%f] delta=[%f] epsilon=[%f] zeta=[%f] eta=[%f %f %f]",
 						 w_alpha_uav, w_alpha_ugv, w_beta_uav, w_beta_ugv, w_theta_ugv,w_gamma_uav, w_gamma_ugv, w_kappa_ugv, 
-						 w_kappa_uav, w_delta, w_epsilon_uav, w_zeta_uav, w_eta_1, w_eta_2);
+						 w_kappa_uav, w_delta, w_epsilon_uav, w_zeta_uav, w_eta_1, w_eta_2, w_eta_3);
 	
 	std::string node_name_ = "grid3D_optimizer_node";
 	grid_3D = new Grid3d(node_name_);
@@ -519,10 +521,10 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		if(parable_obstacle_constraint){
 			ROS_INFO(PRINTF_ORANGE"		- Optimize Parable Obstacles Autodiff");
 			for (int i = 0; i < statesParableParams.size(); ++i) {
-				CostFunction* cost_function_cat_1  = new AutoDiffCostFunction<AutodiffParableFunctor::ParableFunctor, 2, 4, 4, 4> //Residual, ugvPos, uavPos, parableParams
+				CostFunction* cost_function_par_1  = new AutoDiffCostFunction<AutodiffParableFunctor::ParableFunctor, 2, 4, 4, 4> //Residual, ugvPos, uavPos, parableParams
 											(new AutodiffParableFunctor::ParableFunctor(w_eta_1, grid_3D, pose_reel_local.transform.translation,  nh, 
 											write_data_residual, user_name)); 
-				problem.AddResidualBlock(cost_function_cat_1, loss_function, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesParableParams[i].parameter);
+				problem.AddResidualBlock(cost_function_par_1, loss_function, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesParableParams[i].parameter);
 				if (i == 0 || (fix_last_position_ugv && i == statesParableParams.size()-1))
 					problem.SetParameterBlockConstant(statesParableParams[i].parameter);
 			}
@@ -530,9 +532,22 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		if(parable_length_constraint){
 			ROS_INFO(PRINTF_ORANGE"		- Optimize Parable Length Autodiff");
 			for (int i = 0; i < statesParableParams.size(); ++i) {
-				CostFunction* cost_function_cat_2  = new AutoDiffCostFunction<AutodiffParableLengthFunctor::ParableLengthFunctor, 1, 4, 4, 4>
+				CostFunction* cost_function_par_2  = new AutoDiffCostFunction<AutodiffParableLengthFunctor::ParableLengthFunctor, 1, 4, 4, 4>
 				(new AutodiffParableLengthFunctor::ParableLengthFunctor(w_eta_2, pose_reel_local.transform.translation, length_tether_max, write_data_residual, user_name)); 
-					problem.AddResidualBlock(cost_function_cat_2, loss_function, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesParableParams[i].parameter);
+					problem.AddResidualBlock(cost_function_par_2, loss_function, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesParableParams[i].parameter);
+				if (i == 0 || (fix_last_position_ugv && i == statesParableParams.size()-1))
+					problem.SetParameterBlockConstant(statesParableParams[i].parameter);
+				else{
+					problem.SetParameterLowerBound(statesParableParams[i].parameter, 1, 0.000001);
+				}
+			}		
+    	}
+		if(parable_parameters_constraint){
+			ROS_INFO(PRINTF_ORANGE"		- Optimize Parable Params Autodiff");
+			for (int i = 0; i < statesParableParams.size(); ++i) {
+				CostFunction* cost_function_par_3  = new AutoDiffCostFunction<AutodiffParableParametersFunctor::ParableParametersFunctor, 2, 4, 4, 4>
+				(new AutodiffParableParametersFunctor::ParableParametersFunctor(w_eta_3, pose_reel_local.transform.translation, write_data_residual, user_name)); 
+					problem.AddResidualBlock(cost_function_par_3, loss_function, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesParableParams[i].parameter);
 				if (i == 0 || (fix_last_position_ugv && i == statesParableParams.size()-1))
 					problem.SetParameterBlockConstant(statesParableParams[i].parameter);
 				else{
@@ -627,7 +642,7 @@ void OptimizerLocalPlanner::initializingParametersblock()
 	//Set Parameter Blocks from path global information
 	statesPosUGV.clear(); statesPosUAV.clear(); statesRotUGV.clear(); statesRotUAV.clear(); statesTime.clear();
 	
-	printf("Initial States.Parameter[____]:  [  pos_x  pos_y  pos_z  rot_r  trot_p  rot_y pos_x  pos_y  pos_z  rot_x  rot_y  rot_z  rot_w  time_ugv  time_uav  length ]\n");
+	printf("Initial States.Parameter[____] :   [  pos_x  pos_y  pos_z  rot_r  rot_p  rot_y pos_x  pos_y  pos_z  rot_x  rot_y  rot_z  rot_w  time_ugv  time_uav  param_p  param_q  param_r ]\n");
 	for (size_t i = 0 ; i < vec_pose_uav_init.size(); i ++){
 		parameterBlockPos parameter_block_pos_ugv;
 		parameterBlockPos parameter_block_pos_uav;
@@ -678,9 +693,9 @@ void OptimizerLocalPlanner::initializingParametersblock()
 
 		printf("Initial States.Parameter[%lu/%lu]: UGV=[%.3f %.3f %.3f / %.3f %.3f %.3f]",i,vec_pose_uav_init.size(),parameter_block_pos_ugv.parameter[1],
 				parameter_block_pos_ugv.parameter[2],parameter_block_pos_ugv.parameter[3], roll_ugv_init_, pitch_ugv_init_, yaw_ugv_init_);
-		printf(" UAV=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f] / [%.3f %.3f] / %.3f]\n", parameter_block_pos_uav.parameter[1],parameter_block_pos_uav.parameter[2],
+		printf(" UAV=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f] / [%.3f %.3f] / [%.3f %.3f %.3f]\n", parameter_block_pos_uav.parameter[1],parameter_block_pos_uav.parameter[2],
 				parameter_block_pos_uav.parameter[3], parameter_block_rot_uav.parameter[1],parameter_block_rot_uav.parameter[2],parameter_block_rot_uav.parameter[3],
-				parameter_block_rot_uav.parameter[4], parameter_block_time.parameter[1],parameter_block_time.parameter[1],vec_len_cat_init[i]);
+				parameter_block_rot_uav.parameter[4], parameter_block_time.parameter[1],parameter_block_time.parameter[1],v_parable_params_init[i].p, v_parable_params_init[i].q, v_parable_params_init[i].r);
 	}
 }
 
@@ -725,7 +740,7 @@ void OptimizerLocalPlanner::finishigOptimizationAndGetDataResult(int &n_coll_opt
 	}
 	
 	// MP.clearMarkers(catenary_marker, 150, catenary_marker_pub_);  //To delete possibles outliers points 
-	graphParableAndPathMarker(vec_pose_ugv_opt,vec_pose_uav_opt, vec_rot_ugv_opt, v_parable_params_opt, 1, 2,3,
+	graphParableAndPathMarker(vec_pose_ugv_opt, vec_pose_uav_opt, vec_rot_ugv_opt, v_parable_params_opt, 1, 2,3,
 							  traj_opt_marker_ugv_pub_,traj_opt_marker_uav_pub_, parable_marker_opt_pub_, parable_marker_opt);
 
 	ManagePath mp_;
@@ -831,6 +846,7 @@ void OptimizerLocalPlanner::getReelPose()
 
 	try{
         pose_reel_local = tfBuffer->lookupTransform(ugv_base_frame, reel_base_frame, ros::Time(0));
+		printf("pose_reel_local = [%f %f %f]\n", pose_reel_local.transform.translation.x, pose_reel_local.transform.translation.y, pose_reel_local.transform.translation.z);
     }catch (tf2::TransformException &ex){
         ROS_WARN("Optimizer Local Planner: Couldn't get Local Reel Pose (frame: %s), so not possible to set Tether start point; tf exception: %s", reel_base_frame.c_str(),ex.what());
     }
