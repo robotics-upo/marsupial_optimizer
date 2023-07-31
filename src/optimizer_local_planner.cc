@@ -89,7 +89,7 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(bool get_path_from_file_)
 	nh->param<double>("initial_acceleration_ugv", initial_acceleration_ugv,0.0);
 	nh->param<double>("initial_acceleration_uav", initial_acceleration_uav,0.0);
 	nh->param<double>("angle_min_traj", angle_min_traj, M_PI / 15.0);
-	nh->param<double>("distance_catenary_obstacle", distance_catenary_obstacle, 0.1);
+	nh->param<double>("distance_parable_obstacle", distance_parable_obstacle, 0.1);
 	nh->param<double>("dynamic_catenary", dynamic_catenary, 0.5);
 	nh->param<double>("length_tether_max", length_tether_max,20.0);
 
@@ -299,7 +299,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 
 	// Stage to interpolate path
 	InterpolatePath ip_;
-	ip_.initInterpolatePath(count_fix_points_initial_ugv,count_fix_points_final_ugv,count_fix_points_uav, fix_last_position_ugv, distance_catenary_obstacle,
+	ip_.initInterpolatePath(count_fix_points_initial_ugv,count_fix_points_final_ugv,count_fix_points_uav, fix_last_position_ugv, distance_parable_obstacle,
 							use_distance_function, globalPath.points.size(), length_tether_max, ws_z_min, map_resolution, 
 							pose_reel_local, grid_3D);
 
@@ -317,7 +317,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
  	getTemporalState(vec_time_init);
 
 	dm_.initDataManagement(path+files_results, name_output_file, scenario_number, num_pos_initial, initial_velocity_ugv, initial_velocity_uav, 
-							initial_acceleration_ugv, initial_acceleration_uav, distance_catenary_obstacle, pose_reel_local.transform.translation, vec_pose_ugv_init, 
+							initial_acceleration_ugv, initial_acceleration_uav, distance_parable_obstacle, pose_reel_local.transform.translation, vec_pose_ugv_init, 
 							vec_pose_uav_init, vec_len_cat_init, vec_rot_ugv_init, vec_rot_uav_init, mapFull_msg, mapTrav_msg, grid_3D);			   
 	if(write_data_for_analysis)
 		getSmoothnessTrajectory(vec_pose_ugv_init, vec_pose_uav_init, v_angles_smooth_ugv_init, v_angles_smooth_uav_init);
@@ -521,8 +521,8 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		if(parable_obstacle_constraint){
 			ROS_INFO(PRINTF_ORANGE"		- Optimize Parable Obstacles Autodiff");
 			for (int i = 0; i < statesParableParams.size(); ++i) {
-				CostFunction* cost_function_par_1  = new AutoDiffCostFunction<AutodiffParableFunctor::ParableFunctor, 2, 4, 4, 4> //Residual, ugvPos, uavPos, parableParams
-											(new AutodiffParableFunctor::ParableFunctor(w_eta_1, grid_3D, pose_reel_local.transform.translation,  nh, 
+				CostFunction* cost_function_par_1  = new AutoDiffCostFunction<AutodiffParableFunctor::ParableFunctor, 1, 4, 4, 4> //Residual, ugvPos, uavPos, parableParams
+											(new AutodiffParableFunctor::ParableFunctor(w_eta_1, grid_3D, pose_reel_local.transform.translation, distance_parable_obstacle,
 											write_data_residual, user_name)); 
 				problem.AddResidualBlock(cost_function_par_1, loss_function, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesParableParams[i].parameter);
 				if (i == 0 || (fix_last_position_ugv && i == statesParableParams.size()-1))

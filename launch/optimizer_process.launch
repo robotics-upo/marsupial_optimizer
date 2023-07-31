@@ -136,8 +136,8 @@
         <param name="initial_acceleration_uav"  value="0.0"/> <!-- [m/seg^2] 0 acceleration UGV during trajectory-->
         <param name="angle_min_traj"        value="$(eval 3.1415 / 9.0)"/> <!-- [rad] max smooth angles UGV and UAV in trajectory-->
         #Parameter for Parable
-        <param name="distance_Parable_obstacle"  value="0.10"/> <!--bound distance Parable to obstacles [m] -->   
-        <param name="dynamic_Parable"  value="0.5"/> <!-- [m/seg] Max. Vel. that reel can folding and unfolding tether-->    
+        <param name="distance_parable_obstacle"  value="0.10"/> <!--bound distance Parable to obstacles [m] -->   
+        <param name="dynamic_parable"  value="0.5"/> <!-- [m/seg] Max. Vel. that reel can folding and unfolding tether-->    
         #Parameter to write file 
         <param name="write_data_for_analysis"    value="$(arg write_data_files)"/>     
         <param name="name_output_file"    value="$(arg name_output_file)"/>     
