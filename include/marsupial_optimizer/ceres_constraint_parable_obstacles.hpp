@@ -108,7 +108,6 @@ public:
 					cost_ = (1.0/d_obs)*1.0;		
 
 				distance_cost[0] = cost_;
-
 				return true;	
 			}
 			double sb;
@@ -138,22 +137,22 @@ public:
 				d_[1] = sqrt(pow(pUAV[3]-ugv_reel[3],2)); 
 
 				// Here Compute the Parable Points
-				T np[5]; //  To save parable point to computed distance to obstacle
-				(*point_parable)(d_, pUGV, pUAV, param, np); // To get points number in parable
+				T np[5]; //  To save parable values anda parameter for parable
+				(*point_parable)(d_, pUGV, pUAV, param, np); // To get the values and parameters needed for computing the parable interpolation
 
 				T point[3];	
 				T parable_cost_[1];
 				T cost_state_parable = T{0.0};
 				T x_  =  T{0.0};
 				T tetha_ = atan((pUAV[2] - pUGV[2])/(pUAV[1] - pUGV[1]));
-				if ( np[3] < 0 && np[4] < 0 ){
+				if ( np[3] < 0 && np[4] < 0 ){ // To check position difference between UGV and UAV only in  z-axe, so parable it is not computed
 					T _step = d_[0] / T{np[0]};
 					for(int i=0; i < np[0] ; i++)
 					{       
 						point[0] = pUGV[1];
 						point[1] = pUGV[2];
 						point[2] = pUGV[3]+ _step* (double)i;    
-						cost_state_parable = cost_state_parable + parable_cost_[0];
+						cost_state_parable = cost_state_parable + parable_cost_[0]; // To get point parable cost
 					}
 				}
 				else{
@@ -162,28 +161,23 @@ public:
 						point[0] = pUGV[1] + np[1] * cos(tetha_) * x_;
 						point[1] = pUGV[2] + np[2] * sin(tetha_) * x_;
 						point[2] = param[1] * x_* x_ + param[2] * x_ + param[3];
-						(*cost_parable)(point, parable_cost_); // To get points number in parable
+						(*cost_parable)(point, parable_cost_); // To get point parable cost
 						cost_state_parable = cost_state_parable + parable_cost_[0];
 					}
 				}
-
 				residual[0] = wf * cost_state_parable;
 					
 				return true;
 			}
-		
 			std::unique_ptr<ceres::CostFunctionToFunctor<5,2,4,4,4> > point_parable;
 			std::unique_ptr<ceres::CostFunctionToFunctor<1,3> > cost_parable;
-
 			bool w_d_, sb_;
 			double wf;
 			geometry_msgs::Vector3 pos_reel_ugv_;
 			std::string user_;
-
 			Grid3d* g_3D_;
 		};
 private:
-
 };
 
 #endif
