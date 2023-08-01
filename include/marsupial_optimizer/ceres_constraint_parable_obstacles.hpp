@@ -41,15 +41,45 @@ public:
 
 		struct NumPointParable 
 		{
-			NumPointParable ():
+			NumPointParable()
 			{}
-			bool operator()(const double *state, int *ret_) const 
+			// bool operator()(const double *dist, const double *p1, const double *p2, const double *param, double *point) const 
+			bool operator()(const double *dist, const double *p1, const double *p2, const double *param, double *np) const 
 			{
 				int num_point_per_unit_length = 10;
-		
-				int num_point_parable = round( (double)num_point_per_unit_length * state);
-				ret_[0] = num_point_parable; // in case rayCast with collision
+				int num_point_parable = round( (double)num_point_per_unit_length * dist[0]);
+
+				int u_x, u_y;
+
+				if(p2[1] > p1[1])
+					u_x = 1;
+				else if(p2[1] < p1[1])
+					u_x = -1;
+				else
+					u_x = 0;    
 				
+				if(p2[2] > p1[2])
+					u_y = 1;
+				else if(p2[2] < p1[2])
+					u_y = -1;
+				else
+					u_y = 0;  
+				
+				int change_x = 1;
+				int change_y = 1;
+				
+				if (fabs(p1[1] - p2[1]) < 0.001) 
+					change_x = -1;
+				
+				if (fabs(p1[2] - p2[2]) < 0.001)
+					change_y = -1;
+
+				np[0] = num_point_parable;
+				np[1] = u_x;
+				np[2] = u_y;
+				np[3] = change_x;
+				np[4] = change_y;
+
 				return true;
 			}
 		};
@@ -61,7 +91,7 @@ public:
 			bool operator()(const double *state, double *distance_cost) const 
 			{
 				bool is_into_ = g_3D->isIntoMap((double)state[0],(double)state[1],(double)state[2]);
-				double d_obs, cost_;
+				double d_obs, cost_, x_, y_, z_;
 				if (is_into_){
 					TrilinearParams d = g_3D->getPointDistInterpolation((double)state[0], (double)state[1], (double)state[2]);
 					x_ = state[0];
@@ -87,64 +117,62 @@ public:
 
 		struct ParableFunctor 
 		{
-			ParableFunctor(double weight_factor, Grid3d* grid_3D_, geometry_msgs::Vector3 pos_reel_ugv, doble sb, bool write_data, std::string user_name)
+			ParableFunctor(double weight_factor, Grid3d* grid_3D_, geometry_msgs::Vector3 pos_reel_ugv, double sb, bool write_data, std::string user_name)
 					: wf(weight_factor), g_3D_(grid_3D_), pos_reel_ugv_(pos_reel_ugv), sb_(sb), w_d_(write_data), user_(user_name)
 			{
-				num_point_parable.reset(new ceres::CostFunctionToFunctor<1,1>(
-							  new ceres::NumericDiffCostFunction<NumPointParable, ceres::CENTRAL,1,1>(new NumPointParable())));
+				point_parable.reset(new ceres::CostFunctionToFunctor<5,2,4,4,4>(
+							  new ceres::NumericDiffCostFunction<NumPointParable, ceres::CENTRAL,5,2,4,4,4>(new NumPointParable())));
 				cost_parable.reset(new ceres::CostFunctionToFunctor<1,3>(
-							  new ceres::NumericDiffCostFunction<NumPointParable, ceres::CENTRAL,1,3>(new NumPointParable(g_3D_, sb_))));
+							  new ceres::NumericDiffCostFunction<CostDistanceObstacle, ceres::CENTRAL,1,3>(new CostDistanceObstacle(g_3D_, sb_))));
 			}
 
 			template <typename T>
 			bool operator()(const T* const pUGV, const T* const pUAV, const T* const param, T* residual) const 
 			{
-				T ugv_reel[4] = {pUGV[0], pUGV[1], pUGV[2], pUGV[3] + T{pos_reel_ugv.z}}; // Set first parable point on the reel position
-				T d = sqrt(pow(pUAV[1]-ugv_reel[1],2)+pow(pUAV[2]-ugv_reel[2],2)); // To not make less than num_point_per_unit_length the value of points in parable
-				if (d_ < 1.0)
-					d_ = T{1.0};
+				T ugv_reel[4] = {pUGV[0], pUGV[1], pUGV[2], pUGV[3] + T{pos_reel_ugv_.z}}; // Set first parable point on the reel position
+				
+				T d_[2];
+				d_[0] = sqrt(pow(pUAV[1]-ugv_reel[1],2)+pow(pUAV[2]-ugv_reel[2],2)); // To not make less than num_point_per_unit_length the value of points in parable
+				if (d_[0] < 1.0)
+					d_[0] = T{1.0};
+				d_[1] = sqrt(pow(pUAV[3]-ugv_reel[3],2)); 
 
 				// Here Compute the Parable Points
-				T p_[3]; //  To save parable point to computed distance to obstacle
-				T points_in_parable[1];
-				(*num_point_parable)(d_, points_in_parable); // To get points number in parable
-			
-				//**FALTA ARREGLAR ESTO**//
-				double x_, tetha_;
+				T np[5]; //  To save parable point to computed distance to obstacle
+				(*point_parable)(d_, pUGV, pUAV, param, np); // To get points number in parable
+
+				T point[3];	
+				T parable_cost_[1];
+				T cost_state_parable = T{0.0};
 				T x_  =  T{0.0};
-				checkStateParable(p1_, p2_);
-				tetha_ = atan(fabs(p2_.y - p1_.y)/fabs(p2_.x - p1_.x));
-				//**FALTA ARREGLAR ESTO**//
-			
-				T parable_cost_ = T{0.0};
-			
-				if (!x_const || !y_const){ 
-					for(int i = 0; i < points_in_parable; i++){
-						x_ = x_ + (d_/(double)points_in_parable);
-						p_[0] = pUGV[1] + T{_direc_x* cos(tetha_) * x_};
-						p_[1] = pUGV[2] + T{_direc_y* sin(tetha_) * x_};
-						p_[2] = param_[1] * x_* x_ + param_[2] * x_ + param_[3];
-						(*cost_parable)(p_, parable_cost_); // To get points number in parable
+				T tetha_ = atan((pUAV[2] - pUGV[2])/(pUAV[1] - pUGV[1]));
+				if ( np[3] < 0 && np[4] < 0 ){
+					T _step = d_[0] / T{np[0]};
+					for(int i=0; i < np[0] ; i++)
+					{       
+						point[0] = pUGV[1];
+						point[1] = pUGV[2];
+						point[2] = pUGV[3]+ _step* (double)i;    
+						cost_state_parable = cost_state_parable + parable_cost_[0];
 					}
 				}
 				else{
-					double d_ = fabs(p1_.z - p2_.z);
-					double _step = d_ / (double) points_in_parable;
-					for(int i=0; i < points_in_parable ; i++)
-					{       
-						p_[0] = pUGV[1];
-						p_[1] = pUGV[2];
-						p_[2] = pUGV[3]+ T{_step* (double)i};    
-						(*cost_parable)(p_, parable_cost_); // To get points number in parable
+					for(int i = 0; i < np[0];  i++){
+						x_ = x_ + (d_[0]/ T{np[0]});
+						point[0] = pUGV[1] + np[1] * cos(tetha_) * x_;
+						point[1] = pUGV[2] + np[2] * sin(tetha_) * x_;
+						point[2] = param[1] * x_* x_ + param[2] * x_ + param[3];
+						(*cost_parable)(point, parable_cost_); // To get points number in parable
+						cost_state_parable = cost_state_parable + parable_cost_[0];
 					}
 				}
 
-				residual[0] = wf * stateParable[1];
+				residual[0] = wf * cost_state_parable;
 					
 				return true;
 			}
 		
-			std::unique_ptr<ceres::CostFunctionToFunctor<1,1> > num_point_parable;
+			std::unique_ptr<ceres::CostFunctionToFunctor<5,2,4,4,4> > point_parable;
 			std::unique_ptr<ceres::CostFunctionToFunctor<1,3> > cost_parable;
 
 			bool w_d_, sb_;
@@ -154,7 +182,6 @@ public:
 
 			Grid3d* g_3D_;
 		};
-
 private:
 
 };
