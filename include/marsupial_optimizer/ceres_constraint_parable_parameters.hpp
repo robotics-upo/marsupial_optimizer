@@ -35,7 +35,7 @@ public:
 			T Xa = T{0.0};
 			T Xb = sqrt(pow(pUAV[1]-ugv_reel[1],2)+pow(pUAV[2]-ugv_reel[2],2)); 
 
-			// For Residual, is consider that reel_pos is the origin in the parable plane
+			// For Residual, is consider that reel_pos is the origin in the parable plane ( Prarable equation: y = px² + qx + r)
 			T pow_a = sqrt((param[1]*Xa*Xa + param[2]*Xa + param[3] - ugv_reel[3])*(param[1]*Xa*Xa + param[2]*Xa+ param[3] - ugv_reel[3]));// residual = p*xa² + q*xa + r - ya
 			T pow_b = sqrt((param[1]*Xb*Xb + param[2]*Xb + param[3] - pUAV[3]    )*(param[1]*Xb*Xb + param[2]*Xb+ param[3] - pUAV[3]    ));// residual = p*xb² + q*xb + r - yb
 			residual[0] = (wf * 10.0 )* (exp(pow_a) - 1.0);
