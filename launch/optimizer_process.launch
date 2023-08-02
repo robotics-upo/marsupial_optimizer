@@ -101,9 +101,9 @@
         <param name="velocity_uav_constraint"       value="false"/>    # velocity_uav_constraint
         <param name="acceleration_uav_constraint"   value="false"/>    # acceleration_uav_constraint
 
-        <param name="parable_obstacle_constraint"   value="false"/>    # Parable_constraint
+        <param name="parable_obstacle_constraint"   value="true"/>    # Parable_constraint
         <param name="parable_length_constraint"     value="false"/>    # parable_length_constraint 
-        <param name="parable_parameters_constraint" value="true"/>    # parable_parameters_constraint  
+        <param name="parable_parameters_constraint" value="false"/>    # parable_parameters_constraint  
 
         <!-- UGV Constraint Parameters -->
         <param name="w_alpha_ugv"   value="0.180"/>   # Equi-distance ugv
