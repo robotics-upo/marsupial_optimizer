@@ -153,6 +153,7 @@ public:
 						point[1] = pUGV[2];
 						point[2] = pUGV[3]+ _step* (double)i;    
 						cost_state_parable = cost_state_parable + parable_cost_[0]; // To get point parable cost
+				// std::cout << "[" << np[0] <<"/"<< i<<"] , parable_cost_[0]=" << parable_cost_[0] << " STRAIGHT" << std::endl;
 					}
 				}
 				else{
@@ -163,8 +164,10 @@ public:
 						point[2] = param[1] * x_* x_ + param[2] * x_ + param[3];
 						(*cost_parable)(point, parable_cost_); // To get point parable cost
 						cost_state_parable = cost_state_parable + parable_cost_[0];
+				// std::cout << "[" << np[0] <<"/"<< i<<"] , parable_cost_[0]=" << parable_cost_[0]  << " PARABLE" << std::endl;
 					}
 				}
+				// std::cout << "[" << pUGV[0] <<"] , cost_state_parable=" << cost_state_parable << std::endl;
 				residual[0] = wf * cost_state_parable;
 					
 				return true;
