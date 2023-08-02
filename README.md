@@ -1,18 +1,19 @@
-# marsupial_optimizer based on ceres-solver
+# marsupial_optimizer based on ceres-solver - Parable Approach
 
-Testing 
-
-This package provides a framework to solve non-linear optimization problem for 3D trajectory planning in a marsupial robot configuration. Specifically, the configuration consists of an unmanned aerial vehicle (UAV) tied to an unmanned ground vehicle (UGV). The result is a collision-free trajectory for UAV and tether.
+This package provides a framework to solve non-linear optimization problem for 3D trajectory planning in a marsupial robotic system consisting of an unmanned aerial vehicle (UAV) linked to an unmanned ground vehicle (UGV) through a non-taut tether with controllable length. The objective is to determine a synchronized collision-free trajectory for the three marsupial system agents: UAV, UGV, and tether (https://youtu.be/N-K3yT8Tsxw).
 
 <p align="center">
-    <img src="worlds/scenario_2.gif" width="400">
+    <img src="worlds/repo_marsupial-optimizer.gif" width="400">
+</p>
+<p align="center">
+    <img src="worlds/repo_marsupial-optimizer2.gif" width="400">
 </p>
 
-The optimization assumes static UGV position ,and estimates the problem states such as UAV and tether related with: UAV  position,  tether length, and UAV trajectory time. 
+To the best of our knowledge, this is the first method that addresses  the trajectory planning of a marsupial UGV-UAV with a non-taut tether. The optimizer input is  a trajectory calculated adding temporal aspect to a path, wihich is computing using a planner based on optimal Rapidly-exploring Random Trees (RRT*) algorithm with novel sampling and steering techniques to speed up the computation. This algorithm is able to obtain collision-free paths for the UAV and the UGV, taking into account the 3D environment and the tether.
 
-Different components such as UAV and tether positions, distance obstacles and temporal aspects of the motion (velocities and accelerations) are encoded as constraint and objective function. In consequence, the problem determining the values of the states optimizing a weighted multi-objective function.
+The trajectory optimization is based on non-linear least squares. The optimizer takes into account  aspects not considered in the path planning, like temporal constraints of the motion imposed by limits on the velocities and accelerations of the robots, trajectory smoothness, obstacles-free, or raising the tether's clearance. 
 
-The components encoded as constraint and objective function are local with respect to the problem states. Thus, the optimization is solved by formulating the problem as a sparse factor graph. For that g2o is used as the engine for graph optimization [https://github.com/RainerKuemmerle/g2o].
+The optimization process is based on framework ceres-solver (http://ceres-solver.org/)
 
 ## Installation
 
@@ -20,22 +21,30 @@ In this section you will find the installation instructions for making it work. 
 
 ### Prerrequisites and dependencies
 
+This package has been designed and tested in a x86_64 machine under a Ubuntu 20.04 operating system and ROS Noetic distribution. Besides, the scripts provided lets you easily install the following dependencies:
 
+- ceres-solver
+- PCL
+- yaml-cpp
+- rrt-planner (https://github.com/robotics-upo/rrt_star_planners, branch: main)
+- catenary_checker (https://github.com/robotics-upo/catenary_checker , branch: master) 
+- upo_actions (https://github.com/robotics-upo/upo_actions, branch: master)
+- upo_markers (https://github.com/robotics-upo/upo_markers, branch: master)
 
 ### Installation steps:
 
 1- Clone this repository into the source of your catkin workspace. Please refer to http://wiki.ros.org/catkin/Tutorials/create_a_workspace to setup a new workspace.
 
-2- Call marsupial_setup.sh script from ```marsupial_g2o/script``` directory to install package dependencies.
+2- Call marsupial_setup.sh script from ```marsupial_optimizer/script``` directory to install package dependencies.
 
 ```
-rosrun marsupial_g2o marsupial_setup.sh
+rosrun marsupial_optimizer marsupial_setup.sh
 ```
 
-3- Call the g2o_installation.sh script to install G2O required dependencies (will be install in ```/home/$user/```).
+3- Call the ceres_installation.sh script to install Ceres-Solver required dependencies (will be install in ```/home/$user/```).
 
 ```
-rosrun marsupial_g2o g2o_installation.sh
+rosrun marsupial_optimizer ceres_installation.sh
 ```
 
 4- Finally compile your workspace using ```catkin_make``` 
@@ -56,6 +65,3 @@ To launch the optimizer just launch the provided ```launch/marsupial_optimizatio
 roslaunch marsupial_g2o marsupial_optimization_trayectory.launch scenario_number:=2 num_pos_initial:=2
 ```
 
-It will launch the optimizer and the visualization of the environment and marsupial robots in RVIZ. 
-
-To start the optimization process is necessary to publish a desired goal position in the topic ```/Make_Plan/goal```.
