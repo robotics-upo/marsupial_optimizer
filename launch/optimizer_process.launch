@@ -95,15 +95,15 @@
         <param name="obstacles_uav_constraint"      value="true"/>    # obstacles_uav_constraint   
         <param name="smoothness_uav_constraint"     value="true"/>    # smoothness_uav_constraint   
 
-        <param name="time_constraint"               value="false"/>    # time_ugv_constraint
-        <param name="velocity_ugv_constraint"       value="false"/>    # velocity_ugv_constraint
-        <param name="acceleration_ugv_constraint"   value="false"/>    # acceleration_ugv_constraint
-        <param name="velocity_uav_constraint"       value="false"/>    # velocity_uav_constraint
-        <param name="acceleration_uav_constraint"   value="false"/>    # acceleration_uav_constraint
+        <param name="time_constraint"               value="true"/>    # time_ugv_constraint
+        <param name="velocity_ugv_constraint"       value="true"/>    # velocity_ugv_constraint
+        <param name="acceleration_ugv_constraint"   value="true"/>    # acceleration_ugv_constraint
+        <param name="velocity_uav_constraint"       value="true"/>    # velocity_uav_constraint
+        <param name="acceleration_uav_constraint"   value="true"/>    # acceleration_uav_constraint
 
         <param name="parable_obstacle_constraint"   value="true"/>    # Parable_constraint
-        <param name="parable_length_constraint"     value="false"/>    # parable_length_constraint 
-        <param name="parable_parameters_constraint" value="false"/>    # parable_parameters_constraint  
+        <param name="parable_length_constraint"     value="true"/>    # parable_length_constraint 
+        <param name="parable_parameters_constraint" value="true"/>    # parable_parameters_constraint  
 
         <!-- UGV Constraint Parameters -->
         <param name="w_alpha_ugv"   value="0.180"/>   # Equi-distance ugv
@@ -124,9 +124,10 @@
         <param name="w_delta"     value="0.001"/>  # time 
 
         <!-- Parable Constraint Parameters -->
-        <param name="w_eta_1"           value="0.0250"/>   # Parable Obstacles collision 
+        <param name="w_eta_1"           value="0.0010"/>   # Parable Obstacles collision 
         <param name="w_eta_2"           value="0.9000"/>   # Parable length 
-        <param name="w_eta_3"           value="0.1000"/>   # Parable Params 
+        <param name="w_eta_3"           value="0.6000"/>   # Parable Params 
+
         <param name="length_tether_max" value="$(arg length_tether_max)"/>  
         <param name="distance_obstacle_ugv"         value="1.2"/> <!-- bound distance UGV to obstacles [m]-->
         <param name="distance_obstacle_uav"         value="2.0"/> <!-- bound distance UAV to obstacles [m]-->

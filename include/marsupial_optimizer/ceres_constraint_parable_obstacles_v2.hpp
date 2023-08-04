@@ -92,33 +92,46 @@ class DistanceFunction : public ceres::SizedCostFunction<1, 3>
 	double sb;
 };
 
+class NumPointFunction : public ceres::SizedCostFunction<1, 1> 
+{
+ public:
+
+    NumPointFunction(void)
+    {
+    }
+
+    virtual ~NumPointFunction(void) 
+    {
+    }
+
+    virtual bool Evaluate(double const* const* parameters,
+                        double* residuals,
+                        double** jacobians) const 
+    {
+        double d = parameters[0][0];
+		int num_point_per_unit_length = 10;
+		
+		residuals[0] = round( (double)num_point_per_unit_length * d);
+        jacobians[0][0] = (int)num_point_per_unit_length;
+
+        return true;
+  }
+
+  private:
+
+};
+
 class AutodiffParableFunctor {
 
 	public:
     AutodiffParableFunctor(){}
 
-		struct NumPointParable 
-		{
-			NumPointParable()
-			{}
-			bool operator()(const double *dist, double *np) const 
-			{
-				int num_point_per_unit_length = 10;
-				int num_point_parable = round( (double)num_point_per_unit_length * dist[0]);
-
-				np[0] = num_point_parable;
-
-				return true;
-			}
-		};
-
 		struct ParableFunctor 
 		{
 			ParableFunctor(double weight_factor_, Grid3d* grid_3D_, geometry_msgs::Vector3 pos_reel_ugv_, double sb_, bool write_data_, std::string user_name_)
-			: wf(weight_factor_), g_3D(grid_3D_), pos_reel_ugv(pos_reel_ugv_), sb(sb_), w_d_(write_data_), user(user_name_), _parableCostFunctor(new DistanceFunction(g_3D, sb))
+			: wf(weight_factor_), g_3D(grid_3D_), pos_reel_ugv(pos_reel_ugv_), sb(sb_), w_d_(write_data_), user(user_name_), 
+			_parableCostFunctor(new DistanceFunction(g_3D, sb)), _numPointFunctor(new NumPointFunction())
 			{
-				point_parable.reset(new ceres::CostFunctionToFunctor<1,1>(
-							  new ceres::NumericDiffCostFunction<NumPointParable, ceres::CENTRAL,1,1>(new NumPointParable())));
 			}
 
 			template <typename T>
@@ -128,7 +141,7 @@ class AutodiffParableFunctor {
 				
 				// Here is compute the Parable Parameters 
 				T d_[1];
-				T np[1]; 
+				T np_; 
 				T u_x , u_y;
 				T fix_value = T{0.01};
 				bool change_x, change_y;
@@ -160,7 +173,7 @@ class AutodiffParableFunctor {
 				if (d_[0] < 1.0) // To not make less than num_point_per_unit_length the value of points in parable
 					d_[0] = T{1.0};
 
-				(*point_parable)(d_, np); // To get the values and parameters needed for computing the parable interpolation
+        		_numPointFunctor(d_, &np_); // To get the values and parameters needed for computing the parable interpolation
 
 				// Here is compute the parable point and it cost 
 				T point[3];
@@ -168,15 +181,15 @@ class AutodiffParableFunctor {
 				T cost_state_parable = T{0.0};
 				T x_  =  T{0.0};
 				T tetha_ = atan((pUAV[2] - pUGV[2])/(pUAV[1] - pUGV[1]));
-				for(int i = 0; i < np[0]; i++){  
+				for(int i = 0; i < np_; i++){  
 					if ( !change_x && !change_y ){ // To check difference position between UGV and UAV only in z-axe, so parable it is not computed
-						T _step = d_[0] / T{np[0]};
+						T _step = d_[0] / np_;
 						point[0] = pUGV[1];
 						point[1] = pUGV[2];
 						point[2] = pUGV[3]+ _step* (double)i;    
 					}
 					else{ 	// In case that UGV and UAV are not in the same point the plane X-Y
-						x_ = x_ + (d_[0]/ T{np[0]});
+						x_ = x_ + (d_[0]/ np_);
 						point[0] = pUGV[1] + u_x * cos(tetha_) * x_;
 						point[1] = pUGV[2] + u_y * sin(tetha_) * x_;
 						point[2] = param[1] * x_* x_ + param[2] * x_ + param[3];
@@ -184,7 +197,7 @@ class AutodiffParableFunctor {
         			_parableCostFunctor(point, &parable_cost_);
 
 					cost_state_parable = cost_state_parable + parable_cost_; // To get point parable cost
-					// std::cout << "[" << np[0] <<"/"<< i<<"] , parable_cost_[0]=" << parable_cost_[0]  << " PARABLE" << std::endl;
+					// std::cout << "[" << np_[0] <<"/"<< i<<"] , parable_cost_[0]=" << parable_cost_[0]  << " PARABLE" << std::endl;
 				}
 				// std::cout << "[" << pUGV[0] <<"] , cost_state_parable=" << cost_state_parable << std::endl;
 				residual[0] = wf * 0.001 * cost_state_parable;
@@ -192,13 +205,13 @@ class AutodiffParableFunctor {
 				return true;
 			}
 
-			std::unique_ptr<ceres::CostFunctionToFunctor<1,1> > point_parable;
 			bool w_d_, sb;
 			double wf;
 			geometry_msgs::Vector3 pos_reel_ugv;
 			std::string user;
 			Grid3d* g_3D;
 	    	ceres::CostFunctionToFunctor<1, 3> _parableCostFunctor;
+	    	ceres::CostFunctionToFunctor<1, 1> _numPointFunctor;
 		};
 	private:
 };
