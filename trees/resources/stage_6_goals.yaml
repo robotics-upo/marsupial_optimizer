@@ -9,3 +9,25 @@ stage_6_pos_final_1:
         z: 0.0
         w: 1.0
 
+stage_6_pos_comparison_1:
+    pose:
+        x: 6.0
+        y: -0.5
+        z: 1.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        w: 1.0
+
+stage_6_pos_comparison_2:
+    pose:
+        x: 8.4
+        y: 7.5
+        z: 3.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        w: 1.0
+

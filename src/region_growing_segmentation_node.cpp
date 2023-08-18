@@ -200,11 +200,12 @@ void publishTopicsPointCloud()
 {
     ROS_INFO_COND(debug_rgs,PRINTF_CYAN"  RegionGrowing:  segmented_cloud_obstacles->size() = %lu", segmented_cloud_obstacles->size());
     pcl::toROSMsg(*segmented_cloud_obstacles, pc_obstacles_out);
+    pc_obstacles_out.header = data_in.header;
     segmented_obstacles_pc_pub.publish(pc_obstacles_out);
-
 
     ROS_INFO_COND(debug_rgs,PRINTF_CYAN"  RegionGrowing:  segmented_cloud_traversable->size() = %lu", segmented_cloud_traversable->size());
     pcl::toROSMsg(*segmented_cloud_traversable, pc_traversable_out);
+    pc_traversable_out.header = data_in.header;
     segmented_traversable_pc_pub.publish(pc_traversable_out);
 
 }
@@ -299,7 +300,7 @@ int main(int argc, char **argv)
 
     new_octomap_sub = n.subscribe<sensor_msgs::PointCloud2>("/octomap_point_cloud_centers", 1000, pcCallback);
 
-	segmented_traversable_pc_pub = n.advertise<sensor_msgs::PointCloud2>("region_growing_traversability_pc_map", 10,latch_topic);
+	segmented_traversable_pc_pub = n.advertise<sensor_msgs::PointCloud2>("region_growing_traversability_pc_map", 10, latch_topic);
 	segmented_obstacles_pc_pub = n.advertise<sensor_msgs::PointCloud2>("region_growing_obstacles_pc_map", 10,latch_topic);
     reduced_map_pub = n.advertise<octomap_msgs::Octomap>("region_growing_octomap_reduced", 100, latch_topic);
 

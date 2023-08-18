@@ -6,9 +6,10 @@
             <Action ID="WaitSeconds" duration="5" name="Stage1WaitSeconds1"/>
             <Repeat num_cycles="20">
                 <ForceSuccess>
-                    <Action ID="UPOGoToGoalByName" action="/Make_Plan" goal_name="stage_7_pos_comparison_1" name="Stage1GoToGoal" state="gpf1"/>
+                    <Action ID="UPOGoToGoalByName" action="/Make_Plan" goal_name="stage_4_pos_comparison_2" name="Stage4GoToGoal2" state="gpf2"/>
                 </ForceSuccess>
             </Repeat>
+
         </Sequence>
     </BehaviorTree>
     <!-- ////////// -->
