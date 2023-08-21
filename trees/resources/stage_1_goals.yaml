@@ -77,9 +77,9 @@ stage_1_pos_comparison_1:
 
 stage_1_pos_comparison_2:
     pose:
-        x: -8.0
-        y: 3.0
-        z: 8.0
+        x: -5.0
+        y: 2.0
+        z: 7.5
     orientation:
         x: 0.0
         y: 0.0
