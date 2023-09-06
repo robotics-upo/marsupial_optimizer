@@ -1,14 +1,14 @@
 <launch>
-    <arg name="map_file"        default="teatro_wall"/>
+    <arg name="map_file"   default="stage_6"/>
+    <arg name="map"        default="stage_6"/>
     
     <arg name="get_path_from_file"    default="true"/>     
+    <arg name="write_data_files" default="true"/>
 
     <arg name="graph_traj_in_rviz" default="false"/>
     <arg name="pause_execution" default="false"/>
-    <arg name="write_data_files" default="false"/>
     <arg name="use_distance_function" default="true"/>  
     <arg name="pc_user_name"    default="simon"/>     
-    <arg name="map"        default="teatro_wall"/>
 
     <arg name="write_data_residual" default="false"/> # Parameter to write the residual value for each optimizer Functor
 
@@ -53,7 +53,7 @@
 
 
     <!-- Local Planner: Optimizer Ceres-->
-    <node pkg="marsupial_optimizer" type="optimizer_local_planner_node" name="optimizer_process_node" output="screen"> #launch-prefix="gdb -ex run --args"> 
+    <node pkg="marsupial_optimizer" type="optimizer_local_planner_node" name="optimizer_process_node" output="screen" launch-prefix="gdb -ex run --args"> 
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/3d_local_params.yaml"/>
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/$(arg map_file)_ws.yaml"/>
         
@@ -92,7 +92,7 @@
         <param name="smoothness_ugv_constraint"     value="true"/>   # smoothness_ugv_constraint
 
         <param name="equidistance_uav_constraint"   value="true"/>    # equidistance_uav_constraint  
-        <param name="obstacles_uav_constraint"      value="true"/>    # obstacles_uav_constraint   
+        <param name="obstacles_uav_constraint"      value="true"/>    # use_loss_functionobstacles_uav_constraint   
         <param name="smoothness_uav_constraint"     value="true"/>    # smoothness_uav_constraint   
 
         <param name="time_constraint"               value="true"/>    # time_ugv_constraint
@@ -142,7 +142,7 @@
         #Parameter to write file 
         <param name="write_data_for_analysis"    value="$(arg write_data_files)"/>     
         <param name="name_output_file"    value="$(arg name_output_file)"/>     
-        <!-- <param name="scenario_number"    value="$(arg scenario_number)"/>      -->
+        <param name="scenario_name"    value="$(arg map_file)"/>     
         <param name="num_pos_initial"   value="$(arg num_pos_initial)"/>     
         <param name="path"   value="/home/$(arg pc_user_name)/"/>     
         <param name="pc_user_name"  value="$(arg pc_user_name)"/>     
