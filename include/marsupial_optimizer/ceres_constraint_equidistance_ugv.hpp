@@ -38,9 +38,9 @@ class EquiDistanceFunctorUGV
 
       T max_value_residual = T{10.0};
       T min_value_residual = T{0.0};
-      T m;
-      T init_d = T{i_d};
-      
+      T m, init_d ;
+
+      init_d  = T{i_d};
       m = (max_value_residual- min_value_residual)/( 1.5*init_d - init_d);
       
       if(d_pos > init_d)

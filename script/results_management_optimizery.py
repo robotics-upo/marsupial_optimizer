@@ -14,13 +14,12 @@ arg3 = sys.argv[3] # number of position to analize
 
 user_ = 'simon' # Change this value to the user name
 
-num_exp= 100.0
-stage_num = arg1 
+num_exp= 20.0
+stage_name = arg1 
 initial_pos = arg2 
 mode = arg3
-file_path_ugv = '/home/' + user_ + '/results_marsupial_optimizer/results_stage_'+ stage_num +'_InitPos_'+ initial_pos + '_method_'+ mode +'.txt'
-file_path_uav = '/home/' + user_ + '/results_marsupial_optimizer/results_stage_'+ stage_num +'_InitPos_'+ initial_pos + '_method_'+ mode +'.txt'
-print('Magement Data For: ',file_path_ugv)
+file_path = '/home/' + user_ + '/results_marsupial_optimizer/results_'+ stage_name +'_InitPos_'+ initial_pos + '_method_'+ mode +'.txt'
+print('Magement Data For: ',file_path)
 col_00 = 0
 col_01 = 1
 col_02 = 2
@@ -76,7 +75,7 @@ l_col_21 = []
 # l_col_25 = []
 
 # Save colums values sum
-file = open(file_path_ugv, 'r')
+file = open(file_path, 'r')
 lines = file.read().splitlines() 
 lines.pop(0) #quitamos primera linea en caso de tener titulos 
 count = 0
@@ -138,11 +137,11 @@ vCol21= 0.0
 # vCol24= 0.0
 # vCol25= 0.0
 
-output_file = open('/home/' + user_ + '/results_marsupial_optimizer/results.cvs', 'a') #Si no existia el archivo, lo crea y escribe al final
+output_file = open('/home/' + user_ + '/results_marsupial_optimizer/results_'+ stage_name+ '_' + mode +'.cvs', 'a') #Si no existia el archivo, lo crea y escribe al final
 count = 0
-for i in range(0, 100):
+for i in range(0, 20):
     #Anadir resultados, segun columnas: nombre de test, tiempo medio de tes ...
-    # output_file.writelines(str(l_col_00[i]) + ';' + str(l_col_01[i]) + ';' + str(l_col_02[i]) + ';' + str(l_col_03[i]) + ';' + str(l_col_04[i]) + ';' + str(l_col_05[i]) + ';' + str(l_col_06[i]) + ';' + str(l_col_07[i]) + ';' + str(l_col_08[i]) + ';' + str(l_col_09[i]) + ';' + str(l_col_10[i]) + ';' + str(l_col_11[i]) + ';' + str(l_col_12[i]) + ';' + str(l_col_13[i]) + ';' + str(l_col_14[i]) + ';' + str(l_col_15[i]) + ';' + str(l_col_16[i]) + ';' + str(l_col_17[i]) + ';' + str(l_col_18[i]) + ';' + str(l_col_19[i]) + ';' + str(l_col_20[i]) + ';' + str(l_col_21[i]) + '\n')
+    output_file.writelines(str(l_col_00[i]) + ';' + str(l_col_01[i]) + ';' + str(l_col_02[i]) + ';' + str(l_col_03[i]) + ';' + str(l_col_04[i]) + ';' + str(l_col_05[i]) + ';' + str(l_col_06[i]) + ';' + str(l_col_07[i]) + ';' + str(l_col_08[i]) + ';' + str(l_col_09[i]) + ';' + str(l_col_10[i]) + ';' + str(l_col_11[i]) + ';' + str(l_col_12[i]) + ';' + str(l_col_13[i]) + ';' + str(l_col_14[i]) + ';' + str(l_col_15[i]) + ';' + str(l_col_16[i]) + ';' + str(l_col_17[i]) + ';' + str(l_col_18[i]) + ';' + str(l_col_19[i]) + ';' + str(l_col_20[i]) + ';' + str(l_col_21[i]) + '\n')
     vCol00 = vCol00 + float(l_col_00[i])
     vCol01 = vCol01 + float(l_col_01[i])
     vCol02 = vCol02 + float(l_col_02[i])

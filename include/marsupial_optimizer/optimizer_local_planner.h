@@ -54,7 +54,6 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "catenary_checker/near_neighbor.hpp"
 #include "catenary_checker/grid3d.hpp"
 #include "catenary_checker/bisection_catenary_3D.h"
-// #include "misc/marker_publisher.hpp"
 
 //ROS
 #include <ros/ros.h>
@@ -100,7 +99,6 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 
 using namespace Eigen;
 using namespace std;
-// using namespace g2o;
 
 using ceres::AutoDiffCostFunction;
 using ceres::NumericDiffCostFunction;
@@ -145,7 +143,6 @@ public:
 
 	// =========== Function declarations =============
 	OptimizerLocalPlanner(bool get_path_from_file_);
-	// OptimizerLocalPlanner(tf2_ros::Buffer tfBuffer_);
 	// ~OptimizerLocalPlanner();
 	void setupOptimizer();
 	void initializeSubscribers();
@@ -167,9 +164,7 @@ public:
 	void getTemporalState(vector<double> &_time);
 	// void getInitialGlobalPath(trajectory_msgs::MultiDOFJointTrajectory _path, vector<geometry_msgs::Vector3> &v_ugv_, vector<geometry_msgs::Vector3> &v_uav_);
 	void initializingParametersblock();
-	void finishigOptimizationAndGetDataResult(int &n_coll_opt_traj_ugv, int &n_coll_init_path_ugv, int &n_coll_opt_traj_uav, int &n_coll_init_path_uav, int &n_coll_opt_cat_);
-	void getDataForOptimizerAnalysis();
-	void getSmoothnessTrajectory(vector<geometry_msgs::Vector3> v_pos2kin_ugv, vector<geometry_msgs::Vector3> v_pos2kin_uav, vector<double> &v_angles_kin_ugv, vector<double> &v_angles_kin_uav);
+	void finishigOptimizationAndGetDataResult(int &n_coll_opt_traj_ugv, int &n_coll_init_path_ugv, int &n_coll_opt_traj_uav, int &n_coll_init_path_uav, int &n_coll_opt_parab_);
 	geometry_msgs::Vector3 getReelPoint(const float px_, const float py_, const float pz_,const float qx_, const float qy_, const float qz_, const float qw_);
 	void getReelPose();
 	// void publishOptimizedTraj();
@@ -182,15 +177,11 @@ public:
 									ros::Publisher p_parable_, visualization_msgs::MarkerArray m_);
 	void checkCatenaryLength(vector<geometry_msgs::Vector3> v_p_ugv, vector<geometry_msgs::Vector3>  v_p_uav, vector<geometry_msgs::Quaternion> v_r_ugv, vector<float> &v_l_in);
 
-	// bool computeCatenary(int p_, int mode_, double &l_cat_);
-	// double getPointDistanceFullMap(bool use_dist_func_, geometry_msgs::Vector3 p_);
-
 	upo_actions::ExecutePathResult action_result;
 
 	// ============= Global Variables ================
 
 	ros::NodeHandlePtr nh;
-	// tf2_ros::Buffer *tfBuffer;
     std::shared_ptr<tf2_ros::Buffer> tfBuffer;
     std::unique_ptr<tf2_ros::TransformListener> tf2_list;
 
@@ -223,8 +214,9 @@ public:
 	NearNeighbor nn_uav; // Kdtree used for Catenary and UAV
 	NearNeighbor nn_trav, nn_ugv_obs;
 	MarkerPublisher MP;
-	DataManagement dm_;
 	Grid3d* grid_3D;
+	DataManagement dm_;
+
 
 	//! Manage Data Vertices and Edges
     std::unique_ptr<ExecutePathServer> execute_path_srv_ptr;
@@ -274,29 +266,28 @@ public:
 	vector<double> vec_dist_init_ugv, vec_dist_init_uav;
 	vector<double> vec_time_init;
 	vector<double> v_angles_smooth_ugv_init, v_angles_smooth_uav_init, v_angles_smooth_ugv_opt, v_angles_smooth_uav_opt;
-	vector<float> vec_len_cat_init, vec_len_cat_opt;
+	vector<float> vec_len_cat_init;
 	vector<geometry_msgs::Vector3> vec_pose_ugv_opt, vec_pose_uav_opt; 
 	vector<geometry_msgs::Vector3> vec_pose_ugv_init, vec_pose_uav_init;
 	vector <parable_parameters> v_parable_params_init, v_parable_params_opt;
 	vector<double> vec_time_opt;
-	
-
 
 	vector<int> v_id_point_not_fix_ugv, v_id_point_not_fix_uav; // save the id number of position no fix , from vector vec_pose_init_uav
 	
     double pos_reel_x, pos_reel_y, pos_reel_z;
 	ros::Time start_time_opt, final_time_opt;
-	int scenario_number, num_pos_initial, num_goal;
+	int num_pos_initial, num_goal;
 	bool write_data_for_analysis, use_loss_function;
 	double length_tether_max;
 	int count_fix_points_initial_ugv, count_fix_points_final_ugv, count_fix_points_uav;
+	std::string scenario_name;
 
 	bool equidistance_uav_constraint, obstacles_uav_constraint, smoothness_uav_constraint;
 	bool velocity_uav_constraint,acceleration_uav_constraint;
 	bool time_constraint, velocity_ugv_constraint, acceleration_ugv_constraint;
 	bool parable_length_constraint, parable_obstacle_constraint, parable_parameters_constraint;
 	bool finished_rviz_maneuver;
-	bool equidistance_ugv_constraint, obstacles_ugv_constraint,traversability_ugv_constraint, smoothness_ugv_constraint;
+	bool equidistance_ugv_constraint, obstacles_ugv_constraint, traversability_ugv_constraint, smoothness_ugv_constraint;
 	bool write_data_residual;
 
 private:

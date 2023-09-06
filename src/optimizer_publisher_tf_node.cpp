@@ -99,6 +99,9 @@ ManagerTf::ManagerTf(ros::NodeHandlePtr nh, ros::NodeHandle pnh)
 
 	publish_initial = true;
 
+	initial_pos_uav_x = initial_pos_ugv_x;
+	initial_pos_uav_y = initial_pos_ugv_y;
+	initial_pos_uav_z = initial_pos_ugv_z + pos_uav_above_ugv;
 	printf("\tINITIAL POS UGV: trans=[%f %f %f] rot=[%f %f %f]\n",initial_pos_ugv_x, initial_pos_ugv_y, initial_pos_ugv_z, initial_pos_ugv_roll, initial_pos_ugv_pitch, initial_pos_ugv_yaw);
 	printf("\t**INITIAL POS UAV: trans=[%f %f %f] rot=[%f %f %f]\n",initial_pos_uav_x, initial_pos_uav_y, initial_pos_uav_z, initial_pos_uav_roll, initial_pos_uav_pitch, initial_pos_uav_yaw);
 }

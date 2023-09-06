@@ -102,7 +102,7 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(bool get_path_from_file_)
 	nh->param("files_results", files_results, (std::string) "results/");
 	nh->param("files_residuals", files_residuals, (std::string) "residuals/");
 	nh->param("name_output_file", name_output_file, (std::string) "optimization_test");
-	nh->param<int>("scenario_number", scenario_number, 1);
+	nh->param("scenario_name", scenario_name, (std::string) "scenario_name");
 	nh->param<int>("num_pos_initial", num_pos_initial, 1);
 
 	nh->param<bool>("debug", debug, false);
@@ -293,8 +293,9 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		vec_len_cat_init = path_shared_.length_catenary; 
 	}
   	
-	if(write_data_residual)
+	if(write_data_residual){
 		dm_.cleanResidualConstraintsFile(path, files_residuals);
+	}
     getReelPose(); // To get init pos reel for optimization process
 
 	// Stage to interpolate path
@@ -316,18 +317,18 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	calculateDistanceVertices(vec_dist_init_ugv, vec_dist_init_uav);
  	getTemporalState(vec_time_init);
 
-	dm_.initDataManagement(path+files_results, name_output_file, scenario_number, num_pos_initial, initial_velocity_ugv, initial_velocity_uav, 
-							initial_acceleration_ugv, initial_acceleration_uav, distance_parable_obstacle, pose_reel_local.transform.translation, vec_pose_ugv_init, 
-							vec_pose_uav_init, vec_len_cat_init, vec_rot_ugv_init, vec_rot_uav_init, mapFull_msg, mapTrav_msg, grid_3D);			   
-	if(write_data_for_analysis)
-		getSmoothnessTrajectory(vec_pose_ugv_init, vec_pose_uav_init, v_angles_smooth_ugv_init, v_angles_smooth_uav_init);
-		dm_.writeTemporalDataBeforeOptimization(vec_dist_init_ugv, vec_dist_init_uav, vec_time_init, v_angles_smooth_ugv_init, v_angles_smooth_uav_init);
-
 	// Stage to get parable
 	getParableParameter(vec_pose_ugv_init, vec_pose_uav_init, vec_len_cat_init);
 	graphCatenary(vec_pose_ugv_init,vec_pose_uav_init, vec_rot_ugv_init, vec_len_cat_init);
 	graphParableAndPathMarker(vec_pose_ugv_init,vec_pose_uav_init, vec_rot_ugv_init, v_parable_params_init, 5, 6, 2,
 							  traj_marker_ugv_pub_, traj_marker_uav_pub_, parable_marker_init_pub_, parable_marker_init);
+
+	dm_.initDataManagement(path+files_results, name_output_file, scenario_name, num_pos_initial, initial_velocity_ugv, initial_velocity_uav, 
+							initial_acceleration_ugv, initial_acceleration_uav, distance_parable_obstacle, pose_reel_local.transform.translation, vec_pose_ugv_init, 
+							vec_pose_uav_init, vec_len_cat_init, vec_rot_ugv_init, vec_rot_uav_init, mapFull_msg, mapTrav_msg, grid_3D);			   
+	if(write_data_for_analysis)
+		dm_.getSmoothnessTrajectory(vec_pose_ugv_init, vec_pose_uav_init, v_angles_smooth_ugv_init, v_angles_smooth_uav_init);
+		dm_.writeTemporalDataBeforeOptimization(vec_dist_init_ugv, vec_dist_init_uav, vec_time_init, v_angles_smooth_ugv_init, v_angles_smooth_uav_init, v_parable_params_init);
 
 	std::cout << std::endl <<  "==================================================="  << std::endl << "\tPreparing to execute Optimization: Creating Parameter Blocks!!" << std::endl;
 
@@ -344,6 +345,8 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	/****************************   UGV Constraints  ****************************/	
 	if (optimize_ugv){
 		ROS_INFO(PRINTF_GREEN" PREPARING  UGV  PARAMETER  BLOCKS  TO  OPTIMIZE:");
+		if (initial_distance_states_ugv < 0.001)
+			count_fix_points_initial_ugv = statesPosUGV.size();
 		/*** Cost Function UGV I : Equidistance constraint UGV ***/
 		if (equidistance_ugv_constraint){
 			ROS_INFO(PRINTF_GREEN"		- Optimize Equidistance Autodiff");
@@ -406,9 +409,10 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		if (time_constraint){
 			ROS_INFO(PRINTF_GREEN"		- Optimize Time Autodiff");
 			for (int i = 0; i < statesTime.size(); ++i) {
-				CostFunction* cost_function_time  = new AutoDiffCostFunction<TimeFunctor, 1, 2> (new TimeFunctor(w_delta, initial_time, write_data_residual, user_name)); 
+				CostFunction* cost_function_time  = new AutoDiffCostFunction<TimeFunctor, 1, 2> 
+													(new TimeFunctor(w_delta, initial_time, write_data_residual, user_name)); 
 				problem.AddResidualBlock(cost_function_time, loss_function, statesTime[i].parameter);
-				if (i < count_fix_points_initial_ugv) 
+				if (i < 1) 
 					problem.SetParameterBlockConstant(statesTime[i].parameter);
 				else
 					problem.SetParameterLowerBound(statesTime[i].parameter, 1, min_T);
@@ -524,7 +528,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 				CostFunction* cost_function_par_1  = new AutoDiffCostFunction<AutodiffParableFunctor::ParableFunctor, 1, 4, 4, 4> //Residual, ugvPos, uavPos, parableParams
 											(new AutodiffParableFunctor::ParableFunctor(w_eta_1, grid_3D, pose_reel_local.transform.translation, distance_parable_obstacle,
 											write_data_residual, user_name)); 
-				problem.AddResidualBlock(cost_function_par_1, loss_function, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesParableParams[i].parameter);
+					problem.AddResidualBlock(cost_function_par_1, loss_function, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesParableParams[i].parameter);
 				if (i == 0 || (fix_last_position_ugv && i == statesParableParams.size()-1))
 					problem.SetParameterBlockConstant(statesParableParams[i].parameter);
 			}
@@ -533,7 +537,8 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			ROS_INFO(PRINTF_ORANGE"		- Optimize Parable Length Autodiff");
 			for (int i = 0; i < statesParableParams.size(); ++i) {
 				CostFunction* cost_function_par_2  = new AutoDiffCostFunction<AutodiffParableLengthFunctor::ParableLengthFunctor, 1, 4, 4, 4>
-				(new AutodiffParableLengthFunctor::ParableLengthFunctor(w_eta_2, pose_reel_local.transform.translation, length_tether_max, write_data_residual, user_name)); 
+											(new AutodiffParableLengthFunctor::ParableLengthFunctor(w_eta_2, pose_reel_local.transform.translation, 
+											length_tether_max, write_data_residual, user_name)); 
 					problem.AddResidualBlock(cost_function_par_2, loss_function, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesParableParams[i].parameter);
 				if (i == 0 || (fix_last_position_ugv && i == statesParableParams.size()-1))
 					problem.SetParameterBlockConstant(statesParableParams[i].parameter);
@@ -546,7 +551,8 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			ROS_INFO(PRINTF_ORANGE"		- Optimize Parable Params Autodiff");
 			for (int i = 0; i < statesParableParams.size(); ++i) {
 				CostFunction* cost_function_par_3  = new AutoDiffCostFunction<AutodiffParableParametersFunctor::ParableParametersFunctor, 2, 4, 4, 4>
-				(new AutodiffParableParametersFunctor::ParableParametersFunctor(w_eta_3, pose_reel_local.transform.translation, write_data_residual, user_name)); 
+											(new AutodiffParableParametersFunctor::ParableParametersFunctor(w_eta_3, pose_reel_local.transform.translation, 
+											write_data_residual, user_name)); 
 					problem.AddResidualBlock(cost_function_par_3, loss_function, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesParableParams[i].parameter);
 				if (i == 0 || (fix_last_position_ugv && i == statesParableParams.size()-1))
 					problem.SetParameterBlockConstant(statesParableParams[i].parameter);
@@ -577,18 +583,16 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 
 	std::cout << std::endl <<"Optimization Proccess Completed !!!" << std::endl << "===================================================" << std::endl << "Saving Temporal data in txt file ..." << std::endl;
 
-	// Initializing Contraints for optimization	
-	int n_coll_opt_traj_ugv_, n_coll_init_path_ugv_, n_coll_opt_traj_uav_, n_coll_init_path_uav_;
-	int n_coll_opt_cat_;
-	n_coll_opt_traj_ugv_ = n_coll_init_path_ugv_ = n_coll_opt_traj_uav_ = n_coll_init_path_uav_ = 0;
-
-	finishigOptimizationAndGetDataResult(n_coll_opt_traj_ugv_, n_coll_init_path_ugv_, n_coll_opt_traj_uav_, n_coll_init_path_uav_, n_coll_opt_cat_);
+	// Initializing variable for optimization analysis
+	int n_coll_opt_traj_ugv_, n_coll_init_path_ugv_, n_coll_opt_traj_uav_, n_coll_init_path_uav_ ,  n_coll_opt_parab_ ;
+	n_coll_opt_traj_ugv_ = n_coll_init_path_ugv_ = n_coll_opt_traj_uav_ = n_coll_init_path_uav_ = n_coll_opt_parab_ = 0;
+	finishigOptimizationAndGetDataResult(n_coll_opt_traj_ugv_, n_coll_init_path_ugv_, n_coll_opt_traj_uav_, n_coll_init_path_uav_, n_coll_opt_parab_);
 
 	cleanVectors();		//Clear vector after optimization and previus the next iteration
 	double time_sleep_ = 2.0;
 	
 	// Inform if is a feabible Trajectory or not, and visualize traj in RVIZ
-	if (n_coll_opt_traj_ugv_ == 0 && n_coll_opt_traj_uav_ == 0 && n_coll_opt_cat_== 0 ){
+	if (n_coll_opt_traj_ugv_ == 0 && n_coll_opt_traj_uav_ == 0 && n_coll_opt_parab_== 0 ){
 		if (initial_cost==final_cost)
 			ROS_INFO(PRINTF_ORANGE"\n		Optimizer Local Planner: Final Cost equal than Initial Cost");
 		ROS_INFO(PRINTF_GREEN"\n\n\n		Optimizer Local Planner: Goal position successfully achieved through optimization trajectory\n\n\n");
@@ -641,6 +645,8 @@ void OptimizerLocalPlanner::initializingParametersblock()
 {
 	//Set Parameter Blocks from path global information
 	statesPosUGV.clear(); statesPosUAV.clear(); statesRotUGV.clear(); statesRotUAV.clear(); statesTime.clear();
+	statesTime.clear(); statesLength.clear(); statesParableParams.clear();
+
 	
 	printf("Initial States.Parameter[____] :   [  pos_x  pos_y  pos_z  rot_r  rot_p  rot_y pos_x  pos_y  pos_z  rot_x  rot_y  rot_z  rot_w  time_ugv  time_uav  param_p  param_q  param_r ]\n");
 	for (size_t i = 0 ; i < vec_pose_uav_init.size(); i ++){
@@ -699,12 +705,11 @@ void OptimizerLocalPlanner::initializingParametersblock()
 	}
 }
 
-void OptimizerLocalPlanner::finishigOptimizationAndGetDataResult(int &n_coll_opt_traj_ugv, int &n_coll_init_path_ugv, int &n_coll_opt_traj_uav, int &n_coll_init_path_uav, int &n_coll_opt_cat_)
+void OptimizerLocalPlanner::finishigOptimizationAndGetDataResult(int &n_coll_opt_traj_ugv, int &n_coll_init_path_ugv, int &n_coll_opt_traj_uav, int &n_coll_init_path_uav, int &n_coll_opt_parab_)
 {
 	vec_pose_ugv_opt.clear(); vec_rot_ugv_opt.clear();
 	vec_pose_uav_opt.clear(); vec_rot_uav_opt.clear();
 	vec_time_opt.clear();
-	vec_len_cat_opt.clear();
 	v_parable_params_opt.clear();
 	double new_equi_dist = 0; 
 	double distance_ = 0;
@@ -739,28 +744,35 @@ void OptimizerLocalPlanner::finishigOptimizationAndGetDataResult(int &n_coll_opt
 		vec_rot_uav_opt.push_back(rot_angle_uav_);	
 	}
 	
-	// MP.clearMarkers(catenary_marker, 150, catenary_marker_pub_);  //To delete possibles outliers points 
-	graphParableAndPathMarker(vec_pose_ugv_opt, vec_pose_uav_opt, vec_rot_ugv_opt, v_parable_params_opt, 1, 2,3,
+	graphParableAndPathMarker(vec_pose_ugv_opt, vec_pose_uav_opt, vec_rot_ugv_opt, v_parable_params_opt, 1, 2, 3,
 							  traj_opt_marker_ugv_pub_,traj_opt_marker_uav_pub_, parable_marker_opt_pub_, parable_marker_opt);
 
 	ManagePath mp_;
-	// mp_.exportOptimizedPath(vec_pose_ugv_opt, vec_pose_uav_opt, vec_rot_ugv_opt, vec_rot_uav_opt, vec_len_cat_opt, path_mission_file);
 
 	for(size_t i = 0; i < statesPosUAV.size(); i++){
-		printf(PRINTF_REGULAR"Optimized States.Parameter[%lu/%lu]: UGV=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f] UAV=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f] , t=[%.3f/%.3f], l=[%.3f] \n", i,statesPosUAV.size(),
+		printf(PRINTF_REGULAR"Optimized States.Parameter[%lu/%lu]: UGV=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f] UAV=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f] , t=[%.3f/%.3f], parable=[%.3f %.3f %.3f] \n", i,statesPosUAV.size(),
 		statesPosUGV[i].parameter[1], statesPosUGV[i].parameter[2], statesPosUGV[i].parameter[3],
 		statesRotUGV[i].parameter[1], statesRotUGV[i].parameter[2], statesRotUGV[i].parameter[3], statesRotUGV[i].parameter[4],
 		statesPosUAV[i].parameter[1], statesPosUAV[i].parameter[2], statesPosUAV[i].parameter[3],
 		statesRotUAV[i].parameter[1], statesRotUAV[i].parameter[2], statesRotUAV[i].parameter[3], statesRotUAV[i].parameter[4],
-		statesTime[i].parameter[1],statesTime[i].parameter[1], vec_len_cat_init[i]);
+		statesTime[i].parameter[1],statesTime[i].parameter[1], v_parable_params_opt[i].p, v_parable_params_opt[i].q, v_parable_params_opt[i].r);
 	}
 
 	if (write_data_for_analysis){
-		getSmoothnessTrajectory(vec_pose_ugv_opt, vec_pose_uav_opt, v_angles_smooth_ugv_opt, v_angles_smooth_uav_opt);
-		dm_.writeTemporalDataAfterOptimization(size_path, vec_pose_ugv_opt, vec_pose_uav_opt, vec_time_opt, vec_len_cat_opt, vec_rot_ugv_opt, 
-											   vec_rot_uav_opt, v_angles_smooth_ugv_opt, v_angles_smooth_uav_opt);
+		v_angles_smooth_ugv_opt.clear();
+		v_angles_smooth_uav_opt.clear();
+		dm_.getSmoothnessTrajectory(vec_pose_ugv_opt, vec_pose_uav_opt, v_angles_smooth_ugv_opt, v_angles_smooth_uav_opt);
+		dm_.writeTemporalDataAfterOptimization(size_path, 
+											vec_pose_ugv_opt, 
+											vec_pose_uav_opt, 
+											vec_rot_ugv_opt, 
+											vec_rot_uav_opt, 
+											vec_time_opt, 
+											v_parable_params_opt, 
+											v_angles_smooth_ugv_opt, 
+											v_angles_smooth_uav_opt);
 		std::cout << "...Temporal data saved in txt file." << std::endl << std::endl;
-		n_coll_opt_traj_ugv = n_coll_init_path_ugv = n_coll_opt_traj_uav = n_coll_init_path_uav = n_coll_opt_cat_ = 0;
+		n_coll_opt_traj_ugv = n_coll_init_path_ugv = n_coll_opt_traj_uav = n_coll_init_path_uav = n_coll_opt_parab_ = 0;
 		std::cout << "Saving data for analisys in txt file..." << std::endl;
 		double opt_compute_time_ = (final_time_opt - start_time_opt).toSec(); //Compute Time Optimization
 		dm_.getDataForOptimizerAnalysis(nn_ugv_obs.kdtree, nn_uav.kdtree, nn_ugv_obs.obs_points, nn_uav.obs_points, opt_compute_time_, "UGV", n_coll_init_path_ugv, n_coll_opt_traj_ugv);
@@ -805,7 +817,6 @@ void OptimizerLocalPlanner::calculateDistanceVertices(vector<double> &_v_D_ugv,v
 		sum_distance_ = sum_distance_ + pL;
 		_v_D_uav.push_back(pL);
     }
-	// initial_distance_states_uav = sum_distance_ / (vec_pose_uav_init.size()-1);
 	int aux_n_p = round(vec_pose_uav_init.size()*0.1);
 	initial_distance_states_uav = sum_distance_ / (vec_pose_uav_init.size()+aux_n_p);
 }
@@ -846,7 +857,7 @@ void OptimizerLocalPlanner::getReelPose()
 
 	try{
         pose_reel_local = tfBuffer->lookupTransform(ugv_base_frame, reel_base_frame, ros::Time(0));
-		printf("pose_reel_local = [%f %f %f]\n", pose_reel_local.transform.translation.x, pose_reel_local.transform.translation.y, pose_reel_local.transform.translation.z);
+		printf("Optimizer: pose_reel_local = [%f %f %f]\n", pose_reel_local.transform.translation.x, pose_reel_local.transform.translation.y, pose_reel_local.transform.translation.z);
     }catch (tf2::TransformException &ex){
         ROS_WARN("Optimizer Local Planner: Couldn't get Local Reel Pose (frame: %s), so not possible to set Tether start point; tf exception: %s", reel_base_frame.c_str(),ex.what());
     }
@@ -867,69 +878,6 @@ geometry_msgs::Vector3 OptimizerLocalPlanner::getReelPoint(const float px_, cons
 	ret.z = pz_ + pose_reel_local.transform.translation.z ;
 
 	return ret;
-}
-
-void OptimizerLocalPlanner::getSmoothnessTrajectory(vector<geometry_msgs::Vector3> v_pos2kin_ugv, vector<geometry_msgs::Vector3> v_pos2kin_uav, 
-												   vector<double> &v_angles_kin_ugv, vector<double> &v_angles_kin_uav)
-{
-	v_angles_kin_ugv.clear();
-	v_angles_kin_uav.clear();
-
-	// Smoothness for ugv XY Axes
-	for (size_t i=0 ; i < v_pos2kin_ugv.size()-2 ; i++){
-		geometry_msgs::Vector3 v1_ugv, v2_ugv;
-		double dot_product_ugv, norm_vector1_ugv, norm_vector2_ugv, arg_norm_vector1_ugv, arg_norm_vector2_ugv, angle_ugv;
-		v1_ugv.x=(v_pos2kin_ugv[i+1].x-v_pos2kin_ugv[i].x);
-		v1_ugv.y=(v_pos2kin_ugv[i+1].y-v_pos2kin_ugv[i].y); 
-		v1_ugv.z=(v_pos2kin_ugv[i+1].z-v_pos2kin_ugv[i].z);
-		v2_ugv.x=(v_pos2kin_ugv[i+2].x-v_pos2kin_ugv[i+1].x);
-		v2_ugv.y=(v_pos2kin_ugv[i+2].y-v_pos2kin_ugv[i+1].y); 
-		v2_ugv.z=(v_pos2kin_ugv[i+2].z-v_pos2kin_ugv[i+1].z);
-		dot_product_ugv = (v2_ugv.x * v1_ugv.x) + (v2_ugv.y * v1_ugv.y) + (v2_ugv.z * v2_ugv.z);
-		arg_norm_vector1_ugv = (v1_ugv.x * v1_ugv.x) + (v1_ugv.y * v1_ugv.y) + (v2_ugv.z * v2_ugv.z);
-		arg_norm_vector2_ugv = (v2_ugv.x * v2_ugv.x) + (v2_ugv.y * v2_ugv.y) + (v2_ugv.z * v2_ugv.z);
-
-		if (arg_norm_vector1_ugv < 0.0001 || arg_norm_vector2_ugv < 0.0001 )
-			angle_ugv = 0.0;
-		else{
-			norm_vector1_ugv = sqrt(arg_norm_vector1_ugv);
-			norm_vector2_ugv = sqrt(arg_norm_vector2_ugv);
-			double arg_ugv_ = (dot_product_ugv / (norm_vector1_ugv*norm_vector2_ugv)) ;
-			if (arg_ugv_<= 1.000 && arg_ugv_ >= -1.000)
-				angle_ugv = acos(dot_product_ugv / (norm_vector1_ugv*norm_vector2_ugv));
-			else
-				angle_ugv = 0.000;
-		}
-		v_angles_kin_ugv.push_back(angle_ugv);
-	}
-
-	for (size_t i=0 ; i < v_pos2kin_uav.size()-2 ; i++){
-		geometry_msgs::Vector3 v1_uav, v2_uav;
-		double dot_product_uav, norm_vector1_uav, norm_vector2_uav, arg_norm_vector1_uav, arg_norm_vector2_uav, angle_uav;
-		v1_uav.x=(v_pos2kin_uav[i+1].x-v_pos2kin_uav[i].x);
-		v1_uav.y=(v_pos2kin_uav[i+1].y-v_pos2kin_uav[i].y); 
-		v1_uav.z=(v_pos2kin_uav[i+1].z-v_pos2kin_uav[i].z);
-		v2_uav.x=(v_pos2kin_uav[i+2].x-v_pos2kin_uav[i+1].x);
-		v2_uav.y=(v_pos2kin_uav[i+2].y-v_pos2kin_uav[i+1].y); 
-		v2_uav.z=(v_pos2kin_uav[i+2].z-v_pos2kin_uav[i+1].z);
-		dot_product_uav = (v2_uav.x * v1_uav.x) + (v2_uav.y * v1_uav.y) + (v2_uav.z * v2_uav.z);
-		arg_norm_vector1_uav = (v1_uav.x * v1_uav.x) + (v1_uav.y * v1_uav.y) + (v2_uav.z * v2_uav.z);
-		arg_norm_vector2_uav = (v2_uav.x * v2_uav.x) + (v2_uav.y * v2_uav.y) + (v2_uav.z * v2_uav.z);
-		
-		if (arg_norm_vector1_uav < 0.0001 || arg_norm_vector2_uav < 0.0001 )
-			angle_uav = 0.0;
-		else{
-			norm_vector1_uav = sqrt(arg_norm_vector1_uav);
-			norm_vector2_uav = sqrt(arg_norm_vector2_uav);
-			double arg_uav_ = (dot_product_uav / (norm_vector1_uav*norm_vector2_uav));
-			if (arg_uav_<= 1.000 && arg_uav_ >= -1.000)
-				angle_uav = acos(dot_product_uav / (norm_vector1_uav*norm_vector2_uav));
-			else
-				angle_uav = 0.000;
-		}
-
-		v_angles_kin_uav.push_back(angle_uav);
-	}
 }
 
 void OptimizerLocalPlanner::getParableParameter(vector<geometry_msgs::Vector3> v_p_init_ugv_, vector<geometry_msgs::Vector3> v_p_init_uav_, vector<float> &v_l_cat_init_){
