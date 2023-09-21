@@ -54,6 +54,7 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "catenary_checker/near_neighbor.hpp"
 #include "catenary_checker/grid3d.hpp"
 #include "catenary_checker/bisection_catenary_3D.h"
+#include <catenary_checker/check_collision_path_planner.h>
 
 //ROS
 #include <ros/ros.h>
@@ -164,7 +165,8 @@ public:
 	void getTemporalState(vector<double> &_time);
 	// void getInitialGlobalPath(trajectory_msgs::MultiDOFJointTrajectory _path, vector<geometry_msgs::Vector3> &v_ugv_, vector<geometry_msgs::Vector3> &v_uav_);
 	void initializingParametersblock();
-	void finishigOptimizationAndGetDataResult(int &n_coll_opt_traj_ugv, int &n_coll_init_path_ugv, int &n_coll_opt_traj_uav, int &n_coll_init_path_uav, int &n_coll_opt_parab_);
+	void finishigOptimization();
+	void writeDataForAnalysis(int ugv_coll_, int uav_coll_, int tether_coll_);
 	geometry_msgs::Vector3 getReelPoint(const float px_, const float py_, const float pz_,const float qx_, const float qy_, const float qz_, const float qw_);
 	void getReelPose();
 	// void publishOptimizedTraj();
@@ -176,6 +178,8 @@ public:
 									int c_ugv_, int c_uav_, int c_parable_, ros::Publisher p_ugv_, ros::Publisher p_uav_, 
 									ros::Publisher p_parable_, visualization_msgs::MarkerArray m_);
 	void checkCatenaryLength(vector<geometry_msgs::Vector3> v_p_ugv, vector<geometry_msgs::Vector3>  v_p_uav, vector<geometry_msgs::Quaternion> v_r_ugv, vector<float> &v_l_in);
+	double checkParableLength(parable_parameters p_, geometry_msgs::Vector3 p1_ , geometry_msgs::Vector3 p2_);
+
 
 	upo_actions::ExecutePathResult action_result;
 
@@ -205,7 +209,7 @@ public:
 	
 	int n_iter_opt;	//Iterations Numbers of Optimizer
 	int size_path;
-	double distance_parable_obstacle, dynamic_catenary, initial_distance_states_ugv, initial_distance_states_uav;
+	double distance_tether_obstacle, dynamic_catenary, initial_distance_states_ugv, initial_distance_states_uav;
 	double w_alpha_uav, w_alpha_ugv, w_beta_uav, w_beta_ugv, w_theta_ugv, w_gamma_uav, w_gamma_ugv, w_kappa_ugv, w_kappa_uav, w_delta; 
 	double w_epsilon_uav, w_epsilon_ugv, w_zeta_uav , w_zeta_ugv, w_eta_1, w_eta_2, w_eta_3, w_lambda, w_mu_uav, w_nu_ugv;
 
@@ -216,6 +220,7 @@ public:
 	MarkerPublisher MP;
 	Grid3d* grid_3D;
 	DataManagement dm_;
+    sensor_msgs::PointCloud2::ConstPtr pc_obs_ugv;
 
 
 	//! Manage Data Vertices and Edges

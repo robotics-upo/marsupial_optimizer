@@ -34,8 +34,6 @@ public:
 			T dist = T{1.005} * sqrt(pow(pUAV[1]-ugv_reel[1],2)+pow(pUAV[2]-ugv_reel[2],2)+pow(pUAV[3]-ugv_reel[3],2)); 
 			T maxL = T{max_L};
 		
-			// std::cout << "p= " << param[1] << " , q= " << param[2] << " , r= " << param[3] << std::endl;
-
 			// Compute parable L : log(q + ((q + 2*p*x)^2 + 1)^(1/2) + 2*p*x)/(4*p) + ((q + 2*p*x)*((q + 2*p*x)^2 + 1)^(1/2))/(4*p) , x = xA and xB
 			T X = T{0.0}; // X is 0.0 because is considered that the parable beginning in the ugv reel
 			T val = T{2.0}*param[1]*X+param[2]; // This is a common term for the L equation
@@ -53,9 +51,6 @@ public:
 				diff_ = (L - maxL);
 			else
 				diff_ = T{0.0};
-
-			// std::cout << "Lb= " << Lb << " , La= " << La << std::endl;
-			// std::cout << "Length_parable= " << L << " , dist= " << dist << std::endl;
 
 			residual[0] = wf *  (exp(diff_)-1.0) ;
 					

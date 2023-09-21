@@ -49,13 +49,14 @@ class DataManagement
 												std::vector<double> v_angles_kinematic_uav_);
 		virtual void getDataForOptimizerAnalysis(pcl::KdTreeFLANN <pcl::PointXYZ> kdt_, pcl::KdTreeFLANN <pcl::PointXYZ> kdt_all_, 
 												 pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_points_ , pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_points_all_, 
-												 double opt_compute_time_ , std::string mode_, int &n_coll_init_path_, int &n_coll_opt_traj_);
- 		virtual geometry_msgs::Vector3 getReelPos(const float px_, const float py_, const float pz_,const float qx_, const float qy_, const float qz_, const float qw_, geometry_msgs::Vector3 p_reel_);
+												 double opt_compute_time_ , std::string mode_);
+ 		virtual geometry_msgs::Vector3 getReelPos(const geometry_msgs::Vector3 p_,const geometry_msgs::Quaternion q_, geometry_msgs::Vector3 p_reel_);
 		virtual geometry_msgs::Vector3 getEulerAngles(const float qx_, const float qy_, const float qz_, const float qw_);
 		virtual bool isObstacleBetweenTwoPoints(geometry_msgs::Vector3 pose_opt_1, geometry_msgs::Vector3 pose_opt_2, bool oct_full_);
-		virtual void feasibilityAnalisysTrajectory(float init_cost, float final_cost, float succes_steps, float unsuccess_step, float time_opt, int &n_coll_opt_cat_);
+		virtual void feasibilityAnalisysTrajectory(float init_cost, float final_cost, float succes_steps, float unsuccess_step, float time_opt, int ugv_coll_, int uav_coll_, int tether_coll_);
 		virtual void cleanResidualConstraintsFile(std::string path_, std::string files_residuals_);
 		virtual void getSmoothnessTrajectory(vector<geometry_msgs::Vector3> v_pos2kin_ugv, vector<geometry_msgs::Vector3> v_pos2kin_uav, vector<double> &v_angles_kin_ugv, vector<double> &v_angles_kin_uav);
+		virtual double getPointDistanceFullMap(geometry_msgs::Vector3 p_, int pose_);
 
 		std::string path ,scenario_name;
 		std::string output_file, name_output_file;
@@ -86,11 +87,10 @@ class DataManagement
 		octomap::OcTree* octree_full;
 		octomap::OcTree* octree_ugv;
 
-		int num_coll_ugv_traj, num_coll_uav_traj, num_points_coll_cat, num_cat_coll, num_cat_fail_lmin, num_cat_fail_lmax;
-		std::string mode , pos_coll_cat;
+		std::string mode;
 		bool write_temporal_data = false;
 
-		Grid3d* g_3D_;
+		Grid3d* g_3D;
 
 	protected:
 
@@ -100,8 +100,6 @@ class DataManagement
 
 inline DataManagement::DataManagement()
 {
-	num_coll_ugv_traj = num_coll_uav_traj = num_points_coll_cat = num_cat_coll = num_cat_fail_lmin = num_cat_fail_lmax = 0; 
-	pos_coll_cat = "";
 }
 
 inline void DataManagement::initDataManagement(
@@ -141,7 +139,7 @@ inline void DataManagement::initDataManagement(
 	octree_full = octree_full_;
 	octree_ugv = octree_ugv_;
 
-	g_3D_ = grid_3D_;
+	g_3D = grid_3D_;
 
 	output_file = path+"results_"+scenario_name+"_InitPos_"+std::to_string(num_pos_initial)+"_"+name_output_file;
 }
@@ -432,9 +430,7 @@ inline void DataManagement::getDataForOptimizerAnalysis(
 					pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_points_, 
 					pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_points_all_, 
 					double opt_compute_time_ , 
-					std::string mode_, 
-					int &n_coll_init_path_, 
-					int &n_coll_opt_traj_)
+					std::string mode_)
 {
 	//mode = 1 , UGV  - mode = 2 , UAV
 	std::vector<double> vec_time_init_, vec_time_opt_, vec_dist_init_, vec_dist_opt_, vec_vel_opt_, vec_acc_opt_;
@@ -454,9 +450,6 @@ inline void DataManagement::getDataForOptimizerAnalysis(
 		vec_pose_opt_ = vec_pose_ugv_opt;
 		vec_dist_opt_ = vec_dist_ugv_opt;
 		use_oct_full = false;
-		num_points_coll_cat = num_cat_coll = 0; 
-		num_coll_ugv_traj = 0;
-		pos_coll_cat = "";
 	}
 	else if (mode_ == "UAV"){
 		vec_pose_init_ = vec_pose_init_uav;
@@ -466,7 +459,6 @@ inline void DataManagement::getDataForOptimizerAnalysis(
 		vec_pose_opt_ = vec_pose_uav_opt;
 		vec_dist_opt_ = vec_dist_uav_opt;
 		use_oct_full = true;
-		num_coll_uav_traj = 0;
 	}
 
 	// I) Writing general data for initial analysis
@@ -550,20 +542,24 @@ inline void DataManagement::getDataForOptimizerAnalysis(
 		geometry_msgs::Vector3 p_reel_ugv;
 		std::vector<geometry_msgs::Vector3> vec_par_pts_;
 		
-		p_reel_ugv = getReelPos(vec_pose_init_ugv[i].x,vec_pose_init_ugv[i].y,vec_pose_init_ugv[i].z,vec_init_rot_ugv[i].x,vec_init_rot_ugv[i].y,vec_init_rot_ugv[i].z,vec_init_rot_ugv[i].w, pos_reel_ugv);
-		gpp.compute3DParable(vec_par_pts_, p_reel_ugv, vec_pose_init_uav[i], vec_params_parab_init[i].p, vec_params_parab_init[i].q, vec_params_parab_init[i].r);
+		p_reel_ugv = getReelPos(vec_pose_init_ugv[i], vec_init_rot_ugv[i], pos_reel_ugv);
+		// gpp.compute3DParable(vec_par_pts_, p_reel_ugv, vec_pose_init_uav[i], vec_params_parab_init[i].p, vec_params_parab_init[i].q, vec_params_parab_init[i].r);
+        gpp.getParablePoints(p_reel_ugv, vec_pose_init_uav[i], vec_params_parab_init[i], vec_par_pts_);
 
 		for (size_t j= 0 ; j < vec_par_pts_.size() ; j++){
-			count_cat_p_init_++;
-			Eigen::Vector3d p_cat_init_ = Eigen::Vector3d(vec_par_pts_[j].x, vec_par_pts_[j].y, vec_par_pts_[j].z);
-			Eigen::Vector3d nearest_obs_p = nn_.nearestObstacleVertex(kdt_all_, p_cat_init_, obstacles_points_all_);
-			double _d = (p_cat_init_- nearest_obs_p).norm();
-			distance_obs_cat_init_ =  _d + distance_obs_cat_init_;
-			if(distance_obs_par_init_min_ > _d )
-				distance_obs_par_init_min_ = _d;
-			if ( _d < bound_par_obs){
-				count_coll_between_init_++;
-				pos_coll_between_init_ = pos_coll_between_init_+"["+std::to_string(j)+"]";
+			if(j < 3){
+				count_cat_p_init_++;
+				// Eigen::Vector3d p_cat_init_ = Eigen::Vector3d(vec_par_pts_[j].x, vec_par_pts_[j].y, vec_par_pts_[j].z);
+				// Eigen::Vector3d nearest_obs_p = nn_.nearestObstacleVertex(kdt_all_, p_cat_init_, obstacles_points_all_);
+				// double _d = (p_cat_init_- nearest_obs_p).norm();
+				double _d  =  getPointDistanceFullMap(vec_par_pts_[j], j);
+				distance_obs_cat_init_ =  _d + distance_obs_cat_init_;
+				if(distance_obs_par_init_min_ > _d )
+					distance_obs_par_init_min_ = _d;
+				// if ( _d < bound_par_obs){
+				// 	count_coll_between_init_++;
+				// 	pos_coll_between_init_ = pos_coll_between_init_+"["+std::to_string(j)+"]";
+				// }
 			}
 		}
 	}
@@ -621,25 +617,33 @@ inline void DataManagement::getDataForOptimizerAnalysis(
 	std::string pos_coll_between_opt_ = "";
 
 	// II.e) Optimized Parable analisys 
+	// std::cout << "DataManagement::getDataForOptimizerAnalysis: vec_params_parab_opt.size()="<< vec_params_parab_opt.size() <<" vec_pose_opt_.size()=" << vec_pose_opt_.size() << " vec_time_opt_=" << vec_time_opt_.size() << std::endl;
 	for(size_t i = 0 ; i < vec_params_parab_opt.size(); i ++){
 		geometry_msgs::Vector3 p_reel_ugv;
-		std::vector<geometry_msgs::Vector3> vec_par_pts_;
+		std::vector<geometry_msgs::Vector3> vec_par_pts_; 
 
-		p_reel_ugv = getReelPos(vec_pose_ugv_opt[i].x,vec_pose_ugv_opt[i].y,vec_pose_ugv_opt[i].z,vec_opt_rot_ugv[i].x,vec_opt_rot_ugv[i].y,vec_opt_rot_ugv[i].z,vec_opt_rot_ugv[i].w, pos_reel_ugv);
-		gpp.compute3DParable(vec_par_pts_, p_reel_ugv, vec_pose_uav_opt[i], vec_params_parab_opt[i].p, vec_params_parab_opt[i].q, vec_params_parab_opt[i].r);
+		p_reel_ugv = getReelPos(vec_pose_ugv_opt[i],vec_opt_rot_ugv[i], pos_reel_ugv);
+        gpp.getParablePoints(p_reel_ugv, vec_pose_uav_opt[i], vec_params_parab_opt[i], vec_par_pts_);
 	
 		for (size_t j= 0 ; j < vec_par_pts_.size() ; j++){
-			count_cat_p_opt_++;
-			Eigen::Vector3d p_par_opt_ = Eigen::Vector3d(vec_par_pts_[j].x, vec_par_pts_[j].y, vec_par_pts_[j].z);
-			Eigen::Vector3d nearest_obs_p = nn_.nearestObstacleVertex(kdt_all_, p_par_opt_, obstacles_points_all_);
-			double _d = (p_par_opt_- nearest_obs_p).norm();
-			distance_obs_cat_opt_ =  _d + distance_obs_cat_opt_;
-			if(distance_obs_par_opt_min_ > _d )
-				distance_obs_par_opt_min_ = _d;
-			if ( _d < bound_par_obs){
-				count_coll_between_opt_++;
-				pos_coll_between_opt_ = pos_coll_between_opt_+"["+std::to_string(j)+"]";
-			}
+			// if(j < 3){
+				count_cat_p_opt_++;
+				// Eigen::Vector3d p_par_opt_ = Eigen::Vector3d(vec_par_pts_[j].x, vec_par_pts_[j].y, vec_par_pts_[j].z);
+				// Eigen::Vector3d nearest_obs_p = nn_.nearestObstacleVertex(kdt_all_, p_par_opt_, obstacles_points_all_);
+				// double _d = (p_par_opt_- nearest_obs_p).norm();
+				double _d  =  getPointDistanceFullMap(vec_par_pts_[j], j);
+				distance_obs_cat_opt_ =  _d + distance_obs_cat_opt_;
+				// if(mode_ == "UGV")
+					// std::cout << "getDataForOptimizerAnalysis:  In parable[" << i << "]/size["<< vec_params_parab_opt.size()<<"] position["<< j << "]/size["<< vec_par_pts_.size()<< "] distance_obst=" << _d <<" distance_obs_par_opt_min_= " << distance_obs_par_opt_min_ << " pto=["<<vec_par_pts_[j].x <<"," <<vec_par_pts_[j].y<<","<< vec_par_pts_[j].z <<"]" <<std::endl;
+				if(distance_obs_par_opt_min_ > _d ){
+					distance_obs_par_opt_min_ = _d;
+					// std::cout << "			In parable[" << i << "]/size["<< vec_params_parab_opt.size()<<"] position["<< j << "]/size["<< vec_par_pts_.size()<< "] distance_obs_par_opt_min_= " << distance_obs_par_opt_min_ << std::endl;
+				}
+				// if ( _d < bound_par_obs){
+				// 	count_coll_between_opt_++;
+				// 	pos_coll_between_opt_ = pos_coll_between_opt_+"["+std::to_string(j)+"]";
+				// }
+			// }
 		}
 	}
 
@@ -696,28 +700,28 @@ inline void DataManagement::getDataForOptimizerAnalysis(
 	else {
 		std::cout << "Couldn't be open the output data file for " << mode_ << std::endl;
 	}
-	n_coll_init_path_ = count_coll_between_init_;
-	n_coll_opt_traj_ =  count_coll_between_opt_;
 	ofs.close();
 }
 
-inline geometry_msgs::Vector3 DataManagement::getReelPos(const float px_, const float py_, const float pz_, const float qx_, const float qy_, const float qz_,
-					const float qw_, geometry_msgs::Vector3 p_reel_)
+inline geometry_msgs::Vector3 DataManagement::getReelPos(const geometry_msgs::Vector3 p_, const geometry_msgs::Quaternion q_, geometry_msgs::Vector3 p_reel_)
 {
-	geometry_msgs::Vector3 ret;
-
+	geometry_msgs::Vector3 pos_reel;
 	double roll_, pitch_, yaw_;
-	tf::Quaternion q_(qx_,qy_,qz_,qw_);
-	tf::Matrix3x3 M_(q_);	
-	M_.getRPY(roll_, pitch_, yaw_);
+
+	tf::Quaternion q(q_.x,q_.y,q_.z,q_.w);
+	tf::Matrix3x3 M(q);	
+	M.getRPY(roll_, pitch_, yaw_);
 
 	double lengt_vec =  sqrt(p_reel_.x*p_reel_.x + p_reel_.y*p_reel_.y);
-	ret.x = px_ + lengt_vec *cos(yaw_); 
-	ret.y = py_ + lengt_vec *sin(yaw_);
-	ret.z = pz_ + p_reel_.z ;
-
-	return ret;
+	pos_reel.x = p_.x + lengt_vec *cos(yaw_); 
+	pos_reel.y = p_.y + lengt_vec *sin(yaw_);
+	pos_reel.z = p_.z + p_reel_.z ; 
+	
+	return pos_reel;
 }
+
+
+
 
 inline geometry_msgs::Vector3 DataManagement::getEulerAngles(const float qx_, const float qy_, const float qz_, const float qw_)
 {
@@ -768,7 +772,7 @@ inline bool DataManagement::isObstacleBetweenTwoPoints(geometry_msgs::Vector3 po
 		return false;		
 }
 
-inline void DataManagement::feasibilityAnalisysTrajectory(float init_cost, float final_cost, float succes_steps, float unsuccess_step, float time_opt, int &n_coll_opt_cat_)
+inline void DataManagement::feasibilityAnalisysTrajectory(float init_cost, float final_cost, float succes_steps, float unsuccess_step, float time_opt, int ugv_coll_, int uav_coll_, int tether_coll_)
 {
 	std::string name_file = path+"results_"+scenario_name+"_InitPos_"+std::to_string(num_pos_initial)+"_"+
 							"feasibility_trajectory.txt";
@@ -779,26 +783,22 @@ inline void DataManagement::feasibilityAnalisysTrajectory(float init_cost, float
       	std::cout << name_file <<" : File exists !!!!!!!!!! " << std::endl;
    	} else {
 	  feasibility.open(name_file.c_str(), std::ofstream::app);
-	  feasibility << "Feasible/Coll_ugv/Coll_uav/Cat_coll/PosCollCat/C_cost/I_cost/F_cost/T_step/S_step/UnS_steps/time_opt"<<std::endl;
+	  feasibility << "Feasible/Coll_ugv/Coll_uav/Coll_tether/C_cost/I_cost/F_cost/T_steps/S_steps/UnS_steps/time_opt"<<std::endl;
 	  feasibility.close();
       std::cout << name_file <<" : File doesn't exist !!!!!!!!!! " << std::endl;
    	}
 	
 	feasibility.open(name_file.c_str(), std::ofstream::app);
 
-	n_coll_opt_cat_ = num_cat_coll;
-
 	int feasible = 0;
-	if (num_coll_ugv_traj == 0 && num_coll_uav_traj == 0 && num_cat_coll == 0)
+	if (ugv_coll_ == 0 && uav_coll_ == 0 && tether_coll_ == 0)
 		feasible = 1;
 	
 	if (feasibility.is_open()) {
 		feasibility << feasible << ";"
-					<< num_coll_ugv_traj << ";" 
-		    		<< num_coll_uav_traj << ";" 
-		    		<< num_cat_coll << ";["
-					<< pos_coll_cat << "/"
-					<< vec_pose_uav_opt.size() <<"];"
+					<< ugv_coll_ << ";" 
+		    		<< uav_coll_ << ";" 
+		    		<< tether_coll_ << ";"
 					<< init_cost - final_cost << ";"
 					<< init_cost << ";"
 					<< final_cost << ";"
@@ -947,6 +947,20 @@ inline void DataManagement::getSmoothnessTrajectory(vector<geometry_msgs::Vector
 
 		v_angles_kin_uav.push_back(angle_uav);
 	}
+}
+
+inline double DataManagement::getPointDistanceFullMap(geometry_msgs::Vector3 p_, int pose_)
+{
+	double dist;
+
+	bool is_into_ = g_3D->isIntoMap(p_.x,p_.y,p_.z);
+	if(is_into_)
+		dist =  g_3D->getPointDist((double)p_.x,(double)p_.y,(double)p_.z) ;
+	else{
+        std::cout << "  DataManagement::getPointDistanceFullMap : the  parable in the state = " << pose_ << " is out of the GRID["<<p_.x<< ", " << p_.y << ", " <<p_.z << "]"<< std::endl; 
+		dist = -1.0;
+    }
+	return dist;
 }
 
 #endif
