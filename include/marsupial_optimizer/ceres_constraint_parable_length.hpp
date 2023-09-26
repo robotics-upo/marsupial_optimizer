@@ -31,7 +31,7 @@ public:
 		bool operator()(const T* const pUGV, const T* const pUAV, const T* const param, T* residual) const 
 		{
 			T ugv_reel[4] = {pUGV[0], pUGV[1], pUGV[2], pUGV[3] + T{pos_reel_ugv.z}}; // Set first parable point on the reel position
-			T dist = T{1.005} * sqrt(pow(pUAV[1]-ugv_reel[1],2)+pow(pUAV[2]-ugv_reel[2],2)+pow(pUAV[3]-ugv_reel[3],2)); 
+			T dist = T{1.001} * sqrt(pow(pUAV[1]-ugv_reel[1],2)+pow(pUAV[2]-ugv_reel[2],2)+pow(pUAV[3]-ugv_reel[3],2)); 
 			T maxL = T{max_L};
 		
 			// Compute parable L : log(q + ((q + 2*p*x)^2 + 1)^(1/2) + 2*p*x)/(4*p) + ((q + 2*p*x)*((q + 2*p*x)^2 + 1)^(1/2))/(4*p) , x = xA and xB
@@ -52,7 +52,7 @@ public:
 			else
 				diff_ = T{0.0};
 
-			residual[0] = wf *  (exp(diff_)-1.0) ;
+			residual[0] = wf * 100* (exp(diff_)-1.0) ;
 					
 			return true;
 		}

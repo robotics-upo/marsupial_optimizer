@@ -66,9 +66,9 @@ class DistanceFunction : public ceres::SizedCostFunction<1, 3>
 				dist_ = 0.0001;
 			div = 1/dist_;
 			if (dist_ < sb)
-				C = 2.0;
+				C = 10.0;
 			else
-				C = 1.0;	
+				C = 4.0;	
 			residuals[0] = div*C;
             if (jacobians != NULL && jacobians[0] != NULL) 
             {
@@ -79,7 +79,7 @@ class DistanceFunction : public ceres::SizedCostFunction<1, 3>
         }
         else
         {
-            residuals[0] = 1000000.0;
+			residuals[0] = 100000000.0*sqrt(z*z);
             if (jacobians != NULL && jacobians[0] != NULL) 
             {
                 jacobians[0][0] = 0;
@@ -148,8 +148,8 @@ class AutodiffParableFunctor {
 				T np_; 
 				T u_x , u_y;
 				T fix_value = T{0.01};
-				bool change_x, change_y;
-				change_x = change_y = true;
+				bool x_const, y_const;
+				x_const = y_const = false;
 
 				if(pUAV[1] > pUGV[1])
 					u_x = T{1.0};
@@ -165,40 +165,46 @@ class AutodiffParableFunctor {
 				else
 					u_y = T{0.0};  
 					
-				if ((pUGV[1] - pUAV[1]) < fix_value && (pUGV[1] - pUAV[1]) > T{-1.0}*fix_value) 
-					change_x = false;
+				if ((pUGV[1] - pUAV[1]) < fix_value && (pUGV[1] - pUAV[1]) > T{-1.0}*fix_value)
+					x_const = true;
 				if ((pUGV[2] - pUAV[2]) < fix_value && (pUGV[2] - pUAV[2]) > T{-1.0}*fix_value)
-					change_y = false;
+					y_const = true;
 
 				// About distance between UGV and UAV in the plane
-				if ( !change_x && !change_y )  //Not change in X-Y plane, so parable can't be compute
-					d_[0] = sqrt(pow(pUAV[3]-ugv_reel[3],2)); 
-				else
-					d_[0] = sqrt(pow(pUAV[1]-ugv_reel[1],2)+pow(pUAV[2]-ugv_reel[2],2)); 
+				d_[0] = sqrt(pow(pUAV[1]-ugv_reel[1],2)+pow(pUAV[2]-ugv_reel[2],2)); 
 				
 				if (d_[0] < 1.0) // To not make less than num_point_per_unit_length the value of points in parable
 					d_[0] = T{1.0};
 
         		_numPointFunctor(d_, &np_); // To get the values and parameters needed for computing the parable interpolation
 
+				if ( !x_const || !y_const )  //Not change in X-Y plane, so parable can't be compute
+					d_[0] = sqrt(pow(pUAV[3]-ugv_reel[3],2)); 
 				// Here is compute the parable point and it cost 
 				T point[3];
 				T parable_cost_;	
 				T cost_state_parable = T{0.0};
 				T x_  =  T{0.0};
-				T tetha_ = atan((pUAV[2] - pUGV[2])/(pUAV[1] - pUGV[1]));
+				T tetha_;
 				for(int i = 0; i < np_; i++){  
-					if ( !change_x && !change_y ){ // To check difference position between UGV and UAV only in z-axe, so parable it is not computed
-						T _step = d_[0] / np_;
-						point[0] = pUGV[1];
-						point[1] = pUGV[2];
-						point[2] = pUGV[3]+ _step* (double)i;    
-					}
-					else{ 	// In case that UGV and UAV are not in the same point the plane X-Y
+					if ( !x_const || !y_const ){ // To check difference position between UGV and UAV only in z-axe, so parable it is not computed
+						if (x_const)
+							tetha_ = T{1.5707};
+						else if(y_const)
+							tetha_ = T{0.0};
+						else
+							tetha_ = atan(sqrt((pUAV[2] - pUGV[2])*(pUAV[2] - pUGV[2]))/sqrt((pUAV[1] - pUGV[1])*(pUAV[1] - pUGV[1])));
 						x_ = x_ + (d_[0]/ np_);
 						point[0] = pUGV[1] + u_x * cos(tetha_) * x_;
 						point[1] = pUGV[2] + u_y * sin(tetha_) * x_;
 						point[2] = param[1] * x_* x_ + param[2] * x_ + param[3];
+						
+					}
+					else{ 	// In case that UGV and UAV are not in the same point the plane X-Y
+						T _step = d_[0] / np_;
+						point[0] = pUGV[1];
+						point[1] = pUGV[2];
+						point[2] = pUGV[3]+ _step* (double)i;    	
 					}
         			_parableCostFunctor(point, &parable_cost_);
 
@@ -206,7 +212,7 @@ class AutodiffParableFunctor {
 					// std::cout << "[" << np_[0] <<"/"<< i<<"] , parable_cost_[0]=" << parable_cost_[0]  << " PARABLE" << std::endl;
 				}
 				// std::cout << "[" << pUGV[0] <<"] , cost_state_parable=" << cost_state_parable << std::endl;
-				residual[0] = wf * 0.001 * cost_state_parable;
+				residual[0] = wf * 100.0 * cost_state_parable;
 					
 				return true;
 			}

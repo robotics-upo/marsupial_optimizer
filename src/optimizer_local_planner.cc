@@ -108,6 +108,7 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(bool get_path_from_file_)
 	nh->param<bool>("debug", debug, false);
  	nh->param<bool>("show_config", showConfig, false);
  	nh->param<bool>("use_distance_function", use_distance_function, true);
+ 	nh->param<bool>("use_parable", use_parable, true);
 
 	ROS_INFO_COND(showConfig, PRINTF_BLUE "Optimizer Local Planner 3D Node Configuration:\n");
 		
@@ -131,6 +132,8 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(bool get_path_from_file_)
 	std::string node_name_ = "grid3D_optimizer_node";
 	grid_3D = new Grid3d(node_name_);
 	grid_3D->computeTrilinearInterpolation();
+
+	CheckCM = new CatenaryCheckerManager(node_name_);
 
 	get_path_from_file = get_path_from_file_;
 	if (!get_path_from_file){
@@ -281,7 +284,7 @@ void OptimizerLocalPlanner::initializeOptimizerProcessCallBack(const std_msgs::B
 
 void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 {
-  	ROS_INFO_COND(debug, PRINTF_GREEN "Optimizer Local Planner : Path received in action server mode");
+  	ROS_INFO(PRINTF_GREEN "Optimizer Local Planner : Path received in action server mode\n");
 
 	if (!get_path_from_file){
 		auto path_shared_ptr = execute_path_srv_ptr->acceptNewGoal();
@@ -299,6 +302,8 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	}
     getReelPose(); // To get init pos reel for optimization process
 
+	CheckCM->Init(grid_3D, distance_tether_obstacle, distance_obstacle_ugv, distance_obstacle_uav, length_tether_max, ws_z_min, step, 
+	use_parable, use_distance_function, pose_reel_local.transform.translation);
 	// Stage to interpolate path
 	InterpolatePath ip_;
 	ip_.initInterpolatePath(count_fix_points_initial_ugv,count_fix_points_final_ugv,count_fix_points_uav, fix_last_position_ugv, distance_tether_obstacle,
@@ -324,6 +329,8 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	graphParableAndPathMarker(vec_pose_ugv_init,vec_pose_uav_init, vec_rot_ugv_init, v_parable_params_init, 5, 6, 2,
 							  traj_marker_ugv_pub_, traj_marker_uav_pub_, parable_marker_init_pub_, parable_marker_init);
 
+    CheckCM->CheckStatusCollision(vec_pose_ugv_init, vec_rot_ugv_init, vec_pose_uav_init, v_parable_params_init);
+
 	dm_.initDataManagement(path+files_results, name_output_file, scenario_name, num_pos_initial, initial_velocity_ugv, initial_velocity_uav, 
 							initial_acceleration_ugv, initial_acceleration_uav, distance_tether_obstacle, pose_reel_local.transform.translation, vec_pose_ugv_init, 
 							vec_pose_uav_init, vec_len_cat_init, vec_rot_ugv_init, vec_rot_uav_init, mapFull_msg, mapTrav_msg, grid_3D);			   
@@ -342,6 +349,11 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		loss_function = new CauchyLoss(0.5);
 	}
 
+	/********************* To obligate pause method and check Planning result *********************/
+                //    std::string w_ ;
+                //    std::cout << " *** Press key to continue optimization process: " << std::endl;
+                //    std::cin >> w_ ;
+    /*************************************************************************************************/
 	// Initializing Contraints for optimization	
 	/****************************   UGV Constraints  ****************************/	
 	if (optimize_ugv){
@@ -586,16 +598,17 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 
 	finishigOptimization();
 	// Inform if is a feabible Trajectory or not, and 
-	checkCollisionPathPlanner ccpp("grid3D_optimizer_node", grid_3D, pc_obs_ugv, pose_reel_local.transform.translation, distance_obstacle_ugv, distance_obstacle_uav, distance_tether_obstacle);
+	
+	// checkCollisionPathPlanner ccpp("grid3D_optimizer_node", grid_3D, pc_obs_ugv, pose_reel_local.transform.translation, distance_obstacle_ugv, distance_obstacle_uav, distance_tether_obstacle);
 	// std::cout << "executeOptimizerPathGoalCB(): vec_pose_ugv_opt= " << vec_pose_ugv_opt.size() << 
 	// 											" vec_rot_ugv_opt=" << vec_rot_ugv_opt.size() << 
 	// 											" vec_pose_uav_opt=" << vec_pose_uav_opt.size() << 
 	// 											" v_parable_params_opt=" << v_parable_params_opt.size() << std::endl;
-    bool check_collision_ = ccpp.CheckStatus(vec_pose_ugv_opt, vec_rot_ugv_opt, vec_pose_uav_opt, v_parable_params_opt);
+    bool check_collision_ = CheckCM->CheckStatusCollision(vec_pose_ugv_opt, vec_rot_ugv_opt, vec_pose_uav_opt, v_parable_params_opt);
 
 	// Initializing variable for optimization analysis
 	if (write_data_for_analysis)
-		writeDataForAnalysis(ccpp.count_ugv_coll, ccpp.count_uav_coll, ccpp.count_tether_coll);
+		writeDataForAnalysis(CheckCM->count_ugv_coll, CheckCM->count_uav_coll, CheckCM->count_tether_coll);
 	
 	double time_sleep_ = 2.0;
 	bool finished_optimization_ = false;
@@ -643,6 +656,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		finished_optimization_ = true;		
 	}
 	std::cout <<"Optimization Proccess Completed !!!" << std::endl << "Saving Temporal data in txt file ..." << std::endl << "===================================================" << std::endl << std::endl << std::endl;
+    ros::Duration(2.0).sleep();
 
 	/********************* To obligate pause method and check Planning result *********************/
         // std::string y_ ;
@@ -651,6 +665,14 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
     /*************************************************************************************************/
 
 	cleanVectors();		//Clear vector after optimization and previus the next iteration
+	// Clear optimized Markers
+	
+	MP.clearMarkers(catenary_marker, 150, parable_marker_init_pub_);
+  	MP.clearMarkersPointLines(points_ugv_marker, lines_ugv_marker,traj_marker_ugv_pub_,size_path);
+  	MP.clearMarkersPointLines(points_uav_marker, lines_uav_marker,traj_marker_uav_pub_,size_path);
+	MP.clearMarkers(catenary_marker, 150, parable_marker_opt_pub_);
+  	MP.clearMarkersPointLines(points_ugv_marker, lines_ugv_marker,traj_opt_marker_ugv_pub_,size_path);
+  	MP.clearMarkersPointLines(points_uav_marker, lines_uav_marker,traj_opt_marker_uav_pub_,size_path);
 	resetFlags();
 	if (!get_path_from_file && finished_optimization_)
 			execute_path_srv_ptr->setSucceeded(action_result);
@@ -876,7 +898,7 @@ void OptimizerLocalPlanner::getReelPose()
 
 	try{
         pose_reel_local = tfBuffer->lookupTransform(ugv_base_frame, reel_base_frame, ros::Time(0));
-		printf("Optimizer: pose_reel_local = [%f %f %f]\n", pose_reel_local.transform.translation.x, pose_reel_local.transform.translation.y, pose_reel_local.transform.translation.z);
+		// printf("Optimizer: pose_reel_local = [%f %f %f]\n", pose_reel_local.transform.translation.x, pose_reel_local.transform.translation.y, pose_reel_local.transform.translation.z);
     }catch (tf2::TransformException &ex){
         ROS_WARN("Optimizer Local Planner: Couldn't get Local Reel Pose (frame: %s), so not possible to set Tether start point; tf exception: %s", reel_base_frame.c_str(),ex.what());
     }
@@ -943,12 +965,14 @@ void OptimizerLocalPlanner::graphParableAndPathMarker(vector<geometry_msgs::Vect
 	for(size_t i = 0; i < v_params_.size(); i++){ // The Reel Position is consider above base_link_ugv
 		p_reel_ = getReelPoint(v_ugv_[i].x,v_ugv_[i].y,v_ugv_[i].z,v_rot_ugv[i].x, v_rot_ugv[i].y, v_rot_ugv[i].z, v_rot_ugv[i].w);
 		GPP_.getParablePoints(p_reel_, v_uav_[i], v_params_[i], v_pts_parable_);
-		if(i<5){
-			// std::cout << "v_pts_parable_.size()= " << v_pts_parable_.size() << std::endl;
-			MP.markerPoints(m_, v_pts_parable_, i, v_pts_parable_.size(), p_parable_,c_parable_,false);	
-		}else
-			MP.markerPoints(m_, v_pts_parable_, i, v_pts_parable_.size(), p_parable_,c_parable_,false);	
+		MP.markerPoints(m_, v_pts_parable_, i, v_pts_parable_.size(), p_parable_, c_parable_,false);	
 
+	// 	/********************* To obligate pause method and check Planning result *********************/
+    //                std::string v_ ;
+    //                std::cout << " *** Published Tether Marker ["<< i <<"]" << std::endl;
+    //                std::cout << " *** Press key to continue tether publisher marker: " << std::endl;
+    //                std::cin >> v_ ;
+    // /*************************************************************************************************/
 	}
 
 	MP.getMarkerPoints(points_ugv_marker, v_ugv_, "points_ugv_m",c_ugv_);	// RED= 0 ; GREEN= 1 ; BLUE= 2 ; YELLOW= 3 ; PURPLE= 4; BLACK=5; WHITE=6
@@ -975,11 +999,14 @@ void OptimizerLocalPlanner::checkCatenaryLength(vector<geometry_msgs::Vector3> v
 						 pow(v_p_uav[i].z - p_reel_.z,2));
 		if (d_ > v_l_in[i]){
 			double length_corrected_ = d_ * 1.001;
-			ROS_ERROR("OptimizerLocalPlanner::checkCatenaryLength : catenary number=%lu lenght_current=%f length_corrected = %f distance=%f ",i, v_l_in[i] ,length_corrected_,d_);
+			ROS_ERROR("OptimizerLocalPlanner::checkCatenaryLength : [%lu] ugv[%.3f %.3f %.3f] uav[%.3f %.3f %.3f] lenght_current=%f length_corrected = %f distance=%f ",
+			i, v_p_ugv[i].x , v_p_ugv[i].y , v_p_ugv[i].z, v_p_uav[i].x , v_p_uav[i].y , v_p_uav[i].z, v_l_in[i] ,length_corrected_,d_);
 			v_l_out.push_back(d_ * 1.001);
 		}
 		else
 			v_l_out.push_back(v_l_in[i]);
+			ROS_INFO("OptimizerLocalPlanner::checkCatenaryLength : [%lu] ugv[%.3f %.3f %.3f] uav[%.3f %.3f %.3f] lenght_current=%f  distance=%f ",
+			i, v_p_ugv[i].x , v_p_ugv[i].y , v_p_ugv[i].z, v_p_uav[i].x , v_p_uav[i].y , v_p_uav[i].z, v_l_in[i] ,d_);
 	}
 	v_l_in.clear();       //Check This two lines, should be fixed in a previous method the length
 	v_l_in = v_l_out;     //Check This two lines, should be fixed in a previous method the length

@@ -54,7 +54,8 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "catenary_checker/near_neighbor.hpp"
 #include "catenary_checker/grid3d.hpp"
 #include "catenary_checker/bisection_catenary_3D.h"
-#include <catenary_checker/check_collision_path_planner.h>
+// #include <catenary_checker/check_collision_path_planner.h>
+#include "catenary_checker/catenary_checker_manager.h"
 
 //ROS
 #include <ros/ros.h>
@@ -219,6 +220,8 @@ public:
 	NearNeighbor nn_trav, nn_ugv_obs;
 	MarkerPublisher MP;
 	Grid3d* grid_3D;
+	CatenaryCheckerManager *CheckCM;
+
 	DataManagement dm_;
     sensor_msgs::PointCloud2::ConstPtr pc_obs_ugv;
 
@@ -231,7 +234,7 @@ public:
     bool mapReceivedFull, mapReceivedTrav;
     bool debug;
     bool showConfig;
-	bool pause_end_optimization ,traj_in_rviz;
+	bool pause_end_optimization ,traj_in_rviz, use_parable;
 
     octomap_msgs::OctomapConstPtr mapFull, mapTrav;
 	octomap::OcTree *mapFull_msg , *mapTrav_msg;
