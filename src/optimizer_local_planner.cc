@@ -350,9 +350,9 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	}
 
 	/********************* To obligate pause method and check Planning result *********************/
-                //    std::string w_ ;
-                //    std::cout << " *** Press key to continue optimization process: " << std::endl;
-                //    std::cin >> w_ ;
+                   std::string w_ ;
+                   std::cout << " *** Press key to continue optimization process: " << std::endl;
+                   std::cin >> w_ ;
     /*************************************************************************************************/
 	// Initializing Contraints for optimization	
 	/****************************   UGV Constraints  ****************************/	
@@ -656,12 +656,12 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		finished_optimization_ = true;		
 	}
 	std::cout <<"Optimization Proccess Completed !!!" << std::endl << "Saving Temporal data in txt file ..." << std::endl << "===================================================" << std::endl << std::endl << std::endl;
-    ros::Duration(2.0).sleep();
 
+    // ros::Duration(2.0).sleep();
 	/********************* To obligate pause method and check Planning result *********************/
-        // std::string y_ ;
-        // std::cout << " *** Press key to continue: " << std::endl;
-        // std::cin >> y_ ;
+        std::string y_ ;
+        std::cout << " *** Press key to continue: " << std::endl;
+        std::cin >> y_ ;
     /*************************************************************************************************/
 
 	cleanVectors();		//Clear vector after optimization and previus the next iteration
@@ -1005,8 +1005,8 @@ void OptimizerLocalPlanner::checkCatenaryLength(vector<geometry_msgs::Vector3> v
 		}
 		else
 			v_l_out.push_back(v_l_in[i]);
-			ROS_INFO("OptimizerLocalPlanner::checkCatenaryLength : [%lu] ugv[%.3f %.3f %.3f] uav[%.3f %.3f %.3f] lenght_current=%f  distance=%f ",
-			i, v_p_ugv[i].x , v_p_ugv[i].y , v_p_ugv[i].z, v_p_uav[i].x , v_p_uav[i].y , v_p_uav[i].z, v_l_in[i] ,d_);
+			// ROS_INFO("OptimizerLocalPlanner::checkCatenaryLength : [%lu] ugv[%.3f %.3f %.3f] uav[%.3f %.3f %.3f] lenght_current=%f  distance=%f ",
+			// i, v_p_ugv[i].x , v_p_ugv[i].y , v_p_ugv[i].z, v_p_uav[i].x , v_p_uav[i].y , v_p_uav[i].z, v_l_in[i] ,d_);
 	}
 	v_l_in.clear();       //Check This two lines, should be fixed in a previous method the length
 	v_l_in = v_l_out;     //Check This two lines, should be fixed in a previous method the length

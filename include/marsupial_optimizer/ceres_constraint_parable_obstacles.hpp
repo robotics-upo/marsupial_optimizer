@@ -79,12 +79,13 @@ class DistanceFunction : public ceres::SizedCostFunction<1, 3>
         }
         else
         {
-			residuals[0] = 100000000.0*sqrt(z*z);
+			C = 100000.0;
+			residuals[0] = C*z;
             if (jacobians != NULL && jacobians[0] != NULL) 
             {
                 jacobians[0][0] = 0;
                 jacobians[0][1] = 0;
-                jacobians[0][2] = 0;
+                jacobians[0][2] = C;
             }
         }
 

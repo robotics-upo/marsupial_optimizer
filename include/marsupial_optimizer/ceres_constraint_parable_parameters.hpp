@@ -54,8 +54,8 @@ public:
 				pow_b = (param[1]*Xb*Xb + param[2]*Xb + param[3] - pUAV[3]    );// residual = p*xb² + q*xb + r - yb
 			// }
 
-			residual[0] = (wf * 100.0 )* ((pow_a)*(pow_a));
-			residual[1] = (wf * 100.0 )* ((pow_b)*(pow_b));
+			residual[0] = (wf * 100.0 )* ((pow_a));
+			residual[1] = (wf * 100.0 )* ((pow_b));
 
 			return true;
 		}
