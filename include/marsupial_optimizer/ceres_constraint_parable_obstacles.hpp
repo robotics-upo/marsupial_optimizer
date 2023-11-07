@@ -152,23 +152,23 @@ class AutodiffParableFunctor {
 				bool x_const, y_const;
 				x_const = y_const = false;
 
-				if(pUAV[1] > pUGV[1])
+				if(pUAV[1] > ugv_reel[1])
 					u_x = T{1.0};
-				else if(pUAV[1] < pUGV[1])
+				else if(pUAV[1] < ugv_reel[1])
 					u_x = T{-1.0};
 				else
 					u_x = T{0.0};    
 
-				if(pUAV[2] > pUGV[2])
+				if(pUAV[2] > ugv_reel[2])
 					u_y = T{1.0};
-				else if(pUAV[2] < pUGV[2])
+				else if(pUAV[2] < ugv_reel[2])
 					u_y = T{-1.0};
 				else
 					u_y = T{0.0};  
 					
-				if ((pUGV[1] - pUAV[1]) < fix_value && (pUGV[1] - pUAV[1]) > T{-1.0}*fix_value)
+				if ((ugv_reel[1] - pUAV[1]) < fix_value && (ugv_reel[1] - pUAV[1]) > T{-1.0}*fix_value)
 					x_const = true;
-				if ((pUGV[2] - pUAV[2]) < fix_value && (pUGV[2] - pUAV[2]) > T{-1.0}*fix_value)
+				if ((ugv_reel[2] - pUAV[2]) < fix_value && (ugv_reel[2] - pUAV[2]) > T{-1.0}*fix_value)
 					y_const = true;
 
 				// About distance between UGV and UAV in the plane
@@ -194,32 +194,32 @@ class AutodiffParableFunctor {
 						else if(y_const)
 							tetha_ = T{0.0};
 						else
-							tetha_ = atan(sqrt((pUAV[2] - pUGV[2])*(pUAV[2] - pUGV[2]))/sqrt((pUAV[1] - pUGV[1])*(pUAV[1] - pUGV[1])));
+							tetha_ = atan(sqrt((pUAV[2] - ugv_reel[2])*(pUAV[2] - ugv_reel[2]))/sqrt((pUAV[1] - ugv_reel[1])*(pUAV[1] - ugv_reel[1])));
 						x_ = x_ + (d_[0]/ np_);
-						point[0] = pUGV[1] + u_x * cos(tetha_) * x_;
-						point[1] = pUGV[2] + u_y * sin(tetha_) * x_;
+						point[0] = ugv_reel[1] + u_x * cos(tetha_) * x_;
+						point[1] = ugv_reel[2] + u_y * sin(tetha_) * x_;
 						point[2] = param[1] * x_* x_ + param[2] * x_ + param[3];
 						
 					}
 					else{ 	// In case that UGV and UAV are not in the same point the plane X-Y
 						T _step = d_[0] / np_;
-						point[0] = pUGV[1];
-						point[1] = pUGV[2];
-						point[2] = pUGV[3]+ _step* (double)i;    	
+						point[0] = ugv_reel[1];
+						point[1] = ugv_reel[2];
+						point[2] = ugv_reel[3]+ _step* (double)i;    	
 					}
         			_parableCostFunctor(point, &parable_cost_);
 
 					cost_state_parable = cost_state_parable + parable_cost_; // To get point parable cost
 					// std::cout << "[" << np_[0] <<"/"<< i<<"] , parable_cost_[0]=" << parable_cost_[0]  << " PARABLE" << std::endl;
 				}
-				// std::cout << "[" << pUGV[0] <<"] , cost_state_parable=" << cost_state_parable << std::endl;
+				// std::cout << "[" << ugv_reel[0] <<"] , cost_state_parable=" << cost_state_parable << std::endl;
 				residual[0] = wf * 100.0 * cost_state_parable;
 					
 				return true;
 			}
 
-			bool w_d_, sb;
-			double wf;
+			bool w_d_;
+			double wf, sb;
 			geometry_msgs::Vector3 pos_reel_ugv;
 			std::string user;
 			Grid3d* g_3D;

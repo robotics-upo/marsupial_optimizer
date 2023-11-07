@@ -43,6 +43,8 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "marsupial_optimizer/ceres_constraint_parable_obstacles.hpp"
 #include "marsupial_optimizer/ceres_constraint_parable_length.hpp"
 #include "marsupial_optimizer/ceres_constraint_parable_parameters.hpp"
+#include "marsupial_optimizer/ceres_constraint_straight_obstacles.hpp"
+#include "marsupial_optimizer/ceres_constraint_straight_length.hpp"
 
 #include "marsupial_optimizer/marsupial_trajectory_optimized.h"
 
@@ -155,7 +157,6 @@ public:
 	void configServices();
 	void executeOptimizerPathPreemptCB();
 	void executeOptimizerPathGoalCB();
-	void dynRecCb(marsupial_optimizer::OptimizationParamsConfig &config, uint32_t level);
 	void collisionMapCallBack(const octomap_msgs::OctomapConstPtr &msg);
 	void traversableMapCallBack(const octomap_msgs::OctomapConstPtr &msg);
 	void deleteMarkersCallBack(const std_msgs::BoolConstPtr &msg);
@@ -214,7 +215,7 @@ public:
 	double w_alpha_uav, w_alpha_ugv, w_beta_uav, w_beta_ugv, w_theta_ugv, w_gamma_uav, w_gamma_ugv, w_kappa_ugv, w_kappa_uav, w_delta; 
 	double w_epsilon_uav, w_epsilon_ugv, w_zeta_uav , w_zeta_ugv, w_eta_1, w_eta_2, w_eta_3, w_lambda, w_mu_uav, w_nu_ugv;
 
-	bool optimize_ugv , optimize_uav, optimize_cat, fix_last_position_ugv, use_distance_function, get_path_from_file;
+	bool optimize_ugv , optimize_uav, optimize_tether, fix_last_position_ugv, use_distance_function, get_path_from_file;
 
 	NearNeighbor nn_uav; // Kdtree used for Catenary and UAV
 	NearNeighbor nn_trav, nn_ugv_obs;
@@ -274,7 +275,7 @@ public:
 	vector<double> vec_dist_init_ugv, vec_dist_init_uav;
 	vector<double> vec_time_init;
 	vector<double> v_angles_smooth_ugv_init, v_angles_smooth_uav_init, v_angles_smooth_ugv_opt, v_angles_smooth_uav_opt;
-	vector<float> vec_len_cat_init;
+	vector<float> vec_len_tether_init, vec_len_tether_opt;
 	vector<geometry_msgs::Vector3> vec_pose_ugv_opt, vec_pose_uav_opt; 
 	vector<geometry_msgs::Vector3> vec_pose_ugv_init, vec_pose_uav_init;
 	vector <parable_parameters> v_parable_params_init, v_parable_params_opt;
@@ -293,10 +294,11 @@ public:
 	bool equidistance_uav_constraint, obstacles_uav_constraint, smoothness_uav_constraint;
 	bool velocity_uav_constraint,acceleration_uav_constraint;
 	bool time_constraint, velocity_ugv_constraint, acceleration_ugv_constraint;
-	bool parable_length_constraint, parable_obstacle_constraint, parable_parameters_constraint;
+	bool tether_length_constraint, tether_obstacle_constraint, tether_parameters_constraint;
 	bool finished_rviz_maneuver;
 	bool equidistance_ugv_constraint, obstacles_ugv_constraint, traversability_ugv_constraint, smoothness_ugv_constraint;
 	bool write_data_residual;
+    bool just_line_of_sigth; // This variable allow the class just compute the straigth state of the tether 
 
 private:
 	void resetFlags();

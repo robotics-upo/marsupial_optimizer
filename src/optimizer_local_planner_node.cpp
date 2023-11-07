@@ -1,6 +1,5 @@
 #include "marsupial_optimizer/optimizer_local_planner.h"
 
-
 using namespace std;
 
 bool get_path_from_file;
@@ -24,7 +23,6 @@ int main(int argc, char** argv)
   dynamic_reconfigure::Server<marsupial_optimizer::OptimizationParamsConfig> server_;
   dynamic_reconfigure::Server<marsupial_optimizer::OptimizationParamsConfig>::CallbackType f_;
 
-  f_ = boost::bind(&OptimizerLocalPlanner::dynRecCb,&OLPlanner_,  _1, _2);  
   server_.setCallback(f_);
 
   while (ros::ok()) 

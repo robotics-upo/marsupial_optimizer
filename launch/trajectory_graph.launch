@@ -1,0 +1,34 @@
+<launch>
+	
+	<!-- <arg name="input_file_yaml" default="merge_file"/> -->
+	<arg name="input_file_yaml" default="teatro_mission"/>
+	<!-- <arg name="path_file_yaml" default="$(env HOME)/results_marsupial_optimizer"/> -->
+	<arg name="path_file_yaml" default="$(find marsupial_mission_interface)/cfg/optimized_path"/>
+	
+    <!-- <arg name="map_file" default="teatro"/> -->
+    <arg name="map_file" default="teatro"/>
+    <arg name="static_map_file" default="$(find marsupial_optimizer)/maps/$(arg map_file).bt"/>
+    <arg name="published_pc" default="/octomap_point_cloud_centers"/>
+    <arg name="root" default=""/>
+
+    <arg name="rviz"    default="true"/> 
+    <arg name="viz_file"    default="traj_graph_mission"/>
+
+	<node pkg="marsupial_optimizer" type="trajectory_graph_mission_node" name="trajectory_graph_mission_node" output="screen">
+		<param name="file_yaml" value="$(arg path_file_yaml)/$(arg input_file_yaml).yaml"/>
+	</node>
+
+	<node pkg="octomap_server" type="octomap_server_node" name="octomap_server_trajectory_graph_node" output="screen" args="$(arg static_map_file)">
+		<param name="base_frame_id" value="base_link"/>
+		<param name="frame_id" value="world"/>
+        <remap from="/octomap_point_cloud_centers" to="$(arg published_pc)"/>
+        <remap from="/octomap_binary" to="/$(arg root)/octomap_binary"/>
+        <remap from="/occupied_cells_vis_array" to="/$(arg root)/occupied_cells_vis_array"/>
+        <remap from="/free_cells_vis_array" to="/$(arg root)/free_cells_vis_array"/>
+        <remap from="/octomap_full" to="/$(arg root)/octomap_full"/>
+        <remap from="/projected_map" to="/$(arg root)/projected_map"/>
+	</node>
+
+    <node pkg="rviz" name="rviz" type="rviz" args="-d $(find marsupial_optimizer)/viz/$(arg viz_file).rviz" if="$(arg rviz)"/>
+
+</launch>   

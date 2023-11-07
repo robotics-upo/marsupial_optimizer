@@ -1,0 +1,219 @@
+teatro_pos_final_1:
+    pose:
+        x: 4.0  
+        y: 9.0
+        z: 2.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
+
+teatro_pos_final_2:
+    pose:
+        x: -3.5
+        y: 8.0
+        z: 2.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
+
+teatro_pos_final_3:
+    pose:
+        x: -3.5
+        y: 8.0
+        z: 3.25
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
+
+teatro_pos_final_4:
+    pose:
+        x: 6.5
+        y: 9.0
+        z: 3.25
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
+
+teatro_pos_final_5:
+    pose:
+        x: 6.5
+        y: 9.0
+        z: 4.50
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
+
+teatro_pos_final_6:
+    pose:
+        x: -3.5
+        y: 8.0
+        z: 4.5
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
+
+teatro_pos_final_7:
+    pose:
+        x: -6.2
+        y: 6.2
+        z: 3.5
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
+
+teatro_pos_final_8:
+    pose:
+        x: -7.2
+        y: 3.0
+        z: 3.5
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
+
+teatro_pos_final_9:
+    pose:
+        x: -7.2
+        y: -2.7
+        z: 3.5
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
+
+teatro_pos_final_10:
+    pose:
+        x: -7.2
+        y: -4.7
+        z: 3.5
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
+
+teatro_pos_final_11:
+    pose:
+        x: -3.5
+        y: -6.5
+        z: 2.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
+
+teatro_pos_final_12:
+    pose:
+        x: 4.8  
+        y: -7.5
+        z: 2.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
+
+teatro_pos_final_13:
+    pose:
+        x: 4.8  
+        y: -7.5
+        z: 3.25
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
+
+teatro_pos_final_14:
+    pose:
+        x: -3.5
+        y: -6.5
+        z: 3.25
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
+
+teatro_pos_final_15:
+    pose:
+        x: -3.5
+        y: -6.5
+        z: 4.5
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
+
+teatro_pos_final_16:
+    pose:
+        x: 6.5
+        y: -7.5
+        z: 4.5
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
+
+teatro_pos_final_17:
+    pose:
+        x: 10.660
+        y: -8.505
+        z: 3.5
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
+
+teatro_pos_final_18:
+    pose:
+        x: 10.85
+        y: -3.29
+        z: 3.5
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
+
+teatro_pos_final_19:
+    pose:
+        x: 10.6
+        y: 3.8
+        z: 3.5
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
+
+teatro_pos_final_20:
+    pose:
+        x: 9.59
+        y: 9.33
+        z: 3.5
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0

@@ -1,0 +1,208 @@
+<?xml version="1.0"?>
+<root main_tree_to_execute="BehaviorTree">
+    <!-- ////////// -->
+    <BehaviorTree ID="BehaviorTree">
+        <Sequence>
+            <WaitSeconds duration="2" name="WaitSeconds1"/>
+            <Repeat num_cycles="1">
+                <Action ID="UPOGoToGoalByName" action="/Make_Plan" goal_name="hall45_arco_pos_final_1" name="Stage1GoToGoal" state="gpf1"/>
+            </Repeat>
+            <WaitSeconds duration="3" name="WaitSeconds2"/>
+            <Action ID="UPOGoToGoalByName" action="/Make_Plan" goal_name="hall45_arco_pos_final_2" name="Stage2GoToGoal" state="gpf2"/>
+            <WaitSeconds duration="3" name="WaitSeconds3"/>
+            <Action ID="UPOGoToGoalByName" action="/Make_Plan" goal_name="hall45_arco_pos_final_3" name="Stage7GoToGoal" state="gpf9"/>
+            <WaitSeconds duration="2" name="WaitSeconds10"/>
+        </Sequence>
+    </BehaviorTree>
+    <!-- ////////// -->
+    <TreeNodesModel>
+        <Action ID="CallEmptyService">
+            <input_port name="service" type="std::string">ROS service name</input_port>
+        </Action>
+        <Action ID="ConvertJsonToDouble">
+            <input_port name="input" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message</input_port>
+            <output_port name="output" type="double">Output variable</output_port>
+        </Action>
+        <Action ID="ConvertJsonToInt64">
+            <input_port name="input" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message</input_port>
+            <output_port name="output" type="long">Output variable</output_port>
+        </Action>
+        <Action ID="ConvertJsonToString">
+            <input_port name="input" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message</input_port>
+            <output_port name="output" type="std::string">Output variable</output_port>
+        </Action>
+        <Action ID="ConvertJsonToUint64">
+            <input_port name="input" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message</input_port>
+            <output_port name="output" type="unsigned long">Output variable</output_port>
+        </Action>
+        <Action ID="ConvertMessageField">
+            <input_port name="field" type="std::string">Field to fetch</input_port>
+            <input_port name="input" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message</input_port>
+            <output_port name="output" type="void">Output variable</output_port>
+        </Action>
+        <Action ID="ConvertRandomMessageField">
+            <input_port name="field" type="std::string">Field to fetch</input_port>
+            <input_port name="input" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message</input_port>
+            <output_port name="output" type="void">Output variable</output_port>
+        </Action>
+        <Action ID="CopyJson">
+            <input_port name="input" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Input variable</input_port>
+            <output_port name="output" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Output variable to copy to</output_port>
+        </Action>
+        <Action ID="DebugLog">
+            <input_port name="message" type="std::string">Message to log</input_port>
+        </Action>
+        <Action ID="ErrorLog">
+            <input_port name="message" type="std::string">Message to log</input_port>
+        </Action>
+        <Action ID="FatalLog">
+            <input_port name="message" type="std::string">Message to log</input_port>
+        </Action>
+        <Action ID="FindByFieldValue">
+            <input_port name="field" type="std::string">Field to fetch</input_port>
+            <input_port name="input" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message</input_port>
+            <output_port name="output" type="void">Output variable</output_port>
+            <input_port name="value" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Value to search for</input_port>
+        </Action>
+        <Decorator ID="ForEachLoop">
+            <input_port name="break_on_child_failure" type="bool">Break loop on child failure?</input_port>
+            <input_port name="input" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Input sequence</input_port>
+            <output_port name="output_element" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Output element variable</output_port>
+            <output_port name="output_index" type="unsigned long">Output index variable</output_port>
+        </Decorator>
+        <Action ID="GetJsonSize">
+            <input_port name="input" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Input sequence</input_port>
+            <output_port name="output" type="unsigned long">Sequence size output</output_port>
+        </Action>
+        <Action ID="GetMessageField">
+            <input_port name="field" type="std::string">Field to fetch</input_port>
+            <input_port name="input" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message</input_port>
+            <output_port name="output" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Output variable</output_port>
+        </Action>
+        <Action ID="GetRandomMessageField">
+            <input_port name="field" type="std::string">Field to fetch</input_port>
+            <input_port name="input" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message</input_port>
+            <output_port name="output" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Output variable</output_port>
+        </Action>
+        <Action ID="GetTransformDistance">
+            <input_port name="input" type="tf::StampedTransform">TF transform</input_port>
+            <output_port name="output" type="double">Distance form transform origin</output_port>
+        </Action>
+        <Action ID="GetTransformHorizontalDistance">
+            <input_port name="input" type="tf::StampedTransform">TF transform</input_port>
+            <output_port name="output" type="double">2D distance from TF transform origin</output_port>
+        </Action>
+        <Action ID="GetTransformOrigin">
+            <input_port name="input" type="tf::StampedTransform">TF transform</input_port>
+            <output_port name="x" type="double">Origin x coordinate</output_port>
+            <output_port name="y" type="double">Origin y coordinate</output_port>
+            <output_port name="z" type="double">Origin z coordinate</output_port>
+        </Action>
+        <Action ID="InfoLog">
+            <input_port name="message" type="std::string">Message to log</input_port>
+        </Action>
+        <Action ID="InitializeJson">
+            <output_port name="output" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Output variable to initialize</output_port>
+        </Action>
+        <Action ID="LookupTransform">
+            <output_port name="output" type="tf::StampedTransform">Result transform</output_port>
+            <input_port name="source_frame" type="std::string">Origin TF frame</input_port>
+            <input_port name="target_frame" type="std::string">Target TF frame</input_port>
+            <input_port default="0" name="use_last_available" type="bool">Use last available transform?</input_port>
+        </Action>
+        <Action ID="MonitorStdBool">
+            <input_port default="0" name="consume_msgs" type="bool">Should messages be consumed?</input_port>
+            <input_port default="1" name="queue_size" type="unsigned int">Subscriber callback queue size</input_port>
+            <output_port name="serialized_output" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message [std_msgs::Bool_&lt;std::allocator&lt;void&gt; &gt;]</output_port>
+            <input_port name="topic" type="std::string">Topic to subscribe</input_port>
+        </Action>
+        <Action ID="MonitorStdFloat64">
+            <input_port default="0" name="consume_msgs" type="bool">Should messages be consumed?</input_port>
+            <input_port default="1" name="queue_size" type="unsigned int">Subscriber callback queue size</input_port>
+            <output_port name="serialized_output" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message [std_msgs::Float64_&lt;std::allocator&lt;void&gt; &gt;]</output_port>
+            <input_port name="topic" type="std::string">Topic to subscribe</input_port>
+        </Action>
+        <Action ID="MonitorStdInt32">
+            <input_port default="0" name="consume_msgs" type="bool">Should messages be consumed?</input_port>
+            <input_port default="1" name="queue_size" type="unsigned int">Subscriber callback queue size</input_port>
+            <output_port name="serialized_output" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message [std_msgs::Int32_&lt;std::allocator&lt;void&gt; &gt;]</output_port>
+            <input_port name="topic" type="std::string">Topic to subscribe</input_port>
+        </Action>
+        <Action ID="PublishBool">
+            <input_port name="data" type="bool">Auto-generated field from std_msgs::Bool_&lt;std::allocator&lt;void&gt; &gt;</input_port>
+            <input_port default="0" name="latch" type="bool">Latch messages?</input_port>
+            <input_port default="1" name="queue_size" type="unsigned int">Internal publisher queue size</input_port>
+            <input_port name="topic" type="std::string">Topic to publish to</input_port>
+        </Action>
+        <Action ID="PublishStdString">
+            <input_port name="data" type="std::string">Auto-generated field from std_msgs::String_&lt;std::allocator&lt;void&gt; &gt;</input_port>
+            <input_port default="0" name="latch" type="bool">Latch messages?</input_port>
+            <input_port default="1" name="queue_size" type="unsigned int">Internal publisher queue size</input_port>
+            <input_port name="topic" type="std::string">Topic to publish to</input_port>
+        </Action>
+        <Action ID="SubscribeUPOGoal">
+            <input_port default="0" name="consume_msgs" type="bool">Should messages be consumed?</input_port>
+            <output_port name="output" type="upo_actions::MakePlanGoal_&lt;std::allocator&lt;void&gt; &gt;">Received ROS message [upo_actions::MakePlanGoal_&lt;std::allocator&lt;void&gt; &gt;]</output_port>
+            <input_port default="1" name="queue_size" type="unsigned int">Subscriber callback queue size</input_port>
+            <input_port name="topic" type="std::string">Topic to subscribe</input_port>
+        </Action>
+        <Action ID="UPOFireDetection3D">
+            <input_port name="action" type="std::string">Actionlib action server name</input_port>
+            <input_port name="duration" type="int">Duration</input_port>
+            <output_port name="fire_found" type="bool">Fire Found</output_port>
+            <output_port name="state" type="actionlib::SimpleClientGoalState">Actionlib reported state</output_port>
+            <output_port name="x" type="double">Fire x</output_port>
+            <output_port name="y" type="double">Fire x</output_port>
+            <output_port name="z" type="double">Fire x</output_port>
+        </Action>
+        <Action ID="UPOFireExtinguish">
+            <input_port name="action" type="std::string">Actionlib action server name</input_port>
+            <input_port name="detect_fire" type="bool">Detect Fire</input_port>
+            <output_port name="serialized_feedback" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message [upo_actions::FireExtinguishFeedback_&lt;std::allocator&lt;void&gt; &gt;]</output_port>
+            <output_port name="serialized_result" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message [upo_actions::FireExtinguishResult_&lt;std::allocator&lt;void&gt; &gt;]</output_port>
+            <output_port name="state" type="actionlib::SimpleClientGoalState">Actionlib reported state</output_port>
+        </Action>
+        <Action ID="UPOGoToGoal">
+            <input_port name="action" type="std::string">Actionlib action server name</input_port>
+            <input_port name="global_goal.header.frame_id" type="std::string">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void&gt; &gt;</input_port>
+            <input_port name="global_goal.header.seq" type="unsigned int">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void&gt; &gt;</input_port>
+            <input_port name="global_goal.pose.orientation.w" type="double">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void&gt; &gt;</input_port>
+            <input_port name="global_goal.pose.orientation.x" type="double">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void&gt; &gt;</input_port>
+            <input_port name="global_goal.pose.orientation.y" type="double">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void&gt; &gt;</input_port>
+            <input_port name="global_goal.pose.orientation.z" type="double">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void&gt; &gt;</input_port>
+            <input_port name="global_goal.pose.position.x" type="double">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void&gt; &gt;</input_port>
+            <input_port name="global_goal.pose.position.y" type="double">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void&gt; &gt;</input_port>
+            <input_port name="global_goal.pose.position.z" type="double">Auto-generated field from upo_actions::MakePlanGoal_&lt;std::allocator&lt;void&gt; &gt;</input_port>
+            <output_port name="state" type="actionlib::SimpleClientGoalState">Actionlib reported state</output_port>
+        </Action>
+        <Action ID="UPOGoToGoalByName">
+            <input_port name="action" type="std::string">Actionlib action server name</input_port>
+            <input_port name="goal_name" type="std::string">Name of goal</input_port>
+            <output_port name="state" type="actionlib::SimpleClientGoalState">Actionlib reported state</output_port>
+        </Action>
+        <Action ID="UPOLanding">
+            <input_port name="action" type="std::string">Actionlib action server name</input_port>
+            <input_port name="land" type="bool">Auto-generated field from upo_actions::LandingGoal_&lt;std::allocator&lt;void&gt; &gt;</input_port>
+            <output_port name="state" type="actionlib::SimpleClientGoalState">Actionlib reported state</output_port>
+        </Action>
+        <Action ID="UPOTakeOff">
+            <input_port name="action" type="std::string">Actionlib action server name</input_port>
+            <output_port name="state" type="actionlib::SimpleClientGoalState">Actionlib reported state</output_port>
+            <input_port name="takeoff_height.data" type="float">Auto-generated field from upo_actions::TakeOffGoal_&lt;std::allocator&lt;void&gt; &gt;</input_port>
+        </Action>
+        <Action ID="UPOWindowDetection">
+            <input_port name="action" type="std::string">Actionlib action server name</input_port>
+            <input_port name="duration" type="int">Duration</input_port>
+            <output_port name="state" type="actionlib::SimpleClientGoalState">Actionlib reported state</output_port>
+            <output_port name="window_present" type="bool">Window Present</output_port>
+            <output_port name="x" type="double">Window x</output_port>
+            <output_port name="y" type="double">Window y</output_port>
+            <output_port name="z" type="double">Window z</output_port>
+        </Action>
+        <Action ID="WarnLog">
+            <input_port name="message" type="std::string">Message to log</input_port>
+        </Action>
+    </TreeNodesModel>
+    <!-- ////////// -->
+</root>
+

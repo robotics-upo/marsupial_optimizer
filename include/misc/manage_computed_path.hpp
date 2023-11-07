@@ -15,7 +15,7 @@
 #include <yaml-cpp/yaml.h>
 
 #include <upo_actions/ExecutePathAction.h>
-
+#include "marsupial_optimizer/marsupial_trajectory_optimized.h"  //create a msg
 
 using namespace std;
 
@@ -28,6 +28,9 @@ public:
     void exportOptimizedPath(vector<geometry_msgs::Vector3> &v_ugv_, vector<geometry_msgs::Vector3> &v_uav_, 
 									 vector<geometry_msgs::Quaternion> &v_r_ugv_, vector<geometry_msgs::Quaternion> &v_r_uav_, vector<float> &v_l_,
 									 string path_mission_file_);
+    void publishOptimizedTraj(vector<geometry_msgs::Vector3> v_ugv_, vector<geometry_msgs::Vector3> v_uav_, 
+							vector<geometry_msgs::Quaternion> v_r_ugv_, vector<geometry_msgs::Quaternion> v_r_uav_, 
+							vector<float> v_l_, vector<double> v_t_, marsupial_optimizer::marsupial_trajectory_optimized &msg_);
 
     trajectory_msgs::MultiDOFJointTrajectory trajectory;
     std::vector<float> tether_length_vector;

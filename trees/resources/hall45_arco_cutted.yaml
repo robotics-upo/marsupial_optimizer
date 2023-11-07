@@ -1,0 +1,33 @@
+hall45_arco_pos_final_1:
+    pose:
+        x: 55.0
+        y: -11.6
+        z: 3.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
+
+hall45_arco_pos_final_2:
+    pose:
+        x: 50.2
+        y: -13.3
+        z: 3.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
+
+hall45_arco_pos_final_3:
+    pose:
+        x: 53.0
+        y: -16.0
+        z: 3.0
+    orientation:
+        x: 0.0
+        y: 0.0
+        z: 1.0
+        w: 0.0
+

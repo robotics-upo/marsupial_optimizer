@@ -1,7 +1,7 @@
-ws_x_max: 4.7
-ws_y_max: 10.0
-ws_z_max: 6.2
+ws_x_max: 10.0
+ws_y_max: 12.0
+ws_z_max: 8.0
 
 ws_x_min: -9.0
-ws_y_min: -10
+ws_y_min: 6.0
 ws_z_min: -0.5

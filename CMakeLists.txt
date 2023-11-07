@@ -35,7 +35,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(marsupial_optimizer CXX)
 
 # Set to Release in order to speed up the program significantly
-set(CMAKE_BUILD_TYPE Release) #None, Debug, Release, RelWithDebInfo, MinSizeRel
+set(CMAKE_BUILD_TYPE Debug) #None, Debug, Release, RelWithDebInfo, MinSizeRel
 
 # add_compile_options(-std=c++14)
 
@@ -144,6 +144,14 @@ add_executable(optimizer_local_planner_node src/optimizer_local_planner_node.cpp
 add_dependencies(optimizer_local_planner_node ${${PROJECT_NAME}_EXPORTED_TARGETS}  ${catkin_EXPORTED_TARGETS} )
 target_link_libraries(optimizer_local_planner_node  catenary_checker Ceres::ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES} yaml-cpp Qt5::Charts
 Qt5::Widgets dbscan_line)
+
+add_executable(trajectory_merger src/trajectory_merger.cpp)
+target_link_libraries(trajectory_merger  yaml-cpp)
+
+add_executable(trajectory_graph_mission_node src/trajectory_graph_mission_node.cpp)
+target_link_libraries(trajectory_graph_mission_node  ${catkin_LIBRARIES} ${EXTERNAL_LIBS}  yaml-cpp)
+add_dependencies(trajectory_graph_mission_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 
 add_executable(optimizer_publisher_tf_node src/optimizer_publisher_tf_node.cpp src/marker_publisher.cpp) 
 add_dependencies(optimizer_publisher_tf_node ${${PROJECT_NAME}_EXPORTED_TARGETS}  ${catkin_EXPORTED_TARGETS} )

@@ -191,15 +191,15 @@ void ManagePath::exportOptimizedPath(vector<geometry_msgs::Vector3> &v_ugv_, vec
 	v_interp_pose_ugv.size(),v_interp_pose_ugv.size(),vec_interp_len_cat.size());
 
     // Root of our file
-    YAML::Node root_ugv, root_uav, root_tether;
+    YAML::Node root;
 
     // Populate emitter
     YAML::Emitter emitter;
 
     // // Create a node listing some values
-    root_ugv["marsupial_ugv"] = YAML::Node(YAML::NodeType::Map);
+    
     // // We now will write our values under root["MyNode"]
-    YAML::Node node = root_ugv["marsupial_ugv"];
+    YAML::Node node = YAML::Node(YAML::NodeType::Map);
     // YAML::Node node;
     // Write some values
     int size_ = v_ugv_.size();
@@ -223,12 +223,10 @@ void ManagePath::exportOptimizedPath(vector<geometry_msgs::Vector3> &v_ugv_, vec
         node["poses"+to_string(i)]["pose"]["orientation"]["w"] = v_r_ugv_[i].w;
     }
 
-    emitter << root_ugv;
+	root["marsupial_ugv"] = node;
 
     // // Create a node listing some values
-    root_uav["marsupial_uav"] = YAML::Node(YAML::NodeType::Map);
-    // // We now will write our values under root["MyNode"]
-    node = root_uav["marsupial_uav"];
+    node = YAML::Node(YAML::NodeType::Map);
 	size_ = v_uav_.size();
     // YAML::Node node;
     // Write some values
@@ -250,13 +248,10 @@ void ManagePath::exportOptimizedPath(vector<geometry_msgs::Vector3> &v_ugv_, vec
         node["poses"+to_string(i)]["pose"]["orientation"]["w"] = v_r_uav_[i].w;
     }
 
-    // Populate emitter
-    emitter << root_uav;
+	root["marsupial_uav"] = node;
 
-	    // // Create a node listing some values
-    root_tether["tether"] = YAML::Node(YAML::NodeType::Map);
-    // // We now will write our values under root["MyNode"]
-    node = root_tether["tether"];
+	// // Create a node listing some values
+    node = YAML::Node(YAML::NodeType::Map);
 	size_ = v_l_.size();
     // YAML::Node node;
     // Write some values
@@ -271,9 +266,11 @@ void ManagePath::exportOptimizedPath(vector<geometry_msgs::Vector3> &v_ugv_, vec
         node["length"+to_string(i)]["frame_id"] = "tether_length";  
         node["length"+to_string(i)]["length"] = v_l_[i];
     }
+	root["tether"] = node;
+
 
     // Populate emitter
-    emitter << root_tether;
+    emitter << root;
 
     // Write to file
     std::ofstream fout;
@@ -281,4 +278,84 @@ void ManagePath::exportOptimizedPath(vector<geometry_msgs::Vector3> &v_ugv_, vec
     fout << emitter.c_str();
 
 	std::cout << "Saved Path Optimized" << std::endl << std::endl;
+}
+
+void ManagePath::publishOptimizedTraj(vector<geometry_msgs::Vector3> v_ugv_, vector<geometry_msgs::Vector3> v_uav_, 
+									 vector<geometry_msgs::Quaternion> v_r_ugv_, vector<geometry_msgs::Quaternion> v_r_uav_, 
+									 vector<float> v_l_, vector<double> v_t_, marsupial_optimizer::marsupial_trajectory_optimized &msg_)
+{
+    ROS_INFO("Executing Trajectories : Tf modification");
+
+	trajectory_msgs::MultiDOFJointTrajectoryPoint t_;
+	trajectory_msgs::MultiDOFJointTrajectory trajectory_;
+	std::vector<float> l_cat_;
+
+    trajectory_.points.clear();
+
+	t_.transforms.resize(2);
+	t_.velocities.resize(2);
+	t_.accelerations.resize(2);
+
+	for (size_t i = 0; i <  v_ugv_.size() ; i++){
+		//For UGV
+		t_.transforms[0].translation.x = v_ugv_[i].x;
+		t_.transforms[0].translation.y = v_ugv_[i].y;
+		t_.transforms[0].translation.z = v_ugv_[i].z;
+		t_.transforms[0].rotation.x = v_r_ugv_[i].x;
+		t_.transforms[0].rotation.y = v_r_ugv_[i].y;
+		t_.transforms[0].rotation.z = v_r_ugv_[i].z;
+		t_.transforms[0].rotation.w = v_r_ugv_[i].w;
+		if (i==0){
+			t_.velocities[0].linear.x = 0.0;
+			t_.velocities[0].linear.y = 0.0;
+			t_.velocities[0].linear.z = 0.0;
+		}else{ 
+			t_.velocities[0].linear.x = (v_ugv_[i].x - v_ugv_[i-1].x)/v_t_[i];
+			t_.velocities[0].linear.y = (v_ugv_[i].y - v_ugv_[i-1].y)/v_t_[i];
+			t_.velocities[0].linear.z = (v_ugv_[i].z - v_ugv_[i-1].z)/v_t_[i];
+		}
+		if (i==0 || i==v_ugv_.size()-1){
+			t_.accelerations[0].linear.x = 0.0;
+			t_.accelerations[0].linear.y = 0.0;
+			t_.accelerations[0].linear.z = 0.0;
+		}
+		else{
+			t_.accelerations[0].linear.x= ((v_ugv_[i+1].x - v_ugv_[i].x)/v_t_[i+1])-((v_ugv_[i].x - v_ugv_[i-1].x)/v_t_[i]);
+			t_.accelerations[0].linear.y= ((v_ugv_[i+1].y - v_ugv_[i].y)/v_t_[i+1])-((v_ugv_[i].y - v_ugv_[i-1].y)/v_t_[i]);
+			t_.accelerations[0].linear.z= ((v_ugv_[i+1].z - v_ugv_[i].z)/v_t_[i+1])-((v_ugv_[i].z - v_ugv_[i-1].z)/v_t_[i]);
+		}
+		//For UAV
+		t_.transforms[1].translation.x = v_uav_[i].x;
+		t_.transforms[1].translation.y = v_uav_[i].y;
+		t_.transforms[1].translation.z = v_uav_[i].z;
+		t_.transforms[1].rotation.x = v_r_uav_[i].x;
+		t_.transforms[1].rotation.y = v_r_uav_[i].y;
+		t_.transforms[1].rotation.z = v_r_uav_[i].z;
+		t_.transforms[1].rotation.w = v_r_uav_[i].w;
+		if (i==0){
+			t_.velocities[1].linear.x = 0.0;
+			t_.velocities[1].linear.y = 0.0;
+			t_.velocities[1].linear.z = 0.0;
+		}else{  
+			t_.velocities[1].linear.x = (v_uav_[i].x - v_uav_[i-1].x)/v_t_[i];
+			t_.velocities[1].linear.y = (v_uav_[i].y - v_uav_[i-1].y)/v_t_[i];
+			t_.velocities[1].linear.z = (v_uav_[i].z - v_uav_[i-1].z)/v_t_[i];
+		}
+		if (i==0 || i==v_ugv_.size()-1){
+			t_.accelerations[1].linear.x = 0.0;
+			t_.accelerations[1].linear.y = 0.0;
+			t_.accelerations[1].linear.z = 0.0;
+		}else{
+			t_.accelerations[1].linear.x= ((v_uav_[i+1].x - v_uav_[i].x)/v_t_[i+1])-((v_uav_[i].x - v_uav_[i-1].x)/v_t_[i]);
+			t_.accelerations[1].linear.y= ((v_uav_[i+1].y - v_uav_[i].y)/v_t_[i+1])-((v_uav_[i].y - v_uav_[i-1].y)/v_t_[i]);
+			t_.accelerations[1].linear.z= ((v_uav_[i+1].z - v_uav_[i].z)/v_t_[i+1])-((v_uav_[i].z - v_uav_[i-1].z)/v_t_[i]);
+		}
+		// t_.time_from_start = v_t_[i].x;
+		trajectory_.header.stamp = ros::Time::now();
+		trajectory_.points.push_back(t_);
+		l_cat_.push_back(v_l_[i]);
+	}
+
+	msg_.trajectory = trajectory_;
+	msg_.length_catenary = l_cat_;
 }

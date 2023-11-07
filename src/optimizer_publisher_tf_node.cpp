@@ -99,9 +99,9 @@ ManagerTf::ManagerTf(ros::NodeHandlePtr nh, ros::NodeHandle pnh)
 
 	publish_initial = true;
 
-	initial_pos_uav_x = initial_pos_ugv_x;
-	initial_pos_uav_y = initial_pos_ugv_y;
-	initial_pos_uav_z = initial_pos_ugv_z + pos_uav_above_ugv;
+	initial_pos_uav_x = initial_pos_uav_x;
+	initial_pos_uav_y = initial_pos_uav_y;
+	initial_pos_uav_z = initial_pos_uav_z;
 	printf("\tINITIAL POS UGV: trans=[%f %f %f] rot=[%f %f %f]\n",initial_pos_ugv_x, initial_pos_ugv_y, initial_pos_ugv_z, initial_pos_ugv_roll, initial_pos_ugv_pitch, initial_pos_ugv_yaw);
 	printf("\t**INITIAL POS UAV: trans=[%f %f %f] rot=[%f %f %f]\n",initial_pos_uav_x, initial_pos_uav_y, initial_pos_uav_z, initial_pos_uav_roll, initial_pos_uav_pitch, initial_pos_uav_yaw);
 }
@@ -177,7 +177,7 @@ void ManagerTf::trajectoryOptimizedCallBack(const marsupial_optimizer::marsupial
 		mp_.markerPoints(catenary_marker, points_catenary_, i, size_, catenary_marker_pub_);	
 		br.sendTransform(tf::StampedTransform(trans_ugv, ros::Time::now(), "/world", ugv_base_frame));
 		br.sendTransform(tf::StampedTransform(trans_uav, ros::Time::now(), "/world", uav_base_frame));
-		ros::Duration(1.0).sleep();
+		ros::Duration(0.1).sleep();
     	catenary_marker_pub_.publish(catenary_marker);
 
 
