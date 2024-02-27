@@ -54,7 +54,7 @@ rosrun marsupial_optimizer ceres_installation.sh
 Five scenarios with different features can be set to use the optimizer. S1: Open environment, S2: Narrow/constrained environment, S3: Confined environment, S4: Confined environment, S5: Open environment, as show in the next figure.
 
 <p align="center">
-    <img src="worlds/5_scenarios.png" width="1000">
+    <img src="worlds/all_scenarios.png" width="1000">
 </p>
 
 The package has a set of predefined configurations (and completely extendable according to the user's need) that relate the stage number, initial position number and goal position number. The set of initial positions can be check in ```/cfg``` and the goal positions in ```/trees/resources/```.
