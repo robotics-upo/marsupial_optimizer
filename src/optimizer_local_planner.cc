@@ -100,7 +100,6 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(bool get_path_from_file_)
 	nh->param("path", path, (std::string) "~/");
 	nh->param("path_mission_file", path_mission_file, (std::string) "~/missions/cfg/");
 	nh->param("pc_user_name", user_name, (std::string) "simon");
-	nh->param("files_results", files_results, (std::string) "results/");
 	nh->param("files_residuals", files_residuals, (std::string) "residuals/");
 	nh->param("name_output_file", name_output_file, (std::string) "optimization_test");
 	nh->param("scenario_name", scenario_name, (std::string) "scenario_name");
@@ -110,6 +109,7 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(bool get_path_from_file_)
  	nh->param<bool>("show_config", showConfig, false);
  	nh->param<bool>("use_distance_function", use_distance_function, true);
  	nh->param<bool>("use_parable", use_parable, true);
+ 	nh->param<bool>("export_path", export_path, true);
 
 	ROS_INFO_COND(showConfig, PRINTF_BLUE "Optimizer Local Planner 3D Node Configuration:\n");
 		
@@ -340,9 +340,9 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	if(!just_line_of_sigth) // The parable is not computed if is required just to star with initial condition the straight line.
 		CheckCM->CheckStatusCollision(vec_pose_ugv_init, vec_rot_ugv_init, vec_pose_uav_init, v_parable_params_init);
 
-	dm_.initDataManagement(path+files_results, name_output_file, scenario_name, num_pos_initial, initial_velocity_ugv, initial_velocity_uav, 
+	dm_.initDataManagement(path, name_output_file, scenario_name, num_pos_initial, initial_velocity_ugv, initial_velocity_uav, 
 							initial_acceleration_ugv, initial_acceleration_uav, distance_tether_obstacle, pose_reel_local.transform.translation, vec_pose_ugv_init, 
-							vec_pose_uav_init, vec_len_tether_init, vec_rot_ugv_init, vec_rot_uav_init, mapFull_msg, mapTrav_msg, grid_3D);			   
+							vec_pose_uav_init, vec_len_tether_init, vec_rot_ugv_init, vec_rot_uav_init, mapFull_msg, mapTrav_msg, grid_3D, false);			   
 	if(write_data_for_analysis)
 		dm_.getSmoothnessTrajectory(vec_pose_ugv_init, vec_pose_uav_init, v_angles_smooth_ugv_init, v_angles_smooth_uav_init);
 		dm_.writeTemporalDataBeforeOptimization(vec_dist_init_ugv, vec_dist_init_uav, vec_time_init, v_angles_smooth_ugv_init, v_angles_smooth_uav_init, v_parable_params_init);
@@ -497,7 +497,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			ROS_INFO(PRINTF_BLUE"		- Optimize Obstacles Autodiff");
 			for (int i = 0; i < statesPosUAV.size(); ++i) {
 				CostFunction* cost_function_uav_2  = new AutoDiffCostFunction<ObstacleDistanceFunctorUAV::ObstaclesFunctor , 1, 4>
-												(new ObstacleDistanceFunctorUAV::ObstaclesFunctor (w_beta_uav, distance_obstacle_uav, nn_uav.kdtree, nn_uav.obs_points, path+files_results, write_data_residual, grid_3D, use_distance_function, user_name)); 
+												(new ObstacleDistanceFunctorUAV::ObstaclesFunctor (w_beta_uav, distance_obstacle_uav, nn_uav.kdtree, nn_uav.obs_points, path, write_data_residual, grid_3D, use_distance_function, user_name)); 
 				problem.AddResidualBlock(cost_function_uav_2, loss_function, statesPosUAV[i].parameter);
 				if (i == 0)
 					problem.SetParameterBlockConstant(statesPosUAV[i].parameter);
@@ -627,8 +627,9 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	time_optimazation = summary.total_time_in_seconds;
 
 	finishigOptimization();
-	ManagePath mp_;
-	mp_.exportOptimizedPath(vec_pose_ugv_opt, vec_pose_uav_opt, vec_rot_ugv_opt, vec_rot_uav_opt, vec_len_tether_opt, path+files_results);
+		ManagePath mp_;
+	if(export_path)
+		mp_.exportOptimizedPath(vec_pose_ugv_opt, vec_pose_uav_opt, vec_rot_ugv_opt, vec_rot_uav_opt, vec_len_tether_opt, path);
 
 	// Inform if is a feabible Trajectory or not, 
 	bool free_collision_ = true;
@@ -877,7 +878,7 @@ void OptimizerLocalPlanner::finishigOptimization()
 		double dist_ = sqrt(pow(vec_pose_ugv_opt[i].x - vec_pose_uav_opt[i].x,2)+pow(vec_pose_ugv_opt[i].y - vec_pose_uav_opt[i].y,2)+pow(vec_pose_ugv_opt[i].z+0.5 - vec_pose_uav_opt[i].z,2));
 		if(!just_line_of_sigth){
 			length_ = checkParableLength(v_parable_params_opt[i], vec_pose_ugv_opt[i], vec_pose_uav_opt[i]);
-			printf(PRINTF_REGULAR"Optimized States.Parameter[%lu/%lu]: UGV=[%2.3f %2.3f %2.3f / %.3f %.3f %.3f %.3f] UAV=[%2.3f %.23f %.23f / %.3f %.3f %.3f %.3f] , t=[%2.3f/%.3f], parable=[%.3f %.3f %.3f] length=[%.3f/%.3f]\n", 
+			printf(PRINTF_REGULAR"Optimized States.Parameter[%lu/%lu]: UGV=[%2.3f %2.3f %2.3f / %.3f %.3f %.3f %.3f] UAV=[%.3f %.3f %.3f / %.3f %.3f %.3f %.3f] , t=[%2.3f/%.3f], parable=[%.3f %.3f %.3f] length=[%.3f/%.3f]\n", 
 			i,statesPosUAV.size(),
 			statesPosUGV[i].parameter[1], statesPosUGV[i].parameter[2], statesPosUGV[i].parameter[3],
 			statesRotUGV[i].parameter[1], statesRotUGV[i].parameter[2], statesRotUGV[i].parameter[3], statesRotUGV[i].parameter[4],
@@ -1067,10 +1068,10 @@ void OptimizerLocalPlanner::graphParableAndPathMarker(vector<geometry_msgs::Vect
 		MP.markerPoints(m_, v_pts_parable_, i, v_pts_parable_.size(), p_parable_, c_parable_,false);	
 
 		/********************* To obligate pause method and check Planning result *********************/
-                   std::string v_ ;
-                   std::cout << " *** Published Tether Marker ["<< i <<"]" << std::endl;
-                   std::cout << " *** Press key to continue tether publisher marker: " << std::endl;
-                   std::cin >> v_ ;
+                //    std::string v_ ;
+                //    std::cout << " *** Published Tether Marker ["<< i <<"]" << std::endl;
+                //    std::cout << " *** Press key to continue tether publisher marker: " << std::endl;
+                //    std::cin >> v_ ;
     	/*************************************************************************************************/
 	}
 

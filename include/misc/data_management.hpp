@@ -34,7 +34,7 @@ class DataManagement
 							double initial_velocity_uav_, double initial_acceleration_ugv_, double initial_acceleration_uav_, double bound_par_obs_, 
 							geometry_msgs::Vector3 pos_reel_ugv_, std::vector<geometry_msgs::Vector3> vec_pose_init_ugv_, std::vector<geometry_msgs::Vector3> vec_pose_init_uav_,	
 							std::vector<float> vec_len_cat_init_, std::vector<geometry_msgs::Quaternion> vec_rot_ugv_, 
-							std::vector<geometry_msgs::Quaternion> vec_rot_uav_, octomap::OcTree* octree_full_,octomap::OcTree* octree_ugv_, Grid3d* grid_3D_);
+							std::vector<geometry_msgs::Quaternion> vec_rot_uav_, octomap::OcTree* octree_full_,octomap::OcTree* octree_ugv_, Grid3d* grid_3D_, bool wtd_);
 		virtual void writeTemporalDataBeforeOptimization(std::vector<double> vec_dist_init_ugv_, std::vector<double> vec_dist_init_uav_, std::vector<double> vec_time_init_, 
 							std::vector<double> v_angles_kinematic_ugv, std::vector<double> v_angles_kinematic_uav_, vector <parable_parameters> v_parable_params_init_);
 		virtual void writeTemporalDataAfterOptimization(
@@ -88,7 +88,7 @@ class DataManagement
 		octomap::OcTree* octree_ugv;
 
 		std::string mode;
-		bool write_temporal_data = false;
+		bool write_temporal_data;
 
 		Grid3d* g_3D;
 
@@ -112,12 +112,13 @@ inline void DataManagement::initDataManagement(
 				double bound_par_obs_, 
 				geometry_msgs::Vector3 pos_reel_ugv_, std::vector<geometry_msgs::Vector3> vec_pose_init_ugv_, std::vector<geometry_msgs::Vector3> vec_pose_init_uav_, 
 				std::vector<float> vec_len_cat_init_, std::vector<geometry_msgs::Quaternion> vec_rot_ugv_, std::vector<geometry_msgs::Quaternion> vec_rot_uav_, 
-				octomap::OcTree* octree_full_, octomap::OcTree* octree_ugv_, Grid3d* grid_3D_)
+				octomap::OcTree* octree_full_, octomap::OcTree* octree_ugv_, Grid3d* grid_3D_, bool wtd_)
 {
 	path = path_;
 	name_output_file = name_output_file_;
 	scenario_name = scenario_name_; 
 	num_pos_initial = num_pos_initial_;	
+	write_temporal_data = wtd_;
 
 	initial_velocity_ugv = initial_velocity_ugv_; 
 	initial_velocity_uav = initial_velocity_uav_; 

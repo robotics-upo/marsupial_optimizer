@@ -198,7 +198,7 @@ public:
 	tf::TransformListener listener;
 	geometry_msgs::TransformStamped pose_reel_global, pose_reel_local;
 
-	std::string path, files_results, files_residuals, name_output_file, user_name, path_mission_file;
+	std::string path, files_residuals, name_output_file, user_name, path_mission_file;
 
     double map_resolution;
 	float step , step_inv;
@@ -299,6 +299,7 @@ public:
 	bool equidistance_ugv_constraint, obstacles_ugv_constraint, traversability_ugv_constraint, smoothness_ugv_constraint;
 	bool write_data_residual;
     bool just_line_of_sigth; // This variable allow the class just compute the straigth state of the tether 
+	bool export_path; // This variable allow to get path in yaml format for real missions.
 
 private:
 	void resetFlags();

@@ -6,8 +6,8 @@ import csv
 import sys
 
 print("\n\t *** IMPORTANT: Use this script given three parameters: <pc_user_name> <scenario_number> <initial_position_number> ***\n")  # Warnning message
-pc_user = sys.argv[1] # number of position to analize
-arg1 = sys.argv[2] # number of position to analize
+pc_user = sys.argv[1] # usuario PC name
+arg1 = sys.argv[2] # scenario number
 arg2 = sys.argv[3] # number of position to analize
 
 # user_ = 'simon' # Change this value to the user name
@@ -20,9 +20,11 @@ stage_num = arg1
 initial_pos = arg2 
 
 file_path_ugv = '/home/' + user_ + '/results_marsupial_optimizer/results_stage_'+ stage_num +'_InitPos_'+ initial_pos + '_method_UGV.txt'
+print('Magement Data For: ',file_path_ugv) 
 file_path_uav = '/home/' + user_ + '/results_marsupial_optimizer/results_stage_'+ stage_num +'_InitPos_'+ initial_pos + '_method_UAV.txt'
+print('Magement Data For: ',file_path_uav) 
 file_path = '/home/' + user_ + '/results_marsupial_optimizer/results_stage_'+ stage_num +'_InitPos_'+ initial_pos + '_feasibility_trajectory.txt'
-# print('Magement Data For: ',file_path) 
+print('Magement Data For: ',file_path) 
 
 matrix1=[] #values for UGV
 matrix2=[] #values for UAV
@@ -101,3 +103,6 @@ output_file2.close()
 # output_file3 = open('/home/' + user_ + '/results_marsupial_optimizer/distance_function/results_maximum_compute_time.cvs', 'a') # If doesn't exist file, is create and write in the last row
 # output_file3.writelines(str(max_TCGP)+';'+str(max_TCO)+'\n')
 # output_file3.close()
+
+print('Saved data in : /home/'+user_+'/results_marsupial_optimizer/results_management_ugv_uav.cvs')
+print('\t Data:  1)feasibility, 2)TCO, Parable: 3)Mean_DPO, 4)Min_DPO, UGV: 5)Mean_DOO, 6)Min_DOO, 7)Mean_VTO, 8)Max_VTO, 9)Mean_ATO, 10)Max_ATO, UAV: 11)Mean_DOO, 12)Min_DOO, 13)Mean_VTO, 14)Max_VTO, 15)Mean_ATO, 16)Max_ATO')

@@ -152,54 +152,33 @@ class AutodiffParableFunctor {
 				bool x_const, y_const;
 				x_const = y_const = false;
 
-				if(pUAV[1] > ugv_reel[1])
-					u_x = T{1.0};
-				else if(pUAV[1] < ugv_reel[1])
-					u_x = T{-1.0};
-				else
-					u_x = T{0.0};    
-
-				if(pUAV[2] > ugv_reel[2])
-					u_y = T{1.0};
-				else if(pUAV[2] < ugv_reel[2])
-					u_y = T{-1.0};
-				else
-					u_y = T{0.0};  
-					
-				if ((ugv_reel[1] - pUAV[1]) < fix_value && (ugv_reel[1] - pUAV[1]) > T{-1.0}*fix_value)
-					x_const = true;
-				if ((ugv_reel[2] - pUAV[2]) < fix_value && (ugv_reel[2] - pUAV[2]) > T{-1.0}*fix_value)
-					y_const = true;
-
-				// About distance between UGV and UAV in the plane
-				d_[0] = sqrt(pow(pUAV[1]-ugv_reel[1],2)+pow(pUAV[2]-ugv_reel[2],2)); 
-				
+				T delta_x = (pUAV[1] - ugv_reel[1]);
+				T delta_y = (pUAV[2] - ugv_reel[2]);
+				T dist_ = sqrt(delta_x * delta_x + delta_y * delta_y );
+				if (dist_ < 0.0001){
+					u_x = u_y = T{0.0};
+					d_[0] = sqrt(pow(pUAV[3]-ugv_reel[3],2)); 
+				} else{
+					u_x = delta_x /dist_;
+					u_y = delta_y /dist_;
+					d_[0] = dist_; 
+				}
 				if (d_[0] < 1.0) // To not make less than num_point_per_unit_length the value of points in parable
 					d_[0] = T{1.0};
 
         		_numPointFunctor(d_, &np_); // To get the values and parameters needed for computing the parable interpolation
 
-				if ( !x_const || !y_const )  //Not change in X-Y plane, so parable can't be compute
-					d_[0] = sqrt(pow(pUAV[3]-ugv_reel[3],2)); 
 				// Here is compute the parable point and it cost 
 				T point[3];
 				T parable_cost_;	
 				T cost_state_parable = T{0.0};
 				T x_  =  T{0.0};
 				T tetha_;
-				for(int i = 0; i < np_; i++){  
-					if ( !x_const || !y_const ){ // To check difference position between UGV and UAV only in z-axe, so parable it is not computed
-						if (x_const)
-							tetha_ = T{1.5707};
-						else if(y_const)
-							tetha_ = T{0.0};
-						else
-							tetha_ = atan(sqrt((pUAV[2] - ugv_reel[2])*(pUAV[2] - ugv_reel[2]))/sqrt((pUAV[1] - ugv_reel[1])*(pUAV[1] - ugv_reel[1])));
-						x_ = x_ + (d_[0]/ np_);
-						point[0] = ugv_reel[1] + u_x * cos(tetha_) * x_;
-						point[1] = ugv_reel[2] + u_y * sin(tetha_) * x_;
+				for(int i = 0; i < np_; i++, x_ += d_[0]/ np_ ){  
+					if (!(dist_ < 0.0001)){ // To check difference position between UGV and UAV only in z-axe, so parable it is not computed
+						point[0] = ugv_reel[1] + u_x * x_;
+						point[1] = ugv_reel[2] + u_y * x_;
 						point[2] = param[1] * x_* x_ + param[2] * x_ + param[3];
-						
 					}
 					else{ 	// In case that UGV and UAV are not in the same point the plane X-Y
 						T _step = d_[0] / np_;
@@ -210,9 +189,7 @@ class AutodiffParableFunctor {
         			_parableCostFunctor(point, &parable_cost_);
 
 					cost_state_parable = cost_state_parable + parable_cost_; // To get point parable cost
-					// std::cout << "[" << np_[0] <<"/"<< i<<"] , parable_cost_[0]=" << parable_cost_[0]  << " PARABLE" << std::endl;
 				}
-				// std::cout << "[" << ugv_reel[0] <<"] , cost_state_parable=" << cost_state_parable << std::endl;
 				residual[0] = wf * 100.0 * cost_state_parable;
 					
 				return true;
