@@ -9,19 +9,19 @@ This package provides a framework to solve non-linear optimization problem for 3
     <img src="worlds/repo_marsupial-optimizer2.gif" width="400">
 </p>
 
-To the best of our knowledge, this is the first method that addresses  the trajectory planning of a marsupial UGV-UAV with a non-taut tether. The optimizer input is  a trajectory calculated adding temporal aspect to a path, wihich is computing using a planner based on optimal Rapidly-exploring Random Trees (RRT*) algorithm with novel sampling and steering techniques to speed up the computation. This algorithm is able to obtain collision-free paths for the UAV and the UGV, taking into account the 3D environment and the tether.
+To the best of our knowledge, this is the first method that addresses  the trajectory planning of a marsupial UGV-UAV with a non-taut tether. The optimizer input is  a trajectory calculated by adding a temporal aspect to a path, which is computing using a planner based on an optimal Rapidly-exploring Random Trees (RRT*) algorithm with novel sampling and steering techniques to speed up the computation. This algorithm can obtain collision-free paths for the UAV and the UGV, taking into account the 3D environment and the tether.
 
 The trajectory optimization is based on non-linear least squares. The optimizer takes into account  aspects not considered in the path planning, like temporal constraints of the motion imposed by limits on the velocities and accelerations of the robots, trajectory smoothness, obstacles-free, or raising the tether's clearance. 
 
-The optimization process is based on framework ceres-solver (http://ceres-solver.org/)
+The optimization process is based on the framework ceres-solver (http://ceres-solver.org/)
 
 ## Installation
 
-In this section you will find the installation instructions for making it work. The next section (prerequisites) tells you the environment in which the package has been tested.
+In this section, you will find the installation instructions for making it work. The next section (prerequisites) tells you the environment in which the package has been tested.
 
 ### Prerrequisites and dependencies
 
-This package has been designed and tested in a x86_64 machine under a Ubuntu 20.04 operating system and ROS Noetic distribution. Besides, the scripts provided lets you easily install the following dependencies:
+This package has been designed and tested in an x86_64 machine under a Ubuntu 20.04 operating system and ROS Noetic distribution. Besides, the scripts provided lets you easily install the following dependencies:
 
 - ceres-solver
 - PCL
@@ -41,7 +41,7 @@ This package has been designed and tested in a x86_64 machine under a Ubuntu 20.
 rosrun marsupial_optimizer marsupial_setup.sh
 ```
 
-3- Call the ceres_installation.sh script to install Ceres-Solver required dependencies (will be install in ```/home/$user/```).
+3- Call the ceres_installation.sh script to install Ceres-Solver required dependencies (will be installed in ```/home/$user/```).
 
 ```
 rosrun marsupial_optimizer ceres_installation.sh
@@ -51,18 +51,18 @@ rosrun marsupial_optimizer ceres_installation.sh
 
 ## Usage
 
-Five scenarios with different features can be set to use the optimizer. S1: Open environment, S2: Narrow/constrained environment, S3: Confined environment, S4: Confined environment, S5: Open environment, as show in the next figure.
+Five scenarios with different features can be set to use the optimizer. S1: Open environment, S2: Narrow/constrained environment, S3: Confined environment, S4: Confined environment, S5: Open environment, as shown in the next figure.
 
 <p align="center">
     <img src="worlds/all_scenario.png" width="1000">
 </p>
 
-The package has a set of predefined configurations (and completely extendable according to the user's need) that relate the stage number, initial position number and goal position number. The set of initial positions can be check in ```/cfg``` and the goal positions in ```/trees/resources/```.
+The package has a set of predefined configurations (and completely extendable according to the user's need) that relate to the stage number, initial position number, and goal position number. The set of initial positions can be checked in ```/cfg``` and the goal positions in ```/trees/resources/```.
 
-To launch the optimizer just launch the provided ```launch/marsupial_optimization_trayectory.launch``` file. To manage the scenario and initial position predefined is recommend to use the parameter for this launch, ```scenario_number``` and ```num_pos_initial```. Thus, for example to use S2 and initial position 2: 
+To launch the optimizer just launch the provided ```launch/marsupial_optimization_trayectory.launch``` file. To manage the scenario and initial position predefined is recommended to use the parameters for this launch, ```scenario_number``` and ```num_pos_initial```. Thus, for example, to use S2 and initial position 2: 
 
 ```
-roslaunch marsupial_g2o marsupial_optimization_trayectory.launch scenario_number:=2 num_pos_initial:=2
+roslaunch marsupial_optimizer marsupial_optimization_trayectory.launch scenario_number:=2 num_pos_initial:=2
 ```
 
 It will launch the optimizer and the visualization of the environment and marsupial robots in RVIZ. 
