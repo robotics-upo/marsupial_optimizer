@@ -75,7 +75,7 @@ class DataManagement
 
 	    NearNeighbor nn_;
 
-		geometry_msgs::Point ugv_pos_catenary;
+		geometry_msgs::Vector3 ugv_pos_catenary;
 		geometry_msgs::Vector3 pos_reel_ugv;
 
 		octomap::OcTree* octree_full;
@@ -399,7 +399,7 @@ inline void DataManagement::getDataForOptimizerAnalysis(pcl::KdTreeFLANN <pcl::P
 					double opt_compute_time_ , std::string mode_, int &n_coll_init_path_, int &n_coll_opt_traj_)
 {
 	//mode = 1 , UGV  - mode = 2 , UAV
-	std::vector<geometry_msgs::Point> v_points_catenary_opt_,v_points_catenary_init_;
+	std::vector<geometry_msgs::Vector3> v_points_catenary_opt_,v_points_catenary_init_;
 	std::vector<double> vec_time_init_, vec_time_opt_; 
 	std::vector<double> vec_dist_init_, vec_dist_opt_;
 	std::vector<double> vec_vel_opt_;
@@ -523,13 +523,9 @@ inline void DataManagement::getDataForOptimizerAnalysis(pcl::KdTreeFLANN <pcl::P
 		v_points_catenary_init_.clear();
 		geometry_msgs::Vector3 p_reel_ugv;
 		p_reel_ugv = getReelPos(vec_pose_init_ugv[i].x,vec_pose_init_ugv[i].y,vec_pose_init_ugv[i].z,vec_init_rot_ugv[i].x,vec_init_rot_ugv[i].y,vec_init_rot_ugv[i].z,vec_init_rot_ugv[i].w, pos_reel_ugv);
-		// cS_.setMaxNumIterations(100);
-		// cS_.solve(p_reel_ugv.x, p_reel_ugv.y, p_reel_ugv.z, vec_pose_init_uav[i].x(), vec_pose_init_uav[i].y(), vec_pose_init_uav[i].z(), vec_len_cat_init[i], v_points_catenary_init_);
 		bc1.configBisection(vec_len_cat_init[i], p_reel_ugv.x, p_reel_ugv.y, p_reel_ugv.z, 
-							vec_pose_init_uav[i].x, vec_pose_init_uav[i].y, vec_pose_init_uav[i].z, false);
-		if (bc1.L_minor_than_D == true)
-			printf("Before optimization , position[%lu/%lu]: L < D \n",i,vec_pose_opt_.size());		
-		bc1.getPointCatenary3D(v_points_catenary_init_);
+							vec_pose_init_uav[i].x, vec_pose_init_uav[i].y, vec_pose_init_uav[i].z);
+		bc1.getPointCatenary3D(v_points_catenary_init_, true);
 		
 		for (size_t j= 0 ; j < v_points_catenary_init_.size() ; j++){
 			count_cat_p_init_++;
@@ -608,11 +604,8 @@ inline void DataManagement::getDataForOptimizerAnalysis(pcl::KdTreeFLANN <pcl::P
 		p_reel_ugv = getReelPos(vec_pose_ugv_opt[i].x,vec_pose_ugv_opt[i].y,vec_pose_ugv_opt[i].z,vec_opt_rot_ugv[i].x,vec_opt_rot_ugv[i].y,vec_opt_rot_ugv[i].z,vec_opt_rot_ugv[i].w, pos_reel_ugv);
 		// cS_.setMaxNumIterations(100);
 		// cS_.solve(p_reel_ugv.x, p_reel_ugv.y, p_reel_ugv.z, vec_pose_uav_opt[i].x(), vec_pose_uav_opt[i].y(), vec_pose_uav_opt[i].z(), vec_len_cat_opt[i], v_points_catenary_opt_);
-		bc2.readDataForCollisionAnalisys(g_3D_, bound_cat_obs, octree_full, kdt_, obstacles_points_);
-		bc2.configBisection(vec_len_cat_opt[i], p_reel_ugv.x, p_reel_ugv.y, p_reel_ugv.z,vec_pose_uav_opt[i].x,vec_pose_uav_opt[i].y,vec_pose_uav_opt[i].z,true);
-		if (bc2.L_minor_than_D == true)
-			printf("After optimization , position[%lu/%lu]: L < D \n",i,vec_pose_opt_.size());		
-		bc2.getPointCatenary3D(v_points_catenary_opt_);
+		bc2.configBisection(vec_len_cat_opt[i], p_reel_ugv.x, p_reel_ugv.y, p_reel_ugv.z,vec_pose_uav_opt[i].x,vec_pose_uav_opt[i].y,vec_pose_uav_opt[i].z);
+		bc2.getPointCatenary3D(v_points_catenary_opt_, true);
 		bc2.getStatusCollisionCat(dist_obst_cat, pos_cat_in_coll, cat_between_obs, first_coll_, last_coll_);
 		
 		num_points_coll_cat = 0;

@@ -74,14 +74,14 @@ public:
 		bool operator()(const double *state1,const double *state2, const double *state2f,const double *Length, double *Catenary) const 
 		{
 			MarkerPublisher mP_;
-			bisectionCatenary bc(nhP);
+			bisectionCatenary bc;
 			NearNeighbor nn;
 
 			visualization_msgs::MarkerArray catenary_marker_, plane_marker_, obs_plane_marker_;
-			std::vector<geometry_msgs::Point> points_catenary;
+			std::vector<geometry_msgs::Vector3> points_catenary;
 			std::vector<double> dist_obst_cat; 
 			std::vector<int> cat_between_obs, pos_cat_in_coll;
-			geometry_msgs::Point min_point_z_cat;
+			geometry_msgs::Vector3 min_point_z_cat;
 
 			int id_marker_ = state2[0];		// Related with Marker frame.id
 			double min_val_proximity_ = 0.04;
@@ -90,22 +90,21 @@ public:
 			int first_coll, last_coll;
 
 			points_catenary.clear();  dist_obst_cat.clear(); pos_cat_in_coll.clear(); cat_between_obs.clear(); 
-			bc.readDataForCollisionAnalisys(g_3D, sb, o_full, kdT_trav, pc_trav);
-			bool just_one_axe = bc.configBisection(Length[1], state1[1], state1[2], state1[3], state2[1], state2[2], state2[3], true);
-			bc.getPointCatenary3D(points_catenary);
+			bool just_one_axe = bc.configBisection(Length[1], state1[1], state1[2], state1[3], state2[1], state2[2], state2[3]);
+			bc.getPointCatenary3D(points_catenary, true);
 			bc.getStatusCollisionCat(dist_obst_cat, pos_cat_in_coll, cat_between_obs, first_coll, last_coll);
 			double min_distance_cat_obs_ = bc.min_distance_cat_obs;
 
 			mP_.markerPoints(catenary_marker_, points_catenary, id_marker_, size, catenary_marker_pub_);
-			if (bc.L_minor_than_D == true){
-				std::string yy_ ;
-				yy_ = "s";
-				/********************* To obligate stop method and check Optimization result *********************/
-				std::cout << " Press key 'y': ";
-				while (yy_ != "y"){
-					std::cin >> yy_ ;
-				}
-			}
+			// if (bc.L_minor_than_D == true){
+			// 	std::string yy_ ;
+			// 	yy_ = "s";
+			// 	/********************* To obligate stop method and check Optimization result *********************/
+			// 	std::cout << " Press key 'y': ";
+			// 	while (yy_ != "y"){
+			// 		std::cin >> yy_ ;
+			// 	}
+			// }
 
 			if (( (state2f[1]-state2[1]) != 0.0 || (state2f[2]-state2[2]) != 0.0 || (state2f[3]-state2[3]) != 0.0) && first_coll!= 0){
 				octomap::point3d r_;
@@ -121,7 +120,7 @@ public:
 
 			double x_, y_, z_, cost_ , add_extracost;
 			double d_below_z_trav = 0.0;
-			geometry_msgs::Point n_coll_cat, point_coll_trav;
+			geometry_msgs::Vector3 n_coll_cat, point_coll_trav;
 			geometry_msgs::Vector3 p_;
 			int is_collision = 0;
 			int count_coll = 0;

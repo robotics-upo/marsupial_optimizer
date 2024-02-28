@@ -894,14 +894,14 @@ void OptimizerLocalPlanner::finishigOptimizationAndGetDataResult(int &n_coll_opt
 	bisectionCatenary bc;
 	
 	for(size_t i = 0; i < statesPosUAV.size(); i++){
-		std::vector<geometry_msgs::Point> points_catenary_final;
+		std::vector<geometry_msgs::Vector3> points_catenary_final;
 		points_catenary_final.clear();
 
 	  	// The Reel Position is consider above base_link_ugv
 		geometry_msgs::Vector3 p_reel_ =  getReelPoint(statesPosUGV[i].parameter[1],statesPosUGV[i].parameter[2],statesPosUGV[i].parameter[3],statesRotUGV[i].parameter[1],statesRotUGV[i].parameter[2],statesRotUGV[i].parameter[3], statesRotUGV[i].parameter[4]);
 		
 		bc.configBisection(statesLength[i].parameter[1], p_reel_.x, p_reel_.y, p_reel_.z, 
-							statesPosUAV[i].parameter[1], statesPosUAV[i].parameter[2], statesPosUAV[i].parameter[3], false);
+							statesPosUAV[i].parameter[1], statesPosUAV[i].parameter[2], statesPosUAV[i].parameter[3]);
 		bc.getPointCatenary3D(points_catenary_final);
 		
 		double _d_ = sqrt(pow(p_reel_.x - statesPosUAV[i].parameter[1],2) + 
@@ -1477,9 +1477,8 @@ void OptimizerLocalPlanner::publishOptimizedTraj()
 
 bool OptimizerLocalPlanner::computeCatenary(int p_, int mode_, double &l_cat_)
 {
-    geometry_msgs::Point p_final_;
 	geometry_msgs::Vector3 p_reel_;
-    std::vector<geometry_msgs::Point> p_catenary_;
+    std::vector<geometry_msgs::Vector3> p_catenary_;
 
 	bisectionCatenary bc;
 
@@ -1514,7 +1513,7 @@ bool OptimizerLocalPlanner::computeCatenary(int p_, int mode_, double &l_cat_)
 
 		// printf("pose[%i] dist_init_final_=[%f] L=[%f] p_reel=[%f %f %f] p_uav=[%f %f %f] \n", p_, dist_init_final_, l_cat_, p_reel_.x, p_reel_.y, p_reel_.z, vec_pose_init_uav[p_].x,vec_pose_init_uav[p_].y, vec_pose_init_uav[p_].z);	
 
-	    bool just_one_axe = bc.configBisection(l_cat_, p_reel_.x, p_reel_.y, p_reel_.z, vec_pose_init_uav[p_].x, vec_pose_init_uav[p_].y, vec_pose_init_uav[p_].z, false);
+	    bool just_one_axe = bc.configBisection(l_cat_, p_reel_.x, p_reel_.y, p_reel_.z, vec_pose_init_uav[p_].x, vec_pose_init_uav[p_].y, vec_pose_init_uav[p_].z);
 		bc.getPointCatenary3D(p_catenary_);
 		double d_min_point_cat = 100000;
 		if (p_catenary_.size() > 2){

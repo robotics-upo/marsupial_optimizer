@@ -1,6 +1,6 @@
 #include "misc/marker_publisher.h"
 
-void MarkerPublisher::markerPoints(visualization_msgs::MarkerArray _marker, std::vector<geometry_msgs::Point> _vector, int _suffix, int _n_v, ros::Publisher c_m_pub_, int change_marker_)
+void MarkerPublisher::markerPoints(visualization_msgs::MarkerArray _marker, std::vector<geometry_msgs::Vector3> _vector, int _suffix, int _n_v, ros::Publisher c_m_pub_, int change_marker_)
 {
     std::string string_marker;
     std::string ns_marker;

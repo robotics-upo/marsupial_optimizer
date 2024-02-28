@@ -154,15 +154,10 @@ add_dependencies(optimizer_publisher_tf_node ${${PROJECT_NAME}_EXPORTED_TARGETS}
 target_link_libraries(optimizer_publisher_tf_node catenary_checker Ceres::ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES} Qt5::Charts
 Qt5::Widgets dbscan_line)
 
-add_executable(test_catenary_optimizer src/test_catenary_optimizer.cc src/marker_publisher.cpp)
-add_dependencies(test_catenary_optimizer  ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
-target_link_libraries(test_catenary_optimizer catenary_checker Ceres::ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES} Qt5::Charts
-Qt5::Widgets dbscan_line)
-
-add_executable(region_growing_segmentation_node src/region_growing_segmentation_node.cpp)
-add_dependencies(region_growing_segmentation_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
-target_link_libraries(region_growing_segmentation_node catenary_checker Ceres::ceres ${catkin_LIBRARIES}
-${CERES_LIBRARIES} Qt5::Charts Qt5::Widgets dbscan_line)
+# add_executable(test_catenary_optimizer src/test_catenary_optimizer.cc src/marker_publisher.cpp)
+# add_dependencies(test_catenary_optimizer  ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
+# target_link_libraries(test_catenary_optimizer catenary_checker Ceres::ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES} Qt5::Charts
+# Qt5::Widgets dbscan_line)
 
 # add_executable(test_node_yaml src/test_node_yaml.cpp) 
 # add_dependencies(test_node_yaml  ${PROJECT_NAME}_gencfg)

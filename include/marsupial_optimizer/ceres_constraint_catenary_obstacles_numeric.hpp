@@ -55,14 +55,14 @@ struct CatenaryFunctor {
     bool operator()(const double* stateUGV, const double* stateUAV, const double* stateCat, double* residual) const 
     {
         MarkerPublisher mP_;
-		bisectionCatenary bc(nhP);
+		bisectionCatenary bc;
 	    NearNeighbor nn;
 		
 		visualization_msgs::MarkerArray catenary_marker_, plane_marker_, obs_plane_marker_;
-	    std::vector<geometry_msgs::Point> points_catenary;
+	    std::vector<geometry_msgs::Vector3> points_catenary;
 		std::vector<double> dist_obst_cat; 
 		std::vector<int> cat_between_obs, pos_cat_in_coll;
-		geometry_msgs::Point min_point_z_cat, pos_reel;
+		geometry_msgs::Vector3 min_point_z_cat, pos_reel;
 		int pos_in_cat_z_min, first_coll, last_coll;
 		first_coll = last_coll = 0;
 		// For Marker
@@ -111,9 +111,8 @@ struct CatenaryFunctor {
 		}
 
 		points_catenary.clear();  dist_obst_cat.clear(); pos_cat_in_coll.clear(); cat_between_obs.clear(); 
-		bc.readDataForCollisionAnalisys(g_3D_, sb_, o_full_, kdT_trav_, pc_trav_);
-		bool just_one_axe = bc.configBisection(Length_, pos_reel.x, pos_reel.y, pos_reel.z, stateUAV[1], stateUAV[2], stateUAV[3], true);
-		bc.getPointCatenary3D(points_catenary);
+		bool just_one_axe = bc.configBisection(Length_, pos_reel.x, pos_reel.y, pos_reel.z, stateUAV[1], stateUAV[2], stateUAV[3]);
+		bc.getPointCatenary3D(points_catenary, true);
 		bc.getStatusCollisionCat(dist_obst_cat, pos_cat_in_coll, cat_between_obs, first_coll, last_coll);
 		bc.getMinPointZCat(min_point_z_cat, pos_in_cat_z_min);
 
@@ -133,7 +132,7 @@ struct CatenaryFunctor {
 
 		double x_, y_, z_, cost_;
 		double d_below_z_trav = 0.0;
-		geometry_msgs::Point n_coll_cat, point_coll_trav;
+		geometry_msgs::Vector3 n_coll_cat, point_coll_trav;
 		for (size_t i = 0; i < points_catenary.size(); i++){
 			TrilinearParams d = g_3D_->getPointDistInterpolation((double)points_catenary[i].x, (double)points_catenary[i].y, (double)points_catenary[i].z);
 			x_ = points_catenary[i].x;
