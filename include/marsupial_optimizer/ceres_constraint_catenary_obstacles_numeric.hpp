@@ -112,7 +112,7 @@ struct CatenaryFunctor {
 
 		points_catenary.clear();  dist_obst_cat.clear(); pos_cat_in_coll.clear(); cat_between_obs.clear(); 
 		bool just_one_axe = bc.configBisection(Length_, pos_reel.x, pos_reel.y, pos_reel.z, stateUAV[1], stateUAV[2], stateUAV[3]);
-		bc.getPointCatenary3D(points_catenary, true);
+		bc.getPointCatenary3D(points_catenary, false);
 		bc.getStatusCollisionCat(dist_obst_cat, pos_cat_in_coll, cat_between_obs, first_coll, last_coll);
 		bc.getMinPointZCat(min_point_z_cat, pos_in_cat_z_min);
 

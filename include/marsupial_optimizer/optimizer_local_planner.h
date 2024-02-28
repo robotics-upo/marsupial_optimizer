@@ -283,7 +283,7 @@ public:
 	int equidistance_uav_constraint, obstacles_uav_constraint, smoothness_uav_constraint;
 	bool velocity_uav_constraint,acceleration_uav_constraint;
 	bool time_constraint, velocity_ugv_constraint, acceleration_ugv_constraint;
-	bool catenary_length_constraint;
+	bool tether_length_constraint, tether_obstacle_constraint, tether_parameters_constraint;
 	bool finished_rviz_maneuver;
 	int equidistance_ugv_constraint, obstacles_ugv_constraint,traversability_ugv_constraint, smoothness_ugv_constraint, catenary_constraint;
 	bool write_data_residual;

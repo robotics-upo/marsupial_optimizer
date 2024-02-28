@@ -55,7 +55,9 @@ OptimizerLocalPlanner::OptimizerLocalPlanner()
 	nh->param<bool>("acceleration_uav_constraint",acceleration_uav_constraint, true);
 
 	nh->param<int>("catenary_constraint",catenary_constraint, 0);
-	nh->param<bool>("catenary_length_constraint",catenary_length_constraint, false);
+	nh->param<bool>("tether_obstacle_constraint",tether_obstacle_constraint, false);
+	nh->param<bool>("tether_length_constraint",tether_length_constraint, false);
+	nh->param<bool>("tether_parameters_constraint",tether_parameters_constraint, false);
 
 	nh->param<double>("w_alpha_ugv", w_alpha_ugv,0.1);
 	nh->param<double>("w_alpha_uav", w_alpha_uav,0.1);
@@ -601,6 +603,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
   if (optimize_cat){
     ROS_INFO(PRINTF_ORANGE" PREPARING  CATENARY  PARAMETER  BLOCKS  TO  OPTIMIZE:");
     /*** Cost Function Cable I : Catenary constrain  ***/
+	if(tether_obstacle_constraint){
     if(catenary_constraint==1){
       ROS_INFO(PRINTF_ORANGE"		- Optimize Catenary Obstacles Autodiff");
       for (int i = 0; i < statesLength.size(); ++i) {
@@ -633,7 +636,8 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
         }
       }
     }
-    if(catenary_length_constraint){
+	}
+    if(tether_length_constraint){
       ROS_INFO(PRINTF_ORANGE"		- Optimize Catenary Lentgh Autodiff");
       for (int i = 0; i < statesLength.size(); ++i) {
         CostFunction* cost_function_cat_2  = new AutoDiffCostFunction<CatenaryLengthFunctor::CatenaryLength, 1, 4, 4, 2>

@@ -525,7 +525,7 @@ inline void DataManagement::getDataForOptimizerAnalysis(pcl::KdTreeFLANN <pcl::P
 		p_reel_ugv = getReelPos(vec_pose_init_ugv[i].x,vec_pose_init_ugv[i].y,vec_pose_init_ugv[i].z,vec_init_rot_ugv[i].x,vec_init_rot_ugv[i].y,vec_init_rot_ugv[i].z,vec_init_rot_ugv[i].w, pos_reel_ugv);
 		bc1.configBisection(vec_len_cat_init[i], p_reel_ugv.x, p_reel_ugv.y, p_reel_ugv.z, 
 							vec_pose_init_uav[i].x, vec_pose_init_uav[i].y, vec_pose_init_uav[i].z);
-		bc1.getPointCatenary3D(v_points_catenary_init_, true);
+		bc1.getPointCatenary3D(v_points_catenary_init_, false);
 		
 		for (size_t j= 0 ; j < v_points_catenary_init_.size() ; j++){
 			count_cat_p_init_++;
@@ -605,7 +605,7 @@ inline void DataManagement::getDataForOptimizerAnalysis(pcl::KdTreeFLANN <pcl::P
 		// cS_.setMaxNumIterations(100);
 		// cS_.solve(p_reel_ugv.x, p_reel_ugv.y, p_reel_ugv.z, vec_pose_uav_opt[i].x(), vec_pose_uav_opt[i].y(), vec_pose_uav_opt[i].z(), vec_len_cat_opt[i], v_points_catenary_opt_);
 		bc2.configBisection(vec_len_cat_opt[i], p_reel_ugv.x, p_reel_ugv.y, p_reel_ugv.z,vec_pose_uav_opt[i].x,vec_pose_uav_opt[i].y,vec_pose_uav_opt[i].z);
-		bc2.getPointCatenary3D(v_points_catenary_opt_, true);
+		bc2.getPointCatenary3D(v_points_catenary_opt_, false);
 		bc2.getStatusCollisionCat(dist_obst_cat, pos_cat_in_coll, cat_between_obs, first_coll_, last_coll_);
 		
 		num_points_coll_cat = 0;
