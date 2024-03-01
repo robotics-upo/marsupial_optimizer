@@ -32,74 +32,54 @@ using ceres::Problem;
 using ceres::Solve;
 using ceres::Solver;
 
-class CatenaryLengthFunctor {
+class AutodiffTetherLengthFunctor {
 
 public:
-	CatenaryLengthFunctor(){}
+	AutodiffTetherLengthFunctor(){}
 
-	struct CatenaryLength 
+	struct TetherLengthFunctor 
 	{
-		CatenaryLength(double weight_factor, float min_length_cat, geometry_msgs::Vector3 pos_reel_ugv, bool write_data, std::string user_name)
-					: wf_(weight_factor), m_L_c_(min_length_cat), pos_reel_ugv_(pos_reel_ugv), w_d_(write_data), user_(user_name) 
+		TetherLengthFunctor(double weight_factor, geometry_msgs::Vector3 pos_reel_ugv_,  float max_L_, bool write_data, std::string user_name)
+					: wf(weight_factor), max_L(max_L_), pos_reel_ugv(pos_reel_ugv_), w_d_(write_data), user_(user_name) 
 		{}
 
 		template <typename T>
-		bool operator()(const T* const stateUGV, const T* const stateUAV, const T* const stateCat, T* residual) const 
+		bool operator()(const T* const stateUGV, const T* const stateUAV, const T* const params, T* residual) const 
 		{
-			T m_, f_;
-
-			T ugv_reel[4];
-			T pr_ugv_ [3];
-			pr_ugv_[0] = T{pos_reel_ugv_.x};
-			pr_ugv_[1] = T{pos_reel_ugv_.y};
-			pr_ugv_[2] = T{pos_reel_ugv_.z};
-
-			ugv_reel[0] = stateUGV[0]; 
-			ugv_reel[1] = stateUGV[1]; 
-			ugv_reel[2] = stateUGV[2];
-			ugv_reel[3] = stateUGV[3] + pr_ugv_[2];
-			T safety_length = T{m_L_c_};
-			T max_value_residual = T{100.0};
-			T min_value_residual = T{40.0};
-
-			T dist = 1.005 * sqrt(pow(stateUAV[1]-ugv_reel[1],2)+pow(stateUAV[2]-ugv_reel[2],2)+pow(stateUAV[3]-ugv_reel[3],2)); 
+			T ugv_reel[4] = {stateUGV[0], stateUGV[1], stateUGV[2], stateUGV[3] + T{pos_reel_ugv.z}}; // Set first parable point on the reel position
+		
+			T Xa = T{0.0};
+			T Ya = T{0.0};
+			T Xb = sqrt(pow(stateUAV[1]-ugv_reel[1],2)+pow(stateUAV[2]-ugv_reel[2],2)); 
+			T Yb = stateUAV[3] - stateUGV[3];
+			T maxL = T{max_L};
+			
+			/* Map:
+			params[1] = Xo 
+			params[2] = Yo 
+			params[3] = a 
+			params[4] = length (Not used length because it is not optimized)
+			*/
+			T length = params[3] * sinh((Xa - params[1])/params[3]) + params[3] * sinh((Xb - params[1])/params[3]);
+			
+			T dist = T{1.005} * sqrt(pow(stateUAV[1]-ugv_reel[1],2)+pow(stateUAV[2]-ugv_reel[2],2)+pow(stateUAV[3]-ugv_reel[3],2)); 
 
 			T diff_;
-			if (stateCat[1] < dist )
-				diff_ = dist - stateCat[1];
+			if (length < dist )
+				diff_ = (dist - maxL);
+			else if (length > maxL)
+				diff_ = (length - maxL);
 			else
 				diff_ = T{0.0};
 
-			residual[0] = wf_ *  10.0 * (exp(diff_*4.0)-1.0) ;
-
-			// std::cout << "CatenaryLengthFunctor["<< stateCat[0]  <<"] : residual[0]= " << residual[0] << " , stateCat[1]= " << stateCat[1] << " , Length= " << Length_[1]
-				 	//   << " , dist= " << dist <<	" , safety_length= " << safety_length << " ugv_reel["<<ugv_reel[1]
-					//   << "," <<ugv_reel[2] <<"," <<ugv_reel[3] <<"]" << " stateUAV["<< stateUAV[1] <<","<<stateUAV[2]<<","<<stateUAV[3]<<"]" << " LoS=" <<kind_length_initial[0] <<std::endl;
-			
-			if(w_d_){
-				std::ofstream ofs, ofs2;
-				std::string name_output_file =  "/home/"+user_+"/residuals_optimization_data/catenary_length.txt";
-				std::string name_output_file2 = "/home/"+user_+"/residuals_optimization_data/catenary_length2.txt";
-				ofs.open(name_output_file.c_str(), std::ofstream::app);
-				ofs2.open(name_output_file2.c_str(), std::ofstream::app);
-				if (ofs.is_open()) 
-					ofs << residual[0] << "/" <<std::endl;
-				ofs.close();
-				if (ofs2.is_open()) 
-					ofs2 << residual[0] << " ; "
-					<< "(" << stateUGV[0] << "); "
-					<< "stateCat= " << stateCat[1] << "; "
-					<< "dist = " << dist << "; " 
-					<< "diff = " << diff_  << "/" 
-					<< std::endl;
-				ofs2.close();
-			}
+			residual[0] = wf * 100* (exp(diff_)-1.0) ;
+					
 			return true;
 		}
 		bool w_d_;
-		double wf_;
-		float m_L_c_;
-		geometry_msgs::Vector3 pos_reel_ugv_;
+		double wf;
+		float max_L;
+		geometry_msgs::Vector3 pos_reel_ugv;
 		std::string user_;
 	};
 

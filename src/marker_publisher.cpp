@@ -1,6 +1,6 @@
 #include "misc/marker_publisher.h"
 
-void MarkerPublisher::markerPoints(visualization_msgs::MarkerArray _marker, std::vector<geometry_msgs::Vector3> _vector, int _suffix, int _n_v, ros::Publisher c_m_pub_, int change_marker_)
+void MarkerPublisher::markerPoints(visualization_msgs::MarkerArray _marker, std::vector<geometry_msgs::Vector3> _vector, int _suffix, int _n_v, ros::Publisher c_m_pub_, int change_marker_, bool print_)
 {
     std::string string_marker;
     std::string ns_marker;
@@ -44,6 +44,8 @@ void MarkerPublisher::markerPoints(visualization_msgs::MarkerArray _marker, std:
         else
             _marker.markers[i].type = visualization_msgs::Marker::SPHERE;
         _marker.markers[i].lifetime = ros::Duration(0);
+		if (print_)
+			std::cout << "v_pts_parable_["<<i<<"]= "<< _vector[i].x <<","<<_vector[i].y << "," <<_vector[i].z<<"]" <<std::endl;
         _marker.markers[i].pose.position.x = _vector[i].x; 
         _marker.markers[i].pose.position.y = _vector[i].y; 
         _marker.markers[i].pose.position.z = _vector[i].z;

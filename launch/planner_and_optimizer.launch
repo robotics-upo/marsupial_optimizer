@@ -6,7 +6,7 @@
     
     <!-- <arg name="map"        default="thermal_central_2022-03-14-13-05-27"/> -->
     <arg name="num_pos_initial"         default="1"/>
-    <arg name="pos_uav_above_ugv"     default="2.0"/> #meters UAV above UGV
+    <arg name="pos_uav_above_ugv"     default="1.0"/> #meters UAV above UGV
     <arg name="using_pc"    default="true"/> 
     <arg name="rviz"    default="true"/> 
     <arg name="viz_file"    default="random_planner"/>
