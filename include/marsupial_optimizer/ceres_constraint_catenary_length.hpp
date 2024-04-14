@@ -60,7 +60,7 @@ public:
 			params[3] = a 
 			params[4] = length (Not used length because it is not optimized)
 			*/
-			T length = params[3] * sinh((Xa - params[1])/params[3]) + params[3] * sinh((Xb - params[1])/params[3]);
+			T length = params[3] * sinh((Xb - params[1])/params[3]) - params[3] * sinh((Xa - params[1])/params[3]);
 			
 			T dist = T{1.005} * sqrt(pow(stateUAV[1]-ugv_reel[1],2)+pow(stateUAV[2]-ugv_reel[2],2)+pow(stateUAV[3]-ugv_reel[3],2)); 
 
@@ -72,7 +72,7 @@ public:
 			else
 				diff_ = T{0.0};
 
-			residual[0] = wf * 100* (exp(diff_)-1.0) ;
+			residual[0] = wf * 1000* (exp(diff_)-1.0) ;
 					
 			return true;
 		}

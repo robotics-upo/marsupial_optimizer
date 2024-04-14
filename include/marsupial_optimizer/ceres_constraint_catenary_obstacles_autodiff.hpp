@@ -149,8 +149,6 @@ class AutodiffTetherObstacleFunctor {
 				T np_; 
 				T u_x , u_y;
 				T fix_value = T{0.01};
-				bool x_const, y_const;
-				x_const = y_const = false;
 
 				/* Map:
 				params[1] = Xo 
@@ -179,12 +177,11 @@ class AutodiffTetherObstacleFunctor {
 				T parable_cost_;	
 				T cost_state_parable = T{0.0};
 				T x_  =  T{0.0};
-				T tetha_;
 				for(int i = 0; i < np_; i++, x_ += d_[0]/ np_ ){  
 					if (!(dist_ < 0.0001)){ // To check difference position between UGV and UAV only in z-axe, so parable it is not computed
 						point[0] = ugv_reel[1] + u_x * x_;
 						point[1] = ugv_reel[2] + u_y * x_;
-						point[2] = params[3] * cosh((x_ - params[1])/params[3]) + params[2];
+						point[2] = params[3] * cosh((x_ - params[1])/params[3]) +( params[2]-params[3]);
 					}
 					else{ 	// In case that UGV and UAV are not in the same point the plane X-Y
 						T _step = d_[0] / np_;

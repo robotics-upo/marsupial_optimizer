@@ -51,8 +51,8 @@ public:
 			r2 = params[3]*cosh((Xb - params[1])/params[3]) + params[2] - Yb;//Eq. point B(UAV): residual[1] = a cosh(Xb-Xo/a) + Yo - Yb
 			// r3 = params[3]*sinh((Xa - params[1])/params[3]) + params[3]*sinh((Xb - params[1])/params[3]) - params[4]; //Eq. length catenary: residual[2] = a cosh(Xb-Xo/a) + a cosh(Xb-Xo/a)
 
-			residual[0] = (wf * 100.0 )* ((r1));
-			residual[1] = (wf * 100.0 )* ((r2));
+			residual[0] = (wf * 1000.0 )* ((r1));
+			residual[1] = (wf * 1000.0 )* ((r2));
 			// residual[2] = (wf * 100.0 )* ((r3));
 
 			return true;

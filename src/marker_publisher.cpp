@@ -39,10 +39,10 @@ void MarkerPublisher::markerPoints(visualization_msgs::MarkerArray _marker, std:
         _marker.markers[i].ns = ns_marker;
         _marker.markers[i].id = i+1;
         _marker.markers[i].action = visualization_msgs::Marker::ADD;
-        if (i % 5 == 0 || change_marker_!=0)
-            _marker.markers[i].type = visualization_msgs::Marker::CUBE;
-        else
+        if (i == 0 )
             _marker.markers[i].type = visualization_msgs::Marker::SPHERE;
+		else
+            _marker.markers[i].type = visualization_msgs::Marker::CUBE;
         _marker.markers[i].lifetime = ros::Duration(0);
 		if (print_)
 			std::cout << "v_pts_parable_["<<i<<"]= "<< _vector[i].x <<","<<_vector[i].y << "," <<_vector[i].z<<"]" <<std::endl;

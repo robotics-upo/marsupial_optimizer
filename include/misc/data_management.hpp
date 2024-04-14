@@ -22,7 +22,7 @@
 
 #include "catenary_checker/grid3d.hpp"
 #include "catenary_checker/near_neighbor.hpp"
-#include "catenary_checker/get_parabola_parameter.hpp"
+#include "catenary_checker/get_tether_parameter.hpp"
 
 
 class DataManagement
@@ -84,7 +84,7 @@ class DataManagement
 		std::vector<geometry_msgs::Quaternion> vec_init_rot_ugv, vec_init_rot_uav, vec_opt_rot_ugv, vec_opt_rot_uav;
 
 	    NearNeighbor nn_;
-		GetParabolaParameter gpp;
+		GetTetherParameter gpp;
 
 		geometry_msgs::Vector3 pos_reel_ugv;
 

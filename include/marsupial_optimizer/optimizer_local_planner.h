@@ -52,7 +52,7 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "misc/interpolate_path.hpp"
 #include "misc/catenary_solver_ceres.hpp"
 
-#include "catenary_checker/get_parabola_parameter.hpp"
+#include "catenary_checker/get_tether_parameter.hpp"
 #include "catenary_checker/near_neighbor.hpp"
 #include "catenary_checker/grid3d.hpp"
 #include "catenary_checker/bisection_catenary_3D.h"
@@ -137,6 +137,13 @@ struct parameterBlockLength{
 struct parameterBlockTether{
 	double parameter[4];
 };
+
+/* Map:
+	params[1] = Xo 
+	params[2] = Yo 
+	params[3] = a 
+	params[4] = length (Not used length because it is not optimized)
+*/
 
 class OptimizerLocalPlanner
 {
@@ -276,6 +283,7 @@ public:
 	vector<double> vec_time_init;
 	vector<double> v_angles_smooth_ugv_init, v_angles_smooth_uav_init, v_angles_smooth_ugv_opt, v_angles_smooth_uav_opt;
 	vector<float> vec_len_tether_init, vec_len_tether_opt;
+	vector<float> vec_cat_param_x0, vec_cat_param_y0, vec_cat_param_a;
 	vector<geometry_msgs::Vector3> vec_pose_ugv_opt, vec_pose_uav_opt; 
 	vector<geometry_msgs::Vector3> vec_pose_ugv_init, vec_pose_uav_init;
 	vector <tether_parameters> v_tether_params_init, v_tether_params_opt;

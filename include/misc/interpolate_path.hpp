@@ -29,11 +29,18 @@ class InterpolatePath
 		virtual void initInterpolatePath(int c_f_i_ugv_, int c_f_f_ugv_, int c_f_uav_, bool f_l_p_ugv_, double d_c_o_, 
 										 bool u_d_f_, int s_, double l_max_, double ws_z_min_, double map_r_, 
 										 geometry_msgs::TransformStamped p_r_l_, Grid3d* grid_3D_);
+		
+		/*
+		Allow to identify the states that are located in the same position. Return a path with new states computed in interpolateFixedPointsPath method
+		*/
 		virtual void getInitialGlobalPath(trajectory_msgs::MultiDOFJointTrajectory _path, vector<float> &vl_init_,
 										  vector<geometry_msgs::Vector3> &v_ugv_, vector<geometry_msgs::Vector3> &v_uav_,
 										  vector<geometry_msgs::Quaternion> &v_q_ugv_, vector<geometry_msgs::Quaternion> &v_q_uav_);
+		/*
+		It computes new positions for states in the same location. Allow a relocation of the states
+		*/
 		virtual void interpolateFixedPointsPath(vector<geometry_msgs::Vector3> &v_inter_ , int mode_);
-		virtual bool computeInitialCatenary(int p_, int mode_, double &l_cat_);
+		virtual bool computeInitialCatenary(int p_, double &l_cat_);
 		virtual double getPointDistanceFullMap(bool use_dist_func_, geometry_msgs::Vector3 p_);
 		virtual geometry_msgs::Vector3 getReelPoint(const float px_, const float py_, const float pz_,const float qx_, const float qy_, const float qz_, const float qw_);
 	
@@ -199,6 +206,7 @@ inline void InterpolatePath::interpolateFixedPointsPath(vector<geometry_msgs::Ve
 	vector<geometry_msgs::Vector3> vec_pose_init_;
 	vector<bool> is_pos_interpolated_;
 	vector<float> vec_length_aux_;
+	vec_length_aux_.clear();
 	vec_pose_init_aux_.clear();
 	v_inter_.clear(); is_pos_interpolated_.clear();
 	int count_fix_points_;
@@ -305,25 +313,27 @@ inline void InterpolatePath::interpolateFixedPointsPath(vector<geometry_msgs::Ve
 	else
 		ROS_ERROR("WARNNING : In method interpolateFixedPointsPath from optimizer was not set the MODE, this is going to run into trouble");
 
-	for (int m=0 ; m < is_pos_interpolated_.size(); m++){
-		if(is_pos_interpolated_[m]){
-			double length_;
-			if ( computeInitialCatenary(m, mode_, length_)){
-				vec_length_aux_.push_back(length_);
+	if (mode_ == 1){
+		for (int m=0 ; m < is_pos_interpolated_.size(); m++){
+			if(is_pos_interpolated_[m]){
+				double length_;
+				if ( computeInitialCatenary(m, length_)){
+					vec_length_aux_.push_back(length_);
+					}
+				else{
+					vec_length_aux_.push_back(vec_len_cat_init[m]);
+					ROS_ERROR("not catenary interpolated : length[%i]=%f",m,length_);
 				}
-			else{
-				vec_length_aux_.push_back(vec_len_cat_init[m]);
-				ROS_ERROR("not catenary interpolated : length[%i]=%f",m,length_);
 			}
+			else
+				vec_length_aux_.push_back(vec_len_cat_init[m]);
 		}
-		else
-			vec_length_aux_.push_back(vec_len_cat_init[m]);
+		vec_len_cat_init.clear();
+		vec_len_cat_init = vec_length_aux_;
 	}
-	vec_len_cat_init.clear();
-	vec_len_cat_init = vec_length_aux_;
 }
 
-inline bool InterpolatePath::computeInitialCatenary(int p_, int mode_, double &l_cat_)
+inline bool InterpolatePath::computeInitialCatenary(int p_, double &l_cat_)
 {
 	geometry_msgs::Vector3 p_reel_;
     std::vector<geometry_msgs::Vector3> p_catenary_;

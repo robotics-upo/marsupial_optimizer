@@ -1,12 +1,12 @@
 test_1:
   initial_pos_ugv_x: 8.5
-  initial_pos_ugv_y: 1.5
+  initial_pos_ugv_y: 1.8
   initial_pos_ugv_z: 0.0
   initial_pos_ugv_yaw:  -1.5707
   initial_pos_ugv_pitch: 0.0
   initial_pos_ugv_roll: 0.0
-  initial_pos_uav_x: 9.0
-  initial_pos_uav_y: 1.0
+  initial_pos_uav_x: 8.5
+  initial_pos_uav_y: 1.5
   initial_pos_uav_z: 1.0
   initial_pos_uav_yaw:  0.0
   initial_pos_uav_pitch: 0.0
