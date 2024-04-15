@@ -298,10 +298,6 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		vec_cat_param_a  = path_shared_.cat_param_a; 
 	}
 
-	for(size_t i = 0; i < vec_len_tether_init.size(); i++){
-  		ROS_INFO(PRINTF_BLUE "Optimizer Local Planner : [%lu]Antes interpolation Init_length_interpolated=[%f]",i,vec_len_tether_init[i]);
-	}
-  	
 	if(write_data_residual){
 		dm_.cleanResidualConstraintsFile(path, files_residuals);
 	}
@@ -317,11 +313,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 
 	ip_.getInitialGlobalPath(globalPath, vec_len_tether_init, vec_pose_ugv_init, vec_pose_uav_init, vec_rot_ugv_init, vec_rot_uav_init);
 	size_path = vec_pose_uav_init.size();
-
-	for(size_t i = 0; i < vec_len_tether_init.size(); i++){
-  		ROS_INFO(PRINTF_BLUE "Optimizer Local Planner : [%lu]Init_length_interpolated=[%f]",i,vec_len_tether_init[i]);
-	}
-
+	
 	// Clear optimized Markers
 	MP.clearMarkers(catenary_marker, 150, catenary_marker_pub_);
   	MP.clearMarkersPointLines(points_ugv_marker, lines_ugv_marker,traj_marker_ugv_pub_,size_path);
@@ -1079,7 +1071,7 @@ void OptimizerLocalPlanner::graphTetherAndPathMarker(vector<geometry_msgs::Vecto
 	for(size_t i = 0; i < v_params_.size(); i++){ // The Reel Position is consider above base_link_ugv
 		p_reel_ = getReelPoint(v_ugv_[i].x,v_ugv_[i].y,v_ugv_[i].z,v_rot_ugv[i].x, v_rot_ugv[i].y, v_rot_ugv[i].z, v_rot_ugv[i].w);
 double Dist_ = sqrt(pow(v_uav_[i].x - p_reel_.x,2)+ pow(v_uav_[i].y - p_reel_.y,2) + pow(v_uav_[i].z - p_reel_.z,2));
-std::cout << "["<< i <<"] p_reel=[" << p_reel_.x << " " << p_reel_.y << " "<< p_reel_.z <<"] , v_uav_[i]=["<< v_uav_[i].x <<" "<< v_uav_[i].y <<" "<< v_uav_[i].z<<"] Length_cat=["<< vec_len_tether_init[i] <<"]  Dist=["<< Dist_ <<"]  Length-Dist=["<< vec_len_tether_init[i] - Dist_<<"]  graphTetherAndPathMarker"<<std::endl;
+std::cout << "["<< i <<"] p_reel=[" << p_reel_.x << " " << p_reel_.y << " "<< p_reel_.z <<"] , v_ugv_[i]=["<< v_ugv_[i].x <<" "<< v_ugv_[i].y <<" "<< v_ugv_[i].z<<"] , v_uav_[i]=["<< v_uav_[i].x <<" "<< v_uav_[i].y <<" "<< v_uav_[i].z<<"] Length_cat=["<< vec_len_tether_init[i] <<"]  Dist=["<< Dist_ <<"]  Length-Dist=["<< vec_len_tether_init[i] - Dist_<<"]  graphTetherAndPathMarker"<<std::endl;
 std::cout << "v_tether_params_init = ["<<v_tether_params_init[i].a << " " << v_tether_params_init[i].b << " " << v_tether_params_init[i].c <<"]" << std::endl;
 		GPP_.getCatenaryPoints(p_reel_, v_uav_[i], v_params_[i], v_pts_tether_);
 		MP.markerPoints(m_, v_pts_tether_, i, v_pts_tether_.size(), p_tether_, c_tether_,false);	
