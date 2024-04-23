@@ -40,9 +40,9 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "marsupial_optimizer/ceres_constraint_acceleration_ugv.hpp"
 #include "marsupial_optimizer/ceres_constraint_acceleration_uav.hpp"
 
-#include "marsupial_optimizer/ceres_constraint_catenary_obstacles_autodiff.hpp"
-#include "marsupial_optimizer/ceres_constraint_catenary_length.hpp"
-#include "marsupial_optimizer/ceres_constraint_catenary_parameters.hpp"
+#include "marsupial_optimizer/ceres_constraint_tether_obstacles_autodiff.hpp"
+#include "marsupial_optimizer/ceres_constraint_tether_length.hpp"
+#include "marsupial_optimizer/ceres_constraint_tether_parameters.hpp"
 // #include "marsupial_optimizer/ceres_constraint_straight_obstacles.hpp"
 // #include "marsupial_optimizer/ceres_constraint_straight_length.hpp"
 
@@ -183,7 +183,7 @@ public:
 	void getTetherParameter(vector<geometry_msgs::Vector3> v_p_init_ugv_, vector<geometry_msgs::Vector3> v_p_init_uav_, vector<float> &v_l_cat_init_);
 	void graphCatenary(vector<geometry_msgs::Vector3> v_ugv_, vector<geometry_msgs::Vector3> v_uav_, vector<geometry_msgs::Quaternion> v_rot_ugv, vector<float> v_cat_);
 	void graphTetherAndPathMarker(vector<geometry_msgs::Vector3> v_ugv_, vector<geometry_msgs::Vector3> v_uav_, 
-								   vector<geometry_msgs::Quaternion> v_rot_ugv, vector <tether_parameters> v_p_, 
+								   vector<geometry_msgs::Quaternion> v_rot_ugv, vector <tether_parameters> v_p_, vector<float> v_length_,
 									int c_ugv_, int c_uav_, int c_tether_, ros::Publisher p_ugv_, ros::Publisher p_uav_, 
 									ros::Publisher p_tether_, visualization_msgs::MarkerArray m_);
 	void checkCatenaryLength(vector<geometry_msgs::Vector3> v_p_ugv, vector<geometry_msgs::Vector3>  v_p_uav, vector<geometry_msgs::Quaternion> v_r_ugv, vector<float> &v_l_in);
@@ -308,6 +308,7 @@ public:
 	bool write_data_residual;
     bool just_line_of_sigth; // This variable allow the class just compute the straigth state of the tether 
 	bool export_path; // This variable allow to get path in yaml format for real missions.
+	bool stop_plot_cat;
 
 private:
 	void resetFlags();

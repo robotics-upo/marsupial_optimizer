@@ -1,6 +1,7 @@
 #include "misc/marker_publisher.h"
 
-void MarkerPublisher::markerPoints(visualization_msgs::MarkerArray _marker, std::vector<geometry_msgs::Vector3> _vector, int _suffix, int _n_v, ros::Publisher c_m_pub_, int change_marker_, bool print_)
+void MarkerPublisher::markerPoints(visualization_msgs::MarkerArray _marker, std::vector<geometry_msgs::Vector3> _vector, 
+									int _suffix, int _n_v, ros::Publisher c_m_pub_, int change_marker_, bool print_)
 {
     std::string string_marker;
     std::string ns_marker;
@@ -13,19 +14,19 @@ void MarkerPublisher::markerPoints(visualization_msgs::MarkerArray _marker, std:
     else
         c_color3 = 0.0;
 	
-	double _scale = 0.05;
+	double _scale = 0.03;
 
 	if(change_marker_==1){
 		c_color1 = 0.0;
 		c_color2 = 1.0;
 		c_color3 = 1.0;
-		_scale = 0.045;
+		_scale = 0.03;
 	}
 	else if(change_marker_==2){
 		c_color1 = 0.0;
 		c_color2 = 0.0;
 		c_color3 = 0.0;
-		_scale = 0.045;
+		_scale = 0.03;
 	}
             
     string_marker = std::to_string(_suffix);

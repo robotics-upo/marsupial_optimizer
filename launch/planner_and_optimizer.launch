@@ -15,7 +15,7 @@
     
     <arg name="pos_reel_x"    default="0.0"/> #position reel on UGV 
     <arg name="pos_reel_y"    default="0.0"/> #position reel on UGV
-    <arg name="pos_reel_z"    default="0.8"/> #position reel on UGV
+    <arg name="pos_reel_z"    default="0.38"/> #position reel on UGV
     <arg name="ugv_base_frame"    default="ugv_base_link"/> #position reel on UGV
     <arg name="uav_base_frame"    default="uav_base_link"/> #position reel on UAV
     <arg name="use_parable"   default="false"/>
