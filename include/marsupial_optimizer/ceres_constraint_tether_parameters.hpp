@@ -55,7 +55,7 @@ public:
 			residual[1] = wf* ((r2));
 			// residual[2] = (wf * 100.0 )* ((r3));
 
-std::cout << "		["<< params[0]<<"] AutodiffTetherParametersFunctor: residual[0]= " << residual[0] << " , residual[1]= " << residual[1]  << std::endl;
+// std::cout << "		["<< params[0]<<"] AutodiffTetherParametersFunctor: residual[0]= " << residual[0] << " , residual[1]= " << residual[1]  << std::endl;
 
 			return true;
 		}

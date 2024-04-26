@@ -3,39 +3,17 @@
     <!-- ////////// -->
     <BehaviorTree ID="BehaviorTree">
         <Sequence>
-            <Action ID="WaitSeconds" duration="2" name="Stage1WaitSeconds1"/>
-            <Repeat num_cycles="20">
+            <WaitSeconds duration="2" name="Stage1WaitSeconds1"/>
+            <Repeat num_cycles="40">
                 <Action ID="UPOGoToGoalByName" action="/Make_Plan" goal_name="stage_6_pos_final_1" name="Stage1GoToGoal" state="gpf1"/>
             </Repeat>
-            <Action ID="WaitSeconds" duration="3"/>
+            <WaitSeconds duration="3"/>
         </Sequence>
     </BehaviorTree>
     <!-- ////////// -->
     <TreeNodesModel>
         <Action ID="CallEmptyService">
             <input_port name="service" type="std::string">ROS service name</input_port>
-        </Action>
-        <Condition ID="CheckBool">
-            <input_port name="input" type="bool">Input boolean value</input_port>
-        </Condition>
-        <Action ID="CheckKey">
-            <input_port name="no_key" type="std::string">Key to determine if key to say 'no' has benn pressed</input_port>
-            <input_port name="yes_key" type="std::string">Key to determine if key to say 'yes' has been pressed</input_port>
-        </Action>
-        <Condition ID="CompareNumbers">
-            <input_port name="comparison_op" type="std::string">Comparison operator. Valid operators are &lt;, &gt;, &lt;=, &gt;=, == and !=</input_port>
-            <input_port name="first" type="double">First operand</input_port>
-            <input_port name="second" type="double">Second operand</input_port>
-        </Condition>
-        <Condition ID="CompareStrings">
-            <input_port name="comparison_op" type="std::string">Comparison operator. Valid operators are &lt;, &gt;, &lt;=, &gt;=, == and !=</input_port>
-            <input_port name="first" type="std::string">First operand</input_port>
-            <input_port name="second" type="std::string">Second operand</input_port>
-        </Condition>
-        <Action ID="ConcatenateStrings">
-            <input_port name="first" type="std::string">First string</input_port>
-            <output_port name="output" type="std::string">Concatenated result string</output_port>
-            <input_port name="second" type="std::string">Second string</input_port>
         </Action>
         <Action ID="ConvertJsonToDouble">
             <input_port name="input" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message</input_port>
@@ -63,12 +41,6 @@
             <input_port name="input" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message</input_port>
             <output_port name="output" type="void">Output variable</output_port>
         </Action>
-        <Decorator ID="CooldownMilliseconds">
-            <input_port default="0" name="cooldown" type="unsigned int">Cooldown time</input_port>
-        </Decorator>
-        <Decorator ID="CooldownSeconds">
-            <input_port default="0" name="cooldown" type="unsigned int">Cooldown time</input_port>
-        </Decorator>
         <Action ID="CopyJson">
             <input_port name="input" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Input variable</input_port>
             <output_port name="output" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Output variable to copy to</output_port>
@@ -88,10 +60,6 @@
             <output_port name="output" type="void">Output variable</output_port>
             <input_port name="value" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Value to search for</input_port>
         </Action>
-        <Action ID="FindSubstrings">
-            <input_port name="input" type="std::string">String to look into</input_port>
-            <input_port name="substrings" type="std::vector&lt;std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, std::allocator&lt;std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt; &gt; &gt;">Substrings to look for</input_port>
-        </Action>
         <Decorator ID="ForEachLoop">
             <input_port name="break_on_child_failure" type="bool">Break loop on child failure?</input_port>
             <input_port name="input" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Input sequence</input_port>
@@ -101,9 +69,6 @@
         <Action ID="GetJsonSize">
             <input_port name="input" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Input sequence</input_port>
             <output_port name="output" type="unsigned long">Sequence size output</output_port>
-        </Action>
-        <Action ID="GetKeyboard">
-            <output_port name="output" type="std::string">String received from keyboard</output_port>
         </Action>
         <Action ID="GetMessageField">
             <input_port name="field" type="std::string">Field to fetch</input_port>
@@ -135,31 +100,11 @@
         <Action ID="InitializeJson">
             <output_port name="output" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Output variable to initialize</output_port>
         </Action>
-        <Action ID="InterpolateFloat">
-            <input_port name="input_range" type="std::vector&lt;double, std::allocator&lt;double&gt; &gt;">Input value range.</input_port>
-            <input_port name="input_value" type="double">Value to interpolate.</input_port>
-            <input_port name="output_range" type="std::vector&lt;double, std::allocator&lt;double&gt; &gt;">Output value range.</input_port>
-            <output_port name="output_value" type="double">Interpolated value.</output_port>
-        </Action>
-        <Control ID="Interruptible"/>
         <Action ID="LookupTransform">
             <output_port name="output" type="tf::StampedTransform">Result transform</output_port>
             <input_port name="source_frame" type="std::string">Origin TF frame</input_port>
             <input_port name="target_frame" type="std::string">Target TF frame</input_port>
             <input_port default="0" name="use_last_available" type="bool">Use last available transform?</input_port>
-        </Action>
-        <Decorator ID="Loop"/>
-        <Action ID="MathOperationFloat">
-            <input_port name="first" type="double">First operand</input_port>
-            <input_port name="operator" type="std::string">Math operation. Valid operatores are: +, -, / and *</input_port>
-            <output_port name="output" type="double">Operation result</output_port>
-            <input_port name="second" type="double">Second operand</input_port>
-        </Action>
-        <Action ID="MathOperationInt">
-            <input_port name="first" type="int">First operand</input_port>
-            <input_port name="operator" type="std::string">Math operation. Valid operatores are: +, -, / and *</input_port>
-            <output_port name="output" type="int">Operation result</output_port>
-            <input_port name="second" type="int">Second operand</input_port>
         </Action>
         <Action ID="MonitorStdBool">
             <input_port default="0" name="consume_msgs" type="bool">Should messages be consumed?</input_port>
@@ -179,10 +124,6 @@
             <output_port name="serialized_output" type="nlohmann::basic_json&lt;std::map, std::vector, std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt; &gt;, bool, long, unsigned long, double, std::allocator, nlohmann::adl_serializer&gt;">Serialized ROS message [std_msgs::Int32_&lt;std::allocator&lt;void&gt; &gt;]</output_port>
             <input_port name="topic" type="std::string">Topic to subscribe</input_port>
         </Action>
-        <Action ID="OStreamNode">
-            <input_port name="message" type="std::string">String to print</input_port>
-        </Action>
-        <Decorator ID="OnlyOnce"/>
         <Action ID="PublishBool">
             <input_port name="data" type="bool">Auto-generated field from std_msgs::Bool_&lt;std::allocator&lt;void&gt; &gt;</input_port>
             <input_port default="0" name="latch" type="bool">Latch messages?</input_port>
@@ -194,21 +135,6 @@
             <input_port default="0" name="latch" type="bool">Latch messages?</input_port>
             <input_port default="1" name="queue_size" type="unsigned int">Internal publisher queue size</input_port>
             <input_port name="topic" type="std::string">Topic to publish to</input_port>
-        </Action>
-        <Action ID="RandomFloat">
-            <input_port name="max" type="double">Max range value</input_port>
-            <input_port name="min" type="double">Minimum range value</input_port>
-            <output_port name="result" type="double">Random result value</output_port>
-        </Action>
-        <Action ID="RandomInteger">
-            <input_port name="max" type="int">Max range value</input_port>
-            <input_port name="min" type="int">Minimum range value</input_port>
-            <output_port name="result" type="int">Random result value</output_port>
-        </Action>
-        <Action ID="RandomSequenceValue">
-            <input_port default=";" name="delimiter" type="std::string">Sequence entries delimiter</input_port>
-            <output_port name="output" type="std::string">Result random sequence entry</output_port>
-            <input_port name="sequence" type="std::string">Sequence to randomize</input_port>
         </Action>
         <Action ID="SubscribeUPOGoal">
             <input_port default="0" name="consume_msgs" type="bool">Should messages be consumed?</input_port>
@@ -269,16 +195,10 @@
             <output_port name="y" type="double">Window y</output_port>
             <output_port name="z" type="double">Window z</output_port>
         </Action>
-        <Action ID="WaitMilliseconds">
-            <input_port default="0" name="duration" type="unsigned int">Time to wait</input_port>
-        </Action>
-        <Action ID="WaitSeconds">
-            <input_port default="0" name="duration" type="unsigned int">Time to wait</input_port>
-        </Action>
         <Action ID="WarnLog">
             <input_port name="message" type="std::string">Message to log</input_port>
         </Action>
-        <Decorator ID="WhileSuccess"/>
     </TreeNodesModel>
     <!-- ////////// -->
 </root>
+

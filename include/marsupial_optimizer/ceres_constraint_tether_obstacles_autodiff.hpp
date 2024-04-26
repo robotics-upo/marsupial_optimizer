@@ -62,32 +62,36 @@ class DistanceFunction : public ceres::SizedCostFunction<1, 3>
         {
 			TrilinearParams p = g_3D->getPointDistInterpolation(x, y, z);
             dist_ = p.a0 + p.a1*x + p.a2*y + p.a3*z + p.a4*x*y + p.a5*x*z + p.a6*y*z + p.a7*x*y*z;
-			if(dist_ < 0.001)
-				dist_ = 0.001;
-			div = 1/dist_;
-			if (dist_ < sb)
-				C = 10.0;
-			else
-				C = 1.0;	
-			residuals[0] = div*C;
+			// div = 1/dist_;
+			// if (dist_ < sb)
+			// 	C = 10.0;
+			// else
+			// 	C = 1.0;	
+			// residuals[0] = div*C;
+			residuals[0] = dist_;
             if (jacobians != NULL && jacobians[0] != NULL) 
             {
-                jacobians[0][0] = -C*(p.a1 + p.a4*y + p.a5*z + p.a7*y*z)*div*div;
-                jacobians[0][1] = -C*(p.a2 + p.a4*x + p.a6*z + p.a7*x*z)*div*div;
-                jacobians[0][2] = -C*(p.a3 + p.a5*x + p.a6*y + p.a7*x*y)*div*div;
+                // jacobians[0][0] = -C*(p.a1 + p.a4*y + p.a5*z + p.a7*y*z)*div*div;
+                // jacobians[0][1] = -C*(p.a2 + p.a4*x + p.a6*z + p.a7*x*z)*div*div;
+                // jacobians[0][2] = -C*(p.a3 + p.a5*x + p.a6*y + p.a7*x*y)*div*div;
+				jacobians[0][0] = p.a1 + p.a4*y + p.a5*z + p.a7*y*z;
+                jacobians[0][1] = p.a2 + p.a4*x + p.a6*z + p.a7*x*z;
+                jacobians[0][2] = p.a3 + p.a5*x + p.a6*y + p.a7*x*y;
             }
 // std::cout << " , Cost residual (in) ="<< residuals[0] << " , div= "<< div <<" , dist= " << dist_<< " , C= " << C;
 			
         }
         else
         {
-			C = 10.0;
-			residuals[0] = C*z;
+			dist_ = -1.0;
+			// C = 10.0;
+			// residuals[0] = C*z;
             if (jacobians != NULL && jacobians[0] != NULL) 
             {
                 jacobians[0][0] = 0;
                 jacobians[0][1] = 0;
-                jacobians[0][2] = C;
+                // jacobians[0][2] = C;
+                jacobians[0][2] = 0;
             }
 // std::cout << ", Cost residual (out) ="<< residuals[0] << " , C= " << C << " , z= " << z;
         }
@@ -157,14 +161,7 @@ class AutodiffTetherObstacleFunctor {
 				T delta_z = (stateUAV[3] - ugv_reel[3]);
 				dist_[0] = sqrt(delta_x * delta_x + delta_y * delta_y);
 				d_[0] = sqrt(delta_x * delta_x + delta_y * delta_y + delta_z * delta_z );
-				// if (dist_ < 0.0001){
-				// 	u_x = u_y = T{0.0};
-				// 	d_[0] = sqrt(pow(stateUAV[3]-ugv_reel[3],2)); 
-				// } else{
-				// 	u_x = delta_x /dist_;
-				// 	u_y = delta_y /dist_;
-				// 	d_[0] = dist_; 
-				// }
+	
 				if (sqrt(delta_x * delta_x + delta_y * delta_y) <0.001){
 					u_x = u_y = T{0.0};
 				} else{
@@ -179,34 +176,61 @@ class AutodiffTetherObstacleFunctor {
 
 				// Here is compute the parable point and it cost 
 				T point[3];
-				T parable_cost_;	
+				T dist_obst_;	
+				T parable_cost_;
 				T cost_state_parable = T{0.0};
 				T x_  =  T{0.0};
-				for(int i = 0; i < np_; i++, x_ += dist_[0]/ np_ ){  
-					// if (!(dist_ < 0.0001)){ // To check difference position between UGV and UAV only in z-axe, so parable it is not computed
-						point[0] = ugv_reel[1] + u_x * x_;
-						point[1] = ugv_reel[2] + u_y * x_;
-						point[2] = params[3] * cosh((x_ - params[1])/params[3]) +( params[2]-params[3]);
-					// }
-					// else{ 	// In case that UGV and UAV are not in the same point the plane X-Y
-					// 	T _step = d_[0] / np_;
-					// 	point[0] = ugv_reel[1];
-					// 	point[1] = ugv_reel[2];
-					// 	point[2] = ugv_reel[3]+ _step* (double)i;    	
-					// }
-// std::cout << "		["<< params[0]<<"/"<< i<<"]" ;
-        			_parableCostFunctor(point, &parable_cost_);
+				T C;
+				vector<T> v_dist;	
+				v_dist.clear();
+				int first_coll_, last_coll_;
+				first_coll_ = last_coll_ = -1;
 
-					cost_state_parable = cost_state_parable + parable_cost_; // To get point parable cost
+				for(int i = 0; i < np_; i++, x_ += dist_[0]/ np_ ){  
+					point[0] = ugv_reel[1] + u_x * x_;
+					point[1] = ugv_reel[2] + u_y * x_;
+					point[2] = params[3] * cosh((x_ - params[1])/params[3]) +( params[2]-params[3]);
+
+// std::cout << "		["<< params[0]<<"/"<< i<<"]" ;
+        			_parableCostFunctor(point, &dist_obst_);
+
+					if(dist_obst_ < T{0.0}){
+						parable_cost_ = T{10.0} * T{point[2]} * T{point[2]} ;
+						if (first_coll_ == -1)
+							first_coll_ = i;
+						last_coll_ = i;
+					}else{
+						if (dist_obst_ < T{sb}){
+							if (first_coll_ == -1)
+								first_coll_ = i;
+							last_coll_ = i;
+						}
+					}
+				v_dist.push_back(dist_obst_);
 // std::cout << " , cost_state_parable= "<< cost_state_parable <<" , parable_cost= " << parable_cost_ << std::endl ;
 				}
-					if (np_> T{0.0})
-						cost_state_parable = cost_state_parable/np_;
-					else{
-						cost_state_parable = T{10000.0};
-						std::cout << "!!!!!!!!!!!!!!!!! COSA MAS RARA "<< std::endl << std::endl;
-					}
-std::cout << "		["<< params[0]<<"] cost_state_parable= "<< cost_state_parable << std::endl ;
+
+				// Here we compute the cost of the catenary including if is between obstacles
+				for(int i = 0; i < np_; i++){ 
+					T div = T{1.0}/v_dist[i];
+					if (i >=  first_coll_ && i <= last_coll_){
+						if(v_dist[i] < T{0.0})
+							C = T{-10000.0};
+						else
+							C = T{100.0};
+					}else
+						C = T{1.0};	
+					parable_cost_ = div*C;
+					cost_state_parable = cost_state_parable + parable_cost_; // To get point parable cost
+				}
+
+				if (np_> T{0.0})
+					cost_state_parable = cost_state_parable/np_;
+				else{
+					cost_state_parable = T{10000.0};
+					std::cout << "!!!!!!!!!!!!!!!!! COSA MAS RARA "<< std::endl << std::endl;
+				}
+// std::cout << "		["<< params[0]<<"] cost_state_parable= "<< cost_state_parable << " , first - final = ["<< first_coll_ << " - " << last_coll_ <<"]" << std::endl ;
 
 				residual[0] = wf * cost_state_parable;
 					

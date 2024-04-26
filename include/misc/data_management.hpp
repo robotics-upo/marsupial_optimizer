@@ -50,7 +50,8 @@ class DataManagement
 												std::vector<double> vec_time_opt_, 
 												std::vector <tether_parameters> v_params_parab_opt_ ,
 												std::vector<double> v_angles_kinematic_ugv_, 
-												std::vector<double> v_angles_kinematic_uav_);
+												std::vector<double> v_angles_kinematic_uav_,
+												std::vector<float> v_length_);
 		virtual void getDataForOptimizerAnalysis(pcl::KdTreeFLANN <pcl::PointXYZ> kdt_, pcl::KdTreeFLANN <pcl::PointXYZ> kdt_all_, 
 												 pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_points_ , pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_points_all_, 
 												 double opt_compute_time_ , std::string mode_);
@@ -80,7 +81,7 @@ class DataManagement
 
 		std::vector<double> vec_dist_init_ugv, vec_dist_init_uav;
 		std::vector<double> vec_time_init;
-		std::vector<float> vec_len_cat_init;
+		std::vector<float> vec_len_cat_init, vec_len_cat_opt;
 		std::vector<geometry_msgs::Quaternion> vec_init_rot_ugv, vec_init_rot_uav, vec_opt_rot_ugv, vec_opt_rot_uav;
 
 	    NearNeighbor nn_;
@@ -285,16 +286,19 @@ inline void DataManagement::writeTemporalDataAfterOpt(
 					std::vector<double> vec_time_opt_, 
 					std::vector <tether_parameters> v_params_parab_opt_ , 
 					std::vector<double> v_angles_kinematic_ugv_, 
-					std::vector<double> v_angles_kinematic_uav_)
+					std::vector<double> v_angles_kinematic_uav_,
+					std::vector<float> v_length_)
 {
 	
 	vec_pose_ugv_opt.clear(); vec_pose_uav_opt.clear(); vec_time_opt.clear(); vec_opt_rot_ugv.clear(); vec_opt_rot_uav.clear(); vec_params_tether_opt.clear();
+	vec_len_cat_opt.clear();
 	vec_pose_ugv_opt = vec_pose_ugv_opt_;
 	vec_pose_uav_opt = vec_pose_uav_opt_;
 	vec_opt_rot_ugv = vec_rot_ugv_;
 	vec_opt_rot_uav = vec_rot_uav_;
 	vec_time_opt = vec_time_opt_;
 	vec_params_tether_opt = v_params_parab_opt_;
+	vec_len_cat_opt = v_length_;
 	
 	vec_dist_ugv_opt.clear(); 
 	vec_dist_uav_opt.clear(); 
@@ -578,7 +582,8 @@ inline void DataManagement::getDataForOptimizerAnalysis(
 		std::vector<geometry_msgs::Vector3> vec_par_pts_;
 		
 		p_reel_ugv = getReelPos(vec_pose_init_ugv[i], vec_init_rot_ugv[i], pos_reel_ugv);
-        gpp.getParabolaPoints(p_reel_ugv, vec_pose_init_uav[i], vec_params_tether_init[i], vec_par_pts_);
+        // gpp.getParabolaPoints(p_reel_ugv, vec_pose_init_uav[i], vec_params_tether_init[i], vec_par_pts_);
+        gpp.getCatenaryPoints(p_reel_ugv, vec_pose_init_uav[i], vec_params_tether_init[i], vec_par_pts_, vec_len_cat_init[i]);
 
 		for (size_t j= 0 ; j < vec_par_pts_.size() ; j++){
 			if(j < 3){
@@ -657,7 +662,8 @@ inline void DataManagement::getDataForOptimizerAnalysis(
 		std::vector<geometry_msgs::Vector3> vec_par_pts_; 
 
 		p_reel_ugv = getReelPos(vec_pose_ugv_opt[i],vec_opt_rot_ugv[i], pos_reel_ugv);
-        gpp.getParabolaPoints(p_reel_ugv, vec_pose_uav_opt[i], vec_params_tether_opt[i], vec_par_pts_);
+        // gpp.getParabolaPoints(p_reel_ugv, vec_pose_uav_opt[i], vec_params_tether_opt[i], vec_par_pts_);
+        gpp.getCatenaryPoints(p_reel_ugv, vec_pose_uav_opt[i], vec_params_tether_opt[i], vec_par_pts_, vec_len_cat_opt[i]);
 	
 		for (size_t j= 0 ; j < vec_par_pts_.size() ; j++){
 			// if(j < 3){

@@ -129,7 +129,9 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(bool get_path_from_file_)
 	
 	std::string node_name_ = "grid3D_optimizer_node";
 	grid_3D = new Grid3d(node_name_);
+    ROS_INFO_COND(true, PRINTF_BLUE "Initialazing Trilinear Interpolation (grid3D) in Optimizer");
 	grid_3D->computeTrilinearInterpolation();
+    ROS_INFO_COND(true, PRINTF_BLUE "Finished Trilinear Interpolation (grid3D) in Optimizer");
 
 	CheckCM = new CatenaryCheckerManager(node_name_);
 
@@ -376,7 +378,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
     /*************************************************************************************************/
 
 	if(!just_line_of_sigth) // The tether is not computed if is required just to star with initial condition the straight line.
-		CheckCM->CheckStatusCollision(vec_pose_ugv_init, vec_rot_ugv_init, vec_pose_uav_init, v_tether_params_init);
+		CheckCM->CheckStatusCatenaryCollision(vec_pose_ugv_init, vec_rot_ugv_init, vec_pose_uav_init, v_tether_params_init, vec_len_tether_init);
 
 	dm_.initDataManagement(path, name_output_file, scenario_name, num_pos_initial, initial_velocity_ugv, initial_velocity_uav, 
 							initial_acceleration_ugv, initial_acceleration_uav, distance_tether_obstacle, pose_reel_local.transform.translation, vec_pose_ugv_init, 
@@ -395,6 +397,13 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	if(use_loss_function){
 		loss_function = new CauchyLoss(0.5);
 	}
+
+	/********************* To obligate pause method and check Planning result *********************/
+        // std::string yy_ ;
+        // std::cout << " *** Before Initializing Optimization : " ;
+        // std::cout << " Press key to continue : ";
+        // std::cin >> yy_ ;
+    /*************************************************************************************************/
 
 	// Initializing Contraints for optimization	
 	/****************************   UGV Constraints  ****************************/	
@@ -649,16 +658,16 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		mp_.exportOptimizedPath(vec_pose_ugv_opt, vec_pose_uav_opt, vec_rot_ugv_opt, vec_rot_uav_opt, vec_len_tether_opt, path);
 
 	/********************* To obligate pause method and check Planning result *********************/
-        std::string z_ ;
-        std::cout << " *** Finished optimization: " << std::endl;
-        std::cout << " *** Press key to continue: " << std::endl;
-        std::cin >> z_ ;
+        // std::string z_ ;
+        // std::cout << " *** Finished optimization: " << std::endl;
+        // std::cout << " *** Press key to continue: " << std::endl;
+        // std::cin >> z_ ;
     /*************************************************************************************************/
 
 	// Inform if is a feabible Trajectory or not, 
 	bool free_collision_ = true;
 	if(!just_line_of_sigth) // The tether is not computed if is required just to star with initial condition the straight line.
-    	free_collision_ = CheckCM->CheckStatusCollision(vec_pose_ugv_opt, vec_rot_ugv_opt, vec_pose_uav_opt, v_tether_params_opt);
+    	free_collision_ = CheckCM->CheckStatusCatenaryCollision(vec_pose_ugv_opt, vec_rot_ugv_opt, vec_pose_uav_opt, v_tether_params_opt, vec_len_tether_opt);
 
 	// Initializing variable for optimization analysis
 	if (write_data_for_analysis)
@@ -715,8 +724,8 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	ros::Duration(2.0).sleep();
 	/********************* To obligate pause method and check Planning result *********************/
         // std::string y_ ;
-        // std::cout << " *** Optimization Proccess Completed" << std::endl;
-        // std::cout << " *** Press key to continue : " << std::endl;
+        // std::cout << " *** Optimization Proccess Completed " ;
+        // std::cout << " : Press key to continue : " ;
         // std::cin >> y_ ;
     /*************************************************************************************************/
 
@@ -866,7 +875,7 @@ void OptimizerLocalPlanner::finishigOptimization()
 		vec_rot_uav_opt.push_back(rot_angle_uav_);	
 	}
 	
-	stop_plot_cat = true;
+	stop_plot_cat = false;
 	if(!just_line_of_sigth){
 		graphTetherAndPathMarker(vec_pose_ugv_opt, vec_pose_uav_opt, vec_rot_ugv_opt, v_tether_params_opt, vec_len_tether_opt, 1, 2, 3,
 							  traj_opt_marker_ugv_pub_,traj_opt_marker_uav_pub_, tether_marker_opt_pub_, tether_marker_opt);
@@ -934,7 +943,7 @@ void OptimizerLocalPlanner::writeDataForAnalysis(int ugv_coll_, int uav_coll_, i
 	v_angles_smooth_ugv_opt.clear();
 	v_angles_smooth_uav_opt.clear();
 	dm_.getSmoothnessTrajectory(vec_pose_ugv_opt, vec_pose_uav_opt, v_angles_smooth_ugv_opt, v_angles_smooth_uav_opt);
-	dm_.writeTemporalDataAfterOpt(size_path, vec_pose_ugv_opt, vec_pose_uav_opt, vec_rot_ugv_opt, vec_rot_uav_opt, vec_time_opt, v_tether_params_opt, v_angles_smooth_ugv_opt, v_angles_smooth_uav_opt);
+	dm_.writeTemporalDataAfterOpt(size_path, vec_pose_ugv_opt, vec_pose_uav_opt, vec_rot_ugv_opt, vec_rot_uav_opt, vec_time_opt, v_tether_params_opt, v_angles_smooth_ugv_opt, v_angles_smooth_uav_opt, vec_len_tether_opt);
 	std::cout << "...Temporal data saved in txt file." << std::endl << std::endl;
 	std::cout << "Saving data for analisys in txt file..." << std::endl;
 	double opt_compute_time_ = (final_time_opt - start_time_opt).toSec(); //Compute Time Optimization
@@ -1092,13 +1101,13 @@ void OptimizerLocalPlanner::graphTetherAndPathMarker(vector<geometry_msgs::Vecto
 													  ros::Publisher p_tether_, visualization_msgs::MarkerArray m_){
 	
 	// For save in a txt file the point of all catenaries
-    std::ofstream file_pts_cat;
-	std::string  output_file = path + "catenaries_points.txt";
-	file_pts_cat.open(output_file.c_str(), std::ofstream::trunc); 
-	if (file_pts_cat.is_open()) 
-		std::cout << "Opened File: " << output_file << std::endl;
-	else 
-		std::cout << "Could not open File: " << output_file << std::endl;
+    // std::ofstream file_pts_cat;
+	// std::string  output_file = path + "catenaries_points.txt";
+	// file_pts_cat.open(output_file.c_str(), std::ofstream::trunc); 
+	// if (file_pts_cat.is_open()) 
+		// std::cout << "Opened File: " << output_file << std::endl;
+	// else 
+		// std::cout << "Could not open File: " << output_file << std::endl;
 
 	MP.getMarkerPoints(points_ugv_marker, v_ugv_, "points_ugv_m",c_ugv_);	// RED= 0 ; GREEN= 1 ; BLUE= 2 ; YELLOW= 3 ; PURPLE= 4; BLACK=5; WHITE=6
 	MP.getMarkerLines(lines_ugv_marker, v_ugv_, "lines_ugv_m",c_ugv_);
@@ -1131,13 +1140,12 @@ void OptimizerLocalPlanner::graphTetherAndPathMarker(vector<geometry_msgs::Vecto
 		double Dist_ = sqrt(pow(v_uav_[i].x - p_reel_.x,2)+ pow(v_uav_[i].y - p_reel_.y,2) + pow(v_uav_[i].z - p_reel_.z,2));
 		std::cout << "		p_reel=[" << p_reel_.x << " " << p_reel_.y << " "<< p_reel_.z <<"] , v_uav_[i]=["<< v_uav_[i].x <<" "<< v_uav_[i].y <<" "<< v_uav_[i].z<<"] Length_cat=["<< vec_len_tether_init[i] <<"]  Dist=["<< Dist_ <<"]  Length-Dist=["<< vec_len_tether_init[i] - Dist_<<"] "<<std::endl;
 		std::cout << "		v_params_ = ["<<v_params_[i].a << " " << v_params_[i].b << " " << v_params_[i].c <<"]" << std::endl;
-file_pts_cat <<v_params_[i].a<<","<<v_params_[i].b << "," << v_params_[i].c << ","<< 0.0 << "," << p_reel_.z << "," << sqrt(pow(p_reel_.x-v_uav_[i].x,2)+ pow(p_reel_.y-v_uav_[i].y,2)) 
-			 << "," << v_uav_[i].z << "," << v_length_[i] << std::endl;
+// file_pts_cat <<v_params_[i].a<<","<<v_params_[i].b << "," << v_params_[i].c << ","<< 0.0 << "," << p_reel_.z << "," << sqrt(pow(p_reel_.x-v_uav_[i].x,2)+ pow(p_reel_.y-v_uav_[i].y,2)) 
+			//  << "," << v_uav_[i].z << "," << v_length_[i] << std::endl;
 	}
     /*************************************************************************************************/	
 	}
-	file_pts_cat.close();
-
+	// file_pts_cat.close();
 
 }
 
