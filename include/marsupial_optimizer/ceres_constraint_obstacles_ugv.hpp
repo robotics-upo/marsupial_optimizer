@@ -79,7 +79,7 @@ public:
             T min_value_residual = T{0.0};
             T max_value_dependent = T{0.0};
             T m ;
-            if (d_ > d_sb_)
+            if (d_ > d_sb_ || statePos1[1] > n1_[2]-T{0.6}) // 6 cm is the radius of the wheel
                 m = T{0.0};
             else
                 m = (max_value_residual- min_value_residual)/(max_value_dependent - d_sb_);

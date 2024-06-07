@@ -40,7 +40,7 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "marsupial_optimizer/ceres_constraint_acceleration_ugv.hpp"
 #include "marsupial_optimizer/ceres_constraint_acceleration_uav.hpp"
 
-#include "marsupial_optimizer/ceres_constraint_tether_obstacles_autodiff.hpp"
+#include "marsupial_optimizer/ceres_constraint_tether_obstacles.hpp"
 #include "marsupial_optimizer/ceres_constraint_tether_length.hpp"
 #include "marsupial_optimizer/ceres_constraint_tether_parameters.hpp"
 // #include "marsupial_optimizer/ceres_constraint_straight_obstacles.hpp"

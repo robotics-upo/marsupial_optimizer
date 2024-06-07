@@ -58,13 +58,16 @@ class DataManagement
  		virtual geometry_msgs::Vector3 getReelPos(const geometry_msgs::Vector3 p_,const geometry_msgs::Quaternion q_, geometry_msgs::Vector3 p_reel_);
 		virtual geometry_msgs::Vector3 getEulerAngles(const float qx_, const float qy_, const float qz_, const float qw_);
 		virtual bool isObstacleBetweenTwoPoints(geometry_msgs::Vector3 pose_opt_1, geometry_msgs::Vector3 pose_opt_2, bool oct_full_);
+		virtual void openAndCloseFeasibilityFile(int task_);
 		virtual void feasibilityAnalisysTrajectory(float init_cost, float final_cost, float succes_steps, float unsuccess_step, float time_opt, int ugv_coll_, int uav_coll_, int tether_coll_);
+		virtual void feasibilityAnalisysPath(int ugv_coll_, int uav_coll_, int tether_coll_);
 		virtual void cleanResidualConstraintsFile(std::string path_, std::string files_residuals_);
 		virtual void getSmoothnessTrajectory(vector<geometry_msgs::Vector3> v_pos2kin_ugv, vector<geometry_msgs::Vector3> v_pos2kin_uav, vector<double> &v_angles_kin_ugv, vector<double> &v_angles_kin_uav);
 		virtual double getPointDistanceFullMap(geometry_msgs::Vector3 p_, int pose_);
 
 		std::string path ,scenario_name;
 		std::string output_file, name_output_file;
+		std::string feasibility_file;
 		int  num_pos_initial;
 		std::ofstream ofs, feasibility;
 		std::ofstream file_in_time ,file_in_velocity, file_in_acceleration, file_in_rotation, file_in_kinematic;
@@ -148,6 +151,9 @@ inline void DataManagement::initDataManagement(
 	g_3D = grid_3D_;
 
 	output_file = path+"results_"+scenario_name+"_InitPos_"+std::to_string(num_pos_initial)+"_"+name_output_file;
+
+	feasibility_file = path+"results_"+scenario_name+"_InitPos_"+std::to_string(num_pos_initial)+"_"+
+							"feasibility_trajectory.txt";
 }
 
 inline void DataManagement::DataBeforeOptUsingCatenary(std::vector<double> v_dist_init_ugv_, std::vector<double> v_dist_init_uav_, 
@@ -812,24 +818,60 @@ inline bool DataManagement::isObstacleBetweenTwoPoints(geometry_msgs::Vector3 po
 		return false;		
 }
 
+inline void DataManagement::openAndCloseFeasibilityFile(int task_)
+{
+
+	if (task_ == 1) {
+		std::ifstream ifile;
+		ifile.open(feasibility_file);
+		if(ifile) {
+			std::cout << feasibility_file <<" : File exists !!!!!!!!!! " << std::endl;
+		} else {
+			feasibility.open(feasibility_file.c_str(), std::ofstream::app);
+			feasibility << "Feasible_Path;Coll_ugv;Coll_uav;Coll_tether;Feasible_Traj;Coll_ugv;Coll_uav;Coll_tether;C_cost;I_cost;F_cost;T_steps;S_steps;UnS_steps;time_opt"<<std::endl;
+			feasibility.close();
+			std::cout << feasibility_file <<" : File doesn't exist !!!!!!!!!! " << std::endl;
+		}
+		
+		feasibility.open(feasibility_file.c_str(), std::ofstream::app);
+	}
+	else{
+		feasibility.close();
+	}
+}
+
+inline void DataManagement::feasibilityAnalisysPath(int ugv_coll_, int uav_coll_, int tether_coll_)
+{
+	openAndCloseFeasibilityFile(1); // To open the file : argument == 1
+	int feasible = 0;
+	if (ugv_coll_ == 0 && uav_coll_ == 0 && tether_coll_ == 0)
+		feasible = 1;
+	
+	if (feasibility.is_open()) {
+		feasibility << feasible << ";"
+					<< ugv_coll_ << ";" 
+		    		<< uav_coll_ << ";" 
+		    		<< tether_coll_ << ";";
+	} 
+	else 
+		std::cout << "Couldn't be open result_feasibility_analisys_for_trajectory.txt "<< std::endl;
+	openAndCloseFeasibilityFile(0); // To close the file : argumente != 0
+}
+
 inline void DataManagement::feasibilityAnalisysTrajectory(float init_cost, float final_cost, float succes_steps, float unsuccess_step, float time_opt, int ugv_coll_, int uav_coll_, int tether_coll_)
 {
-	std::string name_file = path+"results_"+scenario_name+"_InitPos_"+std::to_string(num_pos_initial)+"_"+
-							"feasibility_trajectory.txt";
+   	// ifile.open(feasibility_file);
+   	// if(ifile) {
+    //   	std::cout << feasibility_file <<" : File exists !!!!!!!!!! " << std::endl;
+   	// } else {
+	//   feasibility.open(feasibility_file.c_str(), std::ofstream::app);
+	//   feasibility << "Feasible_Path/Coll_ugv/Coll_uav/Coll_tether/Feasible_Traj/C_cost/I_cost/F_cost/T_steps/S_steps/UnS_steps/time_opt"<<std::endl;
+	//   feasibility.close();
+    //   std::cout << feasibility_file <<" : File doesn't exist !!!!!!!!!! " << std::endl;
+   	// }
+	// feasibility.open(feasibility_file.c_str(), std::ofstream::app);
 
-	std::ifstream ifile;
-   	ifile.open(name_file);
-   	if(ifile) {
-      	std::cout << name_file <<" : File exists !!!!!!!!!! " << std::endl;
-   	} else {
-	  feasibility.open(name_file.c_str(), std::ofstream::app);
-	  feasibility << "Feasible/Coll_ugv/Coll_uav/Coll_tether/C_cost/I_cost/F_cost/T_steps/S_steps/UnS_steps/time_opt"<<std::endl;
-	  feasibility.close();
-      std::cout << name_file <<" : File doesn't exist !!!!!!!!!! " << std::endl;
-   	}
-	
-	feasibility.open(name_file.c_str(), std::ofstream::app);
-
+	openAndCloseFeasibilityFile(1); // To open the file : argument == 1
 	int feasible = 0;
 	if (ugv_coll_ == 0 && uav_coll_ == 0 && tether_coll_ == 0)
 		feasible = 1;
@@ -850,7 +892,8 @@ inline void DataManagement::feasibilityAnalisysTrajectory(float init_cost, float
 	} 
 	else 
 		std::cout << "Couldn't be open result_feasibility_analisys_for_trajectory.txt "<< std::endl;
-	feasibility.close();
+	openAndCloseFeasibilityFile(0); // To close the file : argumente != 0
+	// feasibility.close();
 }
 
 inline void DataManagement::cleanResidualConstraintsFile(std::string path_, std::string files_residuals_)

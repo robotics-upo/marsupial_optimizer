@@ -1,7 +1,7 @@
 <launch>
     <!-- Loading Arguments -->
     <arg name="planner_type"        default="rrt_star"/>
-    <arg name="map"        default="stage_6"/> #stage_1
+    <arg name="map"        default="stage_2"/> #stage_1
     <arg name="save_path_in_file"   default="false"/>
     
     <!-- <arg name="map"        default="thermal_central_2022-03-14-13-05-27"/> -->

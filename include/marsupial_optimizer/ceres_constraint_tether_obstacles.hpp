@@ -52,11 +52,12 @@ class DistanceFunction : public ceres::SizedCostFunction<1, 3>
                         double* residuals,
                         double** jacobians) const 
     {
-        double x = parameters[0][0];
-        double y = parameters[0][1];
-        double z = parameters[0][2];
-		double dist_, div;
-		double C;
+        float x = parameters[0][0];
+        float y = parameters[0][1];
+        float z = parameters[0][2];
+		float dist_, div;
+		float C;
+std::cout << "  TEHER point:"<< x <<"," << y << "," << z <<std::endl;  
 
 		if(g_3D->isIntoMap(x, y, z))
         {
@@ -191,11 +192,10 @@ class AutodiffTetherObstacleFunctor {
 					point[1] = ugv_reel[2] + u_y * x_;
 					point[2] = params[3] * cosh((x_ - params[1])/params[3]) +( params[2]-params[3]);
 
-// std::cout << "		["<< params[0]<<"/"<< i<<"]" ;
         			_parableCostFunctor(point, &dist_obst_);
 
 					if(dist_obst_ < T{0.0}){
-						parable_cost_ = T{10.0} * T{point[2]} * T{point[2]} ;
+						// parable_cost_ = T{10.0} * T{point[2]} * T{point[2]} ;
 						if (first_coll_ == -1)
 							first_coll_ = i;
 						last_coll_ = i;
@@ -207,12 +207,17 @@ class AutodiffTetherObstacleFunctor {
 						}
 					}
 				v_dist.push_back(dist_obst_);
-// std::cout << " , cost_state_parable= "<< cost_state_parable <<" , parable_cost= " << parable_cost_ << std::endl ;
 				}
 
 				// Here we compute the cost of the catenary including if is between obstacles
+				T distance_;
 				for(int i = 0; i < np_; i++){ 
-					T div = T{1.0}/v_dist[i];
+					if (v_dist[i]< T{0.001} && v_dist[i]>= T{0.0}) 
+						distance_ = T{0.001};
+					else
+						distance_ = v_dist[i];
+
+					T div = T{1.0}/distance_;
 					if (i >=  first_coll_ && i <= last_coll_){
 						if(v_dist[i] < T{0.0})
 							C = T{-10000.0};
@@ -230,9 +235,9 @@ class AutodiffTetherObstacleFunctor {
 					cost_state_parable = T{10000.0};
 					std::cout << "!!!!!!!!!!!!!!!!! COSA MAS RARA "<< std::endl << std::endl;
 				}
-// std::cout << "		["<< params[0]<<"] cost_state_parable= "<< cost_state_parable << " , first - final = ["<< first_coll_ << " - " << last_coll_ <<"]" << std::endl ;
 
 				residual[0] = wf * cost_state_parable;
+std::cout << "		["<< params[0]<<"] cost=" << cost_state_parable << " , coll=["<< first_coll_ << "/" << last_coll_ <<"]"<< std::endl ;
 					
 				return true;
 			}

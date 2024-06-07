@@ -5,9 +5,9 @@ test_1:
   initial_pos_ugv_yaw: 3.14
   initial_pos_ugv_pitch: 0.0
   initial_pos_ugv_roll: 0.0
-  initial_pos_uav_x: 0.3
+  initial_pos_uav_x: 0.2
   initial_pos_uav_y: 0
-  initial_pos_uav_z: 7
+  initial_pos_uav_z: 1.2
   initial_pos_uav_yaw:  0.0
   initial_pos_uav_pitch: 0.0
   initial_pos_uav_roll: 0.0
@@ -20,9 +20,9 @@ test_2:
   initial_pos_ugv_yaw: 3.14
   initial_pos_ugv_pitch: 0.0
   initial_pos_ugv_roll: 0.0
-  initial_pos_uav_x: -4.0
+  initial_pos_uav_x: 3.0
   initial_pos_uav_y: 0
-  initial_pos_uav_z: 5
+  initial_pos_uav_z: 1.2
   initial_pos_uav_yaw:  0.0
   initial_pos_uav_pitch: 0.0
   initial_pos_uav_roll: 0.0
