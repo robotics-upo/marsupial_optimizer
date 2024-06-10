@@ -43,8 +43,11 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "marsupial_optimizer/ceres_constraint_tether_obstacles.hpp"
 #include "marsupial_optimizer/ceres_constraint_tether_length.hpp"
 #include "marsupial_optimizer/ceres_constraint_tether_parameters.hpp"
-// #include "marsupial_optimizer/ceres_constraint_straight_obstacles.hpp"
-// #include "marsupial_optimizer/ceres_constraint_straight_length.hpp"
+#include "marsupial_optimizer/ceres_constraint_parabola_obstacles.hpp"
+#include "marsupial_optimizer/ceres_constraint_parabola_length.hpp"
+#include "marsupial_optimizer/ceres_constraint_parabola_parameters.hpp"
+#include "marsupial_optimizer/ceres_constraint_straight_obstacles.hpp"
+#include "marsupial_optimizer/ceres_constraint_straight_length.hpp"
 
 #include "marsupial_optimizer/marsupial_trajectory_optimized.h"
 
@@ -181,7 +184,6 @@ public:
 	// void publishOptimizedTraj();
 	void cleanResidualConstraintsFile();
 	void getTetherParameter(vector<geometry_msgs::Vector3> v_p_init_ugv_, vector<geometry_msgs::Vector3> v_p_init_uav_, vector<float> &v_l_cat_init_);
-	void graphCatenary(vector<geometry_msgs::Vector3> v_ugv_, vector<geometry_msgs::Vector3> v_uav_, vector<geometry_msgs::Quaternion> v_rot_ugv, vector<float> v_cat_);
 	void graphTetherAndPathMarker(vector<geometry_msgs::Vector3> v_ugv_, vector<geometry_msgs::Vector3> v_uav_, 
 								   vector<geometry_msgs::Quaternion> v_rot_ugv, vector <tether_parameters> v_p_, vector<float> v_length_,
 									int c_ugv_, int c_uav_, int c_tether_, ros::Publisher p_ugv_, ros::Publisher p_uav_, 
@@ -242,7 +244,7 @@ public:
     bool mapReceivedFull, mapReceivedTrav;
     bool debug;
     bool showConfig;
-	bool pause_end_optimization ,traj_in_rviz, use_tether;
+	bool pause_end_optimization ,traj_in_rviz, use_tether, use_catenary_as_tether;
 
     octomap_msgs::OctomapConstPtr mapFull, mapTrav;
 	octomap::OcTree *mapFull_msg , *mapTrav_msg;

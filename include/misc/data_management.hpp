@@ -34,7 +34,7 @@ class DataManagement
 							double initial_velocity_uav_, double initial_acceleration_ugv_, double initial_acceleration_uav_, double bound_par_obs_, 
 							geometry_msgs::Vector3 pos_reel_ugv_, std::vector<geometry_msgs::Vector3> vec_pose_init_ugv_, std::vector<geometry_msgs::Vector3> vec_pose_init_uav_,	
 							std::vector<float> vec_len_cat_init_, std::vector<geometry_msgs::Quaternion> vec_rot_ugv_, 
-							std::vector<geometry_msgs::Quaternion> vec_rot_uav_, octomap::OcTree* octree_full_,octomap::OcTree* octree_ugv_, Grid3d* grid_3D_, bool wtd_);
+							std::vector<geometry_msgs::Quaternion> vec_rot_uav_, octomap::OcTree* octree_full_,octomap::OcTree* octree_ugv_, Grid3d* grid_3D_, bool wtd_, bool use_catenary_as_tether_);
 		virtual void writeTemporalDataBeforeOpt(std::vector<double> v_dist_init_ugv_, std::vector<double> v_dist_init_uav_, std::vector<double> v_time_init_, 
 							std::vector<double> v_angles_kinematic_ugv, std::vector<double> v_angles_kinematic_uav_, vector <tether_parameters> v_tether_params_init_);
 		virtual void DataBeforeOptUsingCatenary(std::vector<double> v_dist_init_ugv_, std::vector<double> v_dist_init_uav_, 
@@ -96,7 +96,7 @@ class DataManagement
 		octomap::OcTree* octree_ugv;
 
 		std::string mode;
-		bool write_temporal_data;
+		bool write_temporal_data, use_catenary_as_tether;
 
 		Grid3d* g_3D;
 
@@ -120,13 +120,14 @@ inline void DataManagement::initDataManagement(
 				double bound_par_obs_, 
 				geometry_msgs::Vector3 pos_reel_ugv_, std::vector<geometry_msgs::Vector3> vec_pose_init_ugv_, std::vector<geometry_msgs::Vector3> vec_pose_init_uav_, 
 				std::vector<float> vec_len_cat_init_, std::vector<geometry_msgs::Quaternion> vec_rot_ugv_, std::vector<geometry_msgs::Quaternion> vec_rot_uav_, 
-				octomap::OcTree* octree_full_, octomap::OcTree* octree_ugv_, Grid3d* grid_3D_, bool wtd_)
+				octomap::OcTree* octree_full_, octomap::OcTree* octree_ugv_, Grid3d* grid_3D_, bool wtd_, bool use_catenary_as_tether_)
 {
 	path = path_;
 	name_output_file = name_output_file_;
 	scenario_name = scenario_name_; 
 	num_pos_initial = num_pos_initial_;	
 	write_temporal_data = wtd_;
+	use_catenary_as_tether = use_catenary_as_tether_;
 
 	initial_velocity_ugv = initial_velocity_ugv_; 
 	initial_velocity_uav = initial_velocity_uav_; 
@@ -588,23 +589,18 @@ inline void DataManagement::getDataForOptimizerAnalysis(
 		std::vector<geometry_msgs::Vector3> vec_par_pts_;
 		
 		p_reel_ugv = getReelPos(vec_pose_init_ugv[i], vec_init_rot_ugv[i], pos_reel_ugv);
-        // gpp.getParabolaPoints(p_reel_ugv, vec_pose_init_uav[i], vec_params_tether_init[i], vec_par_pts_);
-        gpp.getCatenaryPoints(p_reel_ugv, vec_pose_init_uav[i], vec_params_tether_init[i], vec_par_pts_, vec_len_cat_init[i]);
+		if (use_catenary_as_tether)
+        	gpp.getCatenaryPoints(p_reel_ugv, vec_pose_init_uav[i], vec_params_tether_init[i], vec_par_pts_, vec_len_cat_init[i]);
+		else
+        	gpp.getParabolaPoints(p_reel_ugv, vec_pose_init_uav[i], vec_params_tether_init[i], vec_par_pts_);
 
 		for (size_t j= 0 ; j < vec_par_pts_.size() ; j++){
 			if(j < 3){
 				count_cat_p_init_++;
-				// Eigen::Vector3d p_cat_init_ = Eigen::Vector3d(vec_par_pts_[j].x, vec_par_pts_[j].y, vec_par_pts_[j].z);
-				// Eigen::Vector3d nearest_obs_p = nn_.nearestObstacleVertex(kdt_all_, p_cat_init_, obstacles_points_all_);
-				// double _d = (p_cat_init_- nearest_obs_p).norm();
 				double _d  =  getPointDistanceFullMap(vec_par_pts_[j], j);
 				distance_obs_cat_init_ =  _d + distance_obs_cat_init_;
 				if(distance_obs_par_init_min_ > _d )
 					distance_obs_par_init_min_ = _d;
-				// if ( _d < bound_par_obs){
-				// 	count_coll_between_init_++;
-				// 	pos_coll_between_init_ = pos_coll_between_init_+"["+std::to_string(j)+"]";
-				// }
 			}
 		}
 	}
@@ -662,34 +658,23 @@ inline void DataManagement::getDataForOptimizerAnalysis(
 	std::string pos_coll_between_opt_ = "";
 
 	// II.e) Optimized Parabola analisys 
-	// std::cout << "DataManagement::getDataForOptimizerAnalysis: vec_params_tether_opt.size()="<< vec_params_tether_opt.size() <<" vec_pose_opt_.size()=" << vec_pose_opt_.size() << " vec_time_opt_=" << vec_time_opt_.size() << std::endl;
 	for(size_t i = 0 ; i < vec_params_tether_opt.size(); i ++){
 		geometry_msgs::Vector3 p_reel_ugv;
 		std::vector<geometry_msgs::Vector3> vec_par_pts_; 
 
 		p_reel_ugv = getReelPos(vec_pose_ugv_opt[i],vec_opt_rot_ugv[i], pos_reel_ugv);
-        // gpp.getParabolaPoints(p_reel_ugv, vec_pose_uav_opt[i], vec_params_tether_opt[i], vec_par_pts_);
-        gpp.getCatenaryPoints(p_reel_ugv, vec_pose_uav_opt[i], vec_params_tether_opt[i], vec_par_pts_, vec_len_cat_opt[i]);
-	
+		if (use_catenary_as_tether)
+        	gpp.getCatenaryPoints(p_reel_ugv, vec_pose_uav_opt[i], vec_params_tether_opt[i], vec_par_pts_, vec_len_cat_opt[i]);
+		else
+        	gpp.getParabolaPoints(p_reel_ugv, vec_pose_uav_opt[i], vec_params_tether_opt[i], vec_par_pts_);
+
 		for (size_t j= 0 ; j < vec_par_pts_.size() ; j++){
-			// if(j < 3){
 				count_cat_p_opt_++;
-				// Eigen::Vector3d p_par_opt_ = Eigen::Vector3d(vec_par_pts_[j].x, vec_par_pts_[j].y, vec_par_pts_[j].z);
-				// Eigen::Vector3d nearest_obs_p = nn_.nearestObstacleVertex(kdt_all_, p_par_opt_, obstacles_points_all_);
-				// double _d = (p_par_opt_- nearest_obs_p).norm();
 				double _d  =  getPointDistanceFullMap(vec_par_pts_[j], j);
 				distance_obs_cat_opt_ =  _d + distance_obs_cat_opt_;
-				// if(mode_ == "UGV")
-					// std::cout << "getDataForOptimizerAnalysis:  In parabola[" << i << "]/size["<< vec_params_tether_opt.size()<<"] position["<< j << "]/size["<< vec_par_pts_.size()<< "] distance_obst=" << _d <<" distance_obs_par_opt_min_= " << distance_obs_par_opt_min_ << " pto=["<<vec_par_pts_[j].x <<"," <<vec_par_pts_[j].y<<","<< vec_par_pts_[j].z <<"]" <<std::endl;
 				if(distance_obs_par_opt_min_ > _d ){
 					distance_obs_par_opt_min_ = _d;
-					// std::cout << "			In parabola[" << i << "]/size["<< vec_params_tether_opt.size()<<"] position["<< j << "]/size["<< vec_par_pts_.size()<< "] distance_obs_par_opt_min_= " << distance_obs_par_opt_min_ << std::endl;
 				}
-				// if ( _d < bound_par_obs){
-				// 	count_coll_between_opt_++;
-				// 	pos_coll_between_opt_ = pos_coll_between_opt_+"["+std::to_string(j)+"]";
-				// }
-			// }
 		}
 	}
 
