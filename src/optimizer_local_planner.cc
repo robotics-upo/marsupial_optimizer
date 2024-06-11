@@ -1082,12 +1082,6 @@ void OptimizerLocalPlanner::getTetherParameter(vector<geometry_msgs::Vector3> v_
 			tether_params_.parameter[2] = v_tether_params_init[i].b;
 			tether_params_.parameter[3] = v_tether_params_init[i].c;
 			statesTetherParams.push_back(tether_params_);
-			double diff_x = v_p_init_uav_[i].x-v_p_init_ugv_[i].x; 
-			double diff_y = v_p_init_uav_[i].y-v_p_init_ugv_[i].y;
-			double dist_ =  sqrt(diff_x*diff_x+diff_y*diff_y);
-			double a1 = 0.0;
-			double a2 = v_tether_params_init[i].a*dist_*dist_*dist_/3.0 + v_tether_params_init[i].b * dist_ * dist_/2.0 + v_tether_params_init[i].c*dist_;
-std::cout << "OptimizerLocalPlanner::  ["<< i <<"] Area Parabola: " << a2-a1 << " , A["<< 0.0 <<","<< v_p_init_ugv_[i].z+0.38 <<"]"<<" , B["<< dist_ <<","<< v_p_init_uav_[i].z<<"]"<<std::endl;
 		}
 	}
 }
