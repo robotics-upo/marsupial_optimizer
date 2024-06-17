@@ -57,49 +57,33 @@ class DistanceFunction : public ceres::SizedCostFunction<1, 3>
         float z = parameters[0][2];
 		float dist_, div;
 		float C;
-std::cout << "  TEHER point:"<< x <<"," << y << "," << z <<std::endl;  
 
 		if(g_3D->isIntoMap(x, y, z))
         {
 			TrilinearParams p = g_3D->getPointDistInterpolation(x, y, z);
             dist_ = p.a0 + p.a1*x + p.a2*y + p.a3*z + p.a4*x*y + p.a5*x*z + p.a6*y*z + p.a7*x*y*z;
-			// div = 1/dist_;
-			// if (dist_ < sb)
-			// 	C = 10.0;
-			// else
-			// 	C = 1.0;	
-			// residuals[0] = div*C;
+
 			residuals[0] = dist_;
             if (jacobians != NULL && jacobians[0] != NULL) 
             {
-                // jacobians[0][0] = -C*(p.a1 + p.a4*y + p.a5*z + p.a7*y*z)*div*div;
-                // jacobians[0][1] = -C*(p.a2 + p.a4*x + p.a6*z + p.a7*x*z)*div*div;
-                // jacobians[0][2] = -C*(p.a3 + p.a5*x + p.a6*y + p.a7*x*y)*div*div;
 				jacobians[0][0] = p.a1 + p.a4*y + p.a5*z + p.a7*y*z;
                 jacobians[0][1] = p.a2 + p.a4*x + p.a6*z + p.a7*x*z;
                 jacobians[0][2] = p.a3 + p.a5*x + p.a6*y + p.a7*x*y;
             }
-// std::cout << " , Cost residual (in) ="<< residuals[0] << " , div= "<< div <<" , dist= " << dist_<< " , C= " << C;
-			
         }
         else
         {
 			dist_ = -1.0;
-			// C = 10.0;
-			// residuals[0] = C*z;
             if (jacobians != NULL && jacobians[0] != NULL) 
             {
                 jacobians[0][0] = 0;
                 jacobians[0][1] = 0;
-                // jacobians[0][2] = C;
                 jacobians[0][2] = 0;
             }
-// std::cout << ", Cost residual (out) ="<< residuals[0] << " , C= " << C << " , z= " << z;
         }
 
         return true;
   }
-
   private:
 	Grid3d* g_3D;
 	double sb;

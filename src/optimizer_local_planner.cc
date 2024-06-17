@@ -340,10 +340,10 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	graphTetherAndPathMarker(vec_pose_ugv_init, vec_pose_uav_init, vec_rot_ugv_init, v_tether_params_init, vec_len_tether_init, 5, 6, 2,
 							  traj_marker_ugv_pub_, traj_marker_uav_pub_, tether_marker_init_pub_, tether_marker_init);
 	/********************* To obligate pause method and check Planning result *********************/
-        std::string yy_ ;
-        std::cout << " *** Optimization Proccess Initializing Parameter " ;
-        std::cout << " : Press key to continue : " ;
-        std::cin >> yy_ ;
+        // std::string yy_ ;
+        // std::cout << " *** Optimization Proccess Initializing Parameter " ;
+        // std::cout << " : Press key to continue : " ;
+        // std::cin >> yy_ ;
     /*************************************************************************************************/
 
 	dm_.initDataManagement(path, name_output_file, scenario_name, num_pos_initial, initial_velocity_ugv, initial_velocity_uav, 
@@ -622,6 +622,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 							problem.SetParameterBlockConstant(statesTetherParams[i].parameter);
 						else{
 							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 1, 0.000001);
+							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 3, 0.0);
 						}
 					}		
 				}
@@ -636,6 +637,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 							problem.SetParameterBlockConstant(statesTetherParams[i].parameter);
 						else{
 							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 1, 0.000001);
+							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 3, 0.0);
 						}
 					}		
 				}
@@ -877,7 +879,7 @@ void OptimizerLocalPlanner::finishigOptimization()
 	
 	stop_plot_cat = true;
 	if(!just_line_of_sigth){
-		graphTetherAndPathMarker(vec_pose_ugv_opt, vec_pose_uav_opt, vec_rot_ugv_opt, v_tether_params_opt, vec_len_tether_opt, 1, 2, 3,
+		graphTetherAndPathMarker(vec_pose_ugv_opt, vec_pose_uav_opt, vec_rot_ugv_opt, v_tether_params_opt, vec_len_tether_opt, 1, 2, 1,
 							  traj_opt_marker_ugv_pub_,traj_opt_marker_uav_pub_, tether_marker_opt_pub_, tether_marker_opt);
 	}else{
 		int num_point_per_unit_length = 10;

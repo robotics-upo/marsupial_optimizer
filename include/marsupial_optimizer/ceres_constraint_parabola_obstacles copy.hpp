@@ -62,8 +62,8 @@ class DistanceFunctionObstacles : public ceres::SizedCostFunction<1, 3>
         {
 			TrilinearParams p = g_3D->getPointDistInterpolation(x, y, z);
             distance_ = p.a0 + p.a1*x + p.a2*y + p.a3*z + p.a4*x*y + p.a5*x*z + p.a6*y*z + p.a7*x*y*z;
-			if(distance_ < 0.001)
-				distance_ = 0.001;
+			if(distance_ < 0.01)
+				distance_ = 0.01;
 			residuals[0] = distance_;
             if (jacobians != NULL && jacobians[0] != NULL) 
             {
@@ -137,11 +137,10 @@ class AutodiffParableFunctor {
 				T ugv_reel[4] = {pUGV[0], pUGV[1], pUGV[2], pUGV[3] + T{pos_reel_ugv.z}}; // Set first parable point on the reel position
 				
 				// Here is compute the Parable Parameters 
-				double min_val_ = 0.001;
+				double min_val_ = 0.01;
 				T d_[1];
 				T np_; 
 				T u_x , u_y;
-				T fix_value = T{0.01};
 				bool x_const, y_const;
 				x_const = y_const = false;
 
@@ -203,23 +202,48 @@ class AutodiffParableFunctor {
 					v_p3_.push_back(point[2]);
 				}
 
-				T distance_, C, point_cost_;
+				T distance_, C, point_cost_, cost_;
 				T cost_state_parable = T{0.0};
 				for(int i = 0; i < np_; i++){ 
-					if (v_dist[i]< T{min_val_} && v_dist[i]>= T{0.0}) 
-						distance_ = T{min_val_};
-					else
-						distance_ = v_dist[i];
+					// if (v_dist[i]< T{min_val_} && v_dist[i]>= T{0.0}) 
+					// 	distance_ = T{min_val_};
+					// else
+					// 	distance_ = v_dist[i];
 
-					T div = T{1.0}/distance_;
 					if (i >=  first_coll_ && i <= last_coll_){
-						if(v_dist[i] < T{0.0})
-							C = T{-1000.0};
-						else
+						if(v_dist[i] < T{0.0}){ //If point out of workspace for grid
+							if (v_p3_[i] < T{0.0} && v_p3_[i] >= T{-0.01}){
+								C = T{10.0};
+								distance_ = T{0.01};
+								cost_ = T{1.0}/distance_;
+							}
+							else{
+								C = T{1.0};
+								distance_ = v_p3_[i];
+								cost_ = T{-100000.0} * distance_;
+							}
+						}
+						else{
+							// if (v_dist[i] >= 0.0 && v_dist[i] <= T{0.01}){
+							// 	C = T{10.0};
+							// 	distance_ = v_dist[i];
+							// 	cost_ = T{1.0}/distance_;
+							// }
+							// else{
+							// 	C = T{100.0};
+							// 	distance_ = v_dist[i];
+							// 	cost_ = T{100000.0} * distance_;
+							// }
 							C = T{10.0};
-					}else
+							distance_ = v_dist[i];
+							cost_ = T{1.0}/distance_;
+						}
+					}else{
 						C = T{1.0};	
-					point_cost_ = div*C;
+						distance_ = v_dist[i];
+						cost_ = T{1.0}/distance_;
+					}
+					point_cost_ = cost_*C;
 					std::cout << "["<<i<<"]cost:" << point_cost_ <<" , d:" << distance_ <<" , C:" << C << std::endl;
 					// std::cout <<"	Point:["<< v_p1_[i]<<","<< v_p2_[i]<< ","<< v_p3_[i]<<"]"<<std::endl;
 					cost_state_parable = cost_state_parable + point_cost_; // To get point parable cost
@@ -227,9 +251,7 @@ class AutodiffParableFunctor {
 				cost_state_parable = cost_state_parable/np_;
 
 				residual[0] = wf * cost_state_parable;
-if (w_d_){
 std::cout << "	Obs["<< param[0]<<"] : R[0]:"  << residual[0] << " P:["<< param[1]<<"/ "  << param[2] <<"/ "  << param[3] <<"]"<< std::endl ;
-}			
 				return true;
 			}
 

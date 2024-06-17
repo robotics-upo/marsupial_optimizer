@@ -40,28 +40,38 @@ void MarkerPublisher::markerPoints(visualization_msgs::MarkerArray _marker, std:
         _marker.markers[i].ns = ns_marker;
         _marker.markers[i].id = i+1;
         _marker.markers[i].action = visualization_msgs::Marker::ADD;
-        if (i == 0 )
+        if (i%5 == 0 )  {
             _marker.markers[i].type = visualization_msgs::Marker::SPHERE;
-		else
+			_marker.markers[i].color.a = 1.0;
+			_marker.markers[i].color.r = 0.0;
+			_marker.markers[i].color.g = 0.0;
+			_marker.markers[i].color.b = 1.0;
+			_marker.markers[i].scale.x = _scale*1.2;
+			_marker.markers[i].scale.y = _scale*1.2;
+			_marker.markers[i].scale.z = _scale*1.2;
+		}
+		else{
             _marker.markers[i].type = visualization_msgs::Marker::CUBE;
-        _marker.markers[i].lifetime = ros::Duration(0);
+			_marker.markers[i].color.a = 1.0;
+			_marker.markers[i].color.r = 1.0 - c_color1;
+			_marker.markers[i].color.g = c_color2;
+			_marker.markers[i].color.b = c_color3;
+			_marker.markers[i].scale.x = _scale;
+			_marker.markers[i].scale.y = _scale;
+			_marker.markers[i].scale.z = _scale;
+        }
+		_marker.markers[i].lifetime = ros::Duration(0);
 		if (print_)
 			std::cout << "v_pts_parable_["<<i<<"]= "<< _vector[i].x <<","<<_vector[i].y << "," <<_vector[i].z<<"]" <<std::endl;
         _marker.markers[i].pose.position.x = _vector[i].x; 
         _marker.markers[i].pose.position.y = _vector[i].y; 
         _marker.markers[i].pose.position.z = _vector[i].z;
-
         _marker.markers[i].pose.orientation.x = 0.0;
         _marker.markers[i].pose.orientation.y = 0.0;
         _marker.markers[i].pose.orientation.z = 0.0;
         _marker.markers[i].pose.orientation.w = 1.0;
-        _marker.markers[i].scale.x = _scale;
-        _marker.markers[i].scale.y = _scale;
-        _marker.markers[i].scale.z = _scale;
-        _marker.markers[i].color.a = 1.0;
-        _marker.markers[i].color.r = 1.0 - c_color1;
-        _marker.markers[i].color.g = c_color2;
-        _marker.markers[i].color.b = c_color3;
+
+
     }	
     c_m_pub_.publish(_marker);
 }

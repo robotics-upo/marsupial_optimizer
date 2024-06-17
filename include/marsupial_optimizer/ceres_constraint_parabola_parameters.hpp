@@ -56,6 +56,8 @@ public:
 
 			residual[0] = (wf * 100.0 )* ((pow_a));
 			residual[1] = (wf * 100.0 )* ((pow_b));
+if (w_d)
+std::cout << "	Par["<< param[0]<<"] : R[0]:"  << residual[0] <<" residual[1]:"  << residual[1] << std::endl ;
 
 			return true;
 		}

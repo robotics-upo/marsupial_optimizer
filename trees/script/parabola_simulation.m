@@ -3,21 +3,22 @@
 % Define two point of interest where it pass the catenary
 
 reel_z = 0.38;
-p  = [-5.05000 0.70000 2.00000]; % UGV sin contar reel
-p2 = [2.55000 0.20000 3.80000];  % UAV
+p_ugv = [4.330 -0.446 0.008]; % UGV sin contar reel
+p_uav = [0.862 -0.640 6.192]; % UAV
 
-p1 = [p(1,1) p(1,2) p(1,3)+reel_z]; 
+p1 = [p_ugv(1,1) p_ugv(1,2) p_ugv(1,3)+reel_z]; 
+p2 = p_uav;
 
 % Definition of catenary parameters
 
 L = 1.181;
-param = [0.001 0.180 2.380];
-param_cat=[0.905 2.352 14.880]
+param_par = [0.907 -1.480 0.386];
+param_cat = [0.905 2.352 14.880]
 
 %Vcat=[8.5,1.8,0.799998;8.47917,1.7125,0.814312;8.45833,1.625,0.832662;8.4375,1.5375,0.855083;8.41667,1.45,0.88162;8.39583,1.3625,0.912324;8.375,1.275,0.947254;8.35417,1.1875,0.986479;8.33333,1.1,1.03008;8.3125,1.0125,1.07813;8.29167,0.925,1.13073;8.27083,0.8375,1.18799]
-p = param(1,1);
-q = param(1,2);
-r = param(1,3);
+p = param_par(1,1);
+q = param_par(1,2);
+r = param_par(1,3);
 num_point_per_unit_length = 20;
 
 x1 = 0;
@@ -28,7 +29,7 @@ a = a2-a1
 
 X0 = param_cat(1,1);
 Y0 = param_cat(1,2);
-C = param_cat(1,3);
+C =  param_cat(1,3);
 A1 = (C^2 * sinh((x1 - X0)/C)+ (Y0 - C)*x1);
 A2 = (C^2 * sinh((x2 - X0)/C)+ (Y0 - C)*x2);
 A= A2-A1
@@ -75,7 +76,7 @@ for c = 0:num_point_catenary
 end
 
 v
-param
+param_par
 plot3(v(:,1), v(:,2), v(:,3))
 hold on;
 plot3(p1(1,1),p1(1,2),p1(1,3),'or')

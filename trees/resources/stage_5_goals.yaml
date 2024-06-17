@@ -1,7 +1,7 @@
 stage_5_pos_final_1:
     pose:
-        x: -0.9
-        y: 5.0
+        x: 10.0
+        y: 10.0
         z: 2.7
     orientation:
         x: 0.0

@@ -52,7 +52,9 @@ public:
 			else
 				diff_ = T{0.0};
 
-			residual[0] = wf * 100* (exp(diff_)-1.0) ;
+			residual[0] = wf * 100.0 * (exp(diff_)-1.0) ;
+if (w_d)
+std::cout << "	Len["<< param[0]<<"] : R[0]:"  << residual[0] << std::endl ;
 					
 			return true;
 		}
