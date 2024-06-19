@@ -189,7 +189,7 @@ public:
 	NearNeighbor nn_uav; // Kdtree used for Catenary and UAV
 	NearNeighbor nn_trav, nn_ugv_obs;
 	MarkerPublisher MP;
-	Grid3d* grid_3D;
+	Grid3d	*grid_3D, *grid_3D_trav, *grid_3D_obst;
 	CatenaryCheckerManager *CheckCM;
 
 	DataManagement dm_;
@@ -236,7 +236,7 @@ public:
 	int num_pos_initial, num_goal;
 	bool write_data_for_analysis, use_loss_function;
 	double length_tether_max;
-	std::string scenario_name;
+	std::string scenario_name, map_path, map_path_trav, map_path_obst;
 
 	bool equidistance_uav_constraint, obstacles_uav_constraint, smoothness_uav_constraint;
 	bool velocity_uav_constraint,acceleration_uav_constraint;

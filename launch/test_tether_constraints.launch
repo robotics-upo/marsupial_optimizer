@@ -16,8 +16,9 @@
     <arg name="pos_reel_x"    default="0.0"/> #position reel on UGV 
     <arg name="pos_reel_y"    default="0.0"/> #position reel on UGV
     <arg name="pos_reel_z"    default="0.38"/> #position reel on UGV
-    <arg name="ugv_base_frame"    default="ugv_base_link"/> #position reel on UGV
-    <arg name="uav_base_frame"    default="uav_base_link"/> #position reel on UAV
+    <arg name="ugv_base_frame"    default="ugv_base_link"/> #position UGV
+    <arg name="uav_base_frame"    default="uav_base_link"/> #position UAV
+    <arg name="reel_base_frame"    default="reel_base_link"/> #position REEL
     <arg name="use_parable"   default="false"/>
     <arg name="use_distance_function"   default="true"/>
     <arg name="just_line_of_sigth"   default="false"/>
@@ -45,12 +46,12 @@
         <param name="pos_uav_above_ugv" value="$(arg pos_uav_above_ugv)"/>
         <param name="uav_base_frame" value="$(arg uav_base_frame)"/>
         <param name="ugv_base_frame" value="$(arg ugv_base_frame)"/>
-        <param name="reel_base_frame" value="reel_base_link"/>
+        <param name="reel_base_frame" value="$(arg reel_base_frame)"/>
     </node>
 
     <!-- Publishing static tf -->
     <node pkg="tf" type="static_transform_publisher" name="map_tf_node" args="0 0 0 0 0 0  world /map 10"/> # x y z y p r
-    <node pkg="tf" type="static_transform_publisher" name="reel_base_link_tf_node" args="$(arg pos_reel_x) $(arg pos_reel_y) $(arg pos_reel_z) -0.0 0.0 0.0  ugv_base_link reel_base_link 10"/> # x y z y p r
+    <node pkg="tf" type="static_transform_publisher" name="reel_base_link_tf_node" args="$(arg pos_reel_x) $(arg pos_reel_y) $(arg pos_reel_z) -0.0 0.0 0.0  $(arg ugv_base_frame) $(arg reel_base_frame) 10"/> # x y z y p r
 
     <!-- Launch Octomap of Scenario -->
     <include file="$(find marsupial_optimizer)/launch/octomap_server.launch">
@@ -72,7 +73,7 @@
     <node pkg="rviz" name="rviz" type="rviz" args="-d $(find rrt_planners)/viz/$(arg viz_file).rviz" if="$(arg rviz)"/>
 
  <!-- Local Planner: Optimizer Ceres-->
-    <node pkg="marsupial_optimizer" type="test_tether_constraints_node" name="test_tether_constraints_node" output="screen"># launch-prefix="gdb -ex run --args"> #launch-prefix="valgrind">
+    <node pkg="marsupial_optimizer" type="test_tether_constraints_node" name="test_tether_constraints_node" output="screen" launch-prefix="gdb -ex run --args"> #launch-prefix="valgrind">
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/3d_local_params.yaml"/>
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/$(arg map)_ws.yaml"/>
        
@@ -81,7 +82,7 @@
         <param name="world_frame" value="$(arg world_frame)"/> 
         <param name="ugv_base_frame" value="$(arg ugv_base_frame)"/> 
         <param name="uav_base_frame" value="$(arg uav_base_frame)"/>
-        <param name="reel_base_frame" value="reel_base_link"/>
+        <param name="reel_base_frame" value="$(arg reel_base_frame)"/>
         <param name="debug" value="$(arg debug_msgs)"/>
         <param name="show_config" value="$(arg show_config_msgs)"/>
 
@@ -102,7 +103,7 @@
         <param if="$(arg use_catenary_as_tether)" name="w_eta_1" value="0.001" />     # Catenary Obstacles collision 
         <param if="$(arg use_catenary_as_tether)" name="w_eta_2" value="0.400" />     # Catenary length 
         <param if="$(arg use_catenary_as_tether)" name="w_eta_3" value="1.0" />       # Catenary Parameter 
-        <param if="$(eval not arg('use_catenary_as_tether'))" name="w_eta_1" value="0.010" />      # Parabola Obstacles collision 
+        <param if="$(eval not arg('use_catenary_as_tether'))" name="w_eta_1" value="10.100" />      # Parabola Obstacles collision 
         <param if="$(eval not arg('use_catenary_as_tether'))" name="w_eta_2" value="0.100" />       # Parabola length 
         <param if="$(eval not arg('use_catenary_as_tether'))" name="w_eta_3" value="0.600" />       # Parabola Parameter 
 
@@ -119,6 +120,8 @@
 
         <!-- For Grid3D -->
         <param name="map_path"   value="$(find marsupial_optimizer)/maps/$(arg map).bt"/>
+        <param name="map_path_trav"   value="$(find marsupial_optimizer)/maps/$(arg map)_traversability.bt"/>
+        <param name="map_path_obst"   value="$(find marsupial_optimizer)/maps/$(arg map)_obstacles.bt"/>
         <param name="global_frame_id"   value="map"/>
         <!-- <param name="sensor_dev "   value="0.2"/> # Gaussian error -->
     </node>    

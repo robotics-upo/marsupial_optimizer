@@ -77,11 +77,8 @@ TestTetherConstraints::TestTetherConstraints(std::string node_name_)
     ROS_INFO_COND(true, PRINTF_BLUE "Initialazing Trilinear Interpolation (grid3D) in Optimizer");
 	grid_3D->computeTrilinearInterpolation();
 	grid_3D_trav = new Grid3d(_node_name, map_path_trav);
-    ROS_INFO_COND(true, PRINTF_BLUE "Initialazing Trilinear Interpolation (grid3D_trav) in Optimizer");
+    ROS_INFO_COND(true, PRINTF_BLUE "Initialazing Trilinear Interpolation (grid3D) in Optimizer");
 	grid_3D_trav->computeTrilinearInterpolation();
-	grid_3D_obst = new Grid3d(_node_name, map_path_obst);
-    ROS_INFO_COND(true, PRINTF_BLUE "Initialazing Trilinear Interpolation (grid3D_trav) in Optimizer");
-	grid_3D_obst->computeTrilinearInterpolation();
     ROS_INFO_COND(true, PRINTF_BLUE "Finished Trilinear Interpolation (grid3D) in Optimizer");
 
 	CheckCM = new CatenaryCheckerManager(node_name_);
@@ -90,7 +87,7 @@ TestTetherConstraints::TestTetherConstraints(std::string node_name_)
 	CheckCM->Init(grid_3D, distance_tether_obstacle, distance_obstacle_ugv, distance_obstacle_uav, length_tether_max, ws_z_min, step, 
 	use_parabola_, use_distance_function, pose_reel_local.transform.translation, just_line_of_sigth_, use_catenary_as_tether);
 
-	ros::Duration(2.0).sleep();
+	ros::Duration(5.0).sleep();
     getReelPose(); // To get init pos reel for optimization process
 	// if (mapReceivedFull && mapReceivedTrav)
 		executeOptimizerPathGoalCB();
@@ -174,7 +171,7 @@ void TestTetherConstraints::executeOptimizerPathGoalCB()
 {
   	ROS_INFO(PRINTF_GREEN "Optimizer Local Planner : Path received in action server mode\n");
 
-	int row = 1;
+	int row = 2;
 	int colum = 9;
 	size_path = row;
 
@@ -214,8 +211,8 @@ void TestTetherConstraints::executeOptimizerPathGoalCB()
 		// {4.929, 0.774 , 0.056 , 0.722, -0.099, 5.892, 0.504, -0.898, 0.438},
 		// {4.733, 0.491 , 0.047 , 0.575, -0.405, 6.072, 0.492, -0.765, 0.428},
 		// {4.526, 0.212 , 0.033 , 0.670, -0.441, 6.414, 0.636, -0.953, 0.413},
-		{4.328, -0.066,  0.013, 0.827, -0.237, 6.661, 0.599, -0.311, 0.392}
-		// {4.150, -0.350,  0.000, 1.000, -0.400, 6.900, 1.120, -1.459, 0.381}		
+		{4.328, -0.066,  0.013, 0.827, -0.237, 6.661, 0.599, -0.311, 0.392},
+		{4.150, -0.350,  0.000, 1.000, -0.400, 6.900, 1.120, -1.459, 0.381}		
     };
 
 	parameterBlockPos parameter_block_pos_ugv;
@@ -338,7 +335,7 @@ std::cout << "Pose Reel: "<< pose_reel_local.transform.translation.z << std::end
 					ROS_INFO(PRINTF_ORANGE"		- Optimize Tether Obstacles Autodiff - Parabola");
 					for (int i = 0; i < statesTetherParams.size(); ++i) {
 						CostFunction* cost_function_par_1  = new AutoDiffCostFunction<AutodiffParableFunctor::ParableFunctor, 1, 4, 4, 4> //Residual, ugvPos, uavPos, parableParams
-													(new AutodiffParableFunctor::ParableFunctor(w_eta_1, grid_3D_obst, grid_3D_trav, pose_reel_local.transform.translation, distance_tether_obstacle,
+													(new AutodiffParableFunctor::ParableFunctor(w_eta_1, grid_3D, pose_reel_local.transform.translation, distance_tether_obstacle,
 													true, user_name)); 
 							problem.AddResidualBlock(cost_function_par_1, loss_function, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesTetherParams[i].parameter);
 							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 1, 0.001);

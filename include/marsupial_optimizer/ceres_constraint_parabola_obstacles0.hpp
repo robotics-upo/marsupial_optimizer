@@ -35,17 +35,12 @@ using ceres::Problem;
 using ceres::Solve;
 using ceres::Solver;
 
-class DistanceFunctionObstacles : public ceres::SizedCostFunction<2, 3> 
+class DistanceFunctionObstacles : public ceres::SizedCostFunction<1, 3> 
 {
  public:
 
-	DistanceFunctionObstacles(Grid3d* grid_)
+    DistanceFunctionObstacles(Grid3d* grid_)
       : g_3D(grid_)
-    {
-    }
-
-    DistanceFunctionObstacles(Grid3d* grid_obst_ , Grid3d* grid_trav_, double safety_distance_)
-      : g_3D_obst(grid_obst_), g_3D_trav(grid_trav_), sd(safety_distance_)
     {
     }
 
@@ -60,57 +55,28 @@ class DistanceFunctionObstacles : public ceres::SizedCostFunction<2, 3>
         double x = parameters[0][0];
         double y = parameters[0][1];
         double z = parameters[0][2];
-		double d1_, d2_, distance_;
-		double min_dist_ = 0.005;
-		double type_coll_; // -1 if collision with the ground , 1 if collision with another obstacle different than ground
+		double distance_;
+		double C;
 
-		if(g_3D_obst->isIntoMap(x, y, z))
+		if(g_3D->isIntoMap(x, y, z))
         {
-			TrilinearParams p1 = g_3D_trav->getPointDistInterpolation(x, y, z);
-            d1_ = p1.a0 + p1.a1*x + p1.a2*y + p1.a3*z + p1.a4*x*y + p1.a5*x*z + p1.a6*y*z + p1.a7*x*y*z;
-			TrilinearParams p2 = g_3D_obst->getPointDistInterpolation(x, y, z);
-            d2_ = p2.a0 + p2.a1*x + p2.a2*y + p2.a3*z + p2.a4*x*y + p2.a5*x*z + p2.a6*y*z + p2.a7*x*y*z;
-
-			if (d1_ < d2_){
-				distance_  = d1_;
-				type_coll_ = -1.0;
-			}else{
-				distance_ = d2_;
-				type_coll_ = 1.0;
-			}
-
-			if(distance_ > sd)
-				type_coll_ = 0.0;
-			if(distance_ < min_dist_)
-				distance_ = min_dist_;
-// std::cout << "QUE PASA: d1["<< d1_ <<"] d2["<< d2_<<"] d_["<< distance_ << "] type["<< type_coll_ <<"]"<< std::endl;
-
+			TrilinearParams p = g_3D->getPointDistInterpolation(x, y, z);
+            distance_ = p.a0 + p.a1*x + p.a2*y + p.a3*z + p.a4*x*y + p.a5*x*z + p.a6*y*z + p.a7*x*y*z;
+			if(distance_ < 0.001)
+				distance_ = 0.001;
 			residuals[0] = distance_;
-			residuals[1] = type_coll_;
-
-            if (d1_ < d2_ && jacobians != NULL && jacobians[0] != NULL) 
+            if (jacobians != NULL && jacobians[0] != NULL) 
             {
-				jacobians[0][0] = p1.a1 + p1.a4*y + p1.a5*z + p1.a7*y*z;
-                jacobians[0][1] = p1.a2 + p1.a4*x + p1.a6*z + p1.a7*x*z;
-                jacobians[0][2] = p1.a3 + p1.a5*x + p1.a6*y + p1.a7*x*y;
-				jacobians[1][0] = 0.0;
-                jacobians[1][1] = 0.0;
-                jacobians[1][2] = 0.0;
+				jacobians[0][0] = p.a1 + p.a4*y + p.a5*z + p.a7*y*z;
+                jacobians[0][1] = p.a2 + p.a4*x + p.a6*z + p.a7*x*z;
+                jacobians[0][2] = p.a3 + p.a5*x + p.a6*y + p.a7*x*y;
             }
-			else if (d1_ >= d2_ && jacobians != NULL && jacobians[0] != NULL) 
-            {
-				jacobians[0][0] = p2.a1 + p2.a4*y + p2.a5*z + p2.a7*y*z;
-                jacobians[0][1] = p2.a2 + p2.a4*x + p2.a6*z + p2.a7*x*z;
-                jacobians[0][2] = p2.a3 + p2.a5*x + p2.a6*y + p2.a7*x*y;
-            }
-		}
+        }
         else
         {
 			distance_ = -1.0;
-			type_coll_ = -1.0;
 			residuals[0] = distance_;
-            residuals[1] = type_coll_;
-			if (jacobians != NULL && jacobians[0] != NULL) 
+            if (jacobians != NULL && jacobians[0] != NULL) 
             {
                 jacobians[0][0] = 0.0;
                 jacobians[0][1] = 0.0;
@@ -121,8 +87,7 @@ class DistanceFunctionObstacles : public ceres::SizedCostFunction<2, 3>
         return true;
   }
   private:
-	Grid3d *g_3D, *g_3D_obst, *g_3D_trav;
-	double sd;
+	Grid3d* g_3D;
 };
 
 class NumPointParabola : public ceres::SizedCostFunction<1, 1> 
@@ -166,13 +131,6 @@ class AutodiffParableFunctor {
 			{
 			}
 
-			ParableFunctor(double weight_factor_, Grid3d* grid_3D_obst_, Grid3d* grid_3D_trav_, geometry_msgs::Vector3 pos_reel_ugv_, double sb_, bool write_data_, std::string user_name_)
-			: wf(weight_factor_), g_3D_obst(grid_3D_obst_), g_3D_trav(grid_3D_trav_), pos_reel_ugv(pos_reel_ugv_), sb(sb_), w_d_(write_data_), user(user_name_), 
-			_parableCostFunctor(new DistanceFunctionObstacles(g_3D_obst, g_3D_trav, sb)), _numPointFunctor(new NumPointParabola())
-			{
-
-			}
-
 			template <typename T>
 			bool operator()(const T* const pUGV, const T* const pUAV, const T* const param, T* residual) const 
 			{
@@ -183,6 +141,7 @@ class AutodiffParableFunctor {
 				T d_[1];
 				T np_; 
 				T u_x , u_y;
+				T fix_value = T{0.01};
 				bool x_const, y_const;
 				x_const = y_const = false;
 
@@ -205,11 +164,13 @@ class AutodiffParableFunctor {
 
 				// Here is compute the parable point and it cost 
 				T point[3];
-				T data_obst_[2];	
+				T dist_to_obst_;	
 				T x_  =  T{0.0};
-				vector<T> v_dist, v_coll; v_dist.clear(); v_coll.clear();
+				vector<T> v_dist; v_dist.clear();
+				vector<int> v_coll; v_coll.clear();
 				vector<T> v_p1_, v_p2_, v_p3_; v_p1_.clear(), v_p2_.clear(), v_p3_.clear();
-
+				int first_coll_, current_coll_;
+				first_coll_ = current_coll_ = -1;
 				for(int i = 0; i < np_; i++, x_ += dist_/ np_ ){  
 					if (!(dist_ < min_val_)){ // To check difference position between UGV and UAV only in z-axe, so parable it is not computed
 						point[0] = ugv_reel[1] + u_x * x_;
@@ -222,75 +183,66 @@ class AutodiffParableFunctor {
 						point[1] = ugv_reel[2];
 						point[2] = ugv_reel[3]+ _step* (double)i;    	
 					}
-        			_parableCostFunctor(point, data_obst_);
-std::cout << "TESTING ["<< i <<"]: v_dist="<< data_obst_[0]<<"v_coll="<< data_obst_[1] << std::endl;
-					v_dist.push_back(data_obst_[0]);
-					v_coll.push_back(data_obst_[1]);
+        			_parableCostFunctor(point, &dist_to_obst_);
 
+					if(dist_to_obst_ < T{0.0} || point[2] <= T{0.04}){
+						if (first_coll_ == -1)
+							first_coll_ = current_coll_ = i;
+						current_coll_ = i;
+						v_coll.push_back(-1);
+					}else if (dist_to_obst_ < T{sb}){
+						if (first_coll_ == -1)
+							first_coll_ = i;
+						v_coll.push_back(1);
+						current_coll_ = i;
+					}else{
+						v_coll.push_back(0);
+					}
+					
+					v_dist.push_back(dist_to_obst_);
 					v_p1_.push_back(point[0]);
 					v_p2_.push_back(point[1]);
 					v_p3_.push_back(point[2]);
 				}
 
-				int first_collision = -1;
-				int last_collision = -1;
+				T distance_, C, point_cost_;
+				T cost_state_parable = T{0.0};
 				for(int i = 0; i < np_; i++){ 
-					std::cout << "	v_coll["<< i <<"]:"<< v_coll[i]<< std::endl;
-					if (v_coll[i]==T{1.0}){
-						if (first_collision ==-1)
-							first_collision = i;
-						last_collision = i;
-					}
-				}
-std::cout << "	Collision between["<< first_collision <<"-"<< last_collision <<"]"<< std::endl;
+					if (v_dist[i]< T{min_val_} && v_dist[i]>= T{0.0}) 
+						distance_ = T{min_val_};
+					else
+						distance_ = v_dist[i];
 
-
-				T distance_, div_, C, point_cost_;
-				T cost_state_parabola = T{0.0};
-				for(int i = 0; i < np_; i++){ 
-					distance_ = v_dist[i];
-
-					// div_ = T{1.0}/distance_;
-					// if (v_coll[i] != T{0.0}){ // 0.0 = NOT COLLISION ; -1.0 = GROUND COLLISION ; 1.0 = OTHER COLLISION
-					// 	if(v_dist[i] < T{0.0}){
-					// 		C = T{-100000.0};
-					// 		div_ = v_p3_[i];
-					// 		if (v_p3_[i] > T{-min_val_})
-					// 			div_ = T{-min_val_};
-					// 	}
-					// 	else
-					// 		C = T{20.0};
-					// }else
-					// 	C = T{1.0};	
-					// point_cost_ = div_*C;
-
-					div_ = T{1.0}/distance_;
-					if (v_dist[i] < T{sb}){
+					T div = T{1.0}/distance_;
+					if (i >=  first_coll_ && i <= current_coll_){
 						if(v_dist[i] < T{0.0}){
 							C = T{-100000.0};
-							div_ = v_p3_[i];
+							div = v_p3_[i];
 							if (v_p3_[i] > T{-min_val_})
-								div_ = T{-min_val_};
+								div = T{-min_val_};
 						}
 						else if (v_dist[i] > T{sb}){ //This happend when tether is close in obtacles above the floor
 							C = T{5000.0};
-							div_ = distance_;
+							div = distance_;
 						}
 						else
 							C = T{10.0};
 					}else
 						C = T{1.0};	
-					point_cost_ = div_*C;
-if (w_d_)
-std::cout << "["<<i<<"]cost:" << point_cost_ <<" d:" << distance_ <<" C:" << C << std::endl;
-// std::cout <<"	Point:["<< v_p1_[i]<<","<< v_p2_[i]<< ","<< v_p3_[i]<<"]"<<std::endl;
-					cost_state_parabola = cost_state_parabola + point_cost_; // To get point parable cost
+					point_cost_ = div*C;
+					if (w_d_)
+					std::cout << "["<<i<<"]cost:" << point_cost_ <<" , d:" << distance_ <<" , div:" << div <<" , C:" << C << std::endl;
+					// std::cout <<"	Point:["<< v_p1_[i]<<","<< v_p2_[i]<< ","<< v_p3_[i]<<"]"<<std::endl;
+					cost_state_parable = cost_state_parable + point_cost_; // To get point parable cost
+				}
+				for(int i = 0; i < np_; i++){ 
+					std::cout << "	v_coll["<< i <<"]:"<< v_coll[i]<< std::endl;
 				}
 
 
-				cost_state_parabola = cost_state_parabola/np_;
+				cost_state_parable = cost_state_parable/np_;
 
-				residual[0] = wf * cost_state_parabola;
+				residual[0] = wf * cost_state_parable;
 if (w_d_){
 std::cout << "	Obs["<< param[0]<<"] : R[0]:"  << residual[0] << " P:["<< param[1]<<"/ "  << param[2] <<"/ "  << param[3] <<"]"<< std::endl ;
 }			
@@ -301,8 +253,8 @@ std::cout << "	Obs["<< param[0]<<"] : R[0]:"  << residual[0] << " P:["<< param[1
 			double wf, sb;
 			geometry_msgs::Vector3 pos_reel_ugv;
 			std::string user;
-			Grid3d *g_3D, *g_3D_obst, *g_3D_trav;
-	    	ceres::CostFunctionToFunctor<2, 3> _parableCostFunctor;
+			Grid3d* g_3D;
+	    	ceres::CostFunctionToFunctor<1, 3> _parableCostFunctor;
 	    	ceres::CostFunctionToFunctor<1, 1> _numPointFunctor;
 		};
 	private:

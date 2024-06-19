@@ -124,9 +124,12 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(bool get_path_from_file_)
 	MP.clearMarkersPointLines(points_ugv_marker, lines_ugv_marker,traj_marker_ugv_pub_,20);
   	MP.clearMarkersPointLines(points_uav_marker, lines_uav_marker,traj_marker_uav_pub_,20);
 	ROS_INFO(PRINTF_BLUE"Optimizer_Local_Planner: use_distance_function: %s",use_distance_function?"true":"false");
-	ROS_INFO(PRINTF_BLUE"Optimizer_Local_Planner: alpha_uav=[%f] alpha_ugv=[%f] beta_uav=[%f] beta_ugv=[%f] theta_ugv=[%f] gamma_uav=[%f] gamma_ugv=[%f] kappa_ugv=[%f] kappa_uav=[%f] delta=[%f] epsilon=[%f] zeta=[%f] eta=[%f %f %f]",
-						 w_alpha_uav, w_alpha_ugv, w_beta_uav, w_beta_ugv, w_theta_ugv,w_gamma_uav, w_gamma_ugv, w_kappa_ugv, 
-						 w_kappa_uav, w_delta, w_epsilon_uav, w_zeta_uav, w_eta_1, w_eta_2, w_eta_3);
+	printf("Optimizer_Local_Planner: alpha_ugv=[%f] beta_ugv=[%f] gamma_ugv=[%f] kappa_ugv=[%f] theta_ugv=[%f]\n"
+							"\t\t\t alpha_uav=[%f] beta_uav=[%f] gamma_uav=[%f] kappa_uav=[%f] epsilon_uav=[%f] zeta_uav=[%f]\n"
+							"\t\t\t delta_t=[%f] eta_tether(obt len par)=[%f %f %f]",
+							w_alpha_ugv, w_beta_ugv, w_gamma_ugv, w_kappa_ugv, w_theta_ugv, 
+							w_alpha_uav, w_beta_uav, w_gamma_uav, w_kappa_uav, w_epsilon_uav, w_zeta_uav,
+						  	w_delta, w_eta_1, w_eta_2, w_eta_3);
 	
 	std::string node_name_ = "grid3D_optimizer_node";
 	grid_3D = new Grid3d(node_name_);
@@ -605,7 +608,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 					for (int i = 0; i < statesTetherParams.size(); ++i) {
 						CostFunction* cost_function_par_1  = new AutoDiffCostFunction<AutodiffParableFunctor::ParableFunctor, 1, 4, 4, 4> //Residual, ugvPos, uavPos, parableParams
 													(new AutodiffParableFunctor::ParableFunctor(w_eta_1, grid_3D, pose_reel_local.transform.translation, distance_tether_obstacle,
-													write_data_residual, user_name)); 
+													true, user_name)); 
 							problem.AddResidualBlock(cost_function_par_1, loss_function, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesTetherParams[i].parameter);
 						if (i == 0 || (fix_last_position_ugv && i == statesTetherParams.size()-1))
 							problem.SetParameterBlockConstant(statesTetherParams[i].parameter);
@@ -855,7 +858,11 @@ void OptimizerLocalPlanner::finishigOptimization()
 			param_.b = statesTetherParams[i].parameter[2];
 			param_.c = statesTetherParams[i].parameter[3];
 			double d_ = sqrt(pow(position_ugv_.x - position_uav_.x,2) + pow(position_ugv_.y - position_uav_.y,2));
-			double length_ = param_.c*sinh((d_ - param_.a)/param_.c) - param_.c * sinh((0.0 - param_.a)/param_.c);
+			double length_;
+			if(use_catenary_as_tether)
+				length_ = param_.c*sinh((d_ - param_.a)/param_.c) - param_.c * sinh((0.0 - param_.a)/param_.c);
+			else
+				length_ = (param_.a * d_*d_ + param_.b * d_ + param_.c) - (param_.a * 0.0 + param_.b * 0.0 + param_.c);
 			v_tether_params_opt.push_back(param_);
 			vec_len_tether_opt.push_back(length_);
 		}else{
