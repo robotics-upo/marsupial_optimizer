@@ -35,3 +35,26 @@
 {4.526, 0.212 , 0.033 , 0.670, -0.441, 6.414, 0.636, -0.953, 0.413},
 {4.328, -0.066,  0.013, 0.827, -0.237, 6.661, 0.599, -0.311, 0.392},
 {4.150, -0.350,  0.000, 1.000, -0.400, 6.900, 1.120, -1.459, 0.381}
+
+
+TETHER [3] in collision. Total Points:[25] , between[18-42]
+TETHER [4] in collision. Total Points:[19] , between[20-38]
+TETHER [6] in collision. Total Points:[14] , between[22-91]
+TETHER [7] in collision. Total Points:[28] , between[16-89]
+TETHER [9] in collision. Total Points:[23] , between[16-38]
+TETHER [10] in collision. Total Points:[16] , between[72-87]
+checkCollisionPathPlanner: Marsupial system in collision for solution [tether=167]
+TETHER [1] in collision. Total Points:[25] , between[71-95]
+TETHER [4] in collision. Total Points:[24] , between[16-39]
+TETHER [5] in collision. Total Points:[21] , between[59-90]
+TETHER [6] in collision. Total Points:[22] , between[61-91]
+TETHER [7] in collision. Total Points:[22] , between[59-89]
+TETHER [8] in collision. Total Points:[16] , between[20-85]
+TETHER [9] in collision. Total Points:[21] , between[24-44]
+TETHER [10] in collision. Total Points:[6] , between[82-87]
+TETHER [11] in collision. Total Points:[37] , between[12-89]
+
+checkCollisionPathPlanner: Marsupial system in collision for solution [tether=194]
+
+
+

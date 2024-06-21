@@ -73,13 +73,15 @@ TestTetherConstraints::TestTetherConstraints(std::string node_name_)
 						  	w_delta, w_eta_1, w_eta_2, w_eta_3);
 	
 	std::string _node_name = "grid3D_optimizer_node";
+	std::string _node_name_trav = "grid3D_optimizer_trav_node";
+	std::string _node_name_obst = "grid3D_optimizer_obst_node";
 	grid_3D = new Grid3d(_node_name, map_path);
     ROS_INFO_COND(true, PRINTF_BLUE "Initialazing Trilinear Interpolation (grid3D) in Optimizer");
 	grid_3D->computeTrilinearInterpolation();
-	grid_3D_trav = new Grid3d(_node_name, map_path_trav);
+	grid_3D_trav = new Grid3d(_node_name_trav, map_path_trav);
     ROS_INFO_COND(true, PRINTF_BLUE "Initialazing Trilinear Interpolation (grid3D_trav) in Optimizer");
 	grid_3D_trav->computeTrilinearInterpolation();
-	grid_3D_obst = new Grid3d(_node_name, map_path_obst);
+	grid_3D_obst = new Grid3d(_node_name_obst, map_path_obst);
     ROS_INFO_COND(true, PRINTF_BLUE "Initialazing Trilinear Interpolation (grid3D_trav) in Optimizer");
 	grid_3D_obst->computeTrilinearInterpolation();
     ROS_INFO_COND(true, PRINTF_BLUE "Finished Trilinear Interpolation (grid3D) in Optimizer");
@@ -111,6 +113,11 @@ void TestTetherConstraints::initializePublishers()
 {
 	tether_marker_init_pub_ = nh->advertise<visualization_msgs::MarkerArray>("init_tether_marker", 200);
 	tether_marker_opt_pub_ = nh->advertise<visualization_msgs::MarkerArray>("opt_tether_marker", 200);
+
+  	traj_marker_ugv_pub_ = nh->advertise<visualization_msgs::MarkerArray>("init_trajectory_ugv_marker", 2);
+  	traj_marker_uav_pub_ = nh->advertise<visualization_msgs::MarkerArray>("init_trajectory_uav_marker", 2);
+	traj_opt_marker_ugv_pub_ = nh->advertise<visualization_msgs::MarkerArray>("opt_trajectory_uav_marker", 2);
+  	traj_opt_marker_uav_pub_ = nh->advertise<visualization_msgs::MarkerArray>("opt_trajectory_uav_marker", 2);
 
   	ROS_INFO(PRINTF_BLUE"Optimizer_Local_Planner: Publishers Initialized");
 }
@@ -174,7 +181,7 @@ void TestTetherConstraints::executeOptimizerPathGoalCB()
 {
   	ROS_INFO(PRINTF_GREEN "Optimizer Local Planner : Path received in action server mode\n");
 
-	int row = 1;
+	int row = 12;
 	int colum = 9;
 	size_path = row;
 
@@ -204,20 +211,20 @@ void TestTetherConstraints::executeOptimizerPathGoalCB()
 		// {7.050, 0.846 , 0.026 , 1.155, -0.465, 2.195, 0.056, -0.039, 0.407},
 		// {6.950, 1.006 , 0.030 , 0.875, -0.475, 2.475, 0.057, -0.024, 0.410},
 		// {6.810, 1.136 , 0.041 , 0.701, -0.471, 2.840, 0.088, -0.176, 0.421},
-		// {6.629, 1.221 , 0.050 , 0.571, -0.441, 3.234, 0.099, -0.173, 0.431},
-		// {6.418, 1.269 , 0.066 , 0.504, -0.323, 3.637, 0.119, -0.206, 0.448},
-		// {6.178, 1.221 , 0.055 , 0.544, -0.440, 4.035, 0.179, -0.436, 0.435},
-		// {5.912, 1.173 , 0.048 , 0.633, -0.438, 4.447, 0.239, -0.592, 0.427},
-		// {5.658, 1.125 , 0.052 , 0.523, -0.422, 4.833, 0.266, -0.608, 0.433},
-		// {5.403, 1.074 , 0.061 , 0.683, -0.255, 5.169, 0.325, -0.629, 0.443},
-		// {5.157, 0.959 , 0.058 , 0.769, -0.168, 5.527, 0.411, -0.741, 0.439},
-		// {4.929, 0.774 , 0.056 , 0.722, -0.099, 5.892, 0.504, -0.898, 0.438},
-		// {4.733, 0.491 , 0.047 , 0.575, -0.405, 6.072, 0.492, -0.765, 0.428},
-		// {4.526, 0.212 , 0.033 , 0.670, -0.441, 6.414, 0.636, -0.953, 0.413},
-		{4.328, -0.066,  0.013, 0.827, -0.237, 6.661, 0.599, -0.311, 0.392}
-		// {4.150, -0.350,  0.000, 1.000, -0.400, 6.900, 1.120, -1.459, 0.381}		
+		{6.629, -0.221 , 0.050 , 0.571, -0.441, 3.234, 0.099, -0.173, 0.431},
+		{6.418, -0.269 , 0.066 , 0.504, -0.323, 3.637, 0.119, -0.206, 0.448},
+		{6.178, -0.221 , 0.055 , 0.544, -0.440, 4.035, 0.179, -0.436, 0.435},
+		{5.912, -0.173 , 0.048 , 0.633, -0.438, 4.447, 0.239, -0.592, 0.427},
+		{5.658, -0.125 , 0.052 , 0.523, -0.422, 4.833, 0.266, -0.608, 0.433},
+		{5.403, -0.074 , 0.061 , 0.683, -0.255, 5.169, 0.325, -0.629, 0.443},
+		{5.157, -0.959 , 0.058 , 0.769, -0.168, 5.527, 0.411, -0.741, 0.439},
+		{4.929, -0.774 , 0.056 , 0.722, -0.099, 5.892, 0.504, -0.898, 0.438},
+		{4.733, -0.091 , 0.047 , 0.575, -0.405, 6.072, 0.492, -0.765, 0.428},
+		{4.526, -0.012 , 0.033 , 0.670, -0.441, 6.414, 0.636, -0.953, 0.413},
+		{4.328, -0.066,  0.013, 0.827, -0.237, 6.661, 0.599, -0.311, 0.392},
+		{4.150, -0.350,  0.000, 1.000, -0.400, 6.900, 1.120, -1.459, 0.381}		
     };
-
+	
 	parameterBlockPos parameter_block_pos_ugv;
 	parameterBlockPos parameter_block_pos_uav;
 	parameterBlockTether parameter_block_tether_params;
@@ -337,8 +344,11 @@ std::cout << "Pose Reel: "<< pose_reel_local.transform.translation.z << std::end
 				if(tether_obstacle_constraint){
 					ROS_INFO(PRINTF_ORANGE"		- Optimize Tether Obstacles Autodiff - Parabola");
 					for (int i = 0; i < statesTetherParams.size(); ++i) {
+						// CostFunction* cost_function_par_1  = new AutoDiffCostFunction<AutodiffParableFunctor::ParableFunctor, 1, 4, 4, 4> //Residual, ugvPos, uavPos, parableParams
+						// 							(new AutodiffParableFunctor::ParableFunctor(w_eta_1, grid_3D, pose_reel_local.transform.translation, distance_tether_obstacle,
+						// 							true, user_name)); 
 						CostFunction* cost_function_par_1  = new AutoDiffCostFunction<AutodiffParableFunctor::ParableFunctor, 1, 4, 4, 4> //Residual, ugvPos, uavPos, parableParams
-													(new AutodiffParableFunctor::ParableFunctor(w_eta_1, grid_3D_obst, grid_3D_trav, pose_reel_local.transform.translation, distance_tether_obstacle,
+													(new AutodiffParableFunctor::ParableFunctor(w_eta_1, grid_3D, grid_3D_obst, grid_3D_trav, pose_reel_local.transform.translation, distance_tether_obstacle,
 													true, user_name)); 
 							problem.AddResidualBlock(cost_function_par_1, loss_function, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesTetherParams[i].parameter);
 							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 1, 0.001);

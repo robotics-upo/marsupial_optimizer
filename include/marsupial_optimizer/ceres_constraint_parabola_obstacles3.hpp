@@ -61,7 +61,7 @@ class DistanceFunctionObstacles : public ceres::SizedCostFunction<2, 3>
         double y = parameters[0][1];
         double z = parameters[0][2];
 		double d1_, d2_, distance_, type_coll_;
-		double min_dist_ = 0.01;
+		double min_dist_ = 0.005;
 
 		if(g_3D_obst->isIntoMap(x, y, z)){
 			TrilinearParams p = g_3D->getPointDistInterpolation(x, y, z);
@@ -197,14 +197,15 @@ class AutodiffParableFunctor {
 				T x_  =  T{0.0};
 				vector<T> v_dist, v_coll; v_dist.clear(); v_coll.clear();
 				vector<T> v_p1_, v_p2_, v_p3_; v_p1_.clear(), v_p2_.clear(), v_p3_.clear();
-				int first_coll_, last_coll_;
-				first_coll_ = last_coll_ = -1;
+				// int first_coll_, last_coll_;
+				// first_coll_ = last_coll_ = -1;
 				for(int i = 0; i < np_; i++, x_ += dist_/ np_ ){  
 					if (!(dist_ < min_val_)){ // To check difference position between UGV and UAV only in z-axe, so parable it is not computed
 						point[0] = ugv_reel[1] + u_x * x_;
 						point[1] = ugv_reel[2] + u_y * x_;
 						point[2] = param[1] * x_* x_ + param[2] * x_ + param[3];
-					}else{ 	// In case that UGV and UAV are not in the same point the plane X-Y
+					}
+					else{ 	// In case that UGV and UAV are not in the same point the plane X-Y
 						T _step = d_[0] / np_;
 						point[0] = ugv_reel[1];
 						point[1] = ugv_reel[2];
@@ -212,12 +213,17 @@ class AutodiffParableFunctor {
 					}
         			_parableCostFunctor(point, dist_to_obst_);
 
-					if(dist_to_obst_[1] == 1.0){
-						if (first_coll_ == -1)
-							first_coll_ = i;
-						last_coll_ = i;
-					}
-
+					// if(dist_to_obst_[0] < T{0.0}){
+					// 	if (first_coll_ == -1)
+					// 		first_coll_ = i;
+					// 	last_coll_ = i;
+					// }else{
+					// 	if (dist_to_obst_[0] < T{sb}){
+					// 		if (first_coll_ == -1)
+					// 			first_coll_ = i;
+					// 		last_coll_ = i;
+					// 	}
+					// }
 					v_dist.push_back(dist_to_obst_[0]);
 					v_coll.push_back(dist_to_obst_[1]);
 					v_p1_.push_back(point[0]);
@@ -227,49 +233,64 @@ class AutodiffParableFunctor {
 
 				T distance_, C, point_cost_, cost_;
 				T cost_state_parable = T{0.0};
-				T C1 = T{1.0};
-				T C2 = T{20.0};
-				T C3 = T{40};
 				for(int i = 0; i < np_; i++){ 
-					if (v_coll[i]== -1.0){
+					// if (v_dist[i]< T{min_val_} && v_dist[i]>= T{0.0}) 
+					// 	distance_ = T{min_val_};
+					// else
+					// 	distance_ = v_dist[i];
+
+					// if (i >=  first_coll_ && i <= last_coll_){
+					if (v_coll[i]!= 0.0){
 						if(v_dist[i] < T{0.0}){ //If point out of workspace for grid
-							C = C1;
-							distance_ = v_p3_[i];
-							cost_ = T{-100000.0} * distance_;
-						}else{
-							C = C2;
-							distance_ = v_dist[i];
-							cost_ = T{1.0}/distance_;
+							if (v_p3_[i] < T{0.0} && v_p3_[i] >= T{-0.01}){
+								C = T{10.0};
+								distance_ = T{0.01};
+								cost_ = T{1.0}/distance_;
+							}
+							else{
+								C = T{1.0};
+								distance_ = v_p3_[i];
+								cost_ = T{-100000.0} * distance_;
+							}
 						}
-					}else if(i >=  first_coll_ && i <= last_coll_){
-						if(v_coll[i] == 0){
-							C = C3;
-							distance_ = v_dist[i];
-							cost_ = T{1.0/min_val_}*distance_;
-						}else{
-							C = C2;
+						else{
+							// if (v_dist[i] >= 0.0 && v_dist[i] <= T{0.01}){
+							// 	C = T{10.0};
+							// 	distance_ = v_dist[i];
+							// 	cost_ = T{1.0}/distance_;
+							// }
+							// else{
+							// 	C = T{100.0};
+							// 	distance_ = v_dist[i];
+							// 	cost_ = T{100000.0} * distance_;
+							// }
+							C = T{10.0};
 							distance_ = v_dist[i];
 							cost_ = T{1.0}/distance_;
 						}
 					}else{
-						C = C1;	
+						C = T{1.0};	
 						distance_ = v_dist[i];
 						cost_ = T{1.0}/distance_;
 					}
 					point_cost_ = cost_*C;
-// std::cout << "["<<i<<"]cost:" << point_cost_ <<" , d:" << distance_ <<" , C:" << C << " ,v_coll[i]=" << v_coll[i]<<std::endl;
+					// std::cout << "["<<i<<"]cost:" << point_cost_ <<" , d:" << distance_ <<" , C:" << C << " ,v_coll[i]=" << v_coll[i]<<std::endl;
+					std::cout << "["<<i<<"]  d:" << distance_ <<" , C:" << C << " ,v_coll=" << v_coll[i]<<std::endl;
+					// std::cout <<"	Point:["<< v_p1_[i]<<","<< v_p2_[i]<< ","<< v_p3_[i]<<"]"<<std::endl;
 					cost_state_parable = cost_state_parable + point_cost_; // To get point parable cost
 				}
 				cost_state_parable = cost_state_parable/np_;
-// std::cout << "["<<param[0]<<"]cost:" << cost_state_parable <<" coll["<< first_coll_<<"-"<< last_coll_<<"]"<<std::endl;
+
 				residual[0] = wf * cost_state_parable;
-// std::cout << "	Obs["<< param[0]<<"] : R[0]:"  << residual[0] << " P:["<< param[1]<<"/ "  << param[2] <<"/ "  << param[3] <<"]"<< std::endl ;
+std::cout << "	Obs["<< param[0]<<"] : R[0]:"  << residual[0] << " P:["<< param[1]<<"/ "  << param[2] <<"/ "  << param[3] <<"]"<< std::endl ;
 				return true;
 			}
+
 			bool w_d_;
 			double wf, sb;
 			geometry_msgs::Vector3 pos_reel_ugv;
 			std::string user;
+			// Grid3d* g_3D;
 			Grid3d *g_3D, *g_3D_obst, *g_3D_trav;
 	    	ceres::CostFunctionToFunctor<2, 3> _parableCostFunctor;
 	    	ceres::CostFunctionToFunctor<1, 1> _numPointFunctor;

@@ -187,8 +187,6 @@ class AutodiffParableFunctor {
 						if (first_coll_ == -1)
 							first_coll_ = i;
 						last_coll_ = i;
-						// if (point[2] < T{-min_val_})
-						// 	dist_to_obst_ = (dist_to_obst_ * point[2]);
 					}else{
 						if (dist_to_obst_ < T{sb}){
 							if (first_coll_ == -1)

@@ -73,7 +73,7 @@
     <node pkg="rviz" name="rviz" type="rviz" args="-d $(find rrt_planners)/viz/$(arg viz_file).rviz" if="$(arg rviz)"/>
 
  <!-- Local Planner: Optimizer Ceres-->
-    <node pkg="marsupial_optimizer" type="test_tether_constraints_node" name="test_tether_constraints_node" output="screen" launch-prefix="gdb -ex run --args"> #launch-prefix="valgrind">
+    <node pkg="marsupial_optimizer" type="test_tether_constraints_node" name="test_tether_constraints_node" output="screen"># launch-prefix="gdb -ex run --args"> #launch-prefix="valgrind">
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/3d_local_params.yaml"/>
         <rosparam command="load" file="$(find marsupial_optimizer)/cfg/$(arg map)_ws.yaml"/>
        
@@ -103,7 +103,7 @@
         <param if="$(arg use_catenary_as_tether)" name="w_eta_1" value="0.001" />     # Catenary Obstacles collision 
         <param if="$(arg use_catenary_as_tether)" name="w_eta_2" value="0.400" />     # Catenary length 
         <param if="$(arg use_catenary_as_tether)" name="w_eta_3" value="1.0" />       # Catenary Parameter 
-        <param if="$(eval not arg('use_catenary_as_tether'))" name="w_eta_1" value="10.100" />      # Parabola Obstacles collision 
+        <param if="$(eval not arg('use_catenary_as_tether'))" name="w_eta_1" value="10.200" />      # Parabola Obstacles collision 
         <param if="$(eval not arg('use_catenary_as_tether'))" name="w_eta_2" value="0.100" />       # Parabola length 
         <param if="$(eval not arg('use_catenary_as_tether'))" name="w_eta_3" value="0.600" />       # Parabola Parameter 
 
