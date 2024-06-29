@@ -156,7 +156,7 @@ public:
 	void graphTetherAndPathMarker(vector<geometry_msgs::Vector3> v_ugv_, vector<geometry_msgs::Vector3> v_uav_, 
 								   vector<geometry_msgs::Quaternion> v_rot_ugv, vector <tether_parameters> v_p_, vector<float> v_length_,
 									int c_ugv_, int c_uav_, int c_tether_, ros::Publisher p_ugv_, ros::Publisher p_uav_, 
-									ros::Publisher p_tether_, visualization_msgs::MarkerArray m_);
+									ros::Publisher p_tether_, visualization_msgs::MarkerArray m_, bool pause_);
 
 	// ============= Global Variables ================
 

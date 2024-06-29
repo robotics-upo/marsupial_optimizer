@@ -66,7 +66,7 @@ public:
         template <typename T>
         bool operator()(const T* const statePos,  T* residual) const 
         {
-            T d_ugv_, n_[4], bound;
+            T d_ugv_, n_[3], bound;
             (*compute_nearest_distance)(statePos, n_);
 
             d_ugv_ = (statePos[3]-n_[2])*(statePos[3]-n_[2]); // To the closest point to traversavility PC is only consider distance in Z axe

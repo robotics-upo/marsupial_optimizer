@@ -181,53 +181,53 @@ void TestTetherConstraints::executeOptimizerPathGoalCB()
 {
   	ROS_INFO(PRINTF_GREEN "Optimizer Local Planner : Path received in action server mode\n");
 
-	int row = 22;
+	int row = 10;
 	int colum = 9;
 	size_path = row;
 
     double data[row][colum] = {
-//  {8.50000,  1.80000, 0.00000, 8.50000,  1.50000, 1.00000, 4.185,  0.811, 0.380},
-//  {8.20000,  1.50000, 0.00000, 7.95000,  1.50000, 1.35000, 14.235, 0.321, 0.380},
-//  {8.20000,  1.50000, 0.00100, 7.90000,  0.65000, 1.35000, 0.588,  0.545, 0.381},
-//  {8.07500,  1.15000, 0.00100, 7.88580,  0.54165, 1.30724, 1.183,  0.700, 0.381},
-//  {7.95000,  0.80000, 0.00000, 7.25000, -0.20000, 1.25000, 0.303,  0.343, 0.380},
-//  {7.92500,  0.73333, 0.00000, 6.85000, -0.30000, 1.25000, 0.282,  0.162, 0.380},
-//  {7.90000,  0.66667, 0.00000, 6.65000, -0.65000, 1.25000, 0.238,  0.047, 0.380},
-//  {7.87500,  0.60000, 0.00000, 6.50000, -1.00000, 1.30000, 0.213, -0.012, 0.380},
-//  {7.85000,  0.53333, 0.00000, 6.10000, -1.15000, 1.25000, 0.176, -0.070, 0.380},
-//  {7.82500,  0.46667, 0.00000, 5.70000, -0.95000, 1.20000, 0.194, -0.173, 0.380},
-//  {7.80000,  0.40000, 0.00000, 5.35000, -0.80000, 1.35000, 0.101,  0.079, 0.380},
-//  {7.60000,  0.00000, 0.00000, 4.95000, -0.65000, 1.35000, 0.101,  0.079, 0.380},
-//  {7.53333, -0.00833, 0.00000, 4.65000, -0.90000, 1.35000, 0.100,  0.019, 0.380},
-//  {7.46667, -0.01667, 0.00000, 4.45000, -0.50000, 1.35000, 0.108, -0.014, 0.380},
-//  {7.40000, -0.02500, 0.00000, 4.05000, -0.35000, 1.30000, 0.100, -0.065, 0.380},
-//  {7.33333, -0.03333, 0.00000, 3.65000, -0.25000, 1.30000, 0.014,  0.197, 0.380},
-//  {7.26667, -0.04167, 0.00000, 3.35000, -0.50000, 1.35000, 0.015,  0.186, 0.380},
-//  {7.20000, -0.05000, 0.00000, 2.95000, -0.40000, 1.35000, 0.000,  0.226, 0.380},
-//  {6.85000, -0.25000, 0.00000, 2.55000, -0.50000, 1.30000, 0.000,  0.212, 0.380},
-//  {6.81923, -0.25385, 0.00000, 2.30000, -0.15000, 1.30000, 0.001,  0.198, 0.380},
- {6.78846, -0.25769, 0.00000, 1.95000, -0.25000, 1.50000, 0.002,  0.221, 0.380},
- {6.75769, -0.26154, 0.00000, 1.80000, -0.55000, 1.65000, 0.003,  0.240, 0.380},
- {6.72692, -0.26538, 0.00000, 1.75000, -0.50000, 2.00000, 0.075, -0.047, 0.380},
- {6.69615, -0.26923, 0.00000, 1.65000, -0.50000, 2.35000, 0.166, -0.448, 0.380},
- {6.66538, -0.27308, 0.00000, 1.45000, -0.75000, 2.55000, 0.159, -0.419, 0.380},
- {6.63462, -0.27692, 0.00000, 1.05000, -0.75000, 2.60000, 0.102, -0.175, 0.380},
- {6.60385, -0.28077, 0.00000, 1.00000, -0.70000, 2.95000, 0.145, -0.355, 0.380},
- {6.57308, -0.28462, 0.00000, 0.75000, -0.35000, 3.05000, 0.121, -0.248, 0.380},
- {6.54231, -0.28846, 0.00000, 0.70000, -0.05000, 3.30000, 0.147, -0.360, 0.380},
- {6.51154, -0.29231, 0.00000, 0.70000, -0.05000, 3.65000, 0.194, -0.566, 0.380},
- {6.48077, -0.29615, 0.00000, 0.40000, -0.10000, 3.90000, 0.178, -0.506, 0.380},
- {6.45000, -0.30000, 0.00000, 0.45000, -0.15000, 4.25000, 0.176, -0.410, 0.380},
- {6.05000, -0.20000, 0.00100, 0.35000, -0.05000, 4.75000, 0.217, -0.469, 0.381},
- {5.72500, -0.10000, 0.00100, 0.37500, -0.52500, 4.97500, 0.249, -0.479, 0.381},
- {5.40000,  0.00000, 0.00000, 0.40000, -1.00000, 5.20000, 0.276, -0.464, 0.380},
- {5.20000, -0.05000, 0.00000, 0.35000, -0.65000, 5.25000, 0.339, -0.659, 0.380},
- {5.00000, -0.10000, 0.00000, 0.45000, -0.60000, 5.60000, 0.365, -0.532, 0.380},
- {4.80000, -0.15000, 0.00000, 0.55000, -0.55000, 5.95000, 0.552, -1.051, 0.380},
- {4.60000, -0.20000, 0.00000, 0.70000, -0.50000, 6.30000, 0.607, -0.861, 0.380},
- {4.25000, -0.45000, 0.00000, 1.00000, -0.65000, 6.45000, 0.954, -1.243, 0.380},
- {4.05000, -0.50000, 0.00000, 1.00000, -0.25000, 6.55000, 1.274, -1.881, 0.380},
- {3.85000, -0.55000, 0.00000, 1.00000, -0.40000, 6.85000, 1.205, -1.172, 0.380}
+//  {8.50000,  1.80000, 0.00000,  8.50000, 1.50000 , 1.00000, 4.185,  0.811, 0.380},
+//  {8.50000,  1.80000, 0.00000,  8.15000, 1.40000 , 1.20000, 1.536,  0.726, 0.380},
+//  {8.50000,  1.80000, 0.00000,  8.05000, 1.05000 , 1.40000, 0.657,  0.592, 0.380},
+//  {8.50000,  1.80000, 0.00000,  7.75000, 0.25000 , 1.45000, 0.197,  0.281, 0.380},
+//  {8.20000,  1.20000, 0.00000,  7.15000, -0.35000, 1.40000, 0.170,  0.227, 0.380},
+//  {8.10000,  1.08333, 0.00000,  6.75000, -0.40000, 1.45000, 0.231,  0.071, 0.380},
+//  {8.00000,  0.96667, 0.00000,  6.45000, -1.00000, 1.50000, 0.197, -0.046, 0.380},
+//  {7.90000,  0.85000, 0.00000,  6.10000, -1.20000, 1.40000, 0.103,  0.094, 0.380},
+//  {7.90000,  0.45000, 0.00000,  5.70000, -1.20000, 1.40000, 0.102,  0.091, 0.380},
+//  {7.85313,  0.40938, 0.00000,  5.40000, -0.90000, 1.40000, 0.112,  0.055, 0.380},
+//  {7.80625,  0.36875, 0.00000,  5.05000, -1.10000, 1.40000, 0.105, -0.000, 0.380},
+//  {7.75938,  0.32813, 0.00000,  4.65000, -0.90000, 1.40000, 0.101, -0.034, 0.380},
+//  {7.71250,  0.28750, 0.00000,  4.25000, -0.75000, 1.40000, 0.095, -0.062, 0.380},
+//  {7.66563,  0.24688, 0.00000,  3.90000, -0.50000, 1.40000, 0.014,  0.211, 0.380},
+//  {7.61875,  0.20625, 0.00000,  3.60000, -0.75000, 1.40000, 0.014,  0.190, 0.380},
+//  {7.57188,  0.16563, 0.00000,  3.25000, -0.95000, 1.35000, 0.012,  0.163, 0.380},
+//  {7.52500,  0.12500, 0.00000,  3.00000, -1.25000, 1.35000, 0.012,  0.149, 0.380},
+//  {7.47813,  0.08438, 0.00000,  2.60000, -1.20000, 1.40000, 0.011,  0.145, 0.380},
+//  {7.43125,  0.04375, 0.00000,  2.20000, -1.15000, 1.35000, 0.010,  0.128, 0.380},
+//  {7.38438,  0.00313, 0.00000,  1.85000, -1.00000, 1.55000, 0.011,  0.146, 0.380},
+//  {7.33750, -0.03750, 0.00000,  1.50000, -0.85000, 1.70000, 0.011,  0.156, 0.380},
+//  {7.29063, -0.07812, 0.00000,  1.10000, -0.95000, 1.70000, 0.010,  0.146, 0.380},
+//  {7.24375, -0.11875, 0.00000,  1.05000, -0.90000, 2.05000, 0.064, -0.132, 0.380},
+//  {7.19688, -0.15938, 0.00000,  0.65000, -0.95000, 2.00000, 0.012,  0.165, 0.380},
+//  {7.15000, -0.20000, 0.00000, -0.05000, -0.85000, 2.70000, 0.038,  0.049, 0.380},
+//  {6.80000,  0.00000, 0.00000, -0.35000, -0.80000, 2.90000, 0.038,  0.074, 0.380},
+//  {6.66667, -0.03333, 0.00000, -0.20000, -0.75000, 3.25000, 0.056,  0.027, 0.380},
+//  {6.53333, -0.06667, 0.00000, -0.25000, -0.45000, 3.50000, 0.082, -0.095, 0.380},
+//  {6.40000, -0.10000, 0.00000, -0.10000, -0.45000, 3.85000, 0.091, -0.060, 0.380},
+//  {6.30000, -0.13750, 0.00000,  0.10000, -0.10000, 3.75000, 0.110, -0.138, 0.380},
+//  {6.20000, -0.17500, 0.00000,  0.20000, -0.10000, 4.10000, 0.162, -0.354, 0.380},
+//  {6.10000, -0.21250, 0.00000,  0.40000, -0.35000, 4.25000, 0.193, -0.424, 0.380},
+ {6.00000, -0.25000, 0.00000,  0.65000, -0.05000, 4.35000, 0.230, -0.491, 0.380},
+ {5.60000, -0.35000, 0.00000,  0.70000, -0.10000, 4.70000, 0.292, -0.553, 0.381},
+ {5.20000, -0.50000, 0.00000,  0.65000, -0.05000, 4.80000, 0.335, -0.564, 0.380},
+ {4.80000, -0.60000, 0.00000,  0.60000,  0.00000, 5.60000, 0.446, -0.663, 0.380},
+ {4.66667, -0.56667, 0.00000,  0.50000, -0.30000, 5.80000, 0.470, -0.665, 0.380},
+ {4.53333, -0.53333, 0.00000,  0.65000, -0.35000, 6.15000, 0.581, -0.776, 0.380},
+ {4.40000, -0.50000, 0.00000,  0.90000, -0.55000, 6.30000, 0.733, -0.876, 0.381},
+ {4.26667, -0.50000, 0.00000,  1.10000, -0.50000, 6.70000, 0.714, -0.266, 0.381},
+ {4.13333, -0.50000, 0.00000,  1.05000, -0.50000, 6.85000, 0.931, -0.773, 0.383},
+ {4.00000, -0.50000, 0.00000,  1.00000, -0.50000, 7.00000, 1.185, -1.348, 0.380}
  };
 	
 	parameterBlockPos parameter_block_pos_ugv;
@@ -287,7 +287,7 @@ void TestTetherConstraints::executeOptimizerPathGoalCB()
 std::cout << "Pose Reel: "<< pose_reel_local.transform.translation.z << std::endl;
 	ROS_INFO(PRINTF_GREEN "Optimizer Local Planner : Graph Tether initial solution");
 	graphTetherAndPathMarker(vec_pose_ugv_init, vec_pose_uav_init, vec_rot_ugv_init, v_tether_params_init, vec_len_tether_init, 5, 6, 2,
-							  traj_marker_ugv_pub_, traj_marker_uav_pub_, tether_marker_init_pub_, tether_marker_init, false);
+							  traj_marker_ugv_pub_, traj_marker_uav_pub_, tether_marker_init_pub_, tether_marker_init);
 
 	/********************* To obligate pause method and check Planning result *********************/
         std::string y_ ;
@@ -356,7 +356,7 @@ std::cout << "Pose Reel: "<< pose_reel_local.transform.translation.z << std::end
 						// 							(new AutodiffParableFunctor::ParableFunctor(w_eta_1, grid_3D, grid_3D_obst, grid_3D_trav, pose_reel_local.transform.translation, distance_tether_obstacle,
 						// 							true, user_name)); 
 							problem.AddResidualBlock(cost_function_par_1, loss_function, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesTetherParams[i].parameter);
-							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 1, 0.0);
+							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 1, 0.001);
 							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 3, pose_reel_local.transform.translation.z);
 							problem.SetParameterBlockConstant(statesPosUGV[i].parameter);
 							problem.SetParameterBlockConstant(statesPosUAV[i].parameter);
@@ -369,7 +369,7 @@ std::cout << "Pose Reel: "<< pose_reel_local.transform.translation.z << std::end
 													(new AutodiffParableLengthFunctor::ParableLengthFunctor(w_eta_2, pose_reel_local.transform.translation, 
 													length_tether_max, write_data_residual, user_name)); 
 							problem.AddResidualBlock(cost_function_par_2, loss_function, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesTetherParams[i].parameter);
-							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 1, 0.0);
+							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 1, 0.001);
 							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 3, pose_reel_local.transform.translation.z);
 							problem.SetParameterBlockConstant(statesPosUGV[i].parameter);
 							problem.SetParameterBlockConstant(statesPosUAV[i].parameter);
@@ -382,7 +382,7 @@ std::cout << "Pose Reel: "<< pose_reel_local.transform.translation.z << std::end
 													(new AutodiffParableParametersFunctor::ParableParametersFunctor(w_eta_3, pose_reel_local.transform.translation, 
 													write_data_residual, user_name)); 
 							problem.AddResidualBlock(cost_function_par_3, loss_function, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesTetherParams[i].parameter);
-							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 1, 0.0);
+							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 1, 0.001);
 							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 3, pose_reel_local.transform.translation.z);
 							problem.SetParameterBlockConstant(statesPosUGV[i].parameter);
 							problem.SetParameterBlockConstant(statesPosUAV[i].parameter);
@@ -473,7 +473,7 @@ void TestTetherConstraints::finishigOptimization()
 	}
 
 	graphTetherAndPathMarker(vec_pose_ugv_opt, vec_pose_uav_opt, vec_rot_ugv_opt, v_tether_params_opt, vec_len_tether_opt, 1, 2, 1,
-							  traj_opt_marker_ugv_pub_,traj_opt_marker_uav_pub_, tether_marker_opt_pub_, tether_marker_opt, true);
+							  traj_opt_marker_ugv_pub_,traj_opt_marker_uav_pub_, tether_marker_opt_pub_, tether_marker_opt);
 			  
 	for(size_t i = 0; i < size_path; i++){
 		printf(PRINTF_REGULAR"Optimized States.Parameter[%lu/%i]: UGV=[%2.3f %2.3f %2.3f] UAV=[%.3f %.3f %.3f] tether=[%.3f %.3f %.3f]\n", 
@@ -502,7 +502,7 @@ void TestTetherConstraints::getReelPose()
 void TestTetherConstraints::graphTetherAndPathMarker(vector<geometry_msgs::Vector3> v_ugv_, vector<geometry_msgs::Vector3> v_uav_, 
 													  vector<geometry_msgs::Quaternion> v_rot_ugv_, vector <tether_parameters> v_params_, vector<float> v_length_,
 													  int c_ugv_, int c_uav_, int c_tether_, ros::Publisher p_ugv_, ros::Publisher p_uav_, 
-													  ros::Publisher p_tether_, visualization_msgs::MarkerArray m_, bool pause_){
+													  ros::Publisher p_tether_, visualization_msgs::MarkerArray m_){
 	
 	MP.getMarkerPoints(points_ugv_marker, v_ugv_, "points_ugv_m",c_ugv_);	// RED= 0 ; GREEN= 1 ; BLUE= 2 ; YELLOW= 3 ; PURPLE= 4; BLACK=5; WHITE=6
 	MP.getMarkerLines(lines_ugv_marker, v_ugv_, "lines_ugv_m",c_ugv_);
@@ -525,12 +525,10 @@ void TestTetherConstraints::graphTetherAndPathMarker(vector<geometry_msgs::Vecto
 		GTP_.getParabolaPoints(p_reel_, v_uav_[i], v_params_[i], v_pts_tether_);
 		MP.markerPoints(m_, v_pts_tether_, i, v_pts_tether_.size(), p_tether_, c_tether_, print_point_in_graph_marker);	
 		/********************* To obligate pause method and check Planning result *********************/
-		if (pause_){
-			std::string y_ ;
-			std::cout << " *** ["<< i <<"] Optimization Proccess Completed " ;
-			std::cout << " : Press key to continue : " ;
-			std::cin >> y_ ;
-		}
+        std::string y_ ;
+        std::cout << " *** ["<< i <<"] Optimization Proccess Completed " ;
+        std::cout << " : Press key to continue : " ;
+        std::cin >> y_ ;
     	/*************************************************************************************************/
 	}
 }

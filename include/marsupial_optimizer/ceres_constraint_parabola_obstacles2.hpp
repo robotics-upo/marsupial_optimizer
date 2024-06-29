@@ -250,46 +250,20 @@ class AutodiffParableFunctor {
 						last_collision = i;
 					}
 				}
-std::cout << "	Collision between["<< first_collision <<"-"<< last_collision <<"]"<< std::endl;
-
-
 				T distance_, div_, C, point_cost_;
 				T cost_state_parabola = T{0.0};
 				for(int i = 0; i < np_; i++){ 
 					distance_ = v_dist[i];
-
-					// div_ = T{1.0}/distance_;
-					// if (v_coll[i] != T{0.0}){ // 0.0 = NOT COLLISION ; -1.0 = GROUND COLLISION ; 1.0 = OTHER COLLISION
-					// 	if(v_dist[i] < T{0.0}){
-					// 		C = T{-100000.0};
-					// 		div_ = v_p3_[i];
-					// 		if (v_p3_[i] > T{-min_val_})
-					// 			div_ = T{-min_val_};
-					// 	}
-					// 	else
-					// 		C = T{20.0};
-					// }else
-					// 	C = T{1.0};	
-					// point_cost_ = div_*C;
-
 					div_ = T{1.0}/distance_;
 					if (distance_ < T{sb})
 						C = T{100.0};
 					else
 						C = T{1.0};	
 					point_cost_ = div_*C;
-if (w_d_)
-std::cout << "["<<i<<"]cost:" << point_cost_ <<" d:" << distance_ <<" C:" << C << std::endl;
-// std::cout <<"	Point:["<< v_p1_[i]<<","<< v_p2_[i]<< ","<< v_p3_[i]<<"]"<<std::endl;
 					cost_state_parabola = cost_state_parabola + point_cost_; // To get point parable cost
 				}
-
-
 				cost_state_parabola = cost_state_parabola/np_;
-
 				residual[0] = wf * cost_state_parabola;
-if (w_d_){
-std::cout << "	Obs["<< param[0]<<"] : R[0]:"  << residual[0] << " P:["<< param[1]<<"/ "  << param[2] <<"/ "  << param[3] <<"]"<< std::endl ;
 }			
 				return true;
 			}

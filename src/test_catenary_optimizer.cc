@@ -42,12 +42,12 @@ public:
 
 	double parameterCatenary[1];
 	ros::NodeHandlePtr nh;
-  std::shared_ptr<tf2_ros::Buffer> tfBuffer;
-  std::unique_ptr<tf2_ros::TransformListener> tf2_list;
-  std::unique_ptr<tf::TransformListener> tf_list_ptr;
+  	std::shared_ptr<tf2_ros::Buffer> tfBuffer;
+  	std::unique_ptr<tf2_ros::TransformListener> tf2_list;
+  	std::unique_ptr<tf::TransformListener> tf_list_ptr;
 
 	Solver::Options options;
-  Solver::Summary summary;
+  	Solver::Summary summary;
 
 	NearNeighbor nn_uav; // Kdtree used for Catenary and UAV
 	NearNeighbor nn_trav, nn_ugv_obs;
@@ -61,11 +61,11 @@ public:
 	double map_resolution;
 	float step , step_inv;
 	double ws_x_max; 
-  double ws_y_max; 
-  double ws_z_max;
-  double ws_x_min;
-  double ws_y_min;
-  double ws_z_min;
+  	double ws_y_max; 
+  	double ws_z_max;
+  	double ws_x_min;
+  	double ws_y_min;
+  	double ws_z_min;
 
 	double x_init, y_init, z_init, x_final, y_final, z_final;
 

@@ -53,7 +53,7 @@ class InterpolatePath
 		vector<geometry_msgs::Vector3> vec_pose_init_ugv, vec_pose_init_uav;
 		vector<geometry_msgs::Quaternion> vec_init_rot_ugv;
 		vector<float> vec_len_cat_init;
-		vector<int> vec_fix_status_ugv_prepross;
+		vector<int> vec_fix_status_ugv_prepross, v_interpolated_positions;
 		geometry_msgs::TransformStamped pose_reel_local;
 
 	protected:
@@ -105,8 +105,8 @@ inline void InterpolatePath::getInitialGlobalPath(trajectory_msgs::MultiDOFJoint
 	vec_pose_init_ugv.clear(); vec_pose_init_uav.clear();
 
 	vec_len_cat_init = vl_init_;
-
-
+	v_interpolated_positions.clear();
+	v_interpolated_positions.push_back(0); //First position always is fixed
     for (size_t i = 0; i < _path.points.size()-1; i++)
     {
 		// Get position and rotation vector for UGV
@@ -122,9 +122,11 @@ inline void InterpolatePath::getInitialGlobalPath(trajectory_msgs::MultiDOFJoint
 				aux_cont_ugv_++;
 			}
 			count_fix_points_final_ugv = count_fix_points_final_ugv + 1;
-		}else // To make count = 1 in case is not fix point
+			v_interpolated_positions.push_back(1);
+		}else{ // To make count = 1 in case is not fix point
 			count_fix_points_final_ugv = 1;
-
+			v_interpolated_positions.push_back(0);
+		}
 		// Get position and rotation vector for UAV
 		x_uav_ = _path.points.at(i+1).transforms[1].translation.x - _path.points.at(i).transforms[1].translation.x;
 		y_uav_ = _path.points.at(i+1).transforms[1].translation.y - _path.points.at(i).transforms[1].translation.y;
@@ -137,6 +139,7 @@ inline void InterpolatePath::getInitialGlobalPath(trajectory_msgs::MultiDOFJoint
 				count_fix_points_uav = count_fix_points_uav + 1;
 				aux_cont_uav_++;
 			}
+			v_interpolated_positions[i] = 1;
 		}
 		// Get position and rotation vector for UGV
 		p_ugv_.x = _path.points.at(i).transforms[0].translation.x;
@@ -159,6 +162,8 @@ inline void InterpolatePath::getInitialGlobalPath(trajectory_msgs::MultiDOFJoint
 		qt_.w = _path.points.at(i).transforms[1].rotation.w;
 		v_q_uav_.push_back(qt_);
     }
+	v_interpolated_positions[_path.points.size()-1] = 0; //Last position always is fixed
+
 
 	// Get position and rotation vector for UGV
 	p_ugv_.x = _path.points.at(_path.points.size()-1).transforms[0].translation.x;

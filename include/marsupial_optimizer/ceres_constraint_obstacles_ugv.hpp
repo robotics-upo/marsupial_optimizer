@@ -29,8 +29,8 @@ public:
     
     struct ComputeDistanceObstaclesUGV 
     {
-        ComputeDistanceObstaclesUGV (pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points)
-        : kdT_(kdT_From_NN), o_p_(obstacles_Points)
+        ComputeDistanceObstaclesUGV (pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points, double sb_)
+        : kdT_(kdT_From_NN), o_p_(obstacles_Points) , sb(sb_)
         {}
 
         bool operator()(const double *state1, double *near_) const 
@@ -38,10 +38,11 @@ public:
             NearNeighbor nn;
 
             nn.nearestObstacleStateCeres(kdT_ , state1[1],state1[2], state1[3], o_p_, near_[0], near_[1], near_[2]);
+            // nn.radiusNearestObstacleVertex(kdT_, state1[1],state1[2], state1[3], o_p_, sb);
             return true;
         }
 
-        double f_, sb_;
+        double f_, sb;
         pcl::KdTreeFLANN <pcl::PointXYZ> kdT_;
         pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_;
     };
@@ -57,14 +58,14 @@ public:
                                                                         ceres::FORWARD, 
                                                                         4,
                                                                         4>( 
-                                    new ComputeDistanceObstaclesUGV(kdT_, o_p_))));
+                                    new ComputeDistanceObstaclesUGV(kdT_, o_p_, sb_))));
         }
 
         template <typename T>
         bool operator()(const T* const statePos1, T* residual) const 
         {
             // To avoid obstacles
-            T d_, arg_d_, n1_[4];
+            T d_, arg_d_, n1_[3];
 
             (*compute_nearest_distance)(statePos1, n1_);
             arg_d_ = (statePos1[1]-n1_[0])*(statePos1[1]-n1_[0]) + (statePos1[2]-n1_[1])*(statePos1[2]-n1_[1]) + (statePos1[3]-n1_[2])*(statePos1[3]-n1_[2]);
@@ -79,11 +80,11 @@ public:
             T min_value_residual = T{0.0};
             T max_value_dependent = T{0.0};
             T m ;
-            if (d_ > d_sb_ || statePos1[1] > n1_[2]-T{0.6}) // 6 cm is the radius of the wheel
+            if (d_ > d_sb_ || statePos1[3] > n1_[2]-T{0.06}) // 6 cm is the radius of the wheel
                 m = T{0.0};
-            else
+            else{
                 m = (max_value_residual- min_value_residual)/(max_value_dependent - d_sb_);
-            
+            }    
             residual[0] = wf_ * m *(d_ - d_sb_);
 
             // std::cout << "ObstacleDistanceFunctorUGV: residual[0]= " << residual[0] << " , d_= " << d_ << std::endl;
