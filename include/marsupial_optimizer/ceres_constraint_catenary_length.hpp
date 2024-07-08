@@ -32,14 +32,14 @@ using ceres::Problem;
 using ceres::Solve;
 using ceres::Solver;
 
-class AutodiffTetherLengthFunctor {
+class AutodiffCatenaryLengthFunctor {
 
 public:
-	AutodiffTetherLengthFunctor(){}
+	AutodiffCatenaryLengthFunctor(){}
 
-	struct TetherLengthFunctor 
+	struct CatenaryLengthFunctor 
 	{
-		TetherLengthFunctor(double weight_factor, geometry_msgs::Vector3 pos_reel_ugv_,  float max_L_, bool write_data, std::string user_name)
+		CatenaryLengthFunctor(double weight_factor, geometry_msgs::Vector3 pos_reel_ugv_,  float max_L_, bool write_data, std::string user_name)
 					: wf(weight_factor), max_L(max_L_), pos_reel_ugv(pos_reel_ugv_), w_d_(write_data), user_(user_name) 
 		{}
 

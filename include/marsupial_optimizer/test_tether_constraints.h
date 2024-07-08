@@ -26,9 +26,9 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "glog/logging.h"
 #include "Eigen/Core"
 
-#include "marsupial_optimizer/ceres_constraint_tether_obstacles.hpp"
-#include "marsupial_optimizer/ceres_constraint_tether_length.hpp"
-#include "marsupial_optimizer/ceres_constraint_tether_parameters.hpp"
+#include "marsupial_optimizer/ceres_constraint_catenary_obstacles.hpp"
+#include "marsupial_optimizer/ceres_constraint_catenary_length.hpp"
+#include "marsupial_optimizer/ceres_constraint_catenary_parameters.hpp"
 #include "marsupial_optimizer/ceres_constraint_parabola_obstacles.hpp"
 #include "marsupial_optimizer/ceres_constraint_parabola_length.hpp"
 #include "marsupial_optimizer/ceres_constraint_parabola_parameters.hpp"

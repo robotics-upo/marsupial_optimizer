@@ -24,7 +24,7 @@
     <arg name="just_line_of_sigth"   default="false"/>
 
     <arg name="print_point_in_graph_marker"   default="false"/>
-    <arg name="use_catenary_as_tether" default="false"/>  
+    <arg name="use_catenary_as_tether" default="true"/>  
     <arg name="write_data_residual" default="false"/> # Parameter to write the residual value for each optimizer Functor
 
 

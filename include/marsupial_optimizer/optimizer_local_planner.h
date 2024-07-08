@@ -40,9 +40,9 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include "marsupial_optimizer/ceres_constraint_acceleration_ugv.hpp"
 #include "marsupial_optimizer/ceres_constraint_acceleration_uav.hpp"
 
-#include "marsupial_optimizer/ceres_constraint_tether_obstacles.hpp"
-#include "marsupial_optimizer/ceres_constraint_tether_length.hpp"
-#include "marsupial_optimizer/ceres_constraint_tether_parameters.hpp"
+#include "marsupial_optimizer/ceres_constraint_catenary_obstacles.hpp"
+#include "marsupial_optimizer/ceres_constraint_catenary_length.hpp"
+#include "marsupial_optimizer/ceres_constraint_catenary_parameters.hpp"
 #include "marsupial_optimizer/ceres_constraint_parabola_obstacles.hpp"
 #include "marsupial_optimizer/ceres_constraint_parabola_length.hpp"
 #include "marsupial_optimizer/ceres_constraint_parabola_parameters.hpp"
@@ -62,6 +62,7 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 // #include <catenary_checker/check_collision_path_planner.h>
 #include "catenary_checker/catenary_checker_manager.h"
 #include "catenary_checker/solve_parabola_correction_parameter.hpp"
+#include "catenary_checker/solve_catenary_correction_parameter.hpp"
 
 #include "misc/manage_computed_path.hpp"
 
@@ -189,7 +190,7 @@ public:
 	void graphTetherAndPathMarker(vector<geometry_msgs::Vector3> v_ugv_, vector<geometry_msgs::Vector3> v_uav_, 
 								   vector<geometry_msgs::Quaternion> v_rot_ugv, vector <tether_parameters> v_p_, vector<float> v_length_,
 									int c_ugv_, int c_uav_, int c_tether_, ros::Publisher p_ugv_, ros::Publisher p_uav_, 
-									ros::Publisher p_tether_, visualization_msgs::MarkerArray m_, bool use_catenary_as_tether_, bool pause_);
+									ros::Publisher p_tether_, visualization_msgs::MarkerArray m_, bool use_cat_as_tether_, bool pause_);
 	void checkCatenaryStatus(vector<geometry_msgs::Vector3> v_p_ugv, vector<geometry_msgs::Vector3>  v_p_uav, vector<geometry_msgs::Quaternion> v_r_ugv, vector<float> &v_l_in, vector<int> v_fixed_, vector<tether_parameters> &v_param_);
 	double checkTetherLength(tether_parameters p_, geometry_msgs::Vector3 p1_ , geometry_msgs::Vector3 p2_);
 
@@ -232,7 +233,7 @@ public:
 	NearNeighbor nn_trav, nn_ugv_obs;
 	MarkerPublisher MP;
 	Grid3d *grid_3D, *grid_3D_obst, *grid_3D_trav;
-	CatenaryCheckerManager *CheckCM;
+	CatenaryCheckerManager *CheckCM, *CheckCMopt;
 
 	DataManagement dm_;
     sensor_msgs::PointCloud2::ConstPtr pc_obs_ugv;

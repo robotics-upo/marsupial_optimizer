@@ -21,7 +21,7 @@
     <arg name="use_parable"   default="false"/>
     <arg name="use_distance_function"   default="true"/>
     <arg name="just_line_of_sigth"   default="false"/>
-    <arg name="use_catenary_as_tether"   default="false"/>
+    <arg name="use_catenary_as_tether"   default="true"/>
 
     <!-- Publishing UGV and UAV tf -->
     <node pkg="marsupial_optimizer" type="optimizer_publisher_tf_node" name="optimizer_publisher_tf_node" output="screen">

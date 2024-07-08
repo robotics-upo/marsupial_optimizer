@@ -1,7 +1,7 @@
 clear;
 clc;
 
-cat=[-6.40000 2.00000 0.00000 -6.50000 3.00000 1.50000 -0.799 0.142 1.379]; %Posicion 36 catenary (coll car 36 - 38)
+cat=[4.00000 -0.08750 0.00000 1.10000 -0.95000 6.10000 0.412 0.300 1.067]; %Posicion 36 catenary (coll car 36 - 38)
 par=[4.00000 -0.08750 0.00000 1.10000 -0.95000 6.10000 1.111 -1.472 0.380];%Posicion 36 parabola
 
 num_point_per_unit_length = 20;
@@ -46,12 +46,10 @@ for c = 0:num_point_catenary
     v_pts_par=[v_pts_par;x,y,z_p];
 end
 
-plot3(v_pts_par(:,1), v_pts_par(:,2), v_pts_par(:,3),'b', 'DisplayName','Parabola')
+plot3(v_pts_par(:,1), v_pts_par(:,2), v_pts_par(:,3),'b', '')
 hold on;
-plot3(v_pts_cat(:,1), v_pts_cat(:,2), v_pts_cat(:,3),'r', 'DisplayName','Catenary')
-legend
-xlabel('X axis');
-ylabel('Y axis');
-zlabel('Z axis')
+plot3(v_pts_cat(:,1), v_pts_cat(:,2), v_pts_cat(:,3),'r')
+xlabel('Distance XY UGV-UAV');
+ylabel('Z axis');
 title('Parabola vs Catenary');
 grid;
