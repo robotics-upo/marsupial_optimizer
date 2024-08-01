@@ -12,16 +12,18 @@ arg2 = sys.argv[3] # number of position to analize
 
 # user_ = 'simon' # Change this value to the user name
 user_= pc_user # number of scenario to analize
+extra_path_ = "Opt_Params_Catenary/"
 
-NE = 100.0 # number of Experiments
-num_parameters = 22
+num_parameters = 12
 stage_num = arg1 
 initial_pos = arg2 
 
-file_path_ugv = '/home/' + user_ + '/results_marsupial_optimizer/distance_function/results_stage_'+ stage_num +'_InitPos_'+ initial_pos + '_method_UGV.txt'
-file_path_uav = '/home/' + user_ + '/results_marsupial_optimizer/distance_function/results_stage_'+ stage_num +'_InitPos_'+ initial_pos + '_method_UAV.txt'
-file_path = '/home/' + user_ + '/results_marsupial_optimizer/distance_function/results_stage_'+ stage_num +'_InitPos_'+ initial_pos + '_feasibility_trajectory.txt'
-print('Magement Data For: ',file_path) 
+file_path_ugv = '/home/' + user_ + '/results_marsupial_optimizer/'+extra_path_+'results_stage_'+ stage_num +'_InitPos_'+ initial_pos + '_method_UGV.txt'
+file_path_uav = '/home/' + user_ + '/results_marsupial_optimizer/'+extra_path_+'results_stage_'+ stage_num +'_InitPos_'+ initial_pos + '_method_UAV.txt'
+file_path = '/home/' + user_ + '/results_marsupial_optimizer/'+extra_path_+'results_stage_'+ stage_num +'_InitPos_'+ initial_pos + '_feasibility_trajectory.txt'
+print('Feasibility Data in file: ',file_path) 
+print('UGV Data in file: ',file_path_ugv) 
+print('UAV Data in file: ',file_path_uav) 
 
 matrix1=[] #values for UGV
 matrix2=[] #values for UAV
@@ -47,7 +49,7 @@ for l in lines_ugv: # row
     sM1.append([])
     # print('i=',i)
     for j in range(num_parameters): # column
-        # print(' line[j]:',line[j],' j:',j)
+        # print('j:',j,'  line[j]:',line[j])
         matrix1[i].append(float(line[j]))
         if i== 0:
             value = matrix1[i][j]
@@ -82,20 +84,41 @@ sum_feasibility = 0
 total_exp = 0
 for l in lines: # row
     line = l.split(';') 
-    sum_feasibility = int(line[0]) + sum_feasibility
+    sum_feasibility = int(line[4]) + sum_feasibility
     total_exp += 1
 total_feasibility = 100*sum_feasibility / (total_exp)    
 
-output_file1 = open('/home/' + user_ + '/results_marsupial_optimizer/results_management_feasibility_time.cvs', 'a') # If doesn't exist file, is create and write in the last row
-# Order Colums: (From "sM1 or sM2" UGV-UAV)mean_vTI;max_vTI;mean_vTO;max_vTO;mean_aTI;max_aTI;mean_aTO;max_aTO;
-output_file1.writelines(str(total_feasibility)+';'+str(sM1[99][0]/NE)+';'+str(sM1[99][1]/NE)+';'+ str(sM1[99][14]/NE)+';'+str(sM1[99][15]/NE)+';'+str(sM1[99][16]/NE)+';'+str(sM1[99][17]/NE)+';'+str(sM1[99][18]/NE)+';'+str(sM1[99][19]/NE)+';'+str(sM1[99][20]/NE)+';'+str(sM1[99][21]/NE)+';'+str(sM2[99][14]/NE)+';'+str(sM2[99][15]/NE)+';'+str(sM2[99][16]/NE)+';'+str(sM2[99][17]/NE)+';'+str(sM2[99][18]/NE)+';'+str(sM2[99][19]/NE)+';'+str(sM2[99][20]/NE)+';'+str(sM2[99][21]/NE)+'\n')
-output_file1.close()
+NE = len(matrix2) # number of Experiments
+length_ = NE - 1
+# NEXT LINEs FOR CASE OF DEBUG
+# length_ugv = len(matrix1)
+# length_uav = len(matrix2)
+# if length_ugv > 0:
+#     num_col_ugv = len(matrix1[0]) 
+# else:
+#     num_col_ugv = 0
+# if length_uav > 0:
+#     num_col_uav = len(matrix2[0]) 
+# else:
+#     num_col_uav = 0
+# print('UGV fila=',length_ugv, ' colum=',num_col_ugv)
+# print('UAV fila=',length_uav, ' colum=',num_col_uav)
 
-output_file2 = open('/home/' + user_ + '/results_marsupial_optimizer/results_management_ugv_uav.cvs', 'a') # If doesn't exist file, is create and write in the last row
-# Order Colums: ("From sM1 or sM2" UGV-UAV)tTI;tTO; (UGV From"sM1":2-3,6-9)dTI;dTO;mean_doI;min_doI;mean_doO;min_doO; (UAV From "sM2":2-3,6-9)dTI;dTO;mean_doI;min_doI;mean_doO;min_doO; (CAT From "sM1 or sM2":10-13)mean_dcI;min_dcI;mean_dcO;min_dcO;
-output_file2.writelines(str(sM1[99][4]/NE)+';'+str(sM1[99][5]/NE)+';'+str(sM1[99][2]/NE)+';'+str(sM1[99][3]/NE)+';'+str(sM1[99][6]/NE)+';'+str(sM1[99][7]/NE)+';'+str(sM1[99][8]/NE)+';'+str(sM1[99][9]/NE)+';'+str(sM2[99][2]/NE)+';'+str(sM2[99][3]/NE)+';'+str(sM2[99][6]/NE)+';'+str(sM2[99][7]/NE)+';'+str(sM2[99][8]/NE)+';'+str(sM2[99][9]/NE)+';'+str(sM1[99][10]/NE)+';'+str(sM1[99][11]/NE)+';'+str(sM1[99][12]/NE)+';'+str(sM1[99][13]/NE)+'\n')
-output_file2.close()
 
-output_file3 = open('/home/' + user_ + '/results_marsupial_optimizer/distance_function/results_maximum_compute_time.cvs', 'a') # If doesn't exist file, is create and write in the last row
-output_file3.writelines(str(max_TCGP)+';'+str(max_TCO)+'\n')
+# output_file1 = open('/home/' + user_ + '/results_marsupial_optimizer/results_management_feasibility_time.cvs', 'a') # If doesn't exist file, is create and write in the last row
+# # Order Colums: (From "sM1 or sM2" UGV-UAV)mean_vTI;max_vTI;mean_vTO;max_vTO;mean_aTI;max_aTI;mean_aTO;max_aTO;
+# output_file1.writelines(str(total_feasibility)+';'+str(sM1[length_][0]/NE)+';'+str(sM1[length_][1]/NE)+';'+ str(sM1[length_][7]/NE)+';'+str(sM1[length_][8]/NE)+';'+str(sM1[length_][9]/NE)+';'+str(sM1[length_][10]/NE)+';'+str(sM2[length_][7]/NE)+';'+str(sM2[length_][8]/NE)+';'+str(sM2[length_][9]/NE)+';'+str(sM2[length_][10]/NE)+'\n')
+# output_file1.close()
+
+# output_file2 = open('/home/' + user_ + '/results_marsupial_optimizer/results_management_ugv_uav.cvs', 'a') # If doesn't exist file, is create and write in the last row
+# # Order Colums: ("From sM1 or sM2" UGV-UAV)tTI;tTO; (UGV From"sM1":2-3,6-9)dTI;dTO;mean_doI;min_doI;mean_doO;min_doO; (UAV From "sM2":2-3,6-9)dTI;dTO;mean_doI;min_doI;mean_doO;min_doO; (CAT From "sM1 or sM2":10-13)mean_dcI;min_dcI;mean_dcO;min_dcO;
+# output_file2.writelines(str(sM1[length_][1]/NE)+';'+str(sM1[length_][5]/NE)+';'+str(sM1[length_][2]/NE)+';'+str(sM1[length_][3]/NE)+';'+str(sM1[length_][6]/NE)+';'+str(sM1[length_][7]/NE)+';'+str(sM1[length_][8]/NE)+';'+str(sM1[length_][9]/NE)+';'+str(sM2[length_][2]/NE)+';'+str(sM2[length_][3]/NE)+';'+str(sM2[length_][6]/NE)+';'+str(sM2[length_][7]/NE)+';'+str(sM2[length_][8]/NE)+';'+str(sM2[length_][9]/NE)+';'+str(sM1[length_][10]/NE)+';'+str(sM1[length_][11]/NE)+';'+str(sM1[length_][12]/NE)+';'+str(sM1[length_][13]/NE)+'\n')
+# output_file2.close()
+
+# output_file3 = open('/home/' + user_ + '/results_marsupial_optimizer/'+extra_path_+'results_maximum_compute_time.cvs', 'a') # If doesn't exist file, is create and write in the last row
+# output_file3.writelines(str(max_TCGP)+';'+str(max_TCO)+'\n')
+# output_file3.close()
+
+output_file3 = open('/home/' + user_ + '/results_marsupial_optimizer/'+extra_path_+'results_for_paper.cvs', 'a') # If doesn't exist file, is create and write in the last row
+output_file3.writelines(str(total_feasibility)+';'+str(sM1[length_][1]/NE)+';'+str(sM1[length_][5]/NE)+';'+str(sM1[length_][6]/NE)+';'+str(sM1[length_][3]/NE)+';'+str(sM1[length_][4]/NE)+';'+str(sM1[length_][7]/NE)+';'+str(sM1[length_][8]/NE)+';'+str(sM1[length_][9]/NE)+';'+str(sM1[length_][10]/NE)+';'+str(sM2[length_][3]/NE)+';'+str(sM2[length_][4]/NE)+';'+str(sM2[length_][7]/NE)+';'+str(sM2[length_][8]/NE)+';'+str(sM2[length_][9]/NE)+';'+str(sM2[length_][10]/NE)+'\n')
 output_file3.close()

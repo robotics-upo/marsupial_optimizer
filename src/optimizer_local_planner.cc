@@ -657,7 +657,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 							problem.SetParameterBlockConstant(statesTetherParams[i].parameter);
 						else{
 							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 2, 0.01);
-							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 3, 0.1);
+							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 3, 0.01);
 						}
 					}
 				}
@@ -671,7 +671,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 							problem.SetParameterBlockConstant(statesTetherParams[i].parameter);
 						else{
 							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 2, 0.01);
-							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 3, 0.1);
+							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 3, 0.01);
 						}
 					}		
 				}
@@ -685,7 +685,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 							problem.SetParameterBlockConstant(statesTetherParams[i].parameter);
 						else{
 							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 2, 0.01);
-							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 3, 0.1);
+							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 3, 0.01);
 						}
 					}		
 				}

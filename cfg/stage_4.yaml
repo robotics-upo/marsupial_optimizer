@@ -20,3 +20,9 @@ test_2:
   initial_pos_ugv_yaw:  3.14
   initial_pos_ugv_pitch: -0.3
   initial_pos_ugv_roll: 0.0
+  initial_pos_uav_x: 11.5
+  initial_pos_uav_y: -0.6
+  initial_pos_uav_z: 2.5
+  initial_pos_uav_yaw:  3.14
+  initial_pos_uav_pitch: -0.3
+  initial_pos_uav_roll: 0.0

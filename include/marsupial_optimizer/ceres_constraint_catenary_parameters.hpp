@@ -47,15 +47,25 @@ public:
 			params[3] = a 
 			params[4] = length (Not used length because it is not optimized)
 			*/
-			r1 = params[3]*cosh((Xa - params[1])/params[3]) + (params[2]-params[3]) - Ya;//Eq. point A(UGV): residual[0] = a cosh(-Xo/a) + Yo
-			r2 = params[3]*cosh((Xb - params[1])/params[3]) + (params[2]-params[3]) - Yb;//Eq. point B(UAV): residual[1] = a cosh(Xb-Xo/a) + Yo - Yb
+			T cos1_ , cos2_;
+			if (params[3] < T{0.001}){
+				cos1_ = T{0.0};
+				cos2_ = T{0.0};
+			}
+			else {
+				cos1_ = cosh((Xa - params[1])/params[3]);
+				cos2_ = cosh((Xb - params[1])/params[3]) ;
+			}
+
+			r1 = params[3]*cos1_ + (params[2]-params[3]) - Ya;	//Eq. point A(UGV): residual[0] = a cosh(-Xo/a) + Yo
+			r2 = params[3]*cos2_ + (params[2]-params[3]) - Yb;	//Eq. point B(UAV): residual[1] = a cosh(Xb-Xo/a) + Yo - Yb
 			// r3 = params[3]*sinh((Xa - params[1])/params[3]) + params[3]*sinh((Xb - params[1])/params[3]) - params[4]; //Eq. length catenary: residual[2] = a cosh(Xb-Xo/a) + a cosh(Xb-Xo/a)
 
 			residual[0] = wf* ((r1));
 			residual[1] = wf* ((r2));
 			// residual[2] = (wf * 100.0 )* ((r3));
 
-// std::cout << "		["<< params[0]<<"] AutodiffTetherParametersFunctor: residual[0]= " << residual[0] << " , residual[1]= " << residual[1]  << std::endl;
+// std::cout << "["<< params[0]<<"] TetherParametersFunctor: r: " << residual[0] << " - " << residual[1]  << " cos_:" << cos1_ << " - " << cos2_ << " Param: "<< params[1]<<" - "<< params[2]<<" - " params[0]<<" - "<<std::endl;
 
 			return true;
 		}
