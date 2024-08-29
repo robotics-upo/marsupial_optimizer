@@ -291,19 +291,9 @@ class AutodiffParableFunctor {
 
 					point_cost_ = cost_*C;
 					cost_state_parable = cost_state_parable + point_cost_; // To get point parable cost
-// std::cout << "["<<i<<"]cost:" << point_cost_ <<" , d:" << distance_ <<" , C:" << C << " ,v_coll[i]=" << v_coll[i]<<std::endl;
 				}
 
 				double num_coll_ = 0.0;
-// 				if(v_transition_coll_.size() > 0){
-// 					num_coll_ = double(last_coll- first_coll);
-// 					for(size_t i = 0; i < group_coll_; i++){
-// std::cout << "intervall collision positions:["<< v_transition_coll_[2*i]<< " " << v_transition_coll_[2*i+1] <<"] v_transition_coll_.size()="<< v_transition_coll_.size() << std::endl;
-// 					}
-// 				}
-// if(v_transition_coll_.size() > 0)
-// 	std::cout << "collisions:["<< first_coll  << "," << last_coll <<"] middle_coll:["<< middle_coll <<"] num_coll_:[" << num_coll_ << "]" << std::endl;
-// std::cout << "group_coll_:"<< group_coll_<< "  v_transition_coll_.size:"<< v_transition_coll_.size() <<std::endl;
 				cost_state_parable = cost_state_parable/np_;
 
 				residual[0] = wf * cost_state_parable;

@@ -298,6 +298,7 @@ class AutodiffCatenaryObstacleFunctor {
 				cost_state_parable = cost_state_parable/np_;
 
 				residual[0] = wf * cost_state_parable;
+// std::cout << "	Obs["<< params[0]<<"] : R[0]:"  << residual[0] << std::endl ;
 				return true;
 			}
 

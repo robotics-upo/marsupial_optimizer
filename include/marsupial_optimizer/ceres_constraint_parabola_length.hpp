@@ -33,27 +33,30 @@ public:
 			T ugv_reel[4] = {pUGV[0], pUGV[1], pUGV[2], pUGV[3] + T{pos_reel_ugv.z}}; // Set first parable point on the reel position
 			T dist = T{1.001} * sqrt(pow(pUAV[1]-ugv_reel[1],2)+pow(pUAV[2]-ugv_reel[2],2)+pow(pUAV[3]-ugv_reel[3],2)); 
 			T maxL = T{max_L};
-		
-			// Compute parable L : log(q + ((q + 2*p*x)^2 + 1)^(1/2) + 2*p*x)/(4*p) + ((q + 2*p*x)*((q + 2*p*x)^2 + 1)^(1/2))/(4*p) , x = xA and xB
-			T X = T{0.0}; // X is 0.0 because is considered that the parable beginning in the ugv reel
-			T val = T{2.0}*param[1]*X+param[2]; // This is a common term for the L equation
-			T La = (log( param[2] + sqrt((val*val) + T{1.0}) + T{2.0}*param[1]*X)/(T{4.0}*param[1]) + ((val)*sqrt((val*val) + T{1.0}))/(T{4.0}*param[1]));
-			
-			X = {sqrt(pow(pUAV[1]-ugv_reel[1],2)+pow(pUAV[2]-ugv_reel[2],2))};
-			val = T{2.0}*param[1]*X+param[2];
-			T Lb = (log( param[2] + sqrt((val*val) + T{1.0}) + T{2.0}*param[1]*X)/(T{4.0}*param[1]) + ((val)*sqrt((val*val) + T{1.0}))/(T{4.0}*param[1]));
-			T L = Lb - La;
+			T den;
+			T val, La, Lb, L;
+			T Xa = T{0.0}; // X is 0.0 because is considered that the parable beginning in the ugv reel
+			T Xb = {sqrt(pow(pUAV[1]-ugv_reel[1],2)+pow(pUAV[2]-ugv_reel[2],2))};
+			int flag_ = 0;
+			if (param[1] < T{0.001} && param[1] > T{-0.001}){
+				T distXY = T{1.001} * sqrt(pow(pUAV[1]-ugv_reel[1],2)+pow(pUAV[2]-ugv_reel[2],2)); 
+				L = sqrt( pow(Xa-Xb,2) +  pow(Xa*param[2]+param[3] - (Xb*param[2]+param[3]),2)  );
+				flag_ = 1;
+			}
+			else{
+				// Compute parable L : log(q + ((q + 2*p*x)^2 + 1)^(1/2) + 2*p*x)/(4*p) + ((q + 2*p*x)*((q + 2*p*x)^2 + 1)^(1/2))/(4*p) , x = xA and xB
+				val = T{2.0}*param[1]*Xa+param[2]; // This is a common term for the L equation
+				La = (log( param[2] + sqrt((val*val) + T{1.0}) + T{2.0}*param[1]*Xa)/(T{4.0}*param[1]) + ((val)*sqrt((val*val) + T{1.0}))/(T{4.0}*param[1]));
+				
+				val = T{2.0}*param[1]*Xb+param[2];
+				T Lb = (log( param[2] + sqrt((val*val) + T{1.0}) + T{2.0}*param[1]*Xb)/(T{4.0}*param[1]) + ((val)*sqrt((val*val) + T{1.0}))/(T{4.0}*param[1]));
 
-			T diff_;
-			if (L < dist )
-				diff_ = (dist - L);
-			else if (L > maxL)
-				diff_ = (L - maxL);
-			else
-				diff_ = T{0.0};
-
-			residual[0] = wf * 100.0 * (exp(diff_)-1.0) ;
-// std::cout << "Len ["<< param[0]<<"] : R[0]:"  << residual[0] << std::endl ;
+				L = Lb - La;
+				flag_ = 2;
+			}
+			T K = T{1.0};
+			residual[0] = wf * ( exp(K*(dist - L)) + exp(K*(L - maxL)) ) ;
+// std::cout << "Len,"<< flag_<<" ["<< param[0] <<"] : R[0]:"  << residual[0] << " param[1]:" << param[1] << std::endl ;
 			return true;
 		}
 		

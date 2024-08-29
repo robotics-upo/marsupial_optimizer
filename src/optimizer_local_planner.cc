@@ -823,10 +823,10 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	std::cout <<"Optimization Proccess Completed !!!" << std::endl << "Saving Temporal data in txt file ..." << std::endl << "===================================================" << std::endl << std::endl << std::endl;
 
 	/********************* To obligate pause method and check Planning result *********************/
-        // std::string y_ ;
-        // std::cout << " *** Optimization Proccess Completed " ;
-        // std::cout << " : Press key to continue : " ;
-        // std::cin >> y_ ;
+        std::string y_ ;
+        std::cout << " *** Optimization Proccess Completed " ;
+        std::cout << " : Press key to continue : " ;
+        std::cin >> y_ ;
     /*************************************************************************************************/
 	ros::Duration(4.0).sleep();
 	cleanVectors();		//Clear vector after optimization and previus the next iteration

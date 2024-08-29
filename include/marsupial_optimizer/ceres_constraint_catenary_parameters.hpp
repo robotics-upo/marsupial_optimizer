@@ -61,11 +61,12 @@ public:
 			r2 = params[3]*cos2_ + (params[2]-params[3]) - Yb;	//Eq. point B(UAV): residual[1] = a cosh(Xb-Xo/a) + Yo - Yb
 			// r3 = params[3]*sinh((Xa - params[1])/params[3]) + params[3]*sinh((Xb - params[1])/params[3]) - params[4]; //Eq. length catenary: residual[2] = a cosh(Xb-Xo/a) + a cosh(Xb-Xo/a)
 
-			residual[0] = wf* ((r1));
-			residual[1] = wf* ((r2));
+			residual[0] = wf * (r1);
+			residual[1] = wf * (r2);
 			// residual[2] = (wf * 100.0 )* ((r3));
 
 // std::cout << "["<< params[0]<<"] TetherParametersFunctor: r: " << residual[0] << " - " << residual[1]  << " cos_:" << cos1_ << " - " << cos2_ << " Param: "<< params[1]<<" - "<< params[2]<<" - " params[0]<<" - "<<std::endl;
+// std::cout << "Par ["<< params[0]<<"] : R[0]:"  << residual[0] <<" R[1]:"  << residual[1] <<std::endl ;
 
 			return true;
 		}

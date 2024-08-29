@@ -60,19 +60,22 @@ public:
 			params[3] = a 
 			params[4] = length (Not used length because it is not optimized)
 			*/
-			T length = params[3] * sinh((Xb - params[1])/params[3]) - params[3] * sinh((Xa - params[1])/params[3]);
+			T L1, L2; 
+			if(params[3] < T{0.001}){
+				L1 = T{0.0};
+				L2 = T{0.0};
+			}else{
+				L1 = params[3] * sinh((Xb - params[1])/params[3]);
+				L2 = params[3] * sinh((Xa - params[1])/params[3]);	
+			}
+			T L  = L1 - L2;
 			
 			T dist = T{1.01} * sqrt(pow(stateUAV[1]-ugv_reel[1],2)+pow(stateUAV[2]-ugv_reel[2],2)+pow(stateUAV[3]-ugv_reel[3],2)); 
 
-			T diff_;
-			if (length < dist )
-				diff_ = (dist - maxL);
-			else if (length > maxL)
-				diff_ = (length - maxL);
-			else
-				diff_ = T{0.0};
-
-			residual[0] = wf * (exp(diff_)-1.0) ;
+			T K = T{1.0};
+			residual[0] = wf * ( exp(K*(dist - L)) + exp(K*(L - maxL)) ) ;
+// std::cout << "	p[1]:" << params[1] << " L:" << L << " dist:" << dist << std::endl ;
+// std::cout << "Len ["<< params[0] <<"] : R[0]:"  << residual[0] << std::endl ;
 					
 			return true;
 		}

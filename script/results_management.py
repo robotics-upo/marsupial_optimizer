@@ -12,9 +12,10 @@ arg2 = sys.argv[3] # number of position to analize
 
 # user_ = 'simon' # Change this value to the user name
 user_= pc_user # number of scenario to analize
-extra_path_ = "Opt_Params_Catenary/"
+# extra_path_ = "Opt_Params_Catenary/"
+extra_path_ = ""
 
-num_parameters = 12
+num_parameters = 11
 stage_num = arg1 
 initial_pos = arg2 
 

@@ -31,39 +31,25 @@ public:
 		bool operator()(const T* const pUGV, const T* const pUAV, const T* const param, T* residual) const 
 		{
 			T ugv_reel[4] = {pUGV[0], pUGV[1], pUGV[2], pUGV[3] + T{pos_reel_ugv.z}}; // Set first parable point on the reel position
-		
 			T Xa = T{0.0};
 			T Xb = sqrt(pow(pUAV[1]-ugv_reel[1],2)+pow(pUAV[2]-ugv_reel[2],2)); 
-			T pow_a, pow_b;
 
-			// bool x_const, y_const;
-			// x_const = y_const = false;
-			// T fix_value = T{0.01};
-			// if ((pUGV[1] - pUAV[1]) < fix_value && (pUGV[1] - pUAV[1]) > T{-1.0}*fix_value)
-			// 	x_const = true;
-			// if ((pUGV[2] - pUAV[2]) < fix_value && (pUGV[2] - pUAV[2]) > T{-1.0}*fix_value)
-			// 	y_const = true;
+			T Pa = (param[1]*Xa*Xa + param[2]*Xa + param[3] - ugv_reel[3]);// residual = p*xa² + q*xa + r - ya
+			T Pb = (param[1]*Xb*Xb + param[2]*Xb + param[3] - pUAV[3]    );// residual = p*xb² + q*xb + r - yb
 
-			// For Residual, is consider that reel_pos is the origin in the parable plane ( Prarable equation: y = px² + qx + r)
-			// T pow_a = sqrt((param[1]*Xa*Xa + param[2]*Xa + param[3] - ugv_reel[3])*(param[1]*Xa*Xa + param[2]*Xa+ param[3] - ugv_reel[3]));// residual = p*xa² + q*xa + r - ya
-			// T pow_b = sqrt((param[1]*Xb*Xb + param[2]*Xb + param[3] - pUAV[3]    )*(param[1]*Xb*Xb + param[2]*Xb+ param[3] - pUAV[3]    ));// residual = p*xb² + q*xb + r - yb
-			// residual[0] = (wf * 100.0 )* (exp(pow_a) - 1.0);
-			// residual[1] = (wf * 100.0 )* (exp(pow_b) - 1.0);
-			// if ( !x_const || !y_const ){ // To check difference position between UGV and UAV only in z-axe, so parable it is not computed
-				pow_a = (param[1]*Xa*Xa + param[2]*Xa + param[3] - ugv_reel[3]);// residual = p*xa² + q*xa + r - ya
-				pow_b = (param[1]*Xb*Xb + param[2]*Xb + param[3] - pUAV[3]    );// residual = p*xb² + q*xb + r - yb
-			// }
-
-			residual[0] = (wf * 100.0 )* ((pow_a));
-			residual[1] = (wf * 100.0 )* ((pow_b));
-// std::cout << "Par ["<< param[0]<<"] : R[0]:"  << residual[0] <<" residual[1]:"  << residual[1] << std::endl ;
+			residual[0] = wf *100.0 *(Pa);
+			residual[1] = wf *100.0 *(Pb);
+// std::cout << "		Param[1]:"<< param[1]<<" Param[2]:"<< param[2] <<" Param[3]:"<< param[3] <<std::endl ;
+// std::cout << "		Pa:"<< Pa<<" Pb:"<< Pb << std::endl ;
+// std::cout << "		Param_a:" << param_a << " Param_b:" << param_b << std::endl ;
+// std::cout << "Par ["<< param[0]<<"] : R[0]:"  << residual[0] <<" R[1]:"  << residual[1] <<std::endl ;
 			return true;
 		}
 		
 		bool w_d;
 		double wf;
 		geometry_msgs::Vector3 pos_reel_ugv;
-		std::string user;
+		std::string user; 
 	};
 
 private:
