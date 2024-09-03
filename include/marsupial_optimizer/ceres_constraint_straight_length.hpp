@@ -23,7 +23,7 @@ public:
 
 	struct StraightLengthFunctor 
 	{
-	StraightLengthFunctor(double weight_factor, geometry_msgs::Vector3 pos_reel_ugv_)
+	StraightLengthFunctor(double weight_factor, geometry_msgs::Point pos_reel_ugv_)
 					: wf(weight_factor), pos_reel_ugv(pos_reel_ugv_)
 		{}
 
@@ -44,7 +44,7 @@ public:
 		}
 		
 		double wf;
-		geometry_msgs::Vector3 pos_reel_ugv;
+		geometry_msgs::Point pos_reel_ugv;
 	};
 
 private:

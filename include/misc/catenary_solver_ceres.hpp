@@ -4,7 +4,7 @@
 #include "ceres/ceres.h"
 #include "glog/logging.h"
 
-#include <geometry_msgs/Vector3.h>
+#include <geometry_msgs/Point.h>
 
 using ceres::CostFunction;
 using ceres::SizedCostFunction;
@@ -155,7 +155,7 @@ class CatenarySolver
     }
 
     void convert2DTo3D(double _x1, double _y1, double _z1, double _x2, double _y2, double _z2,
-                       std::vector<geometry_msgs::Vector3> &_vector3D, double _xc, double _yc, double _a)
+                       std::vector<geometry_msgs::Point> &_vector3D, double _xc, double _yc, double _a)
     {
       if (x_const && y_const){
         double _dist_3d = sqrt(pow(_x2-_x1,2)+pow(_y2-_y1,2)+pow(_z2-_z1,2)); 
@@ -169,7 +169,7 @@ class CatenarySolver
         double tetha = atan(fabs(_y2-_y1)/fabs(_x2-_x1));
         double Zmin = _z1;
         int pos_lower_point;
-        geometry_msgs::Vector3 point_cat3D;
+        geometry_msgs::Point point_cat3D;
       
         for(int i=0 ; i < num_point_catenary +1 ; i ++)
         {
@@ -191,13 +191,13 @@ class CatenarySolver
     }
 
     void getPointCatenaryStraight(double _x1, double _y1, double _z1, double _dis3D,
-                                  std::vector<geometry_msgs::Vector3> &_v_p)
+                                  std::vector<geometry_msgs::Point> &_v_p)
     {
       double _step = _dis3D / (double) num_point_catenary;
 
       for(int i=0; i < num_point_catenary +1; i++)
       {
-          geometry_msgs::Vector3 _p;
+          geometry_msgs::Point _p;
 
           _p.x = _resolution * ( round(_x1*_div_res ));
           _p.y = _resolution * ( round(_y1*_div_res ));
@@ -234,7 +234,7 @@ class CatenarySolver
     }
 
     bool solve(double x1, double y1, double z1, double x2, double y2, double z2,
-               double length, std::vector<geometry_msgs::Vector3> &_vector3D)
+               double length, std::vector<geometry_msgs::Point> &_vector3D)
     {
       //variables to compute optimization
       double _xB = sqrt(pow(x2 - x1,2)+pow(y2 - y1,2));

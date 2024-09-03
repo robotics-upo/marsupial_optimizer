@@ -34,15 +34,15 @@ class InterpolatePath
 		Allow to identify the states that are located in the same position. Return a path with new states computed in interpolateFixedPointsPath method
 		*/
 		virtual void getInitialGlobalPath(trajectory_msgs::MultiDOFJointTrajectory _path, vector<float> &vl_init_,
-										  vector<geometry_msgs::Vector3> &v_ugv_, vector<geometry_msgs::Vector3> &v_uav_,
+										  vector<geometry_msgs::Point> &v_ugv_, vector<geometry_msgs::Point> &v_uav_,
 										  vector<geometry_msgs::Quaternion> &v_q_ugv_, vector<geometry_msgs::Quaternion> &v_q_uav_);
 		/*
 		It computes new positions for states in the same location. Allow a relocation of the states
 		*/
-		virtual void interpolateFixedPointsPath(vector<geometry_msgs::Vector3> &v_inter_ , int mode_);
+		virtual void interpolateFixedPointsPath(vector<geometry_msgs::Point> &v_inter_ , int mode_);
 		virtual bool computeInitialCatenary(int p_, double &l_cat_);
-		virtual double getPointDistanceFullMap(bool use_dist_func_, geometry_msgs::Vector3 p_);
-		virtual geometry_msgs::Vector3 getReelPoint(const float px_, const float py_, const float pz_,const float qx_, const float qy_, const float qz_, const float qw_);
+		virtual double getPointDistanceFullMap(bool use_dist_func_, geometry_msgs::Point p_);
+		virtual geometry_msgs::Point getReelPoint(const float px_, const float py_, const float pz_,const float qx_, const float qy_, const float qz_, const float qw_);
 	
 		Grid3d* grid_3D;
 
@@ -50,7 +50,7 @@ class InterpolatePath
 		bool fix_last_position_ugv, use_distance_function;
 		double distance_catenary_obstacle,  length_tether_max, ws_z_min, map_resolution;
 
-		vector<geometry_msgs::Vector3> vec_pose_init_ugv, vec_pose_init_uav;
+		vector<geometry_msgs::Point> vec_pose_init_ugv, vec_pose_init_uav;
 		vector<geometry_msgs::Quaternion> vec_init_rot_ugv;
 		vector<float> vec_len_cat_init;
 		vector<int> vec_fix_status_ugv_prepross, v_interpolated_positions;
@@ -88,13 +88,13 @@ inline void InterpolatePath::initInterpolatePath(int c_f_i_ugv_, int c_f_f_ugv_,
 }
 
 inline void InterpolatePath::getInitialGlobalPath(trajectory_msgs::MultiDOFJointTrajectory _path, vector<float> &vl_init_,
-										   vector<geometry_msgs::Vector3> &v_ugv_, vector<geometry_msgs::Vector3> &v_uav_,
+										   vector<geometry_msgs::Point> &v_ugv_, vector<geometry_msgs::Point> &v_uav_,
 										   vector<geometry_msgs::Quaternion> &v_q_ugv_, vector<geometry_msgs::Quaternion> &v_q_uav_)
 {
 	float x_ugv_, y_ugv_, z_ugv_, x_uav_, y_uav_, z_uav_;
 	int aux_cont_ugv_, aux_cont_uav_;
 	double D_ugv_, D_uav_;
-	geometry_msgs::Vector3 p_uav_ , p_ugv_;
+	geometry_msgs::Point p_uav_ , p_ugv_;
 	geometry_msgs::Quaternion qt_;
 
 	aux_cont_ugv_ = aux_cont_uav_ = 0;
@@ -204,11 +204,11 @@ inline void InterpolatePath::getInitialGlobalPath(trajectory_msgs::MultiDOFJoint
 	vl_init_ = vec_len_cat_init;
 }
 
-inline void InterpolatePath::interpolateFixedPointsPath(vector<geometry_msgs::Vector3> &v_inter_ , int mode_)
+inline void InterpolatePath::interpolateFixedPointsPath(vector<geometry_msgs::Point> &v_inter_ , int mode_)
 {
 	// mode_==0 for UGV , mode_==1 for UAV
-	vector<geometry_msgs::Vector3> vec_pose_init_aux_;
-	vector<geometry_msgs::Vector3> vec_pose_init_;
+	vector<geometry_msgs::Point> vec_pose_init_aux_;
+	vector<geometry_msgs::Point> vec_pose_init_;
 	vector<bool> is_pos_interpolated_;
 	vector<float> vec_length_aux_;
 	vec_length_aux_.clear();
@@ -225,7 +225,7 @@ inline void InterpolatePath::interpolateFixedPointsPath(vector<geometry_msgs::Ve
 	}else
 		ROS_ERROR("WARNNING : In method interpolateFixedPointsPath from optimizer was not set the MODE, this is going to run into trouble");
 
-	geometry_msgs::Vector3 pos_ugv_;
+	geometry_msgs::Point pos_ugv_;
 	int count_ = 1;
 	int init_pos_ = 0;
 	int final_pos_ = 0;
@@ -340,8 +340,8 @@ inline void InterpolatePath::interpolateFixedPointsPath(vector<geometry_msgs::Ve
 
 inline bool InterpolatePath::computeInitialCatenary(int p_, double &l_cat_)
 {
-	geometry_msgs::Vector3 p_reel_;
-    std::vector<geometry_msgs::Vector3> p_catenary_;
+	geometry_msgs::Point p_reel_;
+    std::vector<geometry_msgs::Point> p_catenary_;
 
 	bisectionCatenary bc;
 
@@ -380,7 +380,7 @@ inline bool InterpolatePath::computeInitialCatenary(int p_, double &l_cat_)
 		double d_min_point_cat = 100000;
 		if (p_catenary_.size() > 2){
 		    for (size_t i = 0 ; i < p_catenary_.size() ; i++){
-		        geometry_msgs::Vector3 point_cat, p_in_cat_;
+		        geometry_msgs::Point point_cat, p_in_cat_;
 		        if (p_catenary_[i].z < ws_z_min*map_resolution + ((1*map_resolution)+security_dis_ca_)){
 		            check_catenary = false;
 					printf("interpolated_cat_collison in the floor\n");
@@ -425,7 +425,7 @@ inline bool InterpolatePath::computeInitialCatenary(int p_, double &l_cat_)
 		return false;
 }
 
-inline double InterpolatePath::getPointDistanceFullMap(bool use_dist_func_, geometry_msgs::Vector3 p_)
+inline double InterpolatePath::getPointDistanceFullMap(bool use_dist_func_, geometry_msgs::Point p_)
 {
 	double dist;
 
@@ -448,9 +448,9 @@ inline double InterpolatePath::getPointDistanceFullMap(bool use_dist_func_, geom
 	return dist;
 }
 
-inline geometry_msgs::Vector3 InterpolatePath::getReelPoint(const float px_, const float py_, const float pz_,const float qx_, const float qy_, const float qz_, const float qw_)
+inline geometry_msgs::Point InterpolatePath::getReelPoint(const float px_, const float py_, const float pz_,const float qx_, const float qy_, const float qz_, const float qw_)
 {
-	geometry_msgs::Vector3 ret;
+	geometry_msgs::Point ret;
 
 	double roll_, pitch_, yaw_;
 	tf::Quaternion q_(qx_,qy_,qz_,qw_);

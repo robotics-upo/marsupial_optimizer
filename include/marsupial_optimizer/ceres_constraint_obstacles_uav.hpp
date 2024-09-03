@@ -53,7 +53,7 @@ public:
 					d_obs = -1.0;
 			}
 			else{
-				geometry_msgs::Vector3 near_;
+				geometry_msgs::Point near_;
             	nn.nearestObstacleStateCeres(kdT_ , state1[1],state1[2],state1[3], o_p_, near_.x, near_.y, near_.z);
 				double arg_d_obs = pow(near_.x-state1[1],2) + pow(near_.y-state1[2],2) + pow(near_.z-state1[3],2);
                 if (arg_d_obs < 0.0001 && arg_d_obs > -0.0001)

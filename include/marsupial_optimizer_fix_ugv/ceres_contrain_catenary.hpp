@@ -51,7 +51,7 @@ struct CatenaryFunctor {
       double lower_point_cat_z;
       
       visualization_msgs::MarkerArray catenary_marker_;
-	    std::vector<geometry_msgs::Vector3> points_catenary;
+	    std::vector<geometry_msgs::Point> points_catenary;
 
       double dist_ = sqrt((state1[1] - ugv_pc_.x)*(state1[1] - ugv_pc_.x) +
                           (state1[2] - ugv_pc_.y)*(state1[2] - ugv_pc_.y) +

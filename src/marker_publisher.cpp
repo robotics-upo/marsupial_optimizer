@@ -1,6 +1,6 @@
 #include "misc/marker_publisher.h"
 
-void MarkerPublisher::markerPoints(visualization_msgs::MarkerArray _marker, std::vector<geometry_msgs::Vector3> _vector, 
+void MarkerPublisher::markerPoints(visualization_msgs::MarkerArray _marker, std::vector<geometry_msgs::Point> _vector, 
 									int _suffix, int _n_v, ros::Publisher c_m_pub_, int change_marker_, bool print_)
 {
     std::string string_marker;
@@ -87,7 +87,7 @@ void MarkerPublisher::clearMarkers(visualization_msgs::MarkerArray _marker, int 
     c_m_pub_.publish(_marker);
 }
 
-void MarkerPublisher::getMarkerPoints(visualization_msgs::MarkerArray &marker_, std::vector<geometry_msgs::Vector3> vector_, std::string ns_, int colour_)
+void MarkerPublisher::getMarkerPoints(visualization_msgs::MarkerArray &marker_, std::vector<geometry_msgs::Point> vector_, std::string ns_, int colour_)
 {
 	// RED: colour_ = 0 ; GREEN : colour_ = 1 ; BLUE: colour_ = 2 ; YELLOW = 3 ; PURPLE = 4; ; BLACK = 5 ; WHITE = 6
 	marker_.markers.clear();
@@ -153,7 +153,7 @@ void MarkerPublisher::getMarkerPoints(visualization_msgs::MarkerArray &marker_, 
 	}	
 }
 
-void MarkerPublisher::getMarkerLines(visualization_msgs::MarkerArray &marker_, std::vector<geometry_msgs::Vector3> _vector, std::string ns_, int colour_)
+void MarkerPublisher::getMarkerLines(visualization_msgs::MarkerArray &marker_, std::vector<geometry_msgs::Point> _vector, std::string ns_, int colour_)
 {
 	// RED: colour_ = 0 ; GREEN : colour_ = 1 ; BLUE: colour_ = 2 ; YELLOW = 3 ; PURPLE = 4;
 	marker_.markers.clear();
@@ -228,7 +228,7 @@ void MarkerPublisher::clearMarkersPointLines(visualization_msgs::MarkerArray &p_
 	traj_m_pub_.publish(l_m_);
 }
 
-void MarkerPublisher::initialAndFinalPointsMarker(geometry_msgs::Vector3 v3_i, geometry_msgs::Vector3 v3_f, ros::Publisher initial_final_pub_)
+void MarkerPublisher::initialAndFinalPointsMarker(geometry_msgs::Point v3_i, geometry_msgs::Point v3_f, ros::Publisher initial_final_pub_)
 {
 	visualization_msgs::MarkerArray marker_nearest;
 	marker_nearest.markers.resize(2);

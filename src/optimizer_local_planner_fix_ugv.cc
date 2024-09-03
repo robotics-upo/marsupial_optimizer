@@ -313,7 +313,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 
 	// mp_.clearMarkers(catenary_marker, 100, catenary_marker_pub_);
 	for(size_t i = 0; i < statesPos.size(); i++){
-		std::vector<geometry_msgs::Vector3> points_catenary_final;
+		std::vector<geometry_msgs::Point> points_catenary_final;
 		CatenarySolver cSX_;
 		cSX_.setMaxNumIterations(100);
 	  	cSX_.solve(ugv_pos_catenary.x, ugv_pos_catenary.y, ugv_pos_catenary.z, statesPos[i].parameter[1], statesPos[i].parameter[2], statesPos[i].parameter[3], statesLength[i].parameter[1], points_catenary_final);
@@ -360,7 +360,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 void OptimizerLocalPlanner::getDataForOptimizerAnalysis()
 {
 	// bisectionCatenary bsCat;
-	std::vector<geometry_msgs::Vector3> v_points_catenary_opt_,v_points_catenary_init_;
+	std::vector<geometry_msgs::Point> v_points_catenary_opt_,v_points_catenary_init_;
 
 	// Writing general data for initial analysis
 	double init_compute_time_, init_traj_distance_, init_traj_time_, init_traj_vel_, init_traj_vel_max_, init_traj_vel_mean_, init_traj_acc_,init_traj_acc_max_,init_traj_acc_mean_;
@@ -720,7 +720,7 @@ void OptimizerLocalPlanner::setInitialLengthCatenaryAndPosUGV(std::vector <doubl
 
 void OptimizerLocalPlanner::preComputeLengthCatenary(std::vector <double> &_vector, int _s)
 {
-	std::vector<geometry_msgs::Vector3> _pre_points_catenary;
+	std::vector<geometry_msgs::Point> _pre_points_catenary;
 	Eigen::Vector3d _obstacles_near_catenary;
 	Eigen::Vector3d _p_cat;
 	struct catenaryStates{
@@ -848,9 +848,9 @@ void OptimizerLocalPlanner::checkObstaclesBetweenCatenaries(std::vector <double>
 	int _num_points;
 	double _length1,_length2;
 	bool obst_between_catenaries=false;
-	std::vector<geometry_msgs::Vector3> _pre_points_catenary1;
-	std::vector<geometry_msgs::Vector3> _pre_points_catenary2;
-	std::vector<geometry_msgs::Vector3> _v_factor1, _v_factor2;
+	std::vector<geometry_msgs::Point> _pre_points_catenary1;
+	std::vector<geometry_msgs::Point> _pre_points_catenary2;
+	std::vector<geometry_msgs::Point> _v_factor1, _v_factor2;
 	std::vector<Eigen::Vector3d> _vector_points_line;
 	// bisectionCatenary bsC1, bsC2;
 	CatenarySolver _cS1, _cS2;

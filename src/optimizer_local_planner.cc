@@ -5,6 +5,7 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
  */
 
 #include "marsupial_optimizer/optimizer_local_planner.h"
+#include "misc/vector_to_point.hpp"
 
 OptimizerLocalPlanner::OptimizerLocalPlanner(bool get_path_from_file_)
 {
@@ -326,11 +327,11 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	}
     getReelPose(); // To get init pos reel for optimization process
 
-	CheckCM->Init(grid_3D, distance_tether_obstacle, distance_obstacle_ugv, distance_obstacle_uav, length_tether_max, ws_z_min, step, 
-	use_tether, use_distance_function, pose_reel_local.transform.translation, just_line_of_sigth, use_catenary_as_tether);
-	CheckCMopt->Init(grid_3D, 0.02, distance_obstacle_ugv, distance_obstacle_uav, length_tether_max, ws_z_min, step, 
-	use_tether, use_distance_function, pose_reel_local.transform.translation, just_line_of_sigth, use_catenary_as_tether);
-	CheckCM->CheckStatusCollision(globalPath, vec_len_tether_init);
+	CheckCM->init(grid_3D, distance_tether_obstacle, distance_obstacle_ugv, distance_obstacle_uav, length_tether_max, ws_z_min, step, 
+	use_tether, use_distance_function, toPoint(pose_reel_local.transform.translation), just_line_of_sigth, use_catenary_as_tether);
+	CheckCMopt->init(grid_3D, 0.02, distance_obstacle_ugv, distance_obstacle_uav, length_tether_max, ws_z_min, step, 
+	use_tether, use_distance_function, toPoint(pose_reel_local.transform.translation), just_line_of_sigth, use_catenary_as_tether);
+	CheckCM->checkStatusCollision(globalPath, vec_len_tether_init);
 	
 
 	// Stage to interpolate path
@@ -361,7 +362,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	calculateDistanceVertices(vec_dist_init_ugv, vec_dist_init_uav);
  	getTemporalState(vec_time_init);
 
-	CheckCM->CheckStatusTetherCollision(vec_pose_ugv_init, vec_rot_ugv_init, vec_pose_uav_init, v_cat_params_init_, vec_len_tether_init, true);
+	CheckCM->checkStatusTetherCollision(vec_pose_ugv_init, vec_rot_ugv_init, vec_pose_uav_init, v_cat_params_init_, vec_len_tether_init, true);
 	printf("\t 2 Catenary fixed collision after Interpolation\n");
 	for (size_t i=0; i< vec_len_tether_init.size(); i++){
 		printf("[%lu] %.5f %.5f %.5f %.5f %.5f %.5f %.3f %.3f %.3f\n", i,
@@ -407,7 +408,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	ROS_INFO(PRINTF_GREEN "Optimizer Local Planner : 3 Graph initial parabola");
 	graphTetherAndPathMarker(vec_pose_ugv_init, vec_pose_uav_init, vec_rot_ugv_init, v_tether_params_init, vec_len_tether_init, 5, 6, 3,
 						 traj_marker_ugv_pub_, traj_marker_uav_pub_, catenary_marker_pub_, tether_marker_init, use_catenary_as_tether, false);
-	CheckCM->CheckStatusTetherCollision(vec_pose_ugv_init, vec_rot_ugv_init, vec_pose_uav_init, v_tether_params_init, vec_len_tether_init, use_catenary_as_tether);
+	CheckCM->checkStatusTetherCollision(vec_pose_ugv_init, vec_rot_ugv_init, vec_pose_uav_init, v_tether_params_init, vec_len_tether_init, use_catenary_as_tether);
 	// for (size_t i=0; i< vec_len_tether_init.size(); i++){
 	// 	printf("\tAfter compute parabola parameter[%lu/%lu]: ugv=[%.5f %.5f %.5f / %.3f %.3f %.3f %.3f] uav=[%.5f %.5f %.5f / %.3f %.3f %.3f %.3f]  length_catenary=%.3f  params_cat=[%.3f %.3f %.3f]\n", 
     //     i, vec_len_tether_init.size(),
@@ -426,7 +427,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	ROS_INFO(PRINTF_GREEN "Optimizer Local Planner : 4 Graph fixed initial parabola");
 	graphTetherAndPathMarker(vec_pose_ugv_init, vec_pose_uav_init, vec_rot_ugv_init, v_tether_params_init, vec_len_tether_init, 5, 6, 1,
 							traj_marker_ugv_pub_, traj_marker_uav_pub_, tether_marker_init_pub_, tether_marker_init, use_catenary_as_tether, false);
-	CheckCM->CheckStatusTetherCollision(vec_pose_ugv_init, vec_rot_ugv_init, vec_pose_uav_init, v_tether_params_init, vec_len_tether_init, use_catenary_as_tether);
+	CheckCM->checkStatusTetherCollision(vec_pose_ugv_init, vec_rot_ugv_init, vec_pose_uav_init, v_tether_params_init, vec_len_tether_init, use_catenary_as_tether);
 	/********************* To obligate pause method and check Planning result *********************/
         // std::string yy_ ;
         // std::cout << " *** Optimization Proccess Initializing Parameter " ;
@@ -438,11 +439,11 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
   	MP.clearMarkersPointLines(points_uav_marker, lines_uav_marker,traj_marker_uav_pub_,size_path);
 	
 	dm_.initDataManagement(path, name_output_file, scenario_name, num_pos_initial, initial_velocity_ugv, initial_velocity_uav, 
-							initial_acceleration_ugv, initial_acceleration_uav, distance_tether_obstacle, pose_reel_local.transform.translation, vec_pose_ugv_init, 
+							initial_acceleration_ugv, initial_acceleration_uav, distance_tether_obstacle, toPoint(pose_reel_local.transform.translation), vec_pose_ugv_init, 
 							vec_pose_uav_init, vec_len_tether_init, vec_rot_ugv_init, vec_rot_uav_init, mapFull_msg, mapTrav_msg, grid_3D, false, use_catenary_as_tether);			   
 	
 	if(!just_line_of_sigth){ // The tether is not computed if is required just to star with initial condition the straight line.
-		CheckCM->CheckStatusTetherCollision(vec_pose_ugv_init, vec_rot_ugv_init, vec_pose_uav_init, v_tether_params_init, vec_len_tether_init, use_catenary_as_tether);
+		CheckCM->checkStatusTetherCollision(vec_pose_ugv_init, vec_rot_ugv_init, vec_pose_uav_init, v_tether_params_init, vec_len_tether_init, use_catenary_as_tether);
 		dm_.feasibilityAnalisysPath(CheckCM->count_ugv_coll, CheckCM->count_uav_coll, CheckCM->count_total_tether_coll_);
 	}
 
@@ -651,7 +652,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 					ROS_INFO(PRINTF_ORANGE"		- Optimize Tether Obstacles Autodiff - Catenary");
 					for (int i = 0; i < statesTetherParams.size(); ++i) {
 						CostFunction* cost_function_par_1  = new AutoDiffCostFunction<AutodiffCatenaryObstacleFunctor::CatenaryObstacleFunctor, 1, 4, 4, 4> //Residual, ugvPos, uavPos, tetherParams
-									(new AutodiffCatenaryObstacleFunctor::CatenaryObstacleFunctor(w_eta_1, grid_3D, pose_reel_local.transform.translation, distance_tether_obstacle, write_data_residual, user_name)); 
+									(new AutodiffCatenaryObstacleFunctor::CatenaryObstacleFunctor(w_eta_1, grid_3D, toPoint(pose_reel_local.transform.translation), distance_tether_obstacle, write_data_residual, user_name)); 
 							problem.AddResidualBlock(cost_function_par_1, loss_function, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesTetherParams[i].parameter);
 						if (i == 0 || (fix_last_position_ugv && i == statesTetherParams.size()-1))
 							problem.SetParameterBlockConstant(statesTetherParams[i].parameter);
@@ -665,7 +666,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 					ROS_INFO(PRINTF_ORANGE"		- Optimize Tether Length Autodiff - Catenary");
 					for (int i = 0; i < statesTetherParams.size(); ++i) {
 						CostFunction* cost_function_par_2  = new AutoDiffCostFunction<AutodiffCatenaryLengthFunctor::CatenaryLengthFunctor, 1, 4, 4, 4>
-									(new AutodiffCatenaryLengthFunctor::CatenaryLengthFunctor(w_eta_2, pose_reel_local.transform.translation, length_tether_max, write_data_residual, user_name)); 
+									(new AutodiffCatenaryLengthFunctor::CatenaryLengthFunctor(w_eta_2, toPoint(pose_reel_local.transform.translation), length_tether_max, write_data_residual, user_name)); 
 							problem.AddResidualBlock(cost_function_par_2, loss_function, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesTetherParams[i].parameter);
 						if (i == 0 || (fix_last_position_ugv && i == statesTetherParams.size()-1))
 							problem.SetParameterBlockConstant(statesTetherParams[i].parameter);
@@ -679,7 +680,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 					ROS_INFO(PRINTF_ORANGE"		- Optimize Tether Params Autodiff - Catenary");
 					for (int i = 0; i < statesTetherParams.size(); ++i) {
 						CostFunction* cost_function_par_3  = new AutoDiffCostFunction<AutodiffTetherParametersFunctor::TetherParametersFunctor, 2, 4, 4, 4>
-									(new AutodiffTetherParametersFunctor::TetherParametersFunctor(w_eta_3, pose_reel_local.transform.translation, write_data_residual, user_name)); 
+									(new AutodiffTetherParametersFunctor::TetherParametersFunctor(w_eta_3, toPoint(pose_reel_local.transform.translation), write_data_residual, user_name)); 
 							problem.AddResidualBlock(cost_function_par_3, loss_function, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesTetherParams[i].parameter);
 						if (i == 0 || (fix_last_position_ugv && i == statesTetherParams.size()-1))
 							problem.SetParameterBlockConstant(statesTetherParams[i].parameter);
@@ -695,7 +696,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 					ROS_INFO(PRINTF_ORANGE"		- Optimize Tether Obstacles Autodiff - Parabola");
 					for (int i = 0; i < statesTetherParams.size(); ++i) {
 						CostFunction* cost_function_par_1  = new AutoDiffCostFunction<AutodiffParableFunctor::ParableFunctor, 1, 4, 4, 4> //Residual, ugvPos, uavPos, parableParams
-													(new AutodiffParableFunctor::ParableFunctor(w_eta_1, grid_3D, pose_reel_local.transform.translation, distance_tether_obstacle,
+													(new AutodiffParableFunctor::ParableFunctor(w_eta_1, grid_3D, toPoint(pose_reel_local.transform.translation), distance_tether_obstacle,
 													true, user_name)); 
 						// CostFunction* cost_function_par_1  = new AutoDiffCostFunction<AutodiffParableFunctor::ParableFunctor, 1, 4, 4, 4> //Residual, ugvPos, uavPos, parableParams
 						// 							(new AutodiffParableFunctor::ParableFunctor(w_eta_1, grid_3D, grid_3D_obst, grid_3D_trav, pose_reel_local.transform.translation, distance_tether_obstacle,
@@ -713,7 +714,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 					ROS_INFO(PRINTF_ORANGE"		- Optimize Tether Length Autodiff - Parabola");
 					for (int i = 0; i < statesTetherParams.size(); ++i) {
 						CostFunction* cost_function_par_2  = new AutoDiffCostFunction<AutodiffParableLengthFunctor::ParableLengthFunctor, 1, 4, 4, 4>
-													(new AutodiffParableLengthFunctor::ParableLengthFunctor(w_eta_2, pose_reel_local.transform.translation, 
+													(new AutodiffParableLengthFunctor::ParableLengthFunctor(w_eta_2, toPoint(pose_reel_local.transform.translation), 
 													length_tether_max, write_data_residual, user_name)); 
 							problem.AddResidualBlock(cost_function_par_2, loss_function, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesTetherParams[i].parameter);
 						if (i == 0 || (fix_last_position_ugv && i == statesTetherParams.size()-1))
@@ -728,7 +729,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 					ROS_INFO(PRINTF_ORANGE"		- Optimize Tether Params Autodiff - Parabola");
 					for (int i = 0; i < statesTetherParams.size(); ++i) {
 						CostFunction* cost_function_par_3  = new AutoDiffCostFunction<AutodiffParableParametersFunctor::ParableParametersFunctor, 2, 4, 4, 4>
-													(new AutodiffParableParametersFunctor::ParableParametersFunctor(w_eta_3, pose_reel_local.transform.translation, 
+													(new AutodiffParableParametersFunctor::ParableParametersFunctor(w_eta_3, toPoint(pose_reel_local.transform.translation), 
 													write_data_residual, user_name)); 
 							problem.AddResidualBlock(cost_function_par_3, loss_function, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesTetherParams[i].parameter);
 						if (i == 0 || (fix_last_position_ugv && i == statesTetherParams.size()-1))
@@ -766,7 +767,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	// Inform if is a feabible Trajectory or not, 
 	bool free_collision_ = true;
 	if(!just_line_of_sigth) // The tether is not computed if is required just to star with initial condition the straight line.
-    	free_collision_ = CheckCMopt->CheckStatusTetherCollision(vec_pose_ugv_opt, vec_rot_ugv_opt, vec_pose_uav_opt, v_tether_params_opt, vec_len_tether_opt, use_catenary_as_tether);
+    	free_collision_ = CheckCMopt->checkStatusTetherCollision(vec_pose_ugv_opt, vec_rot_ugv_opt, vec_pose_uav_opt, v_tether_params_opt, vec_len_tether_opt, use_catenary_as_tether);
 
 
 	printf("Collision %i %i %i\n",CheckCMopt->count_ugv_coll, CheckCMopt->count_uav_coll, CheckCMopt->count_total_tether_coll_);
@@ -937,7 +938,7 @@ void OptimizerLocalPlanner::finishigOptimization()
 	double new_equi_dist = 0; 
 	double distance_ = 0;
   	for (size_t i = 0; i < size_path; i++){
-		geometry_msgs::Vector3 position_ugv_, position_uav_;
+		geometry_msgs::Point position_ugv_, position_uav_;
 		position_ugv_.x = statesPosUGV[i].parameter[1];
 		position_ugv_.y = statesPosUGV[i].parameter[2];
 		position_ugv_.z = statesPosUGV[i].parameter[3];
@@ -984,12 +985,12 @@ void OptimizerLocalPlanner::finishigOptimization()
 							  traj_opt_marker_ugv_pub_,traj_opt_marker_uav_pub_, tether_marker_opt_pub_, tether_marker_opt, use_catenary_as_tether, false);
 	}else{
 		int num_point_per_unit_length = 10;
-		geometry_msgs::Vector3 point_;
-		std::vector<geometry_msgs::Vector3> points_tether_final_;
+		geometry_msgs::Point point_;
+		std::vector<geometry_msgs::Point> points_tether_final_;
 		points_tether_final_.clear();
 		
 		for(int i = 0; i < size_path; i++){  
-			geometry_msgs::Vector3 p_reel_ = getReelPoint(vec_pose_ugv_opt[i].x,vec_pose_ugv_opt[i].y,vec_pose_ugv_opt[i].z,
+			geometry_msgs::Point p_reel_ = getReelPoint(vec_pose_ugv_opt[i].x,vec_pose_ugv_opt[i].y,vec_pose_ugv_opt[i].z,
 										vec_rot_ugv_opt[i].x, vec_rot_ugv_opt[i].y, vec_rot_ugv_opt[i].z, vec_rot_ugv_opt[i].w);
 			int np_ = round( (double)num_point_per_unit_length * vec_len_tether_opt[i]);
 			double step_x_ = (vec_pose_uav_opt[i].x - p_reel_.x)/ (double)np_;
@@ -1139,9 +1140,9 @@ void OptimizerLocalPlanner::getReelPose()
     }
 }
 
-geometry_msgs::Vector3 OptimizerLocalPlanner::getReelPoint(const float px_, const float py_, const float pz_,const float qx_, const float qy_, const float qz_, const float qw_)
+geometry_msgs::Point OptimizerLocalPlanner::getReelPoint(const float px_, const float py_, const float pz_,const float qx_, const float qy_, const float qz_, const float qw_)
 {
-	geometry_msgs::Vector3 ret;
+	geometry_msgs::Point ret;
 
 	double roll_, pitch_, yaw_;
 	tf::Quaternion q_(qx_,qy_,qz_,qw_);
@@ -1156,7 +1157,7 @@ geometry_msgs::Vector3 OptimizerLocalPlanner::getReelPoint(const float px_, cons
 	return ret;
 }
 
-void OptimizerLocalPlanner::getTetherParameter(vector<geometry_msgs::Vector3> v_p_ugv_, vector<geometry_msgs::Quaternion> v_q_ugv_, vector<geometry_msgs::Vector3> v_p_uav_, vector<float> &v_l_, vector<tether_parameters> _v_param){
+void OptimizerLocalPlanner::getTetherParameter(vector<geometry_msgs::Point> v_p_ugv_, vector<geometry_msgs::Quaternion> v_q_ugv_, vector<geometry_msgs::Point> v_p_uav_, vector<float> &v_l_, vector<tether_parameters> _v_param){
 
 	parameterBlockTether tether_params_ ;
 	tether_parameters value_params_;
@@ -1174,25 +1175,25 @@ void OptimizerLocalPlanner::getTetherParameter(vector<geometry_msgs::Vector3> v_
 	}
 }
 
-void OptimizerLocalPlanner::fixParabolaParameter(vector<geometry_msgs::Vector3> v_p_ugv_, vector<geometry_msgs::Quaternion> v_q_ugv_, vector<geometry_msgs::Vector3> v_p_uav_, vector<float> v_l_, vector<tether_parameters> &v_param_){
+void OptimizerLocalPlanner::fixParabolaParameter(vector<geometry_msgs::Point> v_p_ugv_, vector<geometry_msgs::Quaternion> v_q_ugv_, vector<geometry_msgs::Point> v_p_uav_, vector<float> v_l_, vector<tether_parameters> &v_param_){
 
 	tether_parameters value_params_;
 	vector<tether_parameters> v_params_init_; v_params_init_.clear();
-	geometry_msgs::Vector3 p_reel_;
+	geometry_msgs::Point p_reel_;
 	for (size_t i = 0 ; i < v_param_.size() ; i++){
 		p_reel_ = getReelPoint(v_p_ugv_[i].x,v_p_ugv_[i].y,v_p_ugv_[i].z,v_q_ugv_[i].x, v_q_ugv_[i].y, v_q_ugv_[i].z, v_q_ugv_[i].w);
-		bool free_collision_ = CheckCM->CheckFreeCollisionTether(p_reel_, v_p_uav_[i], v_param_[i], v_l_[i], i);
+		bool free_collision_ = CheckCM->checkFreeCollisionTether(p_reel_, v_p_uav_[i], v_param_[i], v_l_[i], i);
 		if(!free_collision_){
 // std::cout << "["<< i <<"]OLD PARAMS VALUES OPTIMIZED:["<< v_param_[i].a<< " "<< v_param_[i].b << " " << v_param_[i].c << "]"<< std::endl;
 			double a_, b_, c_;
 			if(use_catenary_as_tether){
-				CorrectionCatenaryParametersSolver CCPS(grid_3D, distance_tether_obstacle, length_tether_max, i, pose_reel_local.transform.translation); 
+				CorrectionCatenaryParametersSolver CCPS(grid_3D, distance_tether_obstacle, length_tether_max, i, toPoint(pose_reel_local.transform.translation)); 
 				CCPS.loadInitialStatus(p_reel_, v_p_uav_[i], v_param_[i].a, v_param_[i].b, v_param_[i].c);
 				CCPS.solve(0.001, 0.4, 1.0); //the argument is the weigth for constraints
 				CCPS.getParabolaParameters(a_,b_,c_);
 			}
 			else{
-				CorrectionParabolaParametersSolver CPPS(grid_3D, distance_tether_obstacle, length_tether_max, i, pose_reel_local.transform.translation); 
+				CorrectionParabolaParametersSolver CPPS(grid_3D, distance_tether_obstacle, length_tether_max, i, toPoint(pose_reel_local.transform.translation)); 
 				CPPS.loadInitialStatus(p_reel_, v_p_uav_[i], v_param_[i].a, v_param_[i].b, v_param_[i].c);
 				CPPS.solve(10.0, 0.4, 1.0); //the argument is the weigth for constraints
 				CPPS.getParabolaParameters(a_,b_,c_);
@@ -1214,7 +1215,7 @@ void OptimizerLocalPlanner::fixParabolaParameter(vector<geometry_msgs::Vector3> 
 	v_param_ = v_params_init_;
 }
 
-void OptimizerLocalPlanner::graphTetherAndPathMarker(vector<geometry_msgs::Vector3> v_ugv_, vector<geometry_msgs::Vector3> v_uav_, 
+void OptimizerLocalPlanner::graphTetherAndPathMarker(vector<geometry_msgs::Point> v_ugv_, vector<geometry_msgs::Point> v_uav_, 
 													  vector<geometry_msgs::Quaternion> v_rot_ugv_, vector <tether_parameters> v_params_, vector<float> v_length_,
 													  int c_ugv_, int c_uav_, int c_tether_, ros::Publisher p_ugv_, ros::Publisher p_uav_, 
 													  ros::Publisher p_tether_, visualization_msgs::MarkerArray m_, bool use_cat_as_tether_, bool pause_){
@@ -1228,8 +1229,8 @@ void OptimizerLocalPlanner::graphTetherAndPathMarker(vector<geometry_msgs::Vecto
 	p_uav_.publish(points_uav_marker);
 	p_uav_.publish(lines_uav_marker);
 	
-	std::vector<geometry_msgs::Vector3> v_pts_tether_;
-	geometry_msgs::Vector3 p_reel_;
+	std::vector<geometry_msgs::Point> v_pts_tether_;
+	geometry_msgs::Point p_reel_;
 
 	v_pts_tether_.clear();
 	GetTetherParameter GTP_;
@@ -1254,10 +1255,10 @@ void OptimizerLocalPlanner::graphTetherAndPathMarker(vector<geometry_msgs::Vecto
 	}
 }
 
-void OptimizerLocalPlanner::checkCatenaryStatus(vector<geometry_msgs::Vector3> v_p_ugv, vector<geometry_msgs::Vector3>  v_p_uav, vector<geometry_msgs::Quaternion> v_r_ugv, vector<float> &v_l_in, vector<int> v_fixed_, vector<tether_parameters> &v_param_){
+void OptimizerLocalPlanner::checkCatenaryStatus(vector<geometry_msgs::Point> v_p_ugv, vector<geometry_msgs::Point>  v_p_uav, vector<geometry_msgs::Quaternion> v_r_ugv, vector<float> &v_l_in, vector<int> v_fixed_, vector<tether_parameters> &v_param_){
 
-	vector<geometry_msgs::Vector3> points_catenary_; points_catenary_.clear();
-	geometry_msgs::Vector3 p_reel_;
+	vector<geometry_msgs::Point> points_catenary_; points_catenary_.clear();
+	geometry_msgs::Point p_reel_;
 	std::vector<float>  v_l_out;
 	v_l_out.clear();
 	for(size_t i = 0 ; i < v_l_in.size() ; i++){
@@ -1274,7 +1275,7 @@ void OptimizerLocalPlanner::checkCatenaryStatus(vector<geometry_msgs::Vector3> v
 			v_l_out.push_back(v_l_in[i]);
 		
 		if(v_fixed_[i]== 1){
-			CheckCM->SearchCatenary(p_reel_, v_p_uav[i], points_catenary_);
+			CheckCM->searchCatenary(p_reel_, v_p_uav[i], points_catenary_);
 			v_param_[i].a = CheckCM->param_cat_x0;
 			v_param_[i].b = CheckCM->param_cat_y0;
 			v_param_[i].c  = CheckCM->param_cat_a ;
@@ -1288,7 +1289,7 @@ void OptimizerLocalPlanner::checkCatenaryStatus(vector<geometry_msgs::Vector3> v
 	v_l_in = v_l_out;     //Check This two lines, should be fixed in a previous method the length
 }
 
-double OptimizerLocalPlanner::checkTetherLength(tether_parameters p_, geometry_msgs::Vector3 p1_ , geometry_msgs::Vector3 p2_)
+double OptimizerLocalPlanner::checkTetherLength(tether_parameters p_, geometry_msgs::Point p1_ , geometry_msgs::Point p2_)
 {
 	double L1, L2, L, x_;
 	// Compute tether L : log(q + ((q + 2*p*x)^2 + 1)^(1/2) + 2*p*x)/(4*p) + ((q + 2*p*x)*((q + 2*p*x)^2 + 1)^(1/2))/(4*p) , x = xA and xB

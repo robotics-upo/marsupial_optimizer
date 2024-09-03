@@ -23,7 +23,7 @@ public:
 
 	struct ParableLengthFunctor 
 	{
-	ParableLengthFunctor(double weight_factor, geometry_msgs::Vector3 pos_reel_ugv_, double max_L_, bool write_data, std::string user_name)
+	ParableLengthFunctor(double weight_factor, geometry_msgs::Point pos_reel_ugv_, double max_L_, bool write_data, std::string user_name)
 					: wf(weight_factor), pos_reel_ugv(pos_reel_ugv_), max_L(max_L_),w_d(write_data), user(user_name)
 		{}
 
@@ -62,7 +62,7 @@ public:
 		
 		bool w_d;
 		double wf, max_L;
-		geometry_msgs::Vector3 pos_reel_ugv;
+		geometry_msgs::Point pos_reel_ugv;
 		std::string user;
 	};
 

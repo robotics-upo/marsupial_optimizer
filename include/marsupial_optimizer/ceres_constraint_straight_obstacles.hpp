@@ -133,7 +133,7 @@ class AutodiffStraightFunctor {
 
 		struct StraightFunctor 
 		{
-			StraightFunctor(double weight_factor_, Grid3d* grid_3D_, geometry_msgs::Vector3 pos_reel_ugv_, double sb_)
+			StraightFunctor(double weight_factor_, Grid3d* grid_3D_, geometry_msgs::Point pos_reel_ugv_, double sb_)
 			: wf(weight_factor_), g_3D(grid_3D_), pos_reel_ugv(pos_reel_ugv_), sb(sb_), 
 			_straigthCostFunctor(new DistanceStraightFunction(g_3D, sb)), _numPointFunctor(new NumPointStraightFunction())
 			{
@@ -181,7 +181,7 @@ class AutodiffStraightFunctor {
 			}
 
 			double wf, sb;
-			geometry_msgs::Vector3 pos_reel_ugv;
+			geometry_msgs::Point pos_reel_ugv;
 			Grid3d* g_3D;
 	    	ceres::CostFunctionToFunctor<1, 3> _straigthCostFunctor;
 	    	ceres::CostFunctionToFunctor<1, 1> _numPointFunctor;

@@ -57,7 +57,6 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include <octomap_msgs/conversions.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <visualization_msgs/Marker.h>
-#include <geometry_msgs/Vector3.h>
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Quaternion.h>
 #include <sensor_msgs/PointCloud2.h>
@@ -151,9 +150,9 @@ public:
 	void finishigOptimization();
 	void getReelPose();
 	void resetFlags();
-	bool CheckStatusTetherCollision(vector<geometry_msgs::Vector3> v1_, vector<geometry_msgs::Vector3 >v2_, vector<tether_parameters> v3_);
+	bool CheckStatusTetherCollision(vector<geometry_msgs::Point> v1_, vector<geometry_msgs::Point >v2_, vector<tether_parameters> v3_);
 
-	void graphTetherAndPathMarker(vector<geometry_msgs::Vector3> v_ugv_, vector<geometry_msgs::Vector3> v_uav_, 
+	void graphTetherAndPathMarker(vector<geometry_msgs::Point> v_ugv_, vector<geometry_msgs::Point> v_uav_, 
 								   vector<geometry_msgs::Quaternion> v_rot_ugv, vector <tether_parameters> v_p_, vector<float> v_length_,
 									int c_ugv_, int c_uav_, int c_tether_, ros::Publisher p_ugv_, ros::Publisher p_uav_, 
 									ros::Publisher p_tether_, visualization_msgs::MarkerArray m_, bool pause_);
@@ -227,8 +226,8 @@ public:
 	vector<double> v_angles_smooth_ugv_init, v_angles_smooth_uav_init, v_angles_smooth_ugv_opt, v_angles_smooth_uav_opt;
 	vector<float> vec_len_tether_init, vec_len_tether_opt;
 	vector<float> vec_cat_param_x0, vec_cat_param_y0, vec_cat_param_a;
-	vector<geometry_msgs::Vector3> vec_pose_ugv_opt, vec_pose_uav_opt; 
-	vector<geometry_msgs::Vector3> vec_pose_ugv_init, vec_pose_uav_init;
+	vector<geometry_msgs::Point> vec_pose_ugv_opt, vec_pose_uav_opt; 
+	vector<geometry_msgs::Point> vec_pose_ugv_init, vec_pose_uav_init;
 	vector <tether_parameters> v_tether_params_init, v_tether_params_opt;
 
     double pos_reel_x, pos_reel_y, pos_reel_z;

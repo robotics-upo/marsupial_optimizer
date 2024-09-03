@@ -19,7 +19,7 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include <octomap_msgs/conversions.h>
 
 #include <ros/ros.h>
-#include <geometry_msgs/Vector3.h>
+#include <geometry_msgs/Point.h>
 #include <std_msgs/Bool.h>
 
 
@@ -81,7 +81,7 @@ public:
 	int n_iter_opt;	//Iterations Numbers of Optimizer
 
 	octomap::OcTree *mapFull_msg , *mapTrav_msg;
-	geometry_msgs::Vector3 pos_init, pos_final;
+	geometry_msgs::Point pos_init, pos_final;
 
 	visualization_msgs::MarkerArray catenary_marker;
 

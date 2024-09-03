@@ -5,6 +5,7 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
  */
 
 #include "marsupial_optimizer/test_tether_constraints.h"
+#include <misc/vector_to_point.hpp>
 
 TestTetherConstraints::TestTetherConstraints(std::string node_name_)
 {
@@ -89,8 +90,8 @@ TestTetherConstraints::TestTetherConstraints(std::string node_name_)
 	CheckCM = new CatenaryCheckerManager(node_name_);
 	bool use_parabola_ = true;
 	bool just_line_of_sigth_ = false;
-	CheckCM->Init(grid_3D, distance_tether_obstacle, distance_obstacle_ugv, distance_obstacle_uav, length_tether_max, ws_z_min, step, 
-	use_parabola_, use_distance_function, pose_reel_local.transform.translation, just_line_of_sigth_, use_catenary_as_tether);
+	CheckCM->init(grid_3D, distance_tether_obstacle, distance_obstacle_ugv, distance_obstacle_uav, length_tether_max, ws_z_min, step, 
+	use_parabola_, use_distance_function, toPoint(pose_reel_local.transform.translation), just_line_of_sigth_, use_catenary_as_tether);
 
 	ros::Duration(2.0).sleep();
     getReelPose(); // To get init pos reel for optimization process
@@ -280,7 +281,7 @@ void TestTetherConstraints::executeOptimizerPathGoalCB()
 	parameterBlockPos parameter_block_pos_ugv;
 	parameterBlockPos parameter_block_pos_uav;
 	parameterBlockTether parameter_block_tether_params;
-	geometry_msgs::Vector3 pos_ugv_, pos_uav_;
+	geometry_msgs::Point pos_ugv_, pos_uav_;
 	tether_parameters param_value_;
 
 	cleanVectors();
@@ -358,8 +359,11 @@ std::cout << "Pose Reel: "<< pose_reel_local.transform.translation.z << std::end
 				if(tether_obstacle_constraint){
 					ROS_INFO(PRINTF_ORANGE"		- Optimize Tether Obstacles Autodiff - Catenary");
 					for (int i = 0; i < statesTetherParams.size(); ++i) {
+						geometry_msgs::Point p;
+						auto v = pose_reel_local.transform.translation;
+						p.x = v.x; p.y = v.y; p.z = v.z;
 						CostFunction* cost_function_par_1  = new AutoDiffCostFunction<AutodiffCatenaryObstacleFunctor::CatenaryObstacleFunctor, 1, 4, 4, 4> //Residual, ugvPos, uavPos, tetherParams
-									(new AutodiffCatenaryObstacleFunctor::CatenaryObstacleFunctor(w_eta_1, grid_3D, pose_reel_local.transform.translation, distance_tether_obstacle, write_data_residual, user_name)); 
+									(new AutodiffCatenaryObstacleFunctor::CatenaryObstacleFunctor(w_eta_1, grid_3D, p, distance_tether_obstacle, write_data_residual, user_name)); 
 							problem.AddResidualBlock(cost_function_par_1, loss_function, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesTetherParams[i].parameter);
 							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 2, 0.01);
 							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 3, 0.1);
@@ -371,7 +375,7 @@ std::cout << "Pose Reel: "<< pose_reel_local.transform.translation.z << std::end
 					ROS_INFO(PRINTF_ORANGE"		- Optimize Tether Length Autodiff - Catenary");
 					for (int i = 0; i < statesTetherParams.size(); ++i) {
 						CostFunction* cost_function_par_2  = new AutoDiffCostFunction<AutodiffCatenaryLengthFunctor::CatenaryLengthFunctor, 1, 4, 4, 4>
-									(new AutodiffCatenaryLengthFunctor::CatenaryLengthFunctor(w_eta_2, pose_reel_local.transform.translation, length_tether_max, write_data_residual, user_name)); 
+									(new AutodiffCatenaryLengthFunctor::CatenaryLengthFunctor(w_eta_2, toPoint(pose_reel_local.transform.translation), length_tether_max, write_data_residual, user_name)); 
 							problem.AddResidualBlock(cost_function_par_2, loss_function, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesTetherParams[i].parameter);
 							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 2, 0.01);
 							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 3, 0.1);
@@ -383,7 +387,7 @@ std::cout << "Pose Reel: "<< pose_reel_local.transform.translation.z << std::end
 					ROS_INFO(PRINTF_ORANGE"		- Optimize Tether Params Autodiff - Catenary");
 					for (int i = 0; i < statesTetherParams.size(); ++i) {
 						CostFunction* cost_function_par_3  = new AutoDiffCostFunction<AutodiffTetherParametersFunctor::TetherParametersFunctor, 2, 4, 4, 4>
-									(new AutodiffTetherParametersFunctor::TetherParametersFunctor(w_eta_3, pose_reel_local.transform.translation, write_data_residual, user_name)); 
+									(new AutodiffTetherParametersFunctor::TetherParametersFunctor(w_eta_3, toPoint(pose_reel_local.transform.translation), write_data_residual, user_name)); 
 							problem.AddResidualBlock(cost_function_par_3, loss_function, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesTetherParams[i].parameter);
 							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 2, 0.01);
 							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 3, 0.1);
@@ -397,7 +401,7 @@ std::cout << "Pose Reel: "<< pose_reel_local.transform.translation.z << std::end
 					ROS_INFO(PRINTF_ORANGE"		- Optimize Tether Obstacles Autodiff - Parabola");
 					for (int i = 0; i < statesTetherParams.size(); ++i) {
 						CostFunction* cost_function_par_1  = new AutoDiffCostFunction<AutodiffParableFunctor::ParableFunctor, 1, 4, 4, 4> //Residual, ugvPos, uavPos, parableParams
-													(new AutodiffParableFunctor::ParableFunctor(w_eta_1, grid_3D, pose_reel_local.transform.translation, distance_tether_obstacle,
+													(new AutodiffParableFunctor::ParableFunctor(w_eta_1, grid_3D, toPoint(pose_reel_local.transform.translation), distance_tether_obstacle,
 													true, user_name)); 
 						// CostFunction* cost_function_par_1  = new AutoDiffCostFunction<AutodiffParableFunctor::ParableFunctor, 1, 4, 4, 4> //Residual, ugvPos, uavPos, parableParams
 						// 							(new AutodiffParableFunctor::ParableFunctor(w_eta_1, grid_3D, grid_3D_obst, grid_3D_trav, pose_reel_local.transform.translation, distance_tether_obstacle,
@@ -413,7 +417,7 @@ std::cout << "Pose Reel: "<< pose_reel_local.transform.translation.z << std::end
 					ROS_INFO(PRINTF_ORANGE"		- Optimize Tether Length Autodiff - Parabola");
 					for (int i = 0; i < statesTetherParams.size(); ++i) {
 						CostFunction* cost_function_par_2  = new AutoDiffCostFunction<AutodiffParableLengthFunctor::ParableLengthFunctor, 1, 4, 4, 4>
-													(new AutodiffParableLengthFunctor::ParableLengthFunctor(w_eta_2, pose_reel_local.transform.translation, 
+													(new AutodiffParableLengthFunctor::ParableLengthFunctor(w_eta_2, toPoint(pose_reel_local.transform.translation), 
 													length_tether_max, write_data_residual, user_name)); 
 							problem.AddResidualBlock(cost_function_par_2, loss_function, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesTetherParams[i].parameter);
 							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 1, 0.0);
@@ -426,7 +430,7 @@ std::cout << "Pose Reel: "<< pose_reel_local.transform.translation.z << std::end
 					ROS_INFO(PRINTF_ORANGE"		- Optimize Tether Params Autodiff - Parabola");
 					for (int i = 0; i < statesTetherParams.size(); ++i) {
 						CostFunction* cost_function_par_3  = new AutoDiffCostFunction<AutodiffParableParametersFunctor::ParableParametersFunctor, 2, 4, 4, 4>
-													(new AutodiffParableParametersFunctor::ParableParametersFunctor(w_eta_3, pose_reel_local.transform.translation, 
+													(new AutodiffParableParametersFunctor::ParableParametersFunctor(w_eta_3, toPoint(pose_reel_local.transform.translation), 
 													write_data_residual, user_name)); 
 							problem.AddResidualBlock(cost_function_par_3, loss_function, statesPosUGV[i].parameter, statesPosUAV[i].parameter, statesTetherParams[i].parameter);
 							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 1, 0.0);
@@ -499,7 +503,7 @@ std::cout << "Pose Reel: "<< pose_reel_local.transform.translation.z << std::end
 void TestTetherConstraints::finishigOptimization()
 {
 	vec_pose_ugv_opt.clear(); 	vec_pose_uav_opt.clear(); 	v_tether_params_opt.clear();
-	geometry_msgs::Vector3 position_ugv_, position_uav_;
+	geometry_msgs::Point position_ugv_, position_uav_;
 	tether_parameters param_; 
 
 	double new_equi_dist = 0; 
@@ -546,7 +550,7 @@ void TestTetherConstraints::getReelPose()
     }
 }
 
-void TestTetherConstraints::graphTetherAndPathMarker(vector<geometry_msgs::Vector3> v_ugv_, vector<geometry_msgs::Vector3> v_uav_, 
+void TestTetherConstraints::graphTetherAndPathMarker(vector<geometry_msgs::Point> v_ugv_, vector<geometry_msgs::Point> v_uav_, 
 													  vector<geometry_msgs::Quaternion> v_rot_ugv_, vector <tether_parameters> v_params_, vector<float> v_length_,
 													  int c_ugv_, int c_uav_, int c_tether_, ros::Publisher p_ugv_, ros::Publisher p_uav_, 
 													  ros::Publisher p_tether_, visualization_msgs::MarkerArray m_, bool pause_){
@@ -561,8 +565,8 @@ void TestTetherConstraints::graphTetherAndPathMarker(vector<geometry_msgs::Vecto
 	p_uav_.publish(lines_uav_marker);
 	
 	GetTetherParameter GTP_;
-	geometry_msgs::Vector3  p_reel_;
-	std::vector<geometry_msgs::Vector3> v_pts_tether_;
+	geometry_msgs::Point  p_reel_;
+	std::vector<geometry_msgs::Point> v_pts_tether_;
 
 	for(size_t i = 0; i < v_params_.size(); i++){ // The Reel Position is consider above base_link_ugv1
 		v_pts_tether_.clear();
@@ -585,10 +589,10 @@ void TestTetherConstraints::graphTetherAndPathMarker(vector<geometry_msgs::Vecto
 	}
 }
 
-bool TestTetherConstraints::CheckStatusTetherCollision(vector<geometry_msgs::Vector3> v1_, vector<geometry_msgs::Vector3 >v2_, vector<tether_parameters> v3_)
+bool TestTetherConstraints::CheckStatusTetherCollision(vector<geometry_msgs::Point> v1_, vector<geometry_msgs::Point >v2_, vector<tether_parameters> v3_)
 {
-	geometry_msgs::Vector3 p_reel_; 
-	std::vector<geometry_msgs::Vector3> points_tether_;
+	geometry_msgs::Point p_reel_; 
+	std::vector<geometry_msgs::Point> points_tether_;
 	bool ret_;
     double dist_;
 	int count_tether_coll, first_coll_, last_coll_, count_total_tether_coll_;

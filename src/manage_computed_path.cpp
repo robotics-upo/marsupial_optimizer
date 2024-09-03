@@ -114,7 +114,7 @@ ManagePath::ManagePath(const std::string &path_and_name_file_, upo_actions::Exec
     }
 }
 
-void ManagePath::exportOptimizedPath(vector<geometry_msgs::Vector3> &v_ugv_, vector<geometry_msgs::Vector3> &v_uav_, 
+void ManagePath::exportOptimizedPath(vector<geometry_msgs::Point> &v_ugv_, vector<geometry_msgs::Point> &v_uav_, 
 									 vector<geometry_msgs::Quaternion> &v_r_ugv_, vector<geometry_msgs::Quaternion> &v_r_uav_, vector<float> &v_l_,
 									 string path_mission_file_)
 {
@@ -132,10 +132,10 @@ void ManagePath::exportOptimizedPath(vector<geometry_msgs::Vector3> &v_ugv_, vec
 	double d_to_interp_, d1_, d2_, cat_inter_;
 	int r_;
 	bool interpol_;
-	vector<geometry_msgs::Vector3> v_interp_pose_ugv, v_interp_pose_uav;
+	vector<geometry_msgs::Point> v_interp_pose_ugv, v_interp_pose_uav;
 	vector<geometry_msgs::Quaternion> v_interp_rot_ugv, v_interp_rot_uav;
 	vector<float> vec_interp_len_cat;
-	geometry_msgs::Vector3 p_int_ugv_, p_int_uav_;
+	geometry_msgs::Point p_int_ugv_, p_int_uav_;
 
 	// Interpolate vector
 	printf("vec_pose_ugv_opt.size()=%lu , vec_pose_uav_opt.size()=%lu , vec_len_cat_opt.size()=%lu\n",v_ugv_.size(),v_uav_.size(),v_l_.size());
@@ -280,7 +280,7 @@ void ManagePath::exportOptimizedPath(vector<geometry_msgs::Vector3> &v_ugv_, vec
 	std::cout << "Saved Path Optimized" << std::endl << std::endl;
 }
 
-void ManagePath::publishOptimizedTraj(vector<geometry_msgs::Vector3> v_ugv_, vector<geometry_msgs::Vector3> v_uav_, 
+void ManagePath::publishOptimizedTraj(vector<geometry_msgs::Point> v_ugv_, vector<geometry_msgs::Point> v_uav_, 
 									 vector<geometry_msgs::Quaternion> v_r_ugv_, vector<geometry_msgs::Quaternion> v_r_uav_, 
 									 vector<float> v_l_, vector<double> v_t_, marsupial_optimizer::marsupial_trajectory_optimized &msg_)
 {

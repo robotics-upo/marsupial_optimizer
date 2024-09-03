@@ -9,7 +9,6 @@
 
 #include <ros/ros.h>
 #include <geometry_msgs/Point.h>
-#include <geometry_msgs/Vector3.h>
 #include <visualization_msgs/MarkerArray.h>
 
 #include <pcl/search/impl/kdtree.hpp>
@@ -124,7 +123,7 @@ class AutodiffParableFunctor {
 
 		struct ParableFunctor 
 		{
-			ParableFunctor(double weight_factor_, Grid3d* grid_3D_, geometry_msgs::Vector3 pos_reel_ugv_, double sb_, bool write_data_, std::string user_name_)
+			ParableFunctor(double weight_factor_, Grid3d* grid_3D_, geometry_msgs::Point pos_reel_ugv_, double sb_, bool write_data_, std::string user_name_)
 			: wf(weight_factor_), g_3D(grid_3D_), pos_reel_ugv(pos_reel_ugv_), sb(sb_), w_d_(write_data_), user(user_name_), 
 			_parableCostFunctor(new DistanceFunctionObstacles(g_3D)), _numPointFunctor(new NumPointParabola())
 			{
@@ -303,7 +302,7 @@ class AutodiffParableFunctor {
 
 			bool w_d_;
 			double wf, sb;
-			geometry_msgs::Vector3 pos_reel_ugv;
+			geometry_msgs::Point pos_reel_ugv;
 			std::string user;
 			// Grid3d* g_3D;
 			Grid3d *g_3D, *g_3D_obst, *g_3D_trav;

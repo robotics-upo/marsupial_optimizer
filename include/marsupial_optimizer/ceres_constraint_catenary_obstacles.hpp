@@ -9,7 +9,6 @@
 
 #include <ros/ros.h>
 #include <geometry_msgs/Point.h>
-#include <geometry_msgs/Vector3.h>
 #include <visualization_msgs/MarkerArray.h>
 
 #include <pcl/search/impl/kdtree.hpp>
@@ -120,7 +119,7 @@ class AutodiffCatenaryObstacleFunctor {
 
 		struct CatenaryObstacleFunctor 
 		{
-			CatenaryObstacleFunctor(double weight_factor_, Grid3d* grid_3D_, geometry_msgs::Vector3 pos_reel_ugv_, double sb_, bool write_data_, std::string user_name_)
+			CatenaryObstacleFunctor(double weight_factor_, Grid3d* grid_3D_, geometry_msgs::Point pos_reel_ugv_, double sb_, bool write_data_, std::string user_name_)
 			: wf(weight_factor_), g_3D(grid_3D_), pos_reel_ugv(pos_reel_ugv_), sb(sb_), w_d_(write_data_), user(user_name_), 
 			_parableCostFunctor(new DistanceFunction(g_3D)), _numPointFunctor(new NumPointFunction())
 			{
@@ -304,7 +303,7 @@ class AutodiffCatenaryObstacleFunctor {
 
 			bool w_d_;
 			double wf, sb;
-			geometry_msgs::Vector3 pos_reel_ugv;
+			geometry_msgs::Point pos_reel_ugv;
 			std::string user;
 			Grid3d* g_3D;
 	    	ceres::CostFunctionToFunctor<1, 3> _parableCostFunctor;

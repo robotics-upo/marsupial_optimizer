@@ -76,7 +76,6 @@ Service Robotics Lab, University Pablo de Olavide , Seville, Spain
 #include <octomap_msgs/conversions.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <visualization_msgs/Marker.h>
-#include <geometry_msgs/Vector3.h>
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Quaternion.h>
 #include <sensor_msgs/PointCloud2.h>
@@ -174,25 +173,25 @@ public:
 	void deleteMarkersCallBack(const std_msgs::BoolConstPtr &msg);
 	void finishedRvizManeuverCallBack(const std_msgs::BoolConstPtr &msg);
 	void initializeOptimizerProcessCallBack(const std_msgs::BoolConstPtr &msg);
-	// void interpolateFixedPointsPath(vector<geometry_msgs::Vector3> &v_inter_ , int mode_);
+	// void interpolateFixedPointsPath(vector<geometry_msgs::Point> &v_inter_ , int mode_);
 	void calculateDistanceVertices(vector<double> &_v_D_ugv,vector<double> &_v_D_uav);
 	void getTemporalState(vector<double> &_time);
-	// void getInitialGlobalPath(trajectory_msgs::MultiDOFJointTrajectory _path, vector<geometry_msgs::Vector3> &v_ugv_, vector<geometry_msgs::Vector3> &v_uav_);
+	// void getInitialGlobalPath(trajectory_msgs::MultiDOFJointTrajectory _path, vector<geometry_msgs::Point> &v_ugv_, vector<geometry_msgs::Point> &v_uav_);
 	void initializingParametersblock();
 	void finishigOptimization();
 	void writeDataForAnalysis(int ugv_coll_, int uav_coll_, int tether_coll_);
-	geometry_msgs::Vector3 getReelPoint(const float px_, const float py_, const float pz_,const float qx_, const float qy_, const float qz_, const float qw_);
+	geometry_msgs::Point getReelPoint(const float px_, const float py_, const float pz_,const float qx_, const float qy_, const float qz_, const float qw_);
 	void getReelPose();
 	// void publishOptimizedTraj();
 	void cleanResidualConstraintsFile();
-	void getTetherParameter(vector<geometry_msgs::Vector3> v_p_ugv_, vector<geometry_msgs::Quaternion> v_q_ugv_, vector<geometry_msgs::Vector3> v_p_uav_, vector<float> &v_l_, vector<tether_parameters> _v_param);
-	void fixParabolaParameter(vector<geometry_msgs::Vector3> v_p_ugv_, vector<geometry_msgs::Quaternion> v_q_ugv_, vector<geometry_msgs::Vector3> v_p_uav_, vector<float> v_l_, vector<tether_parameters> &v_param_);
-	void graphTetherAndPathMarker(vector<geometry_msgs::Vector3> v_ugv_, vector<geometry_msgs::Vector3> v_uav_, 
+	void getTetherParameter(vector<geometry_msgs::Point> v_p_ugv_, vector<geometry_msgs::Quaternion> v_q_ugv_, vector<geometry_msgs::Point> v_p_uav_, vector<float> &v_l_, vector<tether_parameters> _v_param);
+	void fixParabolaParameter(vector<geometry_msgs::Point> v_p_ugv_, vector<geometry_msgs::Quaternion> v_q_ugv_, vector<geometry_msgs::Point> v_p_uav_, vector<float> v_l_, vector<tether_parameters> &v_param_);
+	void graphTetherAndPathMarker(vector<geometry_msgs::Point> v_ugv_, vector<geometry_msgs::Point> v_uav_, 
 								   vector<geometry_msgs::Quaternion> v_rot_ugv, vector <tether_parameters> v_p_, vector<float> v_length_,
 									int c_ugv_, int c_uav_, int c_tether_, ros::Publisher p_ugv_, ros::Publisher p_uav_, 
 									ros::Publisher p_tether_, visualization_msgs::MarkerArray m_, bool use_cat_as_tether_, bool pause_);
-	void checkCatenaryStatus(vector<geometry_msgs::Vector3> v_p_ugv, vector<geometry_msgs::Vector3>  v_p_uav, vector<geometry_msgs::Quaternion> v_r_ugv, vector<float> &v_l_in, vector<int> v_fixed_, vector<tether_parameters> &v_param_);
-	double checkTetherLength(tether_parameters p_, geometry_msgs::Vector3 p1_ , geometry_msgs::Vector3 p2_);
+	void checkCatenaryStatus(vector<geometry_msgs::Point> v_p_ugv, vector<geometry_msgs::Point>  v_p_uav, vector<geometry_msgs::Quaternion> v_r_ugv, vector<float> &v_l_in, vector<int> v_fixed_, vector<tether_parameters> &v_param_);
+	double checkTetherLength(tether_parameters p_, geometry_msgs::Point p1_ , geometry_msgs::Point p2_);
 
 
 	upo_actions::ExecutePathResult action_result;
@@ -289,8 +288,8 @@ public:
 	vector<double> v_angles_smooth_ugv_init, v_angles_smooth_uav_init, v_angles_smooth_ugv_opt, v_angles_smooth_uav_opt;
 	vector<float> vec_len_tether_init, vec_len_tether_opt;
 	vector<float> vec_cat_param_x0, vec_cat_param_y0, vec_cat_param_a;
-	vector<geometry_msgs::Vector3> vec_pose_ugv_opt, vec_pose_uav_opt; 
-	vector<geometry_msgs::Vector3> vec_pose_ugv_init, vec_pose_uav_init;
+	vector<geometry_msgs::Point> vec_pose_ugv_opt, vec_pose_uav_opt; 
+	vector<geometry_msgs::Point> vec_pose_ugv_init, vec_pose_uav_init;
 	vector <tether_parameters> v_tether_params_init, v_tether_params_opt;
 	vector<double> vec_time_opt;
 

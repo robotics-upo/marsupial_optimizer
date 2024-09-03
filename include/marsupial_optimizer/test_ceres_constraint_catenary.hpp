@@ -7,7 +7,6 @@
 
 #include <ros/ros.h>
 #include <geometry_msgs/Point.h>
-#include <geometry_msgs/Vector3.h>
 #include <visualization_msgs/MarkerArray.h>
 
 #include <pcl/search/impl/kdtree.hpp>
@@ -53,7 +52,7 @@ using ceres::Solver;
 
 
 struct TestCatenaryFunctor {
-  TestCatenaryFunctor(double w_f, double safty_bound, float min_l_cat, bool w_data, geometry_msgs::Vector3 v_initial, geometry_msgs::Vector3 v_final,
+  TestCatenaryFunctor(double w_f, double safty_bound, float min_l_cat, bool w_data, geometry_msgs::Point v_initial, geometry_msgs::Point v_final,
 				ros::NodeHandlePtr nhP_, octomap::OcTree* octotree_full_, 
   				pcl::KdTreeFLANN <pcl::PointXYZ> kdT_From_NN, pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_Points, Grid3d* grid_3D_,
                 pcl::KdTreeFLANN <pcl::PointXYZ> trav_kdT, pcl::PointCloud <pcl::PointXYZ>::Ptr trav_pc)
@@ -221,7 +220,7 @@ struct TestCatenaryFunctor {
  	bool w_d_;
     double wf_, sb_;
 	float m_L_c_;
-	geometry_msgs::Vector3 v_i_, v_f_;
+	geometry_msgs::Point v_i_, v_f_;
     pcl::KdTreeFLANN <pcl::PointXYZ> kdT_;
     pcl::PointCloud <pcl::PointXYZ>::Ptr o_p_;
 	Grid3d* g_3D_;

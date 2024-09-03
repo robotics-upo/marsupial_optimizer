@@ -39,7 +39,7 @@ public:
 
 	struct CatenaryLengthFunctor 
 	{
-		CatenaryLengthFunctor(double weight_factor, geometry_msgs::Vector3 pos_reel_ugv_,  float max_L_, bool write_data, std::string user_name)
+		CatenaryLengthFunctor(double weight_factor, geometry_msgs::Point pos_reel_ugv_,  float max_L_, bool write_data, std::string user_name)
 					: wf(weight_factor), max_L(max_L_), pos_reel_ugv(pos_reel_ugv_), w_d_(write_data), user_(user_name) 
 		{}
 
@@ -82,7 +82,7 @@ public:
 		bool w_d_;
 		double wf;
 		float max_L;
-		geometry_msgs::Vector3 pos_reel_ugv;
+		geometry_msgs::Point pos_reel_ugv;
 		std::string user_;
 	};
 

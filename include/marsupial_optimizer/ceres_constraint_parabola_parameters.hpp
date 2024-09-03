@@ -23,7 +23,7 @@ public:
 
 	struct ParableParametersFunctor 
 	{
-	ParableParametersFunctor(double weight_factor, geometry_msgs::Vector3 pos_reel_ugv_, bool write_data, std::string user_name)
+	ParableParametersFunctor(double weight_factor, geometry_msgs::Point pos_reel_ugv_, bool write_data, std::string user_name)
 					: wf(weight_factor), pos_reel_ugv(pos_reel_ugv_), w_d(write_data), user(user_name)
 		{}
 
@@ -48,7 +48,7 @@ public:
 		
 		bool w_d;
 		double wf;
-		geometry_msgs::Vector3 pos_reel_ugv;
+		geometry_msgs::Point pos_reel_ugv;
 		std::string user; 
 	};
 

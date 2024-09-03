@@ -7,7 +7,6 @@
 
 #include <ros/ros.h>
 #include <geometry_msgs/Point.h>
-#include <geometry_msgs/Vector3.h>
 #include <visualization_msgs/MarkerArray.h>
 
 #include <pcl/search/impl/kdtree.hpp>
@@ -37,7 +36,7 @@ using ceres::Solver;
 class TestCatenaryLengthFunctor {
 
 public:
-	TestCatenaryLengthFunctor(double w_f, float min_l_cat, geometry_msgs::Vector3 v_initial, geometry_msgs::Vector3 v_final, bool w_data)
+	TestCatenaryLengthFunctor(double w_f, float min_l_cat, geometry_msgs::Point v_initial, geometry_msgs::Point v_final, bool w_data)
                 : wf_(w_f), m_L_c_(min_l_cat), v_i_(v_initial), v_f_(v_final), w_d_(w_data) {}
 
   	template <typename T>
@@ -96,7 +95,7 @@ public:
 bool w_d_;
 double wf_;
 float m_L_c_;
-geometry_msgs::Vector3 v_i_, v_f_;
+geometry_msgs::Point v_i_, v_f_;
 
 private:
 };
