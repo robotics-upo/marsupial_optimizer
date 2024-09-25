@@ -211,14 +211,14 @@ public:
 
 	std::string path, files_residuals, name_output_file, user_name, path_mission_file;
 
-    double map_resolution;
+  double map_resolution;
 	float step , step_inv;
 	double ws_x_max; 
-    double ws_y_max; 
-    double ws_z_max;
-    double ws_x_min;
-    double ws_y_min;
-    double ws_z_min;
+  double ws_y_max; 
+  double ws_z_max;
+  double ws_x_min;
+  double ws_y_min;
+  double ws_z_min;
 	
 	int n_iter_opt;	//Iterations Numbers of Optimizer
 	int size_path;
@@ -231,7 +231,7 @@ public:
 	NearNeighbor nn_uav; // Kdtree used for Catenary and UAV
 	NearNeighbor nn_trav, nn_ugv_obs;
 	MarkerPublisher MP;
-	Grid3d *grid_3D, *grid_3D_obst, *grid_3D_trav;
+	Grid3d *grid_3D; //, *grid_3D_obst, *grid_3D_trav;
 	CatenaryCheckerManager *CheckCM, *CheckCMopt;
 
 	DataManagement dm_;
@@ -239,38 +239,47 @@ public:
 
 
 	//! Manage Data Vertices and Edges
-    std::unique_ptr<ExecutePathServer> execute_path_srv_ptr;
-    std::unique_ptr<tf::TransformListener> tf_list;
-    std::unique_ptr<tf::TransformListener> tf_list_ptr;
+  std::unique_ptr<ExecutePathServer> execute_path_srv_ptr;
+  std::unique_ptr<tf::TransformListener> tf_list;
+  std::unique_ptr<tf::TransformListener> tf_list_ptr;
 	bool use3d;
-    bool mapReceivedFull, mapReceivedTrav;
-    bool debug;
-    bool showConfig;
+  bool mapReceivedFull, mapReceivedTrav;
+  bool debug;
+  bool showConfig;
 	bool pause_end_optimization ,traj_in_rviz, use_tether, use_catenary_as_tether;
 
-    octomap_msgs::OctomapConstPtr mapFull, mapTrav;
+  octomap_msgs::OctomapConstPtr mapFull, mapTrav;
 	octomap::OcTree *mapFull_msg , *mapTrav_msg;
 
-    trajectory_msgs::MultiDOFJointTrajectory globalPath, localTrajectory;
-    ros::Time start_time;
+  trajectory_msgs::MultiDOFJointTrajectory globalPath, localTrajectory;
+  ros::Time start_time;
 
-	visualization_msgs::MarkerArray points_uav_marker, lines_uav_marker, points_ugv_marker, lines_ugv_marker, 
-									post_points_ugv_marker, post_lines_ugv_marker, post_points_uav_marker, post_lines_uav_marker;
+	visualization_msgs::MarkerArray points_uav_marker, lines_uav_marker;
+  visualization_msgs::MarkerArray points_ugv_marker, lines_ugv_marker;
+  visualization_msgs::MarkerArray post_points_ugv_marker, post_lines_ugv_marker;
+  visualization_msgs::MarkerArray post_points_uav_marker, post_lines_uav_marker;
 	typedef visualization_msgs::Marker RVizMarker;
 
 	std::string action_name_;
 	std::string ugv_base_frame, uav_base_frame, reel_base_frame, world_frame;
 
-	ros::Subscriber octomap_ws_sub_,point_cloud_ugv_traversability_sub_, point_cloud_ugv_obstacles_sub_, clean_markers_sub_, local_map_sub, local_trav_map_sub, finished_rviz_maneuver_sub_, star_optimizer_process_sub_;
-	ros::Publisher traj_marker_ugv_pub_, traj_marker_uav_pub_,traj_opt_marker_ugv_pub_,traj_opt_marker_uav_pub_;
+	ros::Subscriber octomap_ws_sub_;
+  ros::Subscriber point_cloud_ugv_traversability_sub_, point_cloud_ugv_obstacles_sub_;
+  ros::Subscriber clean_markers_sub_, local_map_sub, local_trav_map_sub;
+  ros::Subscriber finished_rviz_maneuver_sub_, star_optimizer_process_sub_;
 
-	ros::Publisher catenary_marker_pub_, clean_nodes_marker_gp_pub_, clean_catenary_marker_gp_pub_, trajectory_pub_;
-	ros::Publisher  tether_marker_init_pub_, tether_marker_opt_pub_;
+	ros::Publisher traj_marker_ugv_pub_, traj_marker_uav_pub_;
+  ros::Publisher traj_opt_marker_ugv_pub_,traj_opt_marker_uav_pub_;
+	ros::Publisher catenary_marker_pub_, clean_nodes_marker_gp_pub_;
+  ros::Publisher clean_catenary_marker_gp_pub_, trajectory_pub_;
+	ros::Publisher tether_marker_init_pub_, tether_marker_opt_pub_;
 	visualization_msgs::MarkerArray catenary_marker, tether_marker_init, tether_marker_opt;
 
 	bool verbose_optimizer;
 
-	void setStraightTrajectory(double x1, double y1, double z1, double x2, double y2, double z2, int n_v_u_);	//Function to create a straight line from point A to B
+  // @brief Function to create a straight line from point A to B
+	void setStraightTrajectory(double x1, double y1, double z1,
+                             double x2, double y2, double z2, int n_v_u_);	
 
 	vector<parameterBlockPos> statesPosUGV;
 	vector<parameterBlockPos> statesPosUAV;
@@ -281,11 +290,13 @@ public:
 	vector<parameterBlockTime> statesTime;
 	vector<parameterBlockLength> statesLength ;
 	vector<parameterBlockTether> statesTetherParams;
-	vector<geometry_msgs::Quaternion> vec_rot_ugv_init, vec_rot_uav_init, vec_rot_ugv_opt, vec_rot_uav_opt;
+	vector<geometry_msgs::Quaternion> vec_rot_ugv_init, vec_rot_uav_init;
+  vector<geometry_msgs::Quaternion> vec_rot_ugv_opt, vec_rot_uav_opt;
 
 	vector<double> vec_dist_init_ugv, vec_dist_init_uav;
 	vector<double> vec_time_init;
-	vector<double> v_angles_smooth_ugv_init, v_angles_smooth_uav_init, v_angles_smooth_ugv_opt, v_angles_smooth_uav_opt;
+	vector<double> v_angles_smooth_ugv_init, v_angles_smooth_uav_init;
+  vector<double> v_angles_smooth_ugv_opt, v_angles_smooth_uav_opt;
 	vector<float> vec_len_tether_init, vec_len_tether_opt;
 	vector<float> vec_cat_param_x0, vec_cat_param_y0, vec_cat_param_a;
 	vector<geometry_msgs::Point> vec_pose_ugv_opt, vec_pose_uav_opt; 
@@ -293,24 +304,25 @@ public:
 	vector <tether_parameters> v_tether_params_init, v_tether_params_opt;
 	vector<double> vec_time_opt;
 
-	vector<int> v_id_point_not_fix_ugv, v_id_point_not_fix_uav; // save the id number of position no fix , from vector vec_pose_init_uav
+  // save the id number of position no fix , from vector vec_pose_init_uav
+	vector<int> v_id_point_not_fix_ugv, v_id_point_not_fix_uav; 
 	
-    double pos_reel_x, pos_reel_y, pos_reel_z;
+  double pos_reel_x, pos_reel_y, pos_reel_z;
 	ros::Time start_time_opt, final_time_opt;
 	int num_pos_initial, num_goal;
 	bool write_data_for_analysis, use_loss_function;
 	double length_tether_max;
 	int count_fix_points_initial_ugv, count_fix_points_final_ugv, count_fix_points_uav;
 	std::string scenario_name, map_path, map_path_trav, map_path_obst;
-
 	bool equidistance_uav_constraint, obstacles_uav_constraint, smoothness_uav_constraint;
 	bool velocity_uav_constraint,acceleration_uav_constraint;
 	bool time_constraint, velocity_ugv_constraint, acceleration_ugv_constraint;
 	bool tether_length_constraint, tether_obstacle_constraint, tether_parameters_constraint;
 	bool finished_rviz_maneuver;
-	bool equidistance_ugv_constraint, obstacles_ugv_constraint, traversability_ugv_constraint, smoothness_ugv_constraint;
+	bool equidistance_ugv_constraint, obstacles_ugv_constraint;
+  bool traversability_ugv_constraint, smoothness_ugv_constraint;
 	bool write_data_residual;
-    bool just_line_of_sigth; // This variable allow the class just compute the straigth state of the tether 
+  bool just_line_of_sight; // This variable allow the class just compute the straigth state of the tether 
 	bool export_path; // This variable allow to get path in yaml format for real missions.
 	bool stop_plot_cat;
 
@@ -318,7 +330,9 @@ private:
 	void resetFlags();
 	void cleanVectors();
 	double global_path_length;
-	double distance_obstacle_uav,distance_obstacle_ugv, initial_velocity_ugv, initial_velocity_uav, angle_min_traj, initial_acceleration_ugv, initial_acceleration_uav;
+	double distance_obstacle_uav,distance_obstacle_ugv;
+  double initial_velocity_ugv, initial_velocity_uav;
+  double angle_min_traj, initial_acceleration_ugv, initial_acceleration_uav;
 	double initial_time;
 	double min_T;
 };
