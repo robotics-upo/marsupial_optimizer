@@ -315,7 +315,10 @@ void OptimizerLocalPlanner::initializeOptimizerProcessCallBack(const std_msgs::B
 
 void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 {
-  ROS_INFO(PRINTF_GREEN "\n \t\t Initializing Optimizer Local Planner : Path received in action server mode\n");
+  
+
+	
+	ROS_INFO(PRINTF_GREEN "\n \t\t Initializing Optimizer Local Planner : Path received in action server mode\n");
 
 	if (!get_path_from_file){
 		auto path_shared_ptr = execute_path_srv_ptr->acceptNewGoal();
@@ -333,6 +336,16 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		vec_cat_param_y0 = path_shared_.cat_param_y0; 
 		vec_cat_param_a  = path_shared_.cat_param_a; 
 	}
+
+	if(n_iter_opt == 0) {
+		ROS_INFO(PRINTF_GREEN "\n \t\t N iter is zero. Skipping optimization\n");
+		if (!get_path_from_file) {
+			action_result.arrived = true;
+			execute_path_srv_ptr->setSucceeded(action_result);
+			return;
+		}
+	}
+
 
 	std::vector<tether_parameters> v_cat_params_init_;
 	tether_parameters cat_init_;
@@ -442,8 +455,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 
 	fixParabolaParameter(vec_pose_ugv_init, vec_rot_ugv_init, vec_pose_uav_init,
                        vec_len_tether_init, v_tether_params_init);
-	printf("\t 4 After fix parameters parabola parameter\n");
-	for (size_t i=0; i< vec_len_tether_init.size(); i++){
+		for (size_t i=0; i< vec_len_tether_init.size(); i++){
 		printf("[%lu] %.5f %.5f %.5f %.5f %.5f %.5f %.3f %.3f %.3f\n", i,
 		vec_pose_ugv_init[i].x, vec_pose_ugv_init[i].y, vec_pose_ugv_init[i].z, 
 		vec_pose_uav_init[i].x, vec_pose_uav_init[i].y, vec_pose_uav_init[i].z, 
@@ -837,33 +849,32 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	}
 	else{
 		if (initial_cost==final_cost)
-				ROS_INFO(PRINTF_ORANGE"\n		Optimizer Local Planner: Final Cost equal than Initial Cost");
-		ROS_INFO(PRINTF_RED"\n\n\n\n		Optimizer Local Planner: Goal position Not achieved through optimization trajectory\n\n\n");
-		if (traj_in_rviz){
-			// publishOptimizedTraj();
-			ros::Duration(time_sleep_).sleep();
-			while(!finished_rviz_maneuver){
-				ros::spinOnce();
-				printf("Waiting to finish maneuver in Rviz\n");
-			};
-			ros::Duration(time_sleep_).sleep();
-		}
-		else{
-			ros::Duration(time_sleep_).sleep();
-		}	
-		finished_rviz_maneuver = false;
-		action_result.arrived = false;
-
-		finished_optimization_ = true;		
+      ROS_INFO(PRINTF_ORANGE"\n		Optimizer Local Planner: Final Cost equal than Initial Cost");
+    ROS_INFO(PRINTF_RED"\n\n\n\n		Optimizer Local Planner: Goal position Not achieved through optimization trajectory\n\n\n");
+    if (traj_in_rviz){
+      // publishOptimizedTraj();
+      ros::Duration(time_sleep_).sleep();
+      while(!finished_rviz_maneuver){
+        ros::spinOnce();
+        printf("Waiting to finish maneuver in Rviz\n");
+      };
+      ros::Duration(time_sleep_).sleep();
+    }
+    else{
+      ros::Duration(time_sleep_).sleep();
+    }	
+    finished_rviz_maneuver = false;
+    action_result.arrived = false;
+    finished_optimization_ = true;		
 	}
 	std::cout <<"Optimization Proccess Completed !!!" << std::endl << "Saving Temporal data in txt file ..." << std::endl << "===================================================" << std::endl << std::endl << std::endl;
 
 	/********************* To obligate pause method and check Planning result *********************/
-        std::string y_ ;
-        std::cout << " *** Optimization Proccess Completed " ;
-        std::cout << " : Press key to continue : " ;
-        std::cin >> y_ ;
-    /*************************************************************************************************/
+  //std::string y_ ;
+  //    std::cout << " *** Optimization Proccess Completed " ;
+  //    std::cout << " : Press key to continue : " ;
+  //    std::cin >> y_ ;
+  /*************************************************************************************************/
 	ros::Duration(4.0).sleep();
 	cleanVectors();		//Clear vector after optimization and previus the next iteration
 	// Clear optimized Markers
