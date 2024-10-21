@@ -320,6 +320,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	
 	ROS_INFO(PRINTF_GREEN "\n \t\t Initializing Optimizer Local Planner : Path received in action server mode\n");
 
+  
 	if (!get_path_from_file){
 		auto path_shared_ptr = execute_path_srv_ptr->acceptNewGoal();
 		globalPath = path_shared_ptr->path;
@@ -355,6 +356,13 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		cat_init_.c = vec_cat_param_a[i];
 		v_cat_params_init_.push_back(cat_init_);
 	}
+
+	if (n_iter_opt == 0) {
+		ROS_INFO(PRINTF_RED "\n \t\t Skipping optimization: n_iter is zero\n");
+		execute_path_srv_ptr->setSucceeded(action_result);
+		return;
+	}
+
 
 	if(write_data_residual){
 		dm_.cleanResidualConstraintsFile(path, files_residuals);
@@ -870,12 +878,12 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	std::cout <<"Optimization Proccess Completed !!!" << std::endl << "Saving Temporal data in txt file ..." << std::endl << "===================================================" << std::endl << std::endl << std::endl;
 
 	/********************* To obligate pause method and check Planning result *********************/
-  //std::string y_ ;
-  //    std::cout << " *** Optimization Proccess Completed " ;
-  //    std::cout << " : Press key to continue : " ;
-  //    std::cin >> y_ ;
-  /*************************************************************************************************/
-	ros::Duration(4.0).sleep();
+        // std::string y_ ;
+        // std::cout << " *** Optimization Proccess Completed " ;
+        // std::cout << " : Press key to continue : " ;
+        // std::cin >> y_ ;
+    /*************************************************************************************************/
+	// ros::Duration(4.0).sleep();
 	cleanVectors();		//Clear vector after optimization and previus the next iteration
 	// Clear optimized Markers
 	// MP.clearMarkers(catenary_marker, 150, tether_marker_init_pub_);

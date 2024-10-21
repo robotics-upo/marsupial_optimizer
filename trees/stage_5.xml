@@ -8,7 +8,6 @@
                     <Action ID="UPOGoToGoalByName" action="/Make_Plan" goal_name="stage_5_pos_final_1" name="Stage1GoToGoal" state="gpf1"/>
                 </ForceSuccess>
             </Repeat>
-            <Action ID="WaitSeconds" duration="3"/>
         </Sequence>
     </BehaviorTree>
     <!-- ////////// -->
