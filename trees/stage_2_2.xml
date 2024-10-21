@@ -4,9 +4,9 @@
     <BehaviorTree ID="BehaviorTree">
         <Sequence>
             <WaitSeconds duration="5" name="Stage1WaitSeconds1"/>
-            <Repeat num_cycles="20">
+            <Repeat num_cycles="10">
                 <ForceSuccess>
-                    <Action ID="UPOGoToGoalByName" action="/Make_Plan" goal_name="stage_2_pos_final_8" name="Stage1GoToGoal" state="gpf1"/>
+                    <Action ID="UPOGoToGoalByName" action="/Make_Plan" goal_name="stage_2_pos_final_4" name="Stage1GoToGoal" state="gpf1"/>
                 </ForceSuccess>
             </Repeat>
 

@@ -3,10 +3,10 @@
     <!-- ////////// -->
     <BehaviorTree ID="BehaviorTree">
         <Sequence>
-            <WaitSeconds duration="5" name="Stage1WaitSeconds1"/>
-            <Repeat num_cycles="20">
+            <!-- <WaitSeconds duration="5" name="Stage1WaitSeconds1"/> -->
+            <Repeat num_cycles="1">
                 <ForceSuccess>
-                    <Action ID="UPOGoToGoalByName" action="/Make_Plan" goal_name="stage_1_pos_comparison_2" name="Stage1GoToGoal" state="gpf1"/>
+                    <Action ID="UPOGoToGoalByName" action="/Make_Plan" goal_name="stage_1_pos_final_5" name="Stage1GoToGoal" state="gpf1"/>
                 </ForceSuccess>
             </Repeat>
         </Sequence>

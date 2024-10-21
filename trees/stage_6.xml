@@ -4,10 +4,11 @@
     <BehaviorTree ID="BehaviorTree">
         <Sequence>
             <WaitSeconds duration="2" name="Stage1WaitSeconds1"/>
-            <Repeat num_cycles="100">
+            <Repeat num_cycles="20">
+            <ForceSuccess>
                 <Action ID="UPOGoToGoalByName" action="/Make_Plan" goal_name="stage_6_pos_final_1" name="Stage1GoToGoal" state="gpf1"/>
+            </ForceSuccess>
             </Repeat>
-            <WaitSeconds duration="3"/>
         </Sequence>
     </BehaviorTree>
     <!-- ////////// -->
