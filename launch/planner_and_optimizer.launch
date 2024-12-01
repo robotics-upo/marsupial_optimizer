@@ -18,7 +18,6 @@
     <arg name="pos_reel_z"    default="0.38"/> #position reel on UGV
     <arg name="ugv_base_frame"    default="ugv_base_link"/> #position reel on UGV
     <arg name="uav_base_frame"    default="uav_base_link"/> #position reel on UAV
-    <arg name="use_parable"   default="false"/>
     <arg name="use_distance_function"   default="true"/>
     <arg name="just_line_of_sigth"   default="false"/>
     <arg name="use_catenary_as_tether"   default="true"/>
@@ -60,7 +59,6 @@
         <arg name="sample_mode_rrt" value="$(arg sample_mode)" /> 
         <arg name="planner_type" value="$(arg planner_type)" /> 
         <arg name="write_data_files" value="$(arg write_data_files)" /> 
-        <arg name="use_parable"   value="$(arg use_parable)"/>
         <arg name="use_distance_function"   value="$(arg use_distance_function)"/>
         <arg name="save_path_in_file"   value="$(arg save_path_in_file)"/>
         <arg name="just_line_of_sigth"   value="$(arg just_line_of_sigth)"/>
