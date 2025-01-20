@@ -306,7 +306,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
     getReelPose(); // To get init pos reel for optimization process
 
 	CheckCM->Init(grid_3D, distance_tether_obstacle, distance_obstacle_ugv, distance_obstacle_uav, length_tether_max, ws_z_min, step, 
-	use_tether, use_distance_function, pose_reel_local.transform.translation, just_line_of_sigth);
+	use_tether, use_distance_function, pose_reel_local.transform.translation, just_line_of_sigth, true);
 
 	// Stage to interpolate path
 	InterpolatePath ip_;
@@ -360,7 +360,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 							vec_pose_uav_init, vec_len_tether_init, vec_rot_ugv_init, vec_rot_uav_init, mapFull_msg, mapTrav_msg, grid_3D, false);			   
 	
 	if(!just_line_of_sigth){ // The tether is not computed if is required just to star with initial condition the straight line.
-		CheckCM->CheckStatusCatenaryCollision(vec_pose_ugv_init, vec_rot_ugv_init, vec_pose_uav_init, v_tether_params_init, vec_len_tether_init);
+		CheckCM->CheckStatusTetherCollision(vec_pose_ugv_init, vec_rot_ugv_init, vec_pose_uav_init, v_tether_params_init, vec_len_tether_init);
 		dm_.feasibilityAnalisysPath(CheckCM->count_ugv_coll, CheckCM->count_uav_coll, CheckCM->count_tether_coll);
 	}
 
@@ -643,7 +643,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	// Inform if is a feabible Trajectory or not, 
 	bool free_collision_ = true;
 	if(!just_line_of_sigth) // The tether is not computed if is required just to star with initial condition the straight line.
-    	free_collision_ = CheckCM->CheckStatusCatenaryCollision(vec_pose_ugv_opt, vec_rot_ugv_opt, vec_pose_uav_opt, v_tether_params_opt, vec_len_tether_opt);
+    	free_collision_ = CheckCM->CheckStatusTetherCollision(vec_pose_ugv_opt, vec_rot_ugv_opt, vec_pose_uav_opt, v_tether_params_opt, vec_len_tether_opt);
 
 	// Initializing variable for optimization analysis
 	if (write_data_for_analysis)
@@ -813,7 +813,7 @@ void OptimizerLocalPlanner::finishigOptimization()
 	double new_equi_dist = 0; 
 	double distance_ = 0;
   	for (size_t i = 0; i < size_path; i++){
-		geometry_msgs::Vector3 position_ugv_, position_uav_;
+		geometry_msgs::Point position_ugv_, position_uav_;
 		position_ugv_.x = statesPosUGV[i].parameter[1];
 		position_ugv_.y = statesPosUGV[i].parameter[2];
 		position_ugv_.z = statesPosUGV[i].parameter[3];
@@ -857,12 +857,12 @@ void OptimizerLocalPlanner::finishigOptimization()
 							  traj_opt_marker_ugv_pub_,traj_opt_marker_uav_pub_, tether_marker_opt_pub_, tether_marker_opt);
 	}else{
 		int num_point_per_unit_length = 10;
-		geometry_msgs::Vector3 point_;
-		std::vector<geometry_msgs::Vector3> points_tether_final_;
+		geometry_msgs::Point point_;
+		std::vector<geometry_msgs::Point> points_tether_final_;
 		points_tether_final_.clear();
 		
 		for(int i = 0; i < size_path; i++){  
-			geometry_msgs::Vector3 p_reel_ = getReelPoint(vec_pose_ugv_opt[i].x,vec_pose_ugv_opt[i].y,vec_pose_ugv_opt[i].z,
+			geometry_msgs::Point p_reel_ = getReelPoint(vec_pose_ugv_opt[i].x,vec_pose_ugv_opt[i].y,vec_pose_ugv_opt[i].z,
 										vec_rot_ugv_opt[i].x, vec_rot_ugv_opt[i].y, vec_rot_ugv_opt[i].z, vec_rot_ugv_opt[i].w);
 			int np_ = round( (double)num_point_per_unit_length * vec_len_tether_opt[i]);
 			double step_x_ = (vec_pose_uav_opt[i].x - p_reel_.x)/ (double)np_;
@@ -1009,9 +1009,9 @@ void OptimizerLocalPlanner::getReelPose()
     }
 }
 
-geometry_msgs::Vector3 OptimizerLocalPlanner::getReelPoint(const float px_, const float py_, const float pz_,const float qx_, const float qy_, const float qz_, const float qw_)
+geometry_msgs::Point OptimizerLocalPlanner::getReelPoint(const float px_, const float py_, const float pz_,const float qx_, const float qy_, const float qz_, const float qw_)
 {
-	geometry_msgs::Vector3 ret;
+	geometry_msgs::Point ret;
 
 	double roll_, pitch_, yaw_;
 	tf::Quaternion q_(qx_,qy_,qz_,qw_);
@@ -1026,7 +1026,7 @@ geometry_msgs::Vector3 OptimizerLocalPlanner::getReelPoint(const float px_, cons
 	return ret;
 }
 
-void OptimizerLocalPlanner::getTetherParameter(vector<geometry_msgs::Vector3> v_p_init_ugv_, vector<geometry_msgs::Vector3> v_p_init_uav_, vector<float> &v_l_cat_init_){
+void OptimizerLocalPlanner::getTetherParameter(vector<geometry_msgs::Point> v_p_init_ugv_, vector<geometry_msgs::Point> v_p_init_uav_, vector<float> &v_l_cat_init_){
 
 	parameterBlockTether tether_params_ ;
 	tether_parameters value_params_;
@@ -1062,15 +1062,15 @@ void OptimizerLocalPlanner::getTetherParameter(vector<geometry_msgs::Vector3> v_
 	// }
 }
 
-void OptimizerLocalPlanner::graphCatenary(vector<geometry_msgs::Vector3> v_ugv_, vector<geometry_msgs::Vector3> v_uav_, 
+void OptimizerLocalPlanner::graphCatenary(vector<geometry_msgs::Point> v_ugv_, vector<geometry_msgs::Point> v_uav_, 
 										  vector<geometry_msgs::Quaternion> v_rot_ugv, vector<float>  v_cat_){
 	bisectionCatenary bc;
 	
 	for(size_t i = 0; i < v_uav_.size(); i++){
-		std::vector<geometry_msgs::Vector3> points_catenary_final;
+		std::vector<geometry_msgs::Point> points_catenary_final;
 		points_catenary_final.clear();
 	  	// The Reel Position is consider above base_link_ugv
-		geometry_msgs::Vector3 p_reel_ = getReelPoint(v_ugv_[i].x,v_ugv_[i].y,v_ugv_[i].z,v_rot_ugv[i].x, v_rot_ugv[i].y, v_rot_ugv[i].z, v_rot_ugv[i].w);
+		geometry_msgs::Point p_reel_ = getReelPoint(v_ugv_[i].x,v_ugv_[i].y,v_ugv_[i].z,v_rot_ugv[i].x, v_rot_ugv[i].y, v_rot_ugv[i].z, v_rot_ugv[i].w);
 		bc.configBisection(v_cat_[i], p_reel_.x, p_reel_.y, p_reel_.z, v_uav_[i].x, v_uav_[i].y, v_uav_[i].z);
 		bc.getPointCatenary3D(points_catenary_final, false);
 // std::cout << "White Marker:  ["<< i <<"]Params["<< bc.Xc <<","<< bc.Yc <<","<< bc.c_value <<"]" << std::endl;
@@ -1078,7 +1078,7 @@ void OptimizerLocalPlanner::graphCatenary(vector<geometry_msgs::Vector3> v_ugv_,
 	}
 }
 
-void OptimizerLocalPlanner::graphTetherAndPathMarker(vector<geometry_msgs::Vector3> v_ugv_, vector<geometry_msgs::Vector3> v_uav_, 
+void OptimizerLocalPlanner::graphTetherAndPathMarker(vector<geometry_msgs::Point> v_ugv_, vector<geometry_msgs::Point> v_uav_, 
 													  vector<geometry_msgs::Quaternion> v_rot_ugv_, vector <tether_parameters> v_params_, vector<float> v_length_,
 													  int c_ugv_, int c_uav_, int c_tether_, ros::Publisher p_ugv_, ros::Publisher p_uav_, 
 													  ros::Publisher p_tether_, visualization_msgs::MarkerArray m_){
@@ -1101,8 +1101,8 @@ void OptimizerLocalPlanner::graphTetherAndPathMarker(vector<geometry_msgs::Vecto
 	p_uav_.publish(points_uav_marker);
 	p_uav_.publish(lines_uav_marker);
 	
-	std::vector<geometry_msgs::Vector3> v_pts_tether_;
-	geometry_msgs::Vector3 p_reel_;
+	std::vector<geometry_msgs::Point> v_pts_tether_;
+	geometry_msgs::Point p_reel_;
 
 	v_pts_tether_.clear();
 	GetTetherParameter GPP_;
@@ -1131,9 +1131,9 @@ void OptimizerLocalPlanner::graphTetherAndPathMarker(vector<geometry_msgs::Vecto
 
 }
 
-void OptimizerLocalPlanner::checkCatenaryLength(vector<geometry_msgs::Vector3> v_p_ugv, vector<geometry_msgs::Vector3>  v_p_uav, vector<geometry_msgs::Quaternion> v_r_ugv, vector<float> &v_l_in){
+void OptimizerLocalPlanner::checkCatenaryLength(vector<geometry_msgs::Point> v_p_ugv, vector<geometry_msgs::Point>  v_p_uav, vector<geometry_msgs::Quaternion> v_r_ugv, vector<float> &v_l_in){
 
-	geometry_msgs::Vector3 p_reel_;
+	geometry_msgs::Point p_reel_;
 	std::vector<float>  v_l_out;
 	v_l_out.clear();
 
@@ -1156,7 +1156,7 @@ void OptimizerLocalPlanner::checkCatenaryLength(vector<geometry_msgs::Vector3> v
 	v_l_in = v_l_out;     //Check This two lines, should be fixed in a previous method the length
 }
 
-double OptimizerLocalPlanner::checkTetherLength(tether_parameters p_, geometry_msgs::Vector3 p1_ , geometry_msgs::Vector3 p2_){
+double OptimizerLocalPlanner::checkTetherLength(tether_parameters p_, geometry_msgs::Point p1_ , geometry_msgs::Point p2_){
 
 	double L1, L2, L, x_;
 	// Compute tether L : log(q + ((q + 2*p*x)^2 + 1)^(1/2) + 2*p*x)/(4*p) + ((q + 2*p*x)*((q + 2*p*x)^2 + 1)^(1/2))/(4*p) , x = xA and xB

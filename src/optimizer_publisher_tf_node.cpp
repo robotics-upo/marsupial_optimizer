@@ -28,7 +28,7 @@ public:
 	void markerPoints(visualization_msgs::MarkerArray &_marker, std::vector<geometry_msgs::Point> _vector, int _suffix, int _n_v, int change_marker_);
 	void clearMarkers(visualization_msgs::MarkerArray _marker, int _s, ros::Publisher c_m_pub_);
 
-	geometry_msgs::Vector3 getReelPoint(const float px_, const float py_, const float pz_,const float qx_, const float qy_, const float qz_, const float qw_);
+	geometry_msgs::Point getReelPoint(const float px_, const float py_, const float pz_,const float qx_, const float qy_, const float qz_, const float qw_);
 	
 	marsupial_optimizer::marsupial_trajectory_optimized msg;
     marsupial_optimizer::marsupial_trajectory_optimized trajectory; 
@@ -131,7 +131,7 @@ void ManagerTf::trajectoryOptimizedCallBack(const marsupial_optimizer::marsupial
 	bisectionCatenary bc;
 
 	// cSX_.setMaxNumIterations(100);
-	std::vector<geometry_msgs::Vector3> points_catenary_;
+	std::vector<geometry_msgs::Point> points_catenary_;
 
 	for (size_t i= 0; i < trajectory.trajectory.points.size() ; i++){
 		double ugv_x = trajectory.trajectory.points.at(i).transforms[0].translation.x;
@@ -160,7 +160,7 @@ void ManagerTf::trajectoryOptimizedCallBack(const marsupial_optimizer::marsupial
 
 		//Graph final catenary states
 		points_catenary_.clear();
-		geometry_msgs::Vector3 p_reel_ =  getReelPoint(ugv_x, ugv_y, ugv_z, ugv_rot_x ,ugv_rot_y ,ugv_rot_z ,ugv_rot_w);
+		geometry_msgs::Point p_reel_ =  getReelPoint(ugv_x, ugv_y, ugv_z, ugv_rot_x ,ugv_rot_y ,ugv_rot_z ,ugv_rot_w);
 		
 		//Solve through Ceres
 			// cSX_.solve(p_reel_.x, p_reel_.y, p_reel_.z, uav_x, uav_y, uav_z, trajectory.length_catenary[i], points_catenary_);
@@ -217,9 +217,9 @@ void ManagerTf::getReelPose()
 	// printf("ManagerTf::getReelPose()  , pose_reel_local=[%f %f %f] \n",pose_reel_local.transform.translation.x, pose_reel_local.transform.translation.y,pose_reel_local.transform.translation.z);
 }
 
-geometry_msgs::Vector3 ManagerTf::getReelPoint(const float px_, const float py_, const float pz_,const float qx_, const float qy_, const float qz_, const float qw_)
+geometry_msgs::Point ManagerTf::getReelPoint(const float px_, const float py_, const float pz_,const float qx_, const float qy_, const float qz_, const float qw_)
 {
-	geometry_msgs::Vector3 ret;
+	geometry_msgs::Point ret;
 
 	double roll_, pitch_, yaw_;
 	tf::Quaternion q_(qx_,qy_,qz_,qw_);
