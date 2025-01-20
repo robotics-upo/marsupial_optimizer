@@ -1246,7 +1246,8 @@ void OptimizerLocalPlanner::graphTetherAndPathMarker(vector<geometry_msgs::Point
 	}
 }
 
-void OptimizerLocalPlanner::checkCatenaryStatus(vector<geometry_msgs::Point> v_p_ugv, vector<geometry_msgs::Point>  v_p_uav, vector<geometry_msgs::Quaternion> v_r_ugv, vector<float> &v_l_in, vector<int> v_fixed_, vector<tether_parameters> &v_param_){
+void OptimizerLocalPlanner::checkCatenaryStatus(vector<geometry_msgs::Point> v_p_ugv, vector<geometry_msgs::Point>  v_p_uav, vector<geometry_msgs::Quaternion> v_r_ugv, 
+												vector<float> &v_l_in, vector<int> v_fixed_, vector<tether_parameters> &v_param_){
 
 	vector<geometry_msgs::Point> points_catenary_; points_catenary_.clear();
 	geometry_msgs::Point p_reel_;
