@@ -27,7 +27,7 @@ This package has been designed and tested in an x86_64 machine under a Ubuntu 20
 - PCL
 - yaml-cpp
 - rrt-planner (https://github.com/robotics-upo/rrt_star_planners, branch: main)
-- catenary_checker (https://github.com/robotics-upo/catenary_checker , branch: master) 
+- catenary_checker (https://github.com/robotics-upo/catenary_checker , branch: develop) 
 - upo_actions (https://github.com/robotics-upo/upo_actions, branch: master)
 - upo_markers (https://github.com/robotics-upo/upo_markers, branch: master)
 
