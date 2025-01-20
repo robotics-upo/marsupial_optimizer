@@ -20,7 +20,6 @@
     <arg name="uav_base_frame"    default="uav_base_link"/> #position reel on UAV
     <arg name="use_parable"   default="false"/>
     <arg name="use_distance_function"   default="true"/>
-    <arg name="just_line_of_sigth"   default="false"/>
 
     <!-- Publishing UGV and UAV tf -->
     <node pkg="marsupial_optimizer" type="optimizer_publisher_tf_node" name="optimizer_publisher_tf_node" output="screen">
@@ -61,8 +60,6 @@
         <arg name="write_data_files" value="$(arg write_data_files)" /> 
         <arg name="use_parable"   value="$(arg use_parable)"/>
         <arg name="use_distance_function"   value="$(arg use_distance_function)"/>
-        <arg name="save_path_in_file"   value="$(arg save_path_in_file)"/>
-        <arg name="just_line_of_sigth"   value="$(arg just_line_of_sigth)"/>
     </include>    
 
     <!-- RViz -->

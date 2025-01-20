@@ -1,0 +1,9 @@
+# Maps
+
+The maps used for the experiments are located in "marsupial_optimizer/maps/stage_x.bt" (where x = 1-5). The maps avaliable are:
+
+    - Scenario 1 (S1): stage_1.bt
+    - Scenario 2 (S2): stage_2.bt
+    - Scenario 3 (S3): stage_3.bt
+    - Scenario 4 (S4): stage_4.bt
+    - Scenario 5 (S5): stage_5.bt

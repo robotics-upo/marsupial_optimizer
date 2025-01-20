@@ -1,0 +1,47 @@
+# Instruction:
+
+## First step
+
+Below are the instructions to execute all the simulated experiments conducted in the article "Path and trajectory planning of a tethered UAV-UGV marsupial robotic system."
+
+The set of simulated experiments consists of 5 scenarios (stage_x). Each scenario has two different initial positions.
+
+To launch the experiments in scenario 1, initial positions 1 and 2, respectively, use the following launch configuration:
+
+    roslaunch marsupial_optimizer planner_and_optimizer.launch map:=stage_1 num_pos_initial:=1
+    roslaunch marsupial_optimizer planner_and_optimizer.launch map:=stage_1 num_pos_initial:=2
+
+
+Similarly, to launch the experiments in scenarios 2, 3, 4, and 5, with initial positions 1 and 2, respectively, use:
+
+    roslaunch marsupial_optimizer planner_and_optimizer.launch map:=stage_2 num_pos_initial:=1
+    roslaunch marsupial_optimizer planner_and_optimizer.launch map:=stage_2 num_pos_initial:=2
+
+    roslaunch marsupial_optimizer planner_and_optimizer.launch map:=stage_3 num_pos_initial:=1
+    roslaunch marsupial_optimizer planner_and_optimizer.launch map:=stage_3 num_pos_initial:=2
+
+    roslaunch marsupial_optimizer planner_and_optimizer.launch map:=stage_4 num_pos_initial:=1
+    roslaunch marsupial_optimizer planner_and_optimizer.launch map:=stage_4 num_pos_initial:=2
+
+    roslaunch marsupial_optimizer planner_and_optimizer.launch map:=stage_5 num_pos_initial:=1
+    roslaunch marsupial_optimizer planner_and_optimizer.launch map:=stage_5 num_pos_initial:=2
+
+
+## Second step
+
+As this method was implemented using actionlib based on behavior trees, it is necessary to launch the behavior tree package:
+
+    roslaunch marsupial_optimizer behavior_tree_node_marsupial.launch
+
+## Third step
+
+Finally, to run the behavior tree associated with each stage, it is necessary to execute:
+
+    roscd marsupial_optimizer/trees/script
+    ./execute_tree.sh stage_x
+
+Please note that "x" in stage_x represents a number between 1 and 5.
+
+# Complementary Information
+
+In addition to this file, you can find more information related to the maps and initial positions used for each experiment.

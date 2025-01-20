@@ -1,0 +1,9 @@
+# Initial Positions:
+
+The Initial Position in the different scenarios (S1, S2, S3, S4, S5) used for the experiments are two and are avaliable in "marsupial_optimizer/cfg/stage_x.yaml" (x= 1-5), that is:
+
+    - Scenario 1 (S1): stage_1.yaml
+    - Scenario 2 (S2): stage_2.yaml
+    - Scenario 3 (S3): stage_3.yaml
+    - Scenario 4 (S4): stage_4.yaml
+    - Scenario 5 (S5): stage_5.yaml
