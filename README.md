@@ -68,3 +68,36 @@ roslaunch marsupial_optimizer planner_and_optimizer.launch scenario_number:=2 nu
 It will launch the optimizer and the visualization of the environment and marsupial robots in RVIZ. 
 
 To start the optimization process is necessary to publish a desired goal position in the topic ```/Make_Plan/goal```.
+
+## Citation
+
+If you find this driver useful for your research, please consider adding the following citation.
+
+```
+@ARTICLE{10207830,
+
+  author={Martínez-Rozas, S. and Alejo, D. and Caballero, F. and Merino, L.},
+
+  journal={IEEE Robotics and Automation Letters}, 
+
+  title={Path and Trajectory Planning of a Tethered UAV-UGV Marsupial Robotic System}, 
+
+  year={2023},
+
+  volume={8},
+
+  number={10},
+
+  pages={6475-6482},
+
+  keywords={Autonomous aerial vehicles;Trajectory;Planning;Trajectory planning;Navigation;Three-dimensional displays;Stability analysis;Motion and path planning;aerial systems: applications},
+
+  doi={10.1109/LRA.2023.3301292}}
+
+```
+
+## Acknowledgements
+
+![Logos](minci.png)
+
+This work was partially supported by the following grants: 1) INSERTION PID2021-127648OB-C31, and 2) RATEC PDC2022-133643-C21 projects, funded by MCIN/AEI/ 10.13039/501100011033 and the "European Union NextGenerationEU / PRTR".
