@@ -61,11 +61,6 @@ The package has a set of predefined configurations (and completely extendable ac
 
 To launch the optimizer just launch the provided ```launch/marsupial_optimization_trayectory.launch``` file. To manage the scenario and initial position predefined is recommended to use the parameters for this launch, ```scenario_number``` and ```num_pos_initial```. Thus, for example, to use S2 and initial position 2: 
 
-## Acknowledgements
-
-![Logos](minci.png)
-
-This work was partially supported by the following grants: 1) INSERTION PID2021-127648OB-C31, and 2) RATEC PDC2022-133643-C21 projects, funded by MCIN/AEI/ 10.13039/501100011033 and the "European Union NextGenerationEU / PRTR".
 ```
 roslaunch marsupial_optimizer planner_and_optimizer.launch scenario_number:=2 num_pos_initial:=2
 ```
@@ -73,3 +68,10 @@ roslaunch marsupial_optimizer planner_and_optimizer.launch scenario_number:=2 nu
 It will launch the optimizer and the visualization of the environment and marsupial robots in RVIZ. 
 
 To start the optimization process is necessary to publish a desired goal position in the topic ```/Make_Plan/goal```.
+
+
+## Acknowledgements
+
+![Logos](minci.png)
+
+This work was partially supported by the following grants: 1) INSERTION PID2021-127648OB-C31, and 2) RATEC PDC2022-133643-C21 projects, funded by MCIN/AEI/ 10.13039/501100011033 and the "European Union NextGenerationEU / PRTR".
