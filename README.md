@@ -38,13 +38,7 @@ This package has been designed and tested in an x86_64 machine under a Ubuntu 20
 2- Call marsupial_setup.sh script from ```marsupial_optimizer/script``` directory to install package dependencies.
 
 ```
-rosrun marsupial_optimizer marsupial_setup.sh
-```
-
-3- Call the ceres_installation.sh script to install Ceres-Solver required dependencies (will be installed in ```/home/$user/```).
-
-```
-rosrun marsupial_optimizer ceres_installation.sh
+rosrun marsupial_optimizer marsupial_installation.sh
 ```
 
 4- Finally compile your workspace using ```catkin_make``` 
