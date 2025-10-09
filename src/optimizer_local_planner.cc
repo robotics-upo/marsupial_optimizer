@@ -772,7 +772,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	finishigOptimization();
 		ManagePath mp_;
 	if(export_path)
-		mp_.exportOptimizedPath(vec_pose_ugv_opt, vec_pose_uav_opt, vec_rot_ugv_opt, vec_rot_uav_opt, vec_len_tether_opt, path);
+		mp_.exportOptimizedPath(vec_pose_ugv_opt, vec_pose_uav_opt, vec_rot_ugv_opt, vec_rot_uav_opt, vec_len_tether_opt, vec_time_opt, path);
 
 	// Inform if is a feabible Trajectory or not, 
 	bool free_collision_ = true;

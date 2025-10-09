@@ -291,12 +291,12 @@ public:
 	vector<parameterBlockLength> statesLength ;
 	vector<parameterBlockTether> statesTetherParams;
 	vector<geometry_msgs::Quaternion> vec_rot_ugv_init, vec_rot_uav_init;
-  vector<geometry_msgs::Quaternion> vec_rot_ugv_opt, vec_rot_uav_opt;
+  	vector<geometry_msgs::Quaternion> vec_rot_ugv_opt, vec_rot_uav_opt;
 
 	vector<double> vec_dist_init_ugv, vec_dist_init_uav;
 	vector<double> vec_time_init;
 	vector<double> v_angles_smooth_ugv_init, v_angles_smooth_uav_init;
-  vector<double> v_angles_smooth_ugv_opt, v_angles_smooth_uav_opt;
+  	vector<double> v_angles_smooth_ugv_opt, v_angles_smooth_uav_opt;
 	vector<float> vec_len_tether_init, vec_len_tether_opt;
 	vector<float> vec_cat_param_x0, vec_cat_param_y0, vec_cat_param_a;
 	vector<geometry_msgs::Point> vec_pose_ugv_opt, vec_pose_uav_opt; 
@@ -307,7 +307,7 @@ public:
   // save the id number of position no fix , from vector vec_pose_init_uav
 	vector<int> v_id_point_not_fix_ugv, v_id_point_not_fix_uav; 
 	
-  double pos_reel_x, pos_reel_y, pos_reel_z;
+  	double pos_reel_x, pos_reel_y, pos_reel_z;
 	ros::Time start_time_opt, final_time_opt;
 	int num_pos_initial, num_goal;
 	bool write_data_for_analysis, use_loss_function;
@@ -320,9 +320,9 @@ public:
 	bool tether_length_constraint, tether_obstacle_constraint, tether_parameters_constraint;
 	bool finished_rviz_maneuver;
 	bool equidistance_ugv_constraint, obstacles_ugv_constraint;
-  bool traversability_ugv_constraint, smoothness_ugv_constraint;
+  	bool traversability_ugv_constraint, smoothness_ugv_constraint;
 	bool write_data_residual;
-  bool just_line_of_sight; // This variable allow the class just compute the straigth state of the tether 
+  	bool just_line_of_sight; // This variable allow the class just compute the straigth state of the tether 
 	bool export_path; // This variable allow to get path in yaml format for real missions.
 	bool stop_plot_cat;
 
@@ -331,8 +331,8 @@ private:
 	void cleanVectors();
 	double global_path_length;
 	double distance_obstacle_uav,distance_obstacle_ugv;
-  double initial_velocity_ugv, initial_velocity_uav;
-  double angle_min_traj, initial_acceleration_ugv, initial_acceleration_uav;
+  	double initial_velocity_ugv, initial_velocity_uav;
+  	double angle_min_traj, initial_acceleration_ugv, initial_acceleration_uav;
 	double initial_time;
 	double min_T;
 };
