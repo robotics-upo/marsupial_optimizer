@@ -116,7 +116,7 @@ ManagePath::ManagePath(const std::string &path_and_name_file_, upo_actions::Exec
 
 void ManagePath::exportOptimizedPath(vector<geometry_msgs::Point> &v_ugv_, vector<geometry_msgs::Point> &v_uav_, 
 									 vector<geometry_msgs::Quaternion> &v_r_ugv_, vector<geometry_msgs::Quaternion> &v_r_uav_, vector<float> &v_l_,
-									 string path_mission_file_)
+									 vector<double> v_t_, string path_mission_file_)
 {
     time_t ttime = time(0);
     tm *local_time = localtime(&ttime);
@@ -139,6 +139,7 @@ void ManagePath::exportOptimizedPath(vector<geometry_msgs::Point> &v_ugv_, vecto
 
 	// Interpolate vector
 	printf("vec_pose_ugv_opt.size()=%lu , vec_pose_uav_opt.size()=%lu , vec_len_cat_opt.size()=%lu\n",v_ugv_.size(),v_uav_.size(),v_l_.size());
+	double time_ = 0;
 	for (int i=0 ; i < v_ugv_.size()-1; i++){
 		d_to_interp_ = 0.2;
 		interpol_ = false;
@@ -211,9 +212,11 @@ void ManagePath::exportOptimizedPath(vector<geometry_msgs::Point> &v_ugv_, vecto
     node["size"] = size_;
     
     for(int i=0 ; i < v_ugv_.size(); i++){
+		time_ = time_ + v_t_[i];
 		node["poses"+to_string(i)]["header"] = "ugv"+to_string(i);
         node["poses"+to_string(i)]["seq"] = i;
         node["poses"+to_string(i)]["frame_id"] = "ugv";  
+        node["poses"+to_string(i)]["time"] = time_;  
         node["poses"+to_string(i)]["pose"]["position"]["x"] = v_ugv_[i].x;
         node["poses"+to_string(i)]["pose"]["position"]["y"] = v_ugv_[i].y;
         node["poses"+to_string(i)]["pose"]["position"]["z"] = v_ugv_[i].z;
@@ -235,10 +238,13 @@ void ManagePath::exportOptimizedPath(vector<geometry_msgs::Point> &v_ugv_, vecto
     node["stamp"] = hour_+min_+sec_ ;
     node["frame_id"] = "base_link_uav";
     node["size"] = size_;
-    for(int i=0 ; i < v_uav_.size(); i++){
+    time_ = 0;
+	for(int i=0 ; i < v_uav_.size(); i++){
+		time_ = time_ + v_t_[i];
         node["poses"+to_string(i)]["header"] = "uav"+to_string(i);
         node["poses"+to_string(i)]["seq"] = i;
         node["poses"+to_string(i)]["frame_id"] = "uav";  
+        node["poses"+to_string(i)]["time"] = time_;  
         node["poses"+to_string(i)]["pose"]["position"]["x"] = v_uav_[i].x;
         node["poses"+to_string(i)]["pose"]["position"]["y"] = v_uav_[i].y;
         node["poses"+to_string(i)]["pose"]["position"]["z"] = v_uav_[i].z;
@@ -260,10 +266,13 @@ void ManagePath::exportOptimizedPath(vector<geometry_msgs::Point> &v_ugv_, vecto
     node["stamp"] = hour_+min_+sec_ ;
     node["frame_id"] = "frame_tether";
     node["size"] = size_;
-    for(int i=0 ; i < v_l_.size(); i++){
+    time_ = 0;
+	for(int i=0 ; i < v_l_.size(); i++){
+		time_ = time_ + v_t_[i];
         node["length"+to_string(i)]["header"] = "tether"+to_string(i);
         node["length"+to_string(i)]["seq"] = i;
         node["length"+to_string(i)]["frame_id"] = "tether_length";  
+        node["length"+to_string(i)]["time"] = time_;  
         node["length"+to_string(i)]["length"] = v_l_[i];
     }
 	root["tether"] = node;

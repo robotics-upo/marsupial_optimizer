@@ -60,7 +60,7 @@
         <arg name="planner_type" value="$(arg planner_type)" /> 
         <arg name="write_data_files" value="$(arg write_data_files)" /> 
         <arg name="use_distance_function"   value="$(arg use_distance_function)"/>
-        <!-- <arg name="save_path_in_file"   value="$(arg save_path_in_file)"/> -->
+        <arg name="save_path_in_file"   value="$(arg save_path_in_file)"/>
         <!-- <arg name="just_line_of_sigth"   value="$(arg just_line_of_sigth)"/> -->
         <!-- <arg name="use_catenary_as_tether"   value="$(arg use_catenary_as_tether)"/> -->
     </include>    

@@ -1025,7 +1025,7 @@ inline double DataManagement::getPointDistanceFullMap(geometry_msgs::Point p_, i
 	if(is_into_)
 		dist =  g_3D->getPointDist((double)p_.x,(double)p_.y,(double)p_.z) ;
 	else{
-        std::cout << "  DataManagement::getPointDistanceFullMap : the  parabola in the state = " << pose_ << " is out of the GRID["<<p_.x<< ", " << p_.y << ", " <<p_.z << "]"<< std::endl; 
+        // std::cout << "  DataManagement::getPointDistanceFullMap : the  parabola in the state = " << pose_ << " is out of the GRID["<<p_.x<< ", " << p_.y << ", " <<p_.z << "]"<< std::endl; 
 		dist = -1.0;
     }
 	return dist;

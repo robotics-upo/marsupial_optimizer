@@ -157,7 +157,7 @@
         <param name="write_data_residual"           value="$(arg write_data_residual)"/>
         <param name="use_distance_function"         value="$(arg use_distance_function)"/>     
         <param name="use_parable"                   value="true"/>
-        <param name="export_path"                   value="false"/>
+        <param name="export_path"                   value="true"/>
             
         <param name="verbose_optimizer"             value="$(arg verbose_optimizer)"/>
 
