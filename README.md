@@ -1,4 +1,4 @@
-# marsupial_optimizer based on ceres-solver - Parable Approach
+# marsupial_optimizer based on ceres-solver - Parabola Approach
 
 This package provides a framework to solve non-linear optimization problem for 3D trajectory planning in a marsupial robotic system consisting of an unmanned aerial vehicle (UAV) linked to an unmanned ground vehicle (UGV) through a non-taut tether with controllable length. The objective is to determine a synchronized collision-free trajectory for the three marsupial system agents: UAV, UGV, and tether (https://youtu.be/N-K3yT8Tsxw).
 
