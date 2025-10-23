@@ -204,21 +204,21 @@ public:
 
 	Solver::Options options;
   	Solver::Summary summary;
-	float initial_cost, final_cost, successful_steps, unsuccessful_steps, time_optimazation ;
+	float initial_cost, final_cost, successful_steps, unsuccessful_steps, time_optimazation, num_inner_iteration_steps;
 	
 	tf::TransformListener listener;
 	geometry_msgs::TransformStamped pose_reel_global, pose_reel_local;
 
-	std::string path, files_residuals, name_output_file, user_name, path_mission_file;
+	std::string path, files_residuals, name_output_file, user_name, path_mission_file, name_file_trajectory;
 
-  double map_resolution;
+  	double map_resolution;
 	float step , step_inv;
 	double ws_x_max; 
-  double ws_y_max; 
-  double ws_z_max;
-  double ws_x_min;
-  double ws_y_min;
-  double ws_z_min;
+	double ws_y_max; 
+	double ws_z_max;
+	double ws_x_min;
+	double ws_y_min;
+	double ws_z_min;
 	
 	int n_iter_opt;	//Iterations Numbers of Optimizer
 	int size_path;
@@ -323,7 +323,7 @@ public:
   	bool traversability_ugv_constraint, smoothness_ugv_constraint;
 	bool write_data_residual;
   	bool just_line_of_sight; // This variable allow the class just compute the straigth state of the tether 
-	bool export_path; // This variable allow to get path in yaml format for real missions.
+	bool export_opt_trajectory; // This variable allow to get path in yaml format for real missions.
 	bool stop_plot_cat;
 
 private:

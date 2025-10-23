@@ -632,8 +632,8 @@ bool TestTetherConstraints::CheckStatusTetherCollision(vector<geometry_msgs::Poi
 						// << p_reel_.x <<"," << p_reel_.y << "," << p_reel_.z <<"] UAV["<< v2_[i].x<<"," <<v2_[i].y <<"," <<v2_[i].z << "]" <<std::endl; 
 			}
 		}
-		if (count_tether_coll>0 )
-			std::cout << "TETHER ["<< i <<"] in collision. Total Points:["<< count_tether_coll <<"] , between["<< first_coll_ <<"-"<<last_coll_ <<"]" << std::endl;
+		// if (count_tether_coll>0 )
+			// std::cout << "TETHER ["<< i <<"] in collision. Total Points:["<< count_tether_coll <<"] , between["<< first_coll_ <<"-"<<last_coll_ <<"]" << std::endl;
 		count_total_tether_coll_ = count_total_tether_coll_ + count_tether_coll;
 	}
 

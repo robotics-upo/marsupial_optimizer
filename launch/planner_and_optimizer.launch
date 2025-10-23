@@ -4,7 +4,7 @@
     <arg name="launch_robot_marker" default="true"/>
     <arg name="home"    default="$(env HOME)"/>     
 
-    <arg name="graph_traj_in_rviz" default="false"/>  <!-- Execute Trajectory computed and translating tf robots-->
+    <arg name="graph_traj_in_rviz" default="true"/>  <!-- Execute Trajectory computed and translating tf robots-->
     <arg name="pause_execution" default="false"/>
     <arg name="write_data_files" default="true"/>
     <arg name="use_distance_function" default="true"/>  
@@ -20,7 +20,7 @@
     <arg name="verbose_optimizer" default="false"/>
     <arg name="debug_msgs" default="false"/>
     <arg name="show_config_msgs" default="false"/>
-    <arg name="just_line_of_sigth" default="false"/>
+    <arg name="just_line_of_sight" default="false"/>
     
     <arg name="distance_obstacle_ugv"    default="0.5"/>   
     <arg name="distance_obstacle_uav"    default="0.5"/>   
@@ -37,10 +37,10 @@
     <arg name="files_results"    default="results_marsupial_optimizer"/>     
     <arg name="files_residuals"    default="residuals_optimization_data/"/>     
     <!-- RRT Parameters -->
-    <arg name="n_iter_rrt"          default="20"/>
-    <arg name="n_loop_rrt"          default="100"/>
+    <arg name="n_iter_rrt"          default="40"/>
+    <arg name="n_loop_rrt"          default="200"/>
     <arg name="radius_near_nodes"   default="1.2"/> 
-    <arg name="goal_gap_m"          default="0.2"/> # 1.4
+    <arg name="goal_gap_m"          default="0.8"/> # 1.4
     <arg name="step_steer"          default="0.4"/>
     <arg name="min_l_steer_ugv"     default="8.0"/>
     <arg name="coupled"             default="false"/>
@@ -49,6 +49,7 @@
     <!-- Optimizer Parameter-->
     <arg name="use_loss_function"   default="false"/> 
     <arg name="get_path_from_file"    default="false"/>     
+    <arg name="name_file_trajectory"    default="teatro_trajectory"/>     
 
     <!-- Catenaty Checker-->
     <arg name="plane_dist" default="0.5"/>
@@ -129,6 +130,7 @@
         <param name="dbscan_theta" value="$(arg dbscan_theta)"/>
         <param name="use_dbscan_lines" value="$(arg use_dbscan_lines)"/>
         <param name="use_both" value="$(arg use_both)"/>
+        <param name="just_line_of_sight" value="$(arg just_line_of_sight)"/>
 
         <param name="n_planes" value="$(arg n_planes)"/>
         <param name="do_steer_ugv" value="$(arg do_steer_ugv)"/>
@@ -157,7 +159,8 @@
         <param name="write_data_residual"           value="$(arg write_data_residual)"/>
         <param name="use_distance_function"         value="$(arg use_distance_function)"/>     
         <param name="use_parable"                   value="true"/>
-        <param name="export_path"                   value="true"/>
+        <param name="export_opt_trajectory"         value="false"/>
+        <param name="name_file_trajectory"          value="$(arg name_file_trajectory)"/>
             
         <param name="verbose_optimizer"             value="$(arg verbose_optimizer)"/>
 
@@ -237,6 +240,7 @@
         <param name="path_mission_file"         value="$(find marsupial_mission_interface)/cfg/optimized_path/"/>     
         <param name="files_residuals"           value="$(arg files_residuals)"/>     
         <param name="scenario_name"             value="$(arg map_file)"/>     
+        <param name="just_line_of_sight"        value="$(arg just_line_of_sight)"/>
 
         <!-- For Grid3D -->
         <param name="map_path"                  value="$(find marsupial_optimizer)/maps/$(arg map_file).bt"/>

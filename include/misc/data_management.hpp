@@ -34,7 +34,7 @@ class DataManagement
 							double initial_velocity_uav_, double initial_acceleration_ugv_, double initial_acceleration_uav_, double bound_par_obs_, 
 							geometry_msgs::Point pos_reel_ugv_, std::vector<geometry_msgs::Point> vec_pose_init_ugv_, std::vector<geometry_msgs::Point> vec_pose_init_uav_,	
 							std::vector<float> vec_len_cat_init_, std::vector<geometry_msgs::Quaternion> vec_rot_ugv_, 
-							std::vector<geometry_msgs::Quaternion> vec_rot_uav_, octomap::OcTree* octree_full_,octomap::OcTree* octree_ugv_, Grid3d* grid_3D_, bool wtd_, bool use_catenary_as_tether_);
+							std::vector<geometry_msgs::Quaternion> vec_rot_uav_, octomap::OcTree* octree_full_,octomap::OcTree* octree_ugv_, Grid3d* grid_3D_, bool wtd_, bool use_catenary_as_tether_, bool just_line_of_sight_);
 		virtual void writeTemporalDataBeforeOpt(std::vector<double> v_dist_init_ugv_, std::vector<double> v_dist_init_uav_, std::vector<double> v_time_init_, 
 							std::vector<double> v_angles_kinematic_ugv, std::vector<double> v_angles_kinematic_uav_, vector <tether_parameters> v_tether_params_init_);
 		virtual void DataBeforeOptUsingCatenary(std::vector<double> v_dist_init_ugv_, std::vector<double> v_dist_init_uav_, 
@@ -54,7 +54,7 @@ class DataManagement
 												std::vector<float> v_length_);
 		virtual void getDataForOptimizerAnalysis(pcl::KdTreeFLANN <pcl::PointXYZ> kdt_, pcl::KdTreeFLANN <pcl::PointXYZ> kdt_all_, 
 												 pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_points_ , pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_points_all_, 
-												 double opt_compute_time_ , std::string mode_);
+												 double opt_compute_time_ , std::string mode_, int num_iteration_);
  		virtual geometry_msgs::Point getReelPos(const geometry_msgs::Point p_,const geometry_msgs::Quaternion q_, geometry_msgs::Point p_reel_);
 		virtual geometry_msgs::Point getEulerAngles(const float qx_, const float qy_, const float qz_, const float qw_);
 		virtual bool isObstacleBetweenTwoPoints(geometry_msgs::Point pose_opt_1, geometry_msgs::Point pose_opt_2, bool oct_full_);
@@ -81,6 +81,7 @@ class DataManagement
 		std::vector <tether_parameters> vec_params_tether_opt, vec_params_tether_init;
 
 		double initial_velocity_ugv, initial_velocity_uav, initial_acceleration_ugv, initial_acceleration_uav, bound_par_obs;
+		double dis_ugv, dis_uav;
 
 		std::vector<double> vec_dist_init_ugv, vec_dist_init_uav;
 		std::vector<double> vec_time_init;
@@ -96,7 +97,7 @@ class DataManagement
 		octomap::OcTree* octree_ugv;
 
 		std::string mode;
-		bool write_temporal_data, use_catenary_as_tether;
+		bool write_temporal_data, use_catenary_as_tether, just_line_of_sight;
 
 		Grid3d* g_3D;
 
@@ -120,7 +121,7 @@ inline void DataManagement::initDataManagement(
 				double bound_par_obs_, 
 				geometry_msgs::Point pos_reel_ugv_, std::vector<geometry_msgs::Point> vec_pose_init_ugv_, std::vector<geometry_msgs::Point> vec_pose_init_uav_, 
 				std::vector<float> vec_len_cat_init_, std::vector<geometry_msgs::Quaternion> vec_rot_ugv_, std::vector<geometry_msgs::Quaternion> vec_rot_uav_, 
-				octomap::OcTree* octree_full_, octomap::OcTree* octree_ugv_, Grid3d* grid_3D_, bool wtd_, bool use_catenary_as_tether_)
+				octomap::OcTree* octree_full_, octomap::OcTree* octree_ugv_, Grid3d* grid_3D_, bool wtd_, bool use_catenary_as_tether_, bool just_line_of_sight_)
 {
 	path = path_;
 	name_output_file = name_output_file_;
@@ -143,6 +144,7 @@ inline void DataManagement::initDataManagement(
 	vec_init_rot_ugv = vec_rot_ugv_;
 	vec_init_rot_uav = vec_rot_uav_;
 	bound_par_obs = bound_par_obs_;
+	just_line_of_sight = just_line_of_sight_;
 	
 	pos_reel_ugv = pos_reel_ugv_;
 
@@ -198,6 +200,7 @@ inline void DataManagement::writeTemporalDataBeforeOpt(std::vector<double> vec_d
 	vec_dist_init_uav = vec_dist_init_uav_;
 	vec_time_init = vec_time_init_;
 	vec_params_tether_init = v_tether_params_init_;
+	dis_ugv = dis_uav = 0.0;
 
 	//! Save temporal state before optimization
 	if(write_temporal_data){
@@ -282,6 +285,9 @@ inline void DataManagement::writeTemporalDataBeforeOpt(std::vector<double> vec_d
 		file_in_kinematic << std::endl;
 		file_in_kinematic.close();
 	}
+
+	dis_ugv = _sum_dist_ugv;
+	dis_uav = _sum_dist_uav;
 }
 
 inline void DataManagement::writeTemporalDataAfterOpt(
@@ -476,7 +482,7 @@ inline void DataManagement::getDataForOptimizerAnalysis(
 					pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_points_, 
 					pcl::PointCloud <pcl::PointXYZ>::Ptr obstacles_points_all_, 
 					double opt_compute_time_ , 
-					std::string mode_)
+					std::string mode_, int num_iteration_)
 {
 	//mode = 1 , UGV  - mode = 2 , UAV
 	std::vector<double> vec_time_init_, vec_time_opt_, vec_dist_init_, vec_dist_opt_, vec_vel_opt_, vec_acc_opt_;
@@ -576,9 +582,9 @@ inline void DataManagement::getDataForOptimizerAnalysis(
 	distance_obs_init_mean_ = distance_obs_init_ / (double)vec_pose_init_.size();
 
 	// I.d) Distance Parabola Obstacles Initial
-	double distance_obs_cat_init_ , distance_obs_par_init_min_, distance_obs_par_init_mean_;
-	distance_obs_cat_init_ = distance_obs_par_init_mean_ = 0.0;
-	distance_obs_par_init_min_ = 1000.0;
+	double distance_obs_cat_init_ , distance_obs_tether_init_min_, distance_obs_tether_init_mean_;
+	distance_obs_cat_init_ = distance_obs_tether_init_mean_ = 0.0;
+	distance_obs_tether_init_min_ = 1000.0;
 	int count_cat_p_init_ = 0;
 	int count_coll_between_init_ = 0;
 	std::string pos_coll_between_init_ = "";
@@ -599,13 +605,13 @@ inline void DataManagement::getDataForOptimizerAnalysis(
 				count_cat_p_init_++;
 				double _d  =  getPointDistanceFullMap(vec_par_pts_[j], j);
 				distance_obs_cat_init_ =  _d + distance_obs_cat_init_;
-				if(distance_obs_par_init_min_ > _d )
-					distance_obs_par_init_min_ = _d;
+				if(distance_obs_tether_init_min_ > _d )
+					distance_obs_tether_init_min_ = _d;
 			}
 		}
 	}
 
-	distance_obs_par_init_mean_ = distance_obs_cat_init_/ (double) count_cat_p_init_;
+	distance_obs_tether_init_mean_ = distance_obs_cat_init_/ (double) count_cat_p_init_;
 
 
 	/************************************************************************************************************************/
@@ -650,35 +656,39 @@ inline void DataManagement::getDataForOptimizerAnalysis(
 	distance_obs_opt_mean_ = distance_obs_opt_ / (double)vec_pose_opt_.size();
 
 	// II.d) Distance Parabola Obstacles Optimized
-	double distance_obs_cat_opt_ , distance_obs_par_opt_min_, distance_obs_par_opt_mean_;
-	distance_obs_cat_opt_ = distance_obs_par_opt_mean_ = 0.0;
-	distance_obs_par_opt_min_ = 1000.0;
+	double distance_obs_cat_opt_ , distance_obs_tether_opt_min_, distance_obs_tether_opt_mean_;
+	distance_obs_cat_opt_ = distance_obs_tether_opt_mean_ = 0.0;
+	distance_obs_tether_opt_min_ = 1000.0;
 	int count_cat_p_opt_ = 0;
 	int count_coll_between_opt_ = 0;
 	std::string pos_coll_between_opt_ = "";
 
 	// II.e) Optimized Parabola analisys 
-	for(size_t i = 0 ; i < vec_params_tether_opt.size(); i ++){
+	for(size_t i = 0 ; i < vec_pose_ugv_opt.size(); i ++){
 		geometry_msgs::Point p_reel_ugv;
 		std::vector<geometry_msgs::Point> vec_par_pts_; 
 
 		p_reel_ugv = getReelPos(vec_pose_ugv_opt[i],vec_opt_rot_ugv[i], pos_reel_ugv);
-		if (use_catenary_as_tether)
-        	gpp.getCatenaryPoints(p_reel_ugv, vec_pose_uav_opt[i], vec_params_tether_opt[i], vec_par_pts_, vec_len_cat_opt[i]);
+		if (!just_line_of_sight){
+			if (use_catenary_as_tether)
+				gpp.getCatenaryPoints(p_reel_ugv, vec_pose_uav_opt[i], vec_params_tether_opt[i], vec_par_pts_, vec_len_cat_opt[i]);
+			else
+				gpp.getParabolaPoints(p_reel_ugv, vec_pose_uav_opt[i], vec_params_tether_opt[i], vec_par_pts_);
+		}
 		else
-        	gpp.getParabolaPoints(p_reel_ugv, vec_pose_uav_opt[i], vec_params_tether_opt[i], vec_par_pts_);
-
+			gpp.getPointParabolaStraight(p_reel_ugv, vec_pose_uav_opt[i], vec_par_pts_, vec_len_cat_opt[i]);
+		
 		for (size_t j= 0 ; j < vec_par_pts_.size() ; j++){
-				count_cat_p_opt_++;
-				double _d  =  getPointDistanceFullMap(vec_par_pts_[j], j);
-				distance_obs_cat_opt_ =  _d + distance_obs_cat_opt_;
-				if(distance_obs_par_opt_min_ > _d ){
-					distance_obs_par_opt_min_ = _d;
-				}
+			count_cat_p_opt_++;
+			double _d  =  getPointDistanceFullMap(vec_par_pts_[j], j);
+			distance_obs_cat_opt_ =  _d + distance_obs_cat_opt_;
+			if(distance_obs_tether_opt_min_ > _d ){
+				distance_obs_tether_opt_min_ = _d;
+			}
 		}
 	}
 
-	distance_obs_par_opt_mean_ = distance_obs_cat_opt_/ (double)count_cat_p_opt_;
+	distance_obs_tether_opt_mean_ = distance_obs_cat_opt_/ (double)count_cat_p_opt_;
 
 	std::string name_output_file = output_file +"_"+ mode_ +".txt";
 
@@ -695,10 +705,10 @@ inline void DataManagement::getDataForOptimizerAnalysis(
 	// 		<< distance_obs_init_min_ << ";"
 	// 		<< distance_obs_opt_mean_ << ";" 
 	// 		<< distance_obs_opt_min_ << ";" 
-	// 		<< distance_obs_par_init_mean_ << ";" 
-	// 		<< distance_obs_par_init_min_ << ";" 
-	// 		<< distance_obs_par_opt_mean_ << ";" 
-	// 		<< distance_obs_par_opt_min_ << ";"
+	// 		<< distance_obs_tether_init_mean_ << ";" 
+	// 		<< distance_obs_tether_init_min_ << ";" 
+	// 		<< distance_obs_tether_opt_mean_ << ";" 
+	// 		<< distance_obs_tether_opt_min_ << ";"
 	// 		<< init_traj_vel_mean_ << ";" 
 	// 		<< init_traj_vel_max_ << ";"
 	// 		<< opt_traj_vel_mean_ << ";"
@@ -719,13 +729,16 @@ inline void DataManagement::getDataForOptimizerAnalysis(
 			<< opt_traj_time_ << ";" 
 			<< distance_obs_opt_mean_ << ";" 
 			<< distance_obs_opt_min_ << ";" 
-			<< distance_obs_par_opt_mean_ << ";" 
-			<< distance_obs_par_opt_min_ << ";"
+			<< distance_obs_tether_opt_mean_ << ";" 
+			<< distance_obs_tether_opt_min_ << ";"
 			<< opt_traj_vel_mean_ << ";"
 			<< opt_traj_vel_max_ << ";"
 			<< opt_traj_acc_mean_ << ";"
 			<< opt_traj_acc_max_ << ";"
 			<< count_coll_between_init_ << ";"
+			<< dis_ugv << ";"
+			<< dis_uav << ";"
+			<< num_iteration_ << ";"
 			<<std::endl;
 	} 
 	else {

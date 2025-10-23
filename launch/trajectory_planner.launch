@@ -5,7 +5,7 @@
     <arg name="save_path_in_file"   default="false"/>
     
     <!-- <arg name="map"        default="thermal_central_2022-03-14-13-05-27"/> -->
-    <arg name="num_pos_initial"         default="1"/>
+    <arg name="num_pos_initial"         default="2"/>
     <arg name="pos_uav_above_ugv"     default="1.0"/> #meters UAV above UGV
     <arg name="using_pc"    default="true"/> 
     <arg name="rviz"    default="true"/> 
@@ -19,7 +19,7 @@
     <arg name="ugv_base_frame"    default="ugv_base_link"/> #position reel on UGV
     <arg name="uav_base_frame"    default="uav_base_link"/> #position reel on UAV
     <arg name="use_distance_function"   default="true"/>
-    <arg name="just_line_of_sigth"   default="false"/>
+    <arg name="just_line_of_sight"   default="false"/>
     <arg name="use_catenary_as_tether"   default="true"/>
 
     <!-- Publishing UGV and UAV tf -->
@@ -61,7 +61,7 @@
         <arg name="write_data_files" value="$(arg write_data_files)" /> 
         <arg name="use_distance_function"   value="$(arg use_distance_function)"/>
         <arg name="save_path_in_file"   value="$(arg save_path_in_file)"/>
-        <!-- <arg name="just_line_of_sigth"   value="$(arg just_line_of_sigth)"/> -->
+        <arg name="just_line_of_sight"   value="$(arg just_line_of_sight)"/>
         <!-- <arg name="use_catenary_as_tether"   value="$(arg use_catenary_as_tether)"/> -->
     </include>    
 

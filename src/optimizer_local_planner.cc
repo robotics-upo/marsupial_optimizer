@@ -96,6 +96,7 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(bool get_path_from_file_)
 	nh->param<bool>("verbose_optimizer",verbose_optimizer, true);
 	nh->param<bool>("write_data_for_analysis",write_data_for_analysis, false);
 	nh->param("path", path, (std::string) "~/");
+	nh->param("name_file_trajectory", name_file_trajectory, (std::string) "file_name");
 	nh->param("path_mission_file", path_mission_file, (std::string) "~/missions/cfg/");
 	nh->param("pc_user_name", user_name, (std::string) "simon");
 	nh->param("files_residuals", files_residuals, (std::string) "residuals/");
@@ -107,7 +108,7 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(bool get_path_from_file_)
  	nh->param<bool>("show_config", showConfig, false);
  	nh->param<bool>("use_distance_function", use_distance_function, true);
  	nh->param<bool>("use_tether", use_tether, true);
- 	nh->param<bool>("export_path", export_path, true);
+ 	nh->param<bool>("export_opt_trajectory", export_opt_trajectory, true);
 
 	nh->param("map_path", map_path, (std::string) "map.bt");
 	nh->param("map_path_trav", map_path_trav, (std::string) "map_trav.bt");
@@ -152,6 +153,7 @@ OptimizerLocalPlanner::OptimizerLocalPlanner(bool get_path_from_file_)
 		configServices();
 	}else{
 		ROS_INFO(PRINTF_BLUE"Optimizer_Local_Planner: Parameters loaded, ready for Optimization Process. Waiting for read path!!");
+		// executeOptimizerPathGoalCB();
 	}
 }
 
@@ -214,7 +216,7 @@ void OptimizerLocalPlanner::configServices()
   	execute_path_srv_ptr.reset(new ExecutePathServer(*nh, "/Execute_Plan", false));
   	execute_path_srv_ptr->registerGoalCallback(boost::bind(&OptimizerLocalPlanner::executeOptimizerPathGoalCB, this));
   	execute_path_srv_ptr->registerPreemptCallback(boost::bind(&OptimizerLocalPlanner::executeOptimizerPathPreemptCB, this));
- 	 execute_path_srv_ptr->start();
+ 	execute_path_srv_ptr->start();
 }
 
 void OptimizerLocalPlanner::setupOptimizer()
@@ -306,7 +308,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		vec_cat_param_a  = path_shared_ptr->cat_param_a; 
 	} else{
 		upo_actions::ExecutePathGoal path_shared_;
-		ManagePath mp_(path+"results_marsupial_optimizer/rrt_path_2023_6_20_234860.yaml", path_shared_);
+		ManagePath mp_(path+ name_file_trajectory +".yaml", path_shared_);
 		globalPath = path_shared_.path;
 		vec_len_tether_init = path_shared_.length_catenary; 
 		vec_cat_param_x0 = path_shared_.cat_param_x0; 
@@ -322,7 +324,6 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 			return;
 		}
 	}
-
 
 	std::vector<tether_parameters> v_cat_params_init_;
 	tether_parameters cat_init_;
@@ -390,8 +391,8 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	calculateDistanceVertices(vec_dist_init_ugv, vec_dist_init_uav);
  	getTemporalState(vec_time_init);
 
-	CheckCM->checkStatusTetherCollision(vec_pose_ugv_init, vec_rot_ugv_init, vec_pose_uav_init,
-                                      v_cat_params_init_, vec_len_tether_init, true);
+	CheckCM->checkStatusTetherCollision(vec_pose_ugv_init, vec_rot_ugv_init, 
+										vec_pose_uav_init, v_cat_params_init_, vec_len_tether_init, use_catenary_as_tether);
 	printf("\t 2 Catenary fixed collision after Interpolation\n");
 	for (size_t i=0; i< vec_len_tether_init.size(); i++){
 		printf("[%lu] %.5f %.5f %.5f %.5f %.5f %.5f %.3f %.3f %.3f\n", i,
@@ -404,6 +405,11 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
                            v_cat_params_init_, vec_len_tether_init, 5, 6, 1,
                            traj_marker_ugv_pub_, traj_marker_uav_pub_,
                            catenary_marker_pub_, tether_marker_init, true, false);
+    /********************* To obligate pause method and check Planning result *********************/
+                //    std::string yy_ ;
+                //    std::cout << " *** Graphed Intepolated Path : Press key to continue: " << std::endl;
+                //    std::cin >> yy_ ;
+    /*************************************************************************************************/
 
 	//Clean Nodes Markers Global Planner
 	std_msgs::Bool clean_markers_gp_;
@@ -413,35 +419,46 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	// Stage to get tether
 	ROS_INFO(PRINTF_GREEN "Optimizer Local Planner : Computing Parameter for Parabola after correction of interpolation");
 	getTetherParameter(vec_pose_ugv_init, vec_rot_ugv_init, vec_pose_uav_init, vec_len_tether_init, v_cat_params_init_);
-	printf("\t 3 After compute parabola parameter\n");
+	printf("\t 3 After compute TETHER parameter\n");
 	for (size_t i=0; i< vec_len_tether_init.size(); i++){
 		printf("[%lu] %.5f %.5f %.5f %.5f %.5f %.5f %.3f %.3f %.3f\n", i,
 		vec_pose_ugv_init[i].x, vec_pose_ugv_init[i].y, vec_pose_ugv_init[i].z, 
 		vec_pose_uav_init[i].x, vec_pose_uav_init[i].y, vec_pose_uav_init[i].z, 
 		v_tether_params_init[i].a, v_tether_params_init[i].b,v_tether_params_init[i].c);
 	}	
-	ROS_INFO(PRINTF_GREEN "Optimizer Local Planner : 3 Graph initial parabola");
+	ROS_INFO(PRINTF_GREEN "Optimizer Local Planner : 3 Graph initial TETHER");
 	graphTetherAndPathMarker(vec_pose_ugv_init, vec_pose_uav_init, vec_rot_ugv_init,
                            v_tether_params_init, vec_len_tether_init, 5, 6, 3,traj_marker_ugv_pub_, traj_marker_uav_pub_,
                            catenary_marker_pub_, tether_marker_init, use_catenary_as_tether, false);
+	/********************* To obligate pause method and check Planning result *********************/
+                //    std::string yyy_ ;
+                //    std::cout << " *** Graphed Intepolated Path : Press key to continue: " << std::endl;
+                //    std::cin >> yyy_ ;
+    /*************************************************************************************************/
 	CheckCM->checkStatusTetherCollision(vec_pose_ugv_init, vec_rot_ugv_init,
                                       vec_pose_uav_init, v_tether_params_init, vec_len_tether_init, use_catenary_as_tether);
-
-	fixParabolaParameter(vec_pose_ugv_init, vec_rot_ugv_init, vec_pose_uav_init,
-                       vec_len_tether_init, v_tether_params_init);
+	if(use_catenary_as_tether){
+		fixParabolaParameter(vec_pose_ugv_init, vec_rot_ugv_init, vec_pose_uav_init,
+                       		 vec_len_tether_init, v_tether_params_init);
 		for (size_t i=0; i< vec_len_tether_init.size(); i++){
-		printf("[%lu] %.5f %.5f %.5f %.5f %.5f %.5f %.3f %.3f %.3f\n", i,
-		vec_pose_ugv_init[i].x, vec_pose_ugv_init[i].y, vec_pose_ugv_init[i].z, 
-		vec_pose_uav_init[i].x, vec_pose_uav_init[i].y, vec_pose_uav_init[i].z, 
-		v_tether_params_init[i].a, v_tether_params_init[i].b,v_tether_params_init[i].c);
-	}
+			printf("[%lu] %.5f %.5f %.5f %.5f %.5f %.5f %.3f %.3f %.3f\n", i,
+			vec_pose_ugv_init[i].x, vec_pose_ugv_init[i].y, vec_pose_ugv_init[i].z, 
+			vec_pose_uav_init[i].x, vec_pose_uav_init[i].y, vec_pose_uav_init[i].z, 
+			v_tether_params_init[i].a, v_tether_params_init[i].b,v_tether_params_init[i].c);
+		}
 	ROS_INFO(PRINTF_GREEN "Optimizer Local Planner : 4 Graph fixed initial parabola");
 	graphTetherAndPathMarker(vec_pose_ugv_init, vec_pose_uav_init, vec_rot_ugv_init,
                            v_tether_params_init, vec_len_tether_init, 5, 6, 1, traj_marker_ugv_pub_, traj_marker_uav_pub_,
                            tether_marker_init_pub_, tether_marker_init, use_catenary_as_tether, false);
 	CheckCM->checkStatusTetherCollision(vec_pose_ugv_init, vec_rot_ugv_init,
-                                      vec_pose_uav_init, v_tether_params_init,vec_len_tether_init, use_catenary_as_tether);
-
+                                      vec_pose_uav_init, v_tether_params_init, vec_len_tether_init, use_catenary_as_tether);
+	/********************* To obligate pause method and check Planning result *********************/
+                //    std::string yyyy_ ;
+                //    std::cout << " *** Graphed Intepolated Path : Press key to continue: " << std::endl;
+                //    std::cin >> yyyy_ ;
+    /*************************************************************************************************/
+	}
+	
 	MP.clearMarkers(catenary_marker, 150, catenary_marker_pub_);
   	MP.clearMarkersPointLines(points_ugv_marker, lines_ugv_marker,traj_marker_ugv_pub_,size_path);
   	MP.clearMarkersPointLines(points_uav_marker, lines_uav_marker,traj_marker_uav_pub_,size_path);
@@ -450,7 +467,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
                          initial_velocity_ugv, initial_velocity_uav,initial_acceleration_ugv, initial_acceleration_uav,
                          distance_tether_obstacle, toPoint(pose_reel_local.transform.translation),
                          vec_pose_ugv_init,	vec_pose_uav_init, vec_len_tether_init,vec_rot_ugv_init, vec_rot_uav_init, mapFull_msg,
-                         mapTrav_msg, grid_3D, false, use_catenary_as_tether);
+                         mapTrav_msg, grid_3D, false, use_catenary_as_tether, just_line_of_sight);
 	
 	if(!just_line_of_sight){ // The tether is not computed if is required just to star with initial condition the straight line.
 		CheckCM->checkStatusTetherCollision(vec_pose_ugv_init, vec_rot_ugv_init, vec_pose_uav_init, v_tether_params_init, vec_len_tether_init, use_catenary_as_tether);
@@ -667,7 +684,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 						if (i == 0 || (fix_last_position_ugv && i == statesTetherParams.size()-1))
 							problem.SetParameterBlockConstant(statesTetherParams[i].parameter);
 						else{
-							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 2, 0.01);
+							// problem.SetParameterLowerBound(statesTetherParams[i].parameter, 2, 0.01);
 							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 3, 0.01);
 						}
 					}
@@ -681,7 +698,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 						if (i == 0 || (fix_last_position_ugv && i == statesTetherParams.size()-1))
 							problem.SetParameterBlockConstant(statesTetherParams[i].parameter);
 						else{
-							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 2, 0.01);
+							// problem.SetParameterLowerBound(statesTetherParams[i].parameter, 2, 0.01);
 							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 3, 0.01);
 						}
 					}		
@@ -695,7 +712,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 						if (i == 0 || (fix_last_position_ugv && i == statesTetherParams.size()-1))
 							problem.SetParameterBlockConstant(statesTetherParams[i].parameter);
 						else{
-							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 2, 0.01);
+							// problem.SetParameterLowerBound(statesTetherParams[i].parameter, 2, 0.01);
 							problem.SetParameterLowerBound(statesTetherParams[i].parameter, 3, 0.01);
 						}
 					}		
@@ -768,10 +785,11 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	successful_steps = summary.num_successful_steps;
 	unsuccessful_steps = summary.num_unsuccessful_steps;
 	time_optimazation = summary.total_time_in_seconds;
+	num_inner_iteration_steps = successful_steps+unsuccessful_steps;
 
 	finishigOptimization();
 		ManagePath mp_;
-	if(export_path)
+	if(export_opt_trajectory)
 		mp_.exportOptimizedPath(vec_pose_ugv_opt, vec_pose_uav_opt, vec_rot_ugv_opt, vec_rot_uav_opt, vec_len_tether_opt, vec_time_opt, path);
 
 	// Inform if is a feabible Trajectory or not, 
@@ -785,14 +803,18 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	if (write_data_for_analysis)
 		writeDataForAnalysis(CheckCMopt->count_ugv_coll, CheckCMopt->count_uav_coll, CheckCMopt->count_total_tether_coll_);
 	
+
+	   std::string yy_ ;
+       std::cout << " *** Press key to continue: " << std::endl;
+       std::cin >> yy_ ;
+
 	double time_sleep_ = 2.0;
 	bool finished_optimization_ = false;
 	if (free_collision_){
 		if (initial_cost==final_cost)
 			ROS_INFO(PRINTF_ORANGE"\n		Optimizer Local Planner: Final Cost equal than Initial Cost");
-		ROS_INFO(PRINTF_GREEN"\n\n\n		Optimizer Local Planner: Goal position successfully achieved through optimization trajectory\n\n\n");
-
-	// Visualize traj in RVIZ
+			ROS_INFO(PRINTF_GREEN"\n\n\n		Optimizer Local Planner: Goal position successfully achieved through optimization trajectory\n\n\n");
+		// Visualize traj in RVIZ
 		if (traj_in_rviz){
 			marsupial_optimizer::marsupial_trajectory_optimized msg_;
 			mp_.publishOptimizedTraj(vec_pose_ugv_opt, vec_pose_uav_opt, vec_rot_ugv_opt, vec_rot_uav_opt, vec_len_tether_opt, vec_time_opt, msg_);
@@ -812,22 +834,25 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 	}
 	else{
 		if (initial_cost==final_cost)
-      ROS_INFO(PRINTF_ORANGE"\n		Optimizer Local Planner: Final Cost equal than Initial Cost");
-    ROS_INFO(PRINTF_RED"\n\n\n\n		Optimizer Local Planner: Goal position Not achieved through optimization trajectory\n\n\n");
-    if (traj_in_rviz){
-      ros::Duration(time_sleep_).sleep();
-      while(!finished_rviz_maneuver){
-        ros::spinOnce();
-        printf("Waiting to finish maneuver in Rviz\n");
-      };
-      ros::Duration(time_sleep_).sleep();
-    }
-    else{
-      ros::Duration(time_sleep_).sleep();
-    }	
-    finished_rviz_maneuver = false;
-    action_result.arrived = false;
-    finished_optimization_ = true;		
+      		ROS_INFO(PRINTF_ORANGE"\n		Optimizer Local Planner: Final Cost equal than Initial Cost");
+    	ROS_INFO(PRINTF_RED"\n\n\n\n		Optimizer Local Planner: Goal position Not achieved through optimization trajectory\n\n\n");
+    	if (traj_in_rviz){
+			marsupial_optimizer::marsupial_trajectory_optimized msg_;
+			mp_.publishOptimizedTraj(vec_pose_ugv_opt, vec_pose_uav_opt, vec_rot_ugv_opt, vec_rot_uav_opt, vec_len_tether_opt, vec_time_opt, msg_);
+   			trajectory_pub_.publish(msg_);
+
+			while(!finished_rviz_maneuver){
+				ros::spinOnce();
+			};
+			ros::Duration(time_sleep_).sleep();
+			finished_rviz_maneuver = false;
+		}
+		else{
+			ros::Duration(time_sleep_).sleep();
+		}	
+		finished_rviz_maneuver = false;
+		action_result.arrived = false;
+		finished_optimization_ = true;		
 	}
 	std::cout <<"Optimization Proccess Completed !!!" << std::endl << "Saving Temporal data in txt file ..." << std::endl << "===================================================" << std::endl << std::endl << std::endl;
 
@@ -849,7 +874,7 @@ void OptimizerLocalPlanner::initializingParametersblock()
 	statesPosUGV.clear(); statesPosUAV.clear(); statesRotUGV.clear(); statesRotUAV.clear(); statesTime.clear();
 	statesTime.clear(); statesLength.clear(); statesTetherParams.clear();
 	
-	printf("Initial States.Parameter[____] :   [  pos_x  pos_y  pos_z  rot_r  rot_p  rot_y pos_x  pos_y  pos_z  rot_x  rot_y  rot_z  rot_w  time_ugv  time_uav  param_p  param_q  param_r length]\n");
+	printf("Initial States.Parameter[____] :   [  pos_x  pos_y  pos_z  rot_r  rot_p  rot_y        pos_x  pos_y  pos_z  rot_x  rot_y  rot_z  rot_w  time_ugv  time_uav  param_p  param_q  param_r length]\n");
 	for (size_t i = 0 ; i < vec_pose_uav_init.size(); i ++){
 		parameterBlockPos parameter_block_pos_ugv;
 		parameterBlockPos parameter_block_pos_uav;
@@ -1051,8 +1076,8 @@ void OptimizerLocalPlanner::writeDataForAnalysis(int ugv_coll_, int uav_coll_, i
 	std::cout << "...Temporal data saved in txt file." << std::endl << std::endl;
 	std::cout << "Saving data for analisys in txt file..." << std::endl;
 	double opt_compute_time_ = (final_time_opt - start_time_opt).toSec(); //Compute Time Optimization
-	dm_.getDataForOptimizerAnalysis(nn_ugv_obs.kdtree, nn_uav.kdtree, nn_ugv_obs.obs_points, nn_uav.obs_points, opt_compute_time_, "UGV");
-	dm_.getDataForOptimizerAnalysis(nn_uav.kdtree,     nn_uav.kdtree, nn_uav.obs_points,     nn_uav.obs_points, opt_compute_time_, "UAV");
+	dm_.getDataForOptimizerAnalysis(nn_ugv_obs.kdtree, nn_uav.kdtree, nn_ugv_obs.obs_points, nn_uav.obs_points, opt_compute_time_, "UGV",num_inner_iteration_steps);
+	dm_.getDataForOptimizerAnalysis(nn_uav.kdtree,     nn_uav.kdtree, nn_uav.obs_points,     nn_uav.obs_points, opt_compute_time_, "UAV",num_inner_iteration_steps);
 	dm_.feasibilityAnalisysTrajectory(initial_cost, final_cost, successful_steps, unsuccessful_steps, time_optimazation, ugv_coll_, uav_coll_, tether_coll_);
 	std::cout << "... data for analysis saved in txt file." << std::endl << std::endl;
 }
@@ -1271,10 +1296,10 @@ void OptimizerLocalPlanner::checkCatenaryStatus(vector<geometry_msgs::Point> v_p
 			v_param_[i].a = CheckCM->param_cat_x0;
 			v_param_[i].b = CheckCM->param_cat_y0;
 			v_param_[i].c  = CheckCM->param_cat_a ;
-				std::cout << "	Correcting Catenary params Interpolated ["<< i <<"] collision free. p1[" 
-				<<p_reel_.x<<"," <<p_reel_.y <<","<<p_reel_.z <<"] p2["
-				<<v_p_uav[i].x<<"," <<v_p_uav[i].y <<","<<v_p_uav[i].z <<"]. New params:["
-				<<v_param_[i].a<<"," <<v_param_[i].b <<","<<v_param_[i].c <<"]"<<std::endl;
+				// std::cout << "	Correcting Catenary params Interpolated ["<< i <<"] collision free. p1[" 
+				// <<p_reel_.x<<"," <<p_reel_.y <<","<<p_reel_.z <<"] p2["
+				// <<v_p_uav[i].x<<"," <<v_p_uav[i].y <<","<<v_p_uav[i].z <<"]. New params:["
+				// <<v_param_[i].a<<"," <<v_param_[i].b <<","<<v_param_[i].c <<"]"<<std::endl;
 		}
 	}
 	v_l_in.clear();       //Check This two lines, should be fixed in a previous method the length

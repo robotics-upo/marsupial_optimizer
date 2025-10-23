@@ -5,7 +5,32 @@ ManagePath::ManagePath()
 
 ManagePath::ManagePath(const std::string &path_and_name_file_, upo_actions::ExecutePathGoal &g_)
 {
-  YAML::Node file = YAML::LoadFile(path_and_name_file_);
+//   YAML::Node file = YAML::LoadFile(path_and_name_file_);
+  
+	  // 1) Verificar existencia del archivo
+  if (!std::filesystem::exists(path_and_name_file_)) {
+    std::cerr << "[ManagePath] ERROR: el archivo no existe: "
+              << path_and_name_file_ << std::endl;
+    throw std::runtime_error("Archivo YAML inexistente");
+  }
+
+  // 2) Intentar abrir/parsear y capturar errores
+  YAML::Node file;
+  try {
+    file = YAML::LoadFile(path_and_name_file_);
+  } catch (const YAML::BadFile &e) {
+    std::cerr << "[ManagePath] ERROR: no se pudo abrir el archivo: "
+              << path_and_name_file_ << " | Detalle: " << e.what() << std::endl;
+    throw;
+  } catch (const YAML::ParserException &e) {
+    std::cerr << "[ManagePath] ERROR: el archivo YAML tiene errores de sintaxis: "
+              << path_and_name_file_ << " | Detalle: " << e.what() << std::endl;
+    throw;
+  } catch (const std::exception &e) {
+    std::cerr << "[ManagePath] ERROR inesperado al leer YAML: "
+              << path_and_name_file_ << " | Detalle: " << e.what() << std::endl;
+    throw;
+  }
 
   trajectory.points.clear(); 
 
@@ -138,58 +163,59 @@ void ManagePath::exportOptimizedPath(vector<geometry_msgs::Point> &v_ugv_, vecto
 	geometry_msgs::Point p_int_ugv_, p_int_uav_;
 
 	// Interpolate vector
-	printf("vec_pose_ugv_opt.size()=%lu , vec_pose_uav_opt.size()=%lu , vec_len_cat_opt.size()=%lu\n",v_ugv_.size(),v_uav_.size(),v_l_.size());
+	printf("ManagePath::exportOptimizedPath :    vec_pose_ugv_opt.size()=%lu , vec_pose_uav_opt.size()=%lu , vec_len_cat_opt.size()=%lu\n",
+		v_ugv_.size(),v_uav_.size(),v_l_.size());
 	double time_ = 0;
-	for (int i=0 ; i < v_ugv_.size()-1; i++){
-		d_to_interp_ = 0.2;
-		interpol_ = false;
-		d1_ = sqrt ( pow(v_ugv_[i+1].x - v_ugv_[i].x,2) + pow(v_ugv_[i+1].y - v_ugv_[i].y,2) + pow(v_ugv_[i+1].z - v_ugv_[i].z,2) );
-		d2_ = sqrt ( pow(v_uav_[i+1].x - v_uav_[i].x,2) + pow(v_uav_[i+1].y - v_uav_[i].y,2) + pow(v_uav_[i+1].z - v_uav_[i].z,2) );
-		if (d1_ > d_to_interp_ ){
-			if (d1_ >= d2_)
-				r_ = floor(d1_/d_to_interp_);
-			interpol_ = true;
-		}
-		if (d2_ > d_to_interp_ ){
-			if (d2_ > d1_)
-				r_ = floor(d2_/d_to_interp_);
-			interpol_ = true;
-		}
-		if (interpol_){
-			for (int j=0 ; j < r_ ; j++){
-				p_int_ugv_.x = v_ugv_[i].x + (j+1)*(v_ugv_[i+1].x - v_ugv_[i].x)/(r_+1);
-				p_int_ugv_.y = v_ugv_[i].y + (j+1)*(v_ugv_[i+1].y - v_ugv_[i].y)/(r_+1);
-				p_int_ugv_.z = v_ugv_[i].z + (j+1)*(v_ugv_[i+1].z - v_ugv_[i].z)/(r_+1);
-				p_int_uav_.x = v_uav_[i].x + (j+1)*(v_uav_[i+1].x - v_uav_[i].x)/(r_+1);
-				p_int_uav_.y = v_uav_[i].y + (j+1)*(v_uav_[i+1].y - v_uav_[i].y)/(r_+1);
-				p_int_uav_.z = v_uav_[i].z + (j+1)*(v_uav_[i+1].z - v_uav_[i].z)/(r_+1);
-				cat_inter_ = v_l_[i] + (j+1)*(v_l_[i+1] - v_l_[i])/(r_+1);
-				v_interp_pose_ugv.push_back(p_int_ugv_);
-				v_interp_rot_ugv.push_back(v_r_ugv_[i]);
-				v_interp_pose_uav.push_back(p_int_uav_);
-				v_interp_rot_uav.push_back(v_r_uav_[i]);
-				vec_interp_len_cat.push_back(cat_inter_);
-			}
-		}else{
-			v_interp_pose_ugv.push_back(v_ugv_[i]);
-			v_interp_rot_ugv.push_back(v_r_ugv_[i]);
-			v_interp_pose_uav.push_back(v_uav_[i]);
-			v_interp_rot_uav.push_back(v_r_uav_[i]);
-			vec_interp_len_cat.push_back(v_l_[i]);
-		}
-	}
-	v_ugv_.clear();
-	v_r_ugv_.clear();
-	v_uav_.clear();
-	v_r_uav_.clear();
-	v_l_.clear();
-	v_ugv_ = v_interp_pose_ugv;
-	v_r_ugv_ = v_interp_rot_ugv;
-	v_uav_ = v_interp_pose_uav;
-	v_r_uav_ = v_interp_rot_uav;
-	v_l_ = vec_interp_len_cat;
-	printf("v_ugv_.size()=%lu , v_uav_.size()=%lu vec_interp_len_cat=%lu\n",
-	v_interp_pose_ugv.size(),v_interp_pose_ugv.size(),vec_interp_len_cat.size());
+	// for (int i=0 ; i < v_ugv_.size()-1; i++){
+	// 	d_to_interp_ = 0.2;
+	// 	interpol_ = false;
+	// 	d1_ = sqrt ( pow(v_ugv_[i+1].x - v_ugv_[i].x,2) + pow(v_ugv_[i+1].y - v_ugv_[i].y,2) + pow(v_ugv_[i+1].z - v_ugv_[i].z,2) );
+	// 	d2_ = sqrt ( pow(v_uav_[i+1].x - v_uav_[i].x,2) + pow(v_uav_[i+1].y - v_uav_[i].y,2) + pow(v_uav_[i+1].z - v_uav_[i].z,2) );
+	// 	if (d1_ > d_to_interp_ ){
+	// 		if (d1_ >= d2_)
+	// 			r_ = floor(d1_/d_to_interp_);
+	// 		interpol_ = true;
+	// 	}
+	// 	if (d2_ > d_to_interp_ ){
+	// 		if (d2_ > d1_)
+	// 			r_ = floor(d2_/d_to_interp_);
+	// 		interpol_ = true;
+	// 	}
+	// 	if (interpol_){
+	// 		for (int j=0 ; j < r_ ; j++){
+	// 			p_int_ugv_.x = v_ugv_[i].x + (j+1)*(v_ugv_[i+1].x - v_ugv_[i].x)/(r_+1);
+	// 			p_int_ugv_.y = v_ugv_[i].y + (j+1)*(v_ugv_[i+1].y - v_ugv_[i].y)/(r_+1);
+	// 			p_int_ugv_.z = v_ugv_[i].z + (j+1)*(v_ugv_[i+1].z - v_ugv_[i].z)/(r_+1);
+	// 			p_int_uav_.x = v_uav_[i].x + (j+1)*(v_uav_[i+1].x - v_uav_[i].x)/(r_+1);
+	// 			p_int_uav_.y = v_uav_[i].y + (j+1)*(v_uav_[i+1].y - v_uav_[i].y)/(r_+1);
+	// 			p_int_uav_.z = v_uav_[i].z + (j+1)*(v_uav_[i+1].z - v_uav_[i].z)/(r_+1);
+	// 			cat_inter_ = v_l_[i] + (j+1)*(v_l_[i+1] - v_l_[i])/(r_+1);
+	// 			v_interp_pose_ugv.push_back(p_int_ugv_);
+	// 			v_interp_rot_ugv.push_back(v_r_ugv_[i]);
+	// 			v_interp_pose_uav.push_back(p_int_uav_);
+	// 			v_interp_rot_uav.push_back(v_r_uav_[i]);
+	// 			vec_interp_len_cat.push_back(cat_inter_);
+	// 		}
+	// 	}else{
+	// 		v_interp_pose_ugv.push_back(v_ugv_[i]);
+	// 		v_interp_rot_ugv.push_back(v_r_ugv_[i]);
+	// 		v_interp_pose_uav.push_back(v_uav_[i]);
+	// 		v_interp_rot_uav.push_back(v_r_uav_[i]);
+	// 		vec_interp_len_cat.push_back(v_l_[i]);
+	// 	}
+	// }
+	// v_ugv_.clear();
+	// v_r_ugv_.clear();
+	// v_uav_.clear();
+	// v_r_uav_.clear();
+	// v_l_.clear();
+	// v_ugv_ = v_interp_pose_ugv;
+	// v_r_ugv_ = v_interp_rot_ugv;
+	// v_uav_ = v_interp_pose_uav;
+	// v_r_uav_ = v_interp_rot_uav;
+	// v_l_ = vec_interp_len_cat;
+	// printf("v_ugv_.size()=%lu , v_uav_.size()=%lu vec_interp_len_cat=%lu\n",
+	// v_interp_pose_ugv.size(),v_interp_pose_ugv.size(),vec_interp_len_cat.size());
 
     // Root of our file
     YAML::Node root;

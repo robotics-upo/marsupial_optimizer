@@ -3,6 +3,7 @@
 
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
+#include <tf2/LinearMath/Matrix3x3.h>
 #include <string>
 #include <boost/algorithm/string.hpp>
 #include <geometry_msgs/Vector3.h>
@@ -134,9 +135,9 @@ void ManagerTf::trajectoryOptimizedCallBack(const marsupial_optimizer::marsupial
 	std::vector<geometry_msgs::Point> points_catenary_;
 
 	for (size_t i= 0; i < trajectory.trajectory.points.size() ; i++){
-		double ugv_x = trajectory.trajectory.points.at(i).transforms[0].translation.x;
-		double ugv_y = trajectory.trajectory.points.at(i).transforms[0].translation.y;
-		double ugv_z = trajectory.trajectory.points.at(i).transforms[0].translation.z;
+		double ugv_x = initial_pos_ugv_x = trajectory.trajectory.points.at(i).transforms[0].translation.x;
+		double ugv_y = initial_pos_ugv_y = trajectory.trajectory.points.at(i).transforms[0].translation.y;
+		double ugv_z = initial_pos_ugv_z = trajectory.trajectory.points.at(i).transforms[0].translation.z;
 		double ugv_rot_x = trajectory.trajectory.points.at(i).transforms[0].rotation.x;
 		double ugv_rot_y = trajectory.trajectory.points.at(i).transforms[0].rotation.y;
 		double ugv_rot_z = trajectory.trajectory.points.at(i).transforms[0].rotation.z;
@@ -153,10 +154,14 @@ void ManagerTf::trajectoryOptimizedCallBack(const marsupial_optimizer::marsupial
 		q_ugv = tf::Quaternion(ugv_rot_x ,ugv_rot_y ,ugv_rot_z ,ugv_rot_w);
 		trans_ugv.setOrigin(v_ugv);
 		trans_ugv.setRotation(q_ugv);
+		tf::Matrix3x3 M_(q_ugv);
+		M_.getRPY(initial_pos_ugv_roll, initial_pos_ugv_pitch, initial_pos_ugv_yaw);
 		v_uav = tf::Vector3(uav_x, uav_y, uav_z);
 		q_uav = tf::Quaternion(uav_rot_x ,uav_rot_y ,uav_rot_z ,uav_rot_w);
 		trans_uav.setOrigin(v_uav);
 		trans_uav.setRotation(q_uav);
+		tf::Matrix3x3 N_(q_ugv);
+		N_.getRPY(initial_pos_uav_roll, initial_pos_uav_pitch, initial_pos_uav_yaw);
 
 		//Graph final catenary states
 		points_catenary_.clear();
@@ -190,6 +195,8 @@ void ManagerTf::trajectoryOptimizedCallBack(const marsupial_optimizer::marsupial
 		// }
 		// /*************************************************************************************************/
 	}
+
+
 	ROS_INFO(PRINTF_BLUE "FINISHED TRAJECTORY: RViz maneuver");
 	std_msgs::Bool finished_rviz_maneuver;
 	finished_rviz_maneuver.data = true;
