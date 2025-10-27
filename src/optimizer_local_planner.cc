@@ -308,7 +308,8 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 		vec_cat_param_a  = path_shared_ptr->cat_param_a; 
 	} else{
 		upo_actions::ExecutePathGoal path_shared_;
-		ManagePath mp_(path+ name_file_trajectory +".yaml", path_shared_);
+		// ManagePath mp_(path+ name_file_trajectory +".yaml", path_shared_);
+		ManagePath mp_(path+ name_file_trajectory +".yaml");
 		globalPath = path_shared_.path;
 		vec_len_tether_init = path_shared_.length_catenary; 
 		vec_cat_param_x0 = path_shared_.cat_param_x0; 
@@ -360,7 +361,7 @@ void OptimizerLocalPlanner::executeOptimizerPathGoalCB()
 
 	CheckCM->checkStatusCollision(globalPath, vec_len_tether_init);
 	
-	// Stage to interpolate path
+	// // Stage to interpolate path
 	InterpolatePath ip_;
 	ip_.initInterpolatePath(count_fix_points_initial_ugv,count_fix_points_final_ugv,
                           count_fix_points_uav, fix_last_position_ugv, distance_tether_obstacle,

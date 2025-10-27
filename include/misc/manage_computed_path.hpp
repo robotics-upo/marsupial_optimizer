@@ -9,6 +9,7 @@
 #include <fstream>
 #include <ros/ros.h>
 #include <filesystem> 
+
 //#include <geometry_msgs/Vector3.h>
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Pose.h>
@@ -25,7 +26,8 @@ class ManagePath
 
 public:
     ManagePath();
-    ManagePath(const std::string &path_and_name_file_, upo_actions::ExecutePathGoal &g_);
+    // ManagePath(const std::string &path_and_name_file_, upo_actions::ExecutePathGoal &g_);
+    ManagePath(const std::string &path_and_name_file_);
     void exportOptimizedPath(vector<geometry_msgs::Point> &v_ugv_, vector<geometry_msgs::Point> &v_uav_, 
 									 vector<geometry_msgs::Quaternion> &v_r_ugv_, vector<geometry_msgs::Quaternion> &v_r_uav_, vector<float> &v_l_,
 									 vector<double> v_t_, string path_mission_file_);

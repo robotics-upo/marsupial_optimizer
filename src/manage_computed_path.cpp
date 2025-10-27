@@ -3,34 +3,29 @@
 ManagePath::ManagePath()
 {}
 
-ManagePath::ManagePath(const std::string &path_and_name_file_, upo_actions::ExecutePathGoal &g_)
+// ManagePath::ManagePath(const std::string &path_and_name_file_, upo_actions::ExecutePathGoal &g_)
+ManagePath::ManagePath(const std::string &path_and_name_file_)
 {
 //   YAML::Node file = YAML::LoadFile(path_and_name_file_);
   
-	  // 1) Verificar existencia del archivo
-  if (!std::filesystem::exists(path_and_name_file_)) {
-    std::cerr << "[ManagePath] ERROR: el archivo no existe: "
-              << path_and_name_file_ << std::endl;
-    throw std::runtime_error("Archivo YAML inexistente");
-  }
+	  // Intentar abrir/parsear y capturar errores
+  	YAML::Node file;
 
-  // 2) Intentar abrir/parsear y capturar errores
-  YAML::Node file;
-  try {
-    file = YAML::LoadFile(path_and_name_file_);
-  } catch (const YAML::BadFile &e) {
-    std::cerr << "[ManagePath] ERROR: no se pudo abrir el archivo: "
-              << path_and_name_file_ << " | Detalle: " << e.what() << std::endl;
-    throw;
-  } catch (const YAML::ParserException &e) {
-    std::cerr << "[ManagePath] ERROR: el archivo YAML tiene errores de sintaxis: "
-              << path_and_name_file_ << " | Detalle: " << e.what() << std::endl;
-    throw;
-  } catch (const std::exception &e) {
-    std::cerr << "[ManagePath] ERROR inesperado al leer YAML: "
-              << path_and_name_file_ << " | Detalle: " << e.what() << std::endl;
-    throw;
-  }
+	try {
+		file = YAML::LoadFile(path_and_name_file_);
+	} catch (const YAML::BadFile &e) {
+		std::cerr << "[ManagePath] ERROR: no se pudo abrir el archivo: "
+				<< path_and_name_file_ << " | Detalle: " << e.what() << std::endl;
+		throw;
+	} catch (const YAML::ParserException &e) {
+		std::cerr << "[ManagePath] ERROR: el archivo YAML tiene errores de sintaxis: "
+				<< path_and_name_file_ << " | Detalle: " << e.what() << std::endl;
+		throw;
+	} catch (const std::exception &e) {
+		std::cerr << "[ManagePath] ERROR inesperado al leer YAML: "
+				<< path_and_name_file_ << " | Detalle: " << e.what() << std::endl;
+		throw;
+	}
 
   trajectory.points.clear(); 
 
@@ -132,11 +127,11 @@ ManagePath::ManagePath(const std::string &path_and_name_file_, upo_actions::Exec
   std::cout << "YAML FILE readed. YAML FILE NAME: " << path_and_name_file_ << std::endl;
   std::cout << "Number of points: " << trajectory.points.size() << std::endl;
   
-    upo_actions::ExecutePathGoal goal_action;
-    g_.path = trajectory;
-    for(int i= 0; i<tether_length_vector.size() ; i++){
-        g_.length_catenary.push_back(tether_length_vector[i]);
-    }
+    // upo_actions::ExecutePathGoal goal_action;
+    // g_.path = trajectory;
+    // for(int i= 0; i<tether_length_vector.size() ; i++){
+    //     g_.length_catenary.push_back(tether_length_vector[i]);
+    // }
 }
 
 void ManagePath::exportOptimizedPath(vector<geometry_msgs::Point> &v_ugv_, vector<geometry_msgs::Point> &v_uav_, 

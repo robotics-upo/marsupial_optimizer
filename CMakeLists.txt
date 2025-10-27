@@ -159,6 +159,9 @@ add_dependencies(test_tether_constraints_node ${${PROJECT_NAME}_EXPORTED_TARGETS
 target_link_libraries(test_tether_constraints_node catenary_checker Ceres::ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES} yaml-cpp Qt5::Charts
 Qt5::Widgets dbscan_line)
 
+add_executable(trajectory_markers_node src/trajectory_markers_node.cpp src/manage_computed_path.cpp src/marker_publisher.cpp)
+target_link_libraries(trajectory_markers_node catenary_checker ${catkin_LIBRARIES} yaml-cpp Qt5::Charts Qt5::Widgets dbscan_line)
+
 # add_executable(test_catenary_optimizer src/test_catenary_optimizer.cc src/marker_publisher.cpp)
 # add_dependencies(test_catenary_optimizer  ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
 # target_link_libraries(test_catenary_optimizer catenary_checker Ceres::ceres ${catkin_LIBRARIES} ${CERES_LIBRARIES} Qt5::Charts

@@ -255,23 +255,23 @@ public:
   ros::Time start_time;
 
 	visualization_msgs::MarkerArray points_uav_marker, lines_uav_marker;
-  visualization_msgs::MarkerArray points_ugv_marker, lines_ugv_marker;
-  visualization_msgs::MarkerArray post_points_ugv_marker, post_lines_ugv_marker;
-  visualization_msgs::MarkerArray post_points_uav_marker, post_lines_uav_marker;
+	visualization_msgs::MarkerArray points_ugv_marker, lines_ugv_marker;
+	visualization_msgs::MarkerArray post_points_ugv_marker, post_lines_ugv_marker;
+	visualization_msgs::MarkerArray post_points_uav_marker, post_lines_uav_marker;
 	typedef visualization_msgs::Marker RVizMarker;
 
 	std::string action_name_;
 	std::string ugv_base_frame, uav_base_frame, reel_base_frame, world_frame;
 
 	ros::Subscriber octomap_ws_sub_;
-  ros::Subscriber point_cloud_ugv_traversability_sub_, point_cloud_ugv_obstacles_sub_;
-  ros::Subscriber clean_markers_sub_, local_map_sub, local_trav_map_sub;
-  ros::Subscriber finished_rviz_maneuver_sub_, star_optimizer_process_sub_;
+	ros::Subscriber point_cloud_ugv_traversability_sub_, point_cloud_ugv_obstacles_sub_;
+	ros::Subscriber clean_markers_sub_, local_map_sub, local_trav_map_sub;
+	ros::Subscriber finished_rviz_maneuver_sub_, star_optimizer_process_sub_;
 
 	ros::Publisher traj_marker_ugv_pub_, traj_marker_uav_pub_;
-  ros::Publisher traj_opt_marker_ugv_pub_,traj_opt_marker_uav_pub_;
+  	ros::Publisher traj_opt_marker_ugv_pub_,traj_opt_marker_uav_pub_;
 	ros::Publisher catenary_marker_pub_, clean_nodes_marker_gp_pub_;
-  ros::Publisher clean_catenary_marker_gp_pub_, trajectory_pub_;
+  	ros::Publisher clean_catenary_marker_gp_pub_, trajectory_pub_;
 	ros::Publisher tether_marker_init_pub_, tether_marker_opt_pub_;
 	visualization_msgs::MarkerArray catenary_marker, tether_marker_init, tether_marker_opt;
 
